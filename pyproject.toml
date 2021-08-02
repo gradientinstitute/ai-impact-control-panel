@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "deva"
+version = "0.1.0"
+description = ""
+authors = ["Lachlan McCalman <lachlan@gradientinstitute.org>"]
+
+[tool.poetry.dependencies]
+python = "3.9"
+click = "^8.0.1"
+matplotlib = "^3.4.2"
+numpy = "^1.21.1"
+scipy = "^1.7.1"
+PyQt5 = "^5.15.4"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[tool.poetry.scripts]
+deva-dash = "deva.scripts.dash:cli"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
