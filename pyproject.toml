@@ -11,12 +11,16 @@ matplotlib = "^3.4.2"
 numpy = "^1.21.1"
 scipy = "^1.7.1"
 PyQt5 = "^5.15.4"
+toml = "^0.10.2"
+namedtupled = "^0.3.3"
+pandas = "^1.3.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 
 [tool.poetry.scripts]
 deva-dash = "deva.scripts.dash:cli"
+deva-sim = "deva.scripts.sim:cli"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
