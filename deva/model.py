@@ -1,9 +1,7 @@
-import logging
 from logging import info
-import numpy as np
-from sklearn.linear_model import LogisticRegression
+# from sklearn.linear_model import LogisticRegression
+# from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 from sklearn import metrics
 
 
@@ -23,7 +21,7 @@ def build_model(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
     data_out['Adjprob'] = pred_prob
     data_out['Adjpred'] = pred
 
-    #Adj probabilities to match ubp
+    # Adj probabilities to match ubp
     data_out['Adjprob'] *= cfg.AdjScale
 
     data_out = data_out.join(t_test)
@@ -37,4 +35,3 @@ def build_model(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
     info('AUC: {}'.format(auc))
 
     return clf
-

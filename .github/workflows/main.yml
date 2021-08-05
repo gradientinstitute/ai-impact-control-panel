@@ -41,6 +41,9 @@ jobs:
       #- name: Typecheck
       #  run: |
       #    make typecheck      
+      - name: Lint
+        run: |
+          flake8 deva tests
       - name: Test
         run: |
           poetry run pytest .

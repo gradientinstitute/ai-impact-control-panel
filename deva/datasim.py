@@ -3,8 +3,8 @@ Generate and save fraud features and responses to csv.
 """
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass
 from logging import info
+
 
 def simulate(cfg):
 
@@ -22,7 +22,7 @@ def simulate(cfg):
 
     # a latent wealth variable
     # couple with gender?
-    cust_wealth = np.random.pareto(cfg.wealth_spread, size=cfg.n_customers)
+    # cust_wealth = np.random.pareto(cfg.wealth_spread, size=cfg.n_customers)
 
     # a latent spending frequency
     # couple with wealth and or gender?
@@ -51,14 +51,16 @@ def simulate(cfg):
     # Generate a transaction amount based on whether they are a high spender
     trans_highvalue_cust = cust_ishightrans[trans_customer]
     trans_amount = np.zeros(len(trans_highvalue_cust))
-    low_amount = np.random.beta(cfg.low_alpha, cfg.low_beta, size=np.sum(~trans_highvalue_cust))
-    high_amount = np.random.beta(cfg.high_alpha, cfg.high_beta, size=np.sum(trans_highvalue_cust))
+    low_amount = np.random.beta(cfg.low_alpha, cfg.low_beta,
+                                size=np.sum(~trans_highvalue_cust))
+    high_amount = np.random.beta(cfg.high_alpha, cfg.high_beta,
+                                 size=np.sum(trans_highvalue_cust))
     trans_amount[~trans_highvalue_cust] = low_amount
     trans_amount[trans_highvalue_cust] = high_amount
 
     # generate label
-    trans_fraud = (np.random.rand(cfg.n_transactions) <
-        cust_fraudrisk[trans_customer]).astype(int)
+    trans_fraud = (np.random.rand(
+        cfg.n_transactions) < cust_fraudrisk[trans_customer]).astype(int)
 
     # generate transaction times in seconds
     trans_time = (np.random.beta(cfg.trans_time_alpha, cfg.trans_time_beta,
@@ -71,7 +73,6 @@ def simulate(cfg):
 
     # Generate transaction features
     # couple with customer features
-
 
     real_cols = cfg.real_cols
     n_cols = len(real_cols)
@@ -94,11 +95,11 @@ def simulate(cfg):
     # Generate dataframe and save to disk
     # feature_names = ['feature_{}'.format(i) for i in range(n_features)]
     columns = real_cols + ['CustID',
-                            'trans_time',
-                            'TxnAmt',
-                            'Male',
-                            'Female',
-                            'response']
+                           'trans_time',
+                           'TxnAmt',
+                           'Male',
+                           'Female',
+                           'response']
     cols = np.concatenate((X, np.vstack((trans_customer,
                                          abs_trans_time,
                                          trans_amount,
@@ -117,10 +118,12 @@ def simulate(cfg):
 
     pos_id = train.response == 1
     train = pd.concat([train[pos_id],
-                               train[~pos_id].sample(frac=0.01)])
+                      train[~pos_id].sample(frac=0.01)])
 
-    info("Fraud prevalence in training data: {}".format(np.mean(train.response)))
-    info("Fraud prevalence in val data: {}".format(np.mean(val.response)))
+    info("Fraud prevalence in training data: {}".format(
+        np.mean(train.response)))
+    info("Fraud prevalence in val data: {}".format(
+        np.mean(val.response)))
 
     info("Aggregating data to customer level")
     indiv_cts_train, indiv_disc_train = make_indiv_data(train)
@@ -146,20 +149,26 @@ def _set_majority(data, columns):
 
     data2 = data[columns]
     data2 = data2 + 1e-5 * np.arange(len(columns))[None, :]
-    data[columns] = (data2.values == data2.values.max(axis=1)[:, None]).astype(int)
+    data[columns] = (
+            data2.values == data2.values.max(axis=1)[:, None]).astype(int)
 
 
 def make_indiv_data(in_data):
     # Aggregate data to customer level
-    demographics = ['Male', 'Female', 'Divorced', 'Married', 'Single', 'Widowed', 'Luzon', 'Visayas', 'Mindanao', 'isPrimary', 'CustID']
+    demographics = ['Male', 'Female', 'Divorced', 'Married',
+                    'Single', 'Widowed', 'Luzon', 'Visayas',
+                    'Mindanao', 'isPrimary', 'CustID']
 
     cust_data = in_data[demographics].copy()
-    cust_data = cust_data[cust_data.isPrimary > 0.5].drop(columns=["isPrimary"])
+    cust_data = cust_data[cust_data.isPrimary > 0.5].drop(
+            columns=["isPrimary"])
     cust_data = cust_data.groupby("CustID").mean()
 
     cust_data["OtherSex"] = 1 - cust_data.Male - cust_data.Female
-    cust_data["OtherMarital"] = 1 - cust_data[["Married", "Single", "Widowed", "Divorced"]].sum(axis=1)
-    cust_data["OtherLocation"] = 1 - cust_data[["Luzon", "Visayas", "Mindanao", "Divorced"]].sum(axis=1)
+    cust_data["OtherMarital"] = 1 - cust_data[["Married", "Single", "Widowed",
+                                               "Divorced"]].sum(axis=1)
+    cust_data["OtherLocation"] = 1 - cust_data[["Luzon", "Visayas", "Mindanao",
+                                                "Divorced"]].sum(axis=1)
 
     cust_data = cust_data[[
         'Male', 'Female', 'OtherSex',
@@ -167,7 +176,6 @@ def make_indiv_data(in_data):
         'Luzon', 'Visayas', 'Mindanao', 'OtherLocation'
     ]]
     cust_data.head()
-
 
     pred = in_data.Adjpred
     target = in_data.response
@@ -182,15 +190,17 @@ def make_indiv_data(in_data):
     outcomes["NotFraud"] = outcomes.FP + outcomes.TN
     outcomes["Flagged"] = outcomes.FP + outcomes.TP
     outcomes["NotFlagged"] = outcomes.FN + outcomes.TN
-    outcomes["Transactions"] = outcomes.TP + outcomes.FP + outcomes.TN + outcomes.FN
+    outcomes["Transactions"] = (outcomes.TP + outcomes.FP +
+                                outcomes.TN + outcomes.FN)
     # fname = outfile + "_cts.csv"
     # print("Saving to ", fname)
     # outcomes.to_csv(fname)
 
     discrete_outcomes = outcomes.copy()
     _set_majority(discrete_outcomes, ["Male", "Female", "OtherSex"])
-    _set_majority(discrete_outcomes, ["Divorced", "Married", "Single", "Widowed", "OtherMarital"])
-    _set_majority(discrete_outcomes, ["Luzon", "Visayas", "Mindanao", "OtherLocation"])
+    _set_majority(discrete_outcomes, ["Divorced", "Married",
+                                      "Single", "Widowed", "OtherMarital"])
+    _set_majority(discrete_outcomes, ["Luzon", "Visayas",
+                                      "Mindanao", "OtherLocation"])
 
     return outcomes, discrete_outcomes
-

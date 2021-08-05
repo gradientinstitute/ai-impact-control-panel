@@ -2,13 +2,15 @@ import sys
 import numpy as np
 import click
 import matplotlib
-matplotlib.use('Qt5Agg')
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg \
+    import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+
+matplotlib.use('Qt5Agg')
 
 
 class MplCanvas(FigureCanvas):
@@ -56,7 +58,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.canvas)
         self.addDockWidget(Qt.LeftDockWidgetArea, dock)
 
-        button.clicked.connect( lambda: self.canvas.update_line(slider.value()))
+        button.clicked.connect(lambda: self.canvas.update_line(slider.value()))
 
         self.show()
 
@@ -64,5 +66,5 @@ class MainWindow(QtWidgets.QMainWindow):
 @click.command()
 def cli():
     app = QtWidgets.QApplication(sys.argv)
-    w = MainWindow()
+    _ = MainWindow()
     app.exec_()

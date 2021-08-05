@@ -8,6 +8,7 @@ from logging import info
 import pandas as pd
 from joblib import dump
 
+
 @click.group()
 @click.argument('configfile', type=click.File('r'))
 @click.option('-f', '--data-folder', default='data')
@@ -39,6 +40,7 @@ def data(ctx):
             info(f"saving {fname}")
             d_tt.to_csv(os.path.join(data_folder, fname))
 
+
 @cli.command()
 @click.pass_context
 def model(ctx):
@@ -46,8 +48,10 @@ def model(ctx):
     cfg = ctx.obj['cfg']
     data_folder = ctx.obj['data_folder']
     sim_name = ctx.obj['sim_name']
-    fname_train = os.path.join(data_folder, f'{sim_name}_transaction_train.csv')
-    fname_test = os.path.join(data_folder, f'{sim_name}_transaction_test.csv')
+    fname_train = os.path.join(data_folder,
+                               f'{sim_name}_transaction_train.csv')
+    fname_test = os.path.join(data_folder,
+                              f'{sim_name}_transaction_test.csv')
 
     # Load train data
     df = pd.read_csv(fname_train)
@@ -64,6 +68,6 @@ def model(ctx):
     t_test = df_val.trans_time
     mdl = build_model(X_train, y_train, t_train, X_test, y_test, t_test, cfg)
 
-    #Write the model to disk
+    # Write the model to disk
     model_fname = os.path.join(data_folder, f'{sim_name}_model.joblib')
     dump(mdl, model_fname)
