@@ -15,7 +15,15 @@ along with venv creation and dependencies.
 
 To get into a venv, do `poetry shell`.
 
-## Running
+## Generating data and models
+
+`deva-gen` is the command for generating. See the --help.
+
+It takes a problem file (e.g. vanilla.toml) which specifies the model config
+etc. It has `data` and `model` subcommands for generating each of those. By
+default it outputs into the data folder.
+
+## Running the dash
 
 Currently just a skeleton, but try:
 

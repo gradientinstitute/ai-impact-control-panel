@@ -81,3 +81,6 @@ real_cols = [
              'Adjprob', 'Adjpred', 
              # 'CardNumID', 'CustID',
              'Unmarried']
+
+
+AdjScale = 1.0
