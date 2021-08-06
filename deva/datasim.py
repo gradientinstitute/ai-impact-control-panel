@@ -116,91 +116,9 @@ def simulate(cfg):
     train = df[:int(len(df) * (1 - cfg.frac_days_validation))]
     val = df[int(len(df) * (1 - cfg.frac_days_validation)):]
 
-    pos_id = train.response == 1
-    train = pd.concat([train[pos_id],
-                      train[~pos_id].sample(frac=0.01)])
-
     info("Fraud prevalence in training data: {}".format(
         np.mean(train.response)))
     info("Fraud prevalence in val data: {}".format(
         np.mean(val.response)))
 
-    info("Aggregating data to customer level")
-    indiv_cts_train, indiv_disc_train = make_indiv_data(train)
-    indiv_cts_test, indiv_disc_test = make_indiv_data(val)
-    results = {
-            'train': {
-                'transaction': train,
-                'ctsperson': indiv_cts_train,
-                'dscperson': indiv_disc_train,
-                },
-            'test': {
-                'transaction': val,
-                'ctsperson': indiv_cts_test,
-                'dscperson': indiv_disc_test,
-
-            }
-        }
-
-    return results
-
-
-def _set_majority(data, columns):
-
-    data2 = data[columns]
-    data2 = data2 + 1e-5 * np.arange(len(columns))[None, :]
-    data[columns] = (
-            data2.values == data2.values.max(axis=1)[:, None]).astype(int)
-
-
-def make_indiv_data(in_data):
-    # Aggregate data to customer level
-    demographics = ['Male', 'Female', 'Divorced', 'Married',
-                    'Single', 'Widowed', 'Luzon', 'Visayas',
-                    'Mindanao', 'isPrimary', 'CustID']
-
-    cust_data = in_data[demographics].copy()
-    cust_data = cust_data[cust_data.isPrimary > 0.5].drop(
-            columns=["isPrimary"])
-    cust_data = cust_data.groupby("CustID").mean()
-
-    cust_data["OtherSex"] = 1 - cust_data.Male - cust_data.Female
-    cust_data["OtherMarital"] = 1 - cust_data[["Married", "Single", "Widowed",
-                                               "Divorced"]].sum(axis=1)
-    cust_data["OtherLocation"] = 1 - cust_data[["Luzon", "Visayas", "Mindanao",
-                                                "Divorced"]].sum(axis=1)
-
-    cust_data = cust_data[[
-        'Male', 'Female', 'OtherSex',
-        'Divorced', 'Married', 'Single', 'Widowed', 'OtherMarital',
-        'Luzon', 'Visayas', 'Mindanao', 'OtherLocation'
-    ]]
-    cust_data.head()
-
-    pred = in_data.Adjpred
-    target = in_data.response
-    pre_ag = in_data[["CustID"]].copy()
-    pre_ag["TP"] = (pred == 1) & (target == 1)
-    pre_ag["FP"] = (pred == 1) & (target == 0)
-    pre_ag["TN"] = (pred == 0) & (target == 0)
-    pre_ag["FN"] = (pred == 0) & (target == 1)
-    outcomes = pre_ag.groupby("CustID").sum()
-    outcomes = cust_data.join(outcomes)
-    outcomes["Fraud"] = outcomes.TP + outcomes.FN
-    outcomes["NotFraud"] = outcomes.FP + outcomes.TN
-    outcomes["Flagged"] = outcomes.FP + outcomes.TP
-    outcomes["NotFlagged"] = outcomes.FN + outcomes.TN
-    outcomes["Transactions"] = (outcomes.TP + outcomes.FP +
-                                outcomes.TN + outcomes.FN)
-    # fname = outfile + "_cts.csv"
-    # print("Saving to ", fname)
-    # outcomes.to_csv(fname)
-
-    discrete_outcomes = outcomes.copy()
-    _set_majority(discrete_outcomes, ["Male", "Female", "OtherSex"])
-    _set_majority(discrete_outcomes, ["Divorced", "Married",
-                                      "Single", "Widowed", "OtherMarital"])
-    _set_majority(discrete_outcomes, ["Luzon", "Visayas",
-                                      "Mindanao", "OtherLocation"])
-
-    return outcomes, discrete_outcomes
+    return train, val

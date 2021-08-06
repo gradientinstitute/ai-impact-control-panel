@@ -26,12 +26,10 @@ def build_model(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
 
     data_out = data_out.join(t_test)
     data_out.sort_index(inplace=True)
-    data_out.to_csv('data/validation_data.csv')
-    info('Validation data written successfully.')
 
     # check performance
     fpr, tpr, _thresholds = metrics.roc_curve(y_test, pred_prob, pos_label=1)
     auc = metrics.auc(fpr, tpr)
     info('AUC: {}'.format(auc))
 
-    return clf
+    return data_out, clf

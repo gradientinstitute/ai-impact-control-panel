@@ -1,7 +1,7 @@
 # Initialise parameters
 random_seed = 42
 n_features = 5
-n_transactions = 500000
+n_transactions = 50000
 n_days = 240
 n_customers = 5000
 noise = 10.0
@@ -81,6 +81,3 @@ real_cols = [
              'Adjprob', 'Adjpred', 
              # 'CardNumID', 'CustID',
              'Unmarried']
-
-
-AdjScale = 1.0
