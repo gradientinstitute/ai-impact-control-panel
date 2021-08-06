@@ -41,43 +41,6 @@ nonlinear = true
 # nonstationarity between 0 and 1
 nonstationarity = 1.0
 
-real_cols = [
-             # 'TxnAmt', 
-             'CreditLimit', 'isPrimary', 'cardbrand_Classic',
-             'cardbrand_Gold', 'cardbrand_Platinum', 'cardbrand_MilesPlat',
-             'cardbrand_Specialty', 'cardbrand_Cobrand', 'cardbrand_Affinity',
-             'cardbrand_Corp', 'cardbrand_Master', 'cardbrand_CebuPac',
-             'cardbrand_PlayEveryday', 'merch_AirlineLodging',
-             'merch_DigitalGoods', 'merch_HouseholdNeeds', 'merch_Services',
-             'merch_Shopping', 'cont_Africa', 'cont_Asia', 'cont_Europe',
-             'cont_NorthAm', 'cont_Oceania', 'cont_SouthAm', 'MOB_mos',
-             'diffDate_TxnExpiry_mos', 
-             # 'response', 
-             'Prev_TxnAmt',
-             'Prev_diffDate', 'Prev2_TxnAmt', 'Prev2_SameMCC',
-             'minTranAmt3mos', 'minTranAmt1mo', 'avgTranAmt1wk',
-             'minTranAmt1wk', 'minTranAmt1day', 'avgMCCTranAmt3mos',
-             'minMCCTranAmt3mos', 'avgcountryTranAmt3mos',
-             'mincountryTranAmt3mos', 'DigitalGoodsTranCount3mos',
-             'minDigitalGoodsTranAmt3mos', 'mineuropeTranAmt3mos',
-             'europeTranCount1mo', 'mineuropeTranAmt1wk',
-             'northamTranCount3mos', 'minnorthamTranAmt3mos',
-             'minnorthamTranAmt1mo', 'minnorthamTranAmt1wk',
-             'minweekendTranAmt3mos', 'minweekendTranAmt1mo',
-             'minweekendTranAmt1wk', 'percweekendTranCount1wk',
-             'weekendTranCount1day', 'minpaydayTranAmt3mos',
-             'percpaydayTranAmt3mos', 'minpaydayTranAmt1mo',
-             'minpaydayTranAmt1wk', 'percpaydayTranCount1wk',
-             'minpaydayTranAmt1day', 'Prev_AirlineLodging',
-             'Prev_DigitalGoods', 'Prev_HouseholdNeeds', 'Prev_Leisure',
-             'Prev_Others', 'Prev_Shopping', 'Prev_Europe',
-             'Prev2_AirlineLodging', 'Prev2_HouseholdNeeds', 'Prev2_Leisure',
-             'Prev2_Services', 'Prev2_Shopping', 'Prev2_Europe',
-             'ismostCountry3mos', 
-             # 'Male', 'Female', 
-             'Divorced', 'Married',
-             'Single', 'Widowed', 'Luzon', 'Visayas', 'Mindanao', 'Pos_Online',
-             'Pos_Offline', 
-             'Adjprob', 'Adjpred', 
-             # 'CardNumID', 'CustID',
-             'Unmarried']
+# number of extra features that have no particular meaning
+features = 10
+

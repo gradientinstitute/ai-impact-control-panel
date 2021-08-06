@@ -17,12 +17,9 @@ def build_model(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
 
     # Write out validation data
     data_out = X_test.copy()
-    data_out['response'] = y_test
-    data_out['Adjprob'] = pred_prob
-    data_out['Adjpred'] = pred
-
-    # Adj probabilities to match ubp
-    data_out['Adjprob'] *= cfg.AdjScale
+    data_out['is_fraud'] = y_test
+    data_out['score'] = pred_prob
+    data_out['is_flagged'] = pred
 
     data_out = data_out.join(t_test)
     data_out.sort_index(inplace=True)

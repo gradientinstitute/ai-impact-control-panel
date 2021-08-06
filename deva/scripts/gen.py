@@ -56,16 +56,16 @@ def model(ctx, model):
 
     # Load train data
     df = pd.read_csv(fname_train)
-    df.set_index('ID', inplace=True)
-    X_train = df.drop(['trans_time', 'response'], axis=1)
-    y_train = df.response
+    df.set_index('trans_id', inplace=True)
+    X_train = df.drop(['trans_time', 'is_fraud'], axis=1)
+    y_train = df.is_fraud
     t_train = df.trans_time
 
     # Load validation data
     df_val = pd.read_csv(fname_test)
-    df_val.set_index("ID", inplace=True)
-    X_test = df_val.drop(["trans_time", "response"], axis=1)
-    y_test = df_val.response
+    df_val.set_index('trans_id', inplace=True)
+    X_test = df_val.drop(['trans_time', 'is_fraud'], axis=1)
+    y_test = df_val.is_fraud
     t_test = df_val.trans_time
     y_scored, mdl = build_model(X_train, y_train, t_train,
                                 X_test, y_test, t_test, cfg)

@@ -73,11 +73,7 @@ def simulate(cfg):
 
     # Generate transaction features
     # couple with customer features
-
-    real_cols = cfg.real_cols
-    n_cols = len(real_cols)
-    # n_features = cfg.features
-    n_features = n_cols
+    n_features = cfg.features
     X_latent = np.vstack((trans_fraud, trans_ismale, trans_highvalue_cust)).T
     W_start = np.random.randn(X_latent.shape[1], n_features)
     W_end = np.random.randn(X_latent.shape[1], n_features)
@@ -93,13 +89,13 @@ def simulate(cfg):
         X = np.arctan(X)
 
     # Generate dataframe and save to disk
-    # feature_names = ['feature_{}'.format(i) for i in range(n_features)]
-    columns = real_cols + ['CustID',
-                           'trans_time',
-                           'TxnAmt',
-                           'Male',
-                           'Female',
-                           'response']
+    feature_names = ['feature_{}'.format(i) for i in range(n_features)]
+    columns = feature_names + ['customer_id',
+                               'trans_time',
+                               'trans_dollars',
+                               'customer_is_male',
+                               'customer_is_female',
+                               'is_fraud']
     cols = np.concatenate((X, np.vstack((trans_customer,
                                          abs_trans_time,
                                          trans_amount,
@@ -107,18 +103,16 @@ def simulate(cfg):
                                          trans_fraud)).T),
                           axis=1)
     df = pd.DataFrame(cols, columns=columns)
-    df["ID"] = trans_id
-    df.set_index("ID", inplace=True)
+    df["trans_id"] = trans_id
+    df.set_index("trans_id", inplace=True)
     df.isPrimary = 1
+
+    info(f'Generated {df.shape[0]} instances of {df.shape[1]} features')
 
     # Split data into train and validation based on frac_data_validation in the
     # config file.
     train = df[:int(len(df) * (1 - cfg.frac_days_validation))]
     val = df[int(len(df) * (1 - cfg.frac_days_validation)):]
 
-    info("Fraud prevalence in training data: {}".format(
-        np.mean(train.response)))
-    info("Fraud prevalence in val data: {}".format(
-        np.mean(val.response)))
 
     return train, val
