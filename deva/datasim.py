@@ -114,5 +114,4 @@ def simulate(cfg):
     train = df[:int(len(df) * (1 - cfg.frac_days_validation))]
     val = df[int(len(df) * (1 - cfg.frac_days_validation)):]
 
-
     return train, val

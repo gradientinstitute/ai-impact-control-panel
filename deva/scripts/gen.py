@@ -70,9 +70,11 @@ def model(ctx, model):
     y_scored, mdl = build_model(X_train, y_train, t_train,
                                 X_test, y_test, t_test, cfg)
 
-    out_fname = os.path.join(data_folder, f'{sim_name}_sim_scoredby_{model_name}.csv')
+    out_fname = os.path.join(
+            data_folder, f'{sim_name}_sim_scoredby_{model_name}.csv')
     y_scored.to_csv(out_fname)
 
     # Write the model to disk
-    model_fname = os.path.join(data_folder, f'{sim_name}_sim_trained_{model_name}.joblib')
+    model_fname = os.path.join(
+            data_folder, f'{sim_name}_sim_trained_{model_name}.joblib')
     dump(mdl, model_fname)
