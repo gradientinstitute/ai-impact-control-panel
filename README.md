@@ -23,6 +23,14 @@ It takes a problem file (e.g. vanilla.toml) which specifies the model config
 etc. It has `data` and `model` subcommands for generating each of those. By
 default it outputs into the data folder.
 
+For the data, try:
+
+`deva-gen --sim example.sim data`
+
+For a model on that data:
+
+`deva-gen --sim example.sim model randomforest1.model`
+
 ## Running the dash
 
 Currently just a skeleton, but try:
