@@ -19,17 +19,19 @@ To get into a venv, do `poetry shell`.
 
 `deva-gen` is the command for generating. See the --help.
 
-It takes a problem file (e.g. vanilla.toml) which specifies the model config
-etc. It has `data` and `model` subcommands for generating each of those. By
-default it outputs into the data folder.
+It takes a scenario folder -- see `scenario/example` for an example.
 
-For the data, try:
+For generating data, run:
 
-`deva-gen --sim example.sim data`
+`deva-gen scenarios/example data`
 
 For a model on that data:
 
-`deva-gen --sim example.sim model randomforest1.model`
+`deva-gen scenarios/example model`
+
+## Data and Model configs
+
+See the example scenario for commented versions of the configs.
 
 ## Running the dash
 
