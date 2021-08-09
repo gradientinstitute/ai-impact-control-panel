@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import itertools
 import numpy as np
 
@@ -32,9 +31,7 @@ def iterate_hypers(base_cfg, range_cfg, list_cfg, instance_cfg, n_range_draws):
             yield f'range{i}', full_dict
 
 
-
 def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
-
     model_dict = {
             'randomforest': RandomForestClassifier,
             'logistic': LogisticRegression

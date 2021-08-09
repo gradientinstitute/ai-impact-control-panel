@@ -19,6 +19,7 @@ def cli(ctx, scenario):
     logging.basicConfig(level=logging.INFO)
     ctx.obj['folder'] = scenario
 
+
 @cli.command()
 @click.pass_context
 def data(ctx):
