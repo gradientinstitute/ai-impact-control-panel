@@ -1,0 +1,19 @@
+n_range_draws = 3
+
+[logistic]
+fit_intercept = true
+random_state = 666
+
+[logistic.ranges]
+tol = [1e-4, 1e-3]
+
+[logistic.lists]
+random_state = [111, 222, 333, 444]
+
+[logistic.instances.set1]
+random_state = 1
+tol = 1.1e-4
+
+[logistic.instances.set2]
+random_state = 2
+tol = 1.2e-4

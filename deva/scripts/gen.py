@@ -1,39 +1,36 @@
 import click
 from deva.config import parse_config
-from deva.model import build_model
+from deva.model import iter_models
 import os
 from deva.datasim import simulate
 import logging
 from logging import info
 import pandas as pd
 from joblib import dump
+import toml
 
 
 @click.group()
-@click.option('--data-folder', default='data')
-@click.option('--sim', type=click.File('r'), required=True)
+@click.argument('scenario', type=click.Path(
+    exists=True, file_okay=False, dir_okay=True, resolve_path=True))
 @click.pass_context
-def cli(ctx, data_folder, sim):
+def cli(ctx, scenario):
     ctx.ensure_object(dict)
     logging.basicConfig(level=logging.INFO)
-    data_folder = os.path.join(os.getcwd(), data_folder)
-    ctx.obj['data_folder'] = data_folder
-    cfg = parse_config(sim)
-    sim_name = os.path.splitext(sim.name)[0]
-    ctx.obj['sim_name'] = sim_name
-    ctx.obj['sim_cfg'] = cfg
-
+    ctx.obj['folder'] = scenario
 
 @cli.command()
 @click.pass_context
 def data(ctx):
-    data_folder = ctx.obj['data_folder']
-    cfg = ctx.obj['sim_cfg']
-    sim_name = ctx.obj['sim_name']
-
-    X_train, X_test = simulate(cfg)
-    fname_train = f'{sim_name}_sim_train.csv'
-    fname_test = f'{sim_name}_sim_test.csv'
+    folder = ctx.obj['folder']
+    data_folder = os.path.join(folder, 'data')
+    os.makedirs(data_folder, exist_ok=True)
+    sim_cfg_fname = os.path.join(folder, 'sim.toml')
+    with open(sim_cfg_fname, 'r') as f:
+        sim_cfg = parse_config(f)
+    X_train, X_test = simulate(sim_cfg)
+    fname_train = 'train.csv'
+    fname_test = 'test.csv'
     X_train.to_csv(os.path.join(data_folder, fname_train))
     info(f"saved {fname_train}")
     X_test.to_csv(os.path.join(data_folder, fname_test))
@@ -41,18 +38,17 @@ def data(ctx):
 
 
 @cli.command()
-@click.argument('model', type=click.File('r'))
 @click.pass_context
-def model(ctx, model):
-    sim_name = ctx.obj['sim_name']
-
-    model_name = os.path.splitext(model.name)[0]
-    cfg = parse_config(model)
-    data_folder = ctx.obj['data_folder']
-    fname_train = os.path.join(data_folder,
-                               f'{sim_name}_sim_train.csv')
-    fname_test = os.path.join(data_folder,
-                              f'{sim_name}_sim_test.csv')
+def model(ctx):
+    folder = ctx.obj['folder']
+    data_folder = os.path.join(folder, 'data')
+    model_folder = os.path.join(folder, 'models')
+    os.makedirs(model_folder, exist_ok=True)
+    model_cfg_fname = os.path.join(folder, 'model.toml')
+    with open(model_cfg_fname, 'r') as f:
+        cfg = parse_config(f, build_tuple=False)
+    fname_train = os.path.join(data_folder, 'train.csv')
+    fname_test = os.path.join(data_folder, 'test.csv')
 
     # Load train data
     df = pd.read_csv(fname_train)
@@ -67,14 +63,30 @@ def model(ctx, model):
     X_test = df_val.drop(['trans_time', 'is_fraud'], axis=1)
     y_test = df_val.is_fraud
     t_test = df_val.trans_time
-    y_scored, mdl = build_model(X_train, y_train, t_train,
-                                X_test, y_test, t_test, cfg)
 
-    out_fname = os.path.join(
-            data_folder, f'{sim_name}_sim_scoredby_{model_name}.csv')
-    y_scored.to_csv(out_fname)
+    for out in iter_models(X_train, y_train,
+                           t_train, X_test,
+                           y_test, t_test, cfg):
+        name = out['name']
+        model_fname = os.path.join(model_folder, f'model_{name}.joblib')
+        out_fname = os.path.join(model_folder, f'scored_{name}.csv')
+        metric_fname = os.path.join(model_folder, f'metrics_{name}.toml')
+        param_fname = os.path.join(model_folder, f'params_{name}.toml')
 
-    # Write the model to disk
-    model_fname = os.path.join(
-            data_folder, f'{sim_name}_sim_trained_{model_name}.joblib')
-    dump(mdl, model_fname)
+        data_out = X_test.copy()
+        data_out['is_fraud'] = y_test
+        data_out['score'] = out['y_scores']
+        data_out['is_flagged'] = out['y_pred']
+        data_out = data_out.join(t_test)
+        data_out.sort_index(inplace=True)
+        data_out.to_csv(out_fname)
+
+        dump(out['model'], model_fname)
+
+        with open(metric_fname, 'w') as f:
+            f.write(toml.dumps(out['metrics']))
+
+        with open(param_fname, 'w') as f:
+            f.write(toml.dumps(out['params']))
+
+        info(f'written model {name}')
