@@ -1,0 +1,46 @@
+# Initialise parameters
+random_seed = 42
+n_features = 5
+n_transactions = 50000
+n_days = 240
+n_customers = 5000
+noise = 10.0
+frac_fraud = 0.00135
+frac_female = 0.6
+frac_high_trans = 0.2
+wealth_spread = 1.0
+frac_days_validation = 0.2
+
+# parameters for the beta distribution controlling customer spending
+cust_spend_alpha = 2
+cust_spend_beta = 2
+
+# beta for customer fraud risk
+cust_risk_alpha = 2
+cust_risk_beta = 2
+
+# beta for transaction time of day
+trans_time_alpha = 1.7
+trans_time_beta = 1.7
+
+# low customer spending distribution
+low_alpha = 1
+low_beta = 5
+
+# Increase in fraud if high spender
+high_spend_fraud = 2
+
+# high customer spending distribution
+high_alpha = 10
+high_beta = 5
+
+# signal strength (for testing)
+signal_strength = 1.0
+nonlinear = true
+
+# nonstationarity between 0 and 1
+nonstationarity = 1.0
+
+# number of extra features that have no particular meaning
+features = 10
+
