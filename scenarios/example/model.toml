@@ -3,6 +3,14 @@
 # if <model>.ranges section is defined, this gives the number of draws
 n_range_draws = 3
 
+# These are the metrics to be run on the model outputs. The header names should
+# match those defined in metrics_dict defined in score.py
+[metrics]
+[metrics.auc]
+name = "Area under the ROC curve"
+[metrics.accuracy]
+name = "Accuracy"
+
 # The name here must match the dictionary entry in deva/model.py iter_models
 # function. This tells the program what model you want to use.  In this
 # section, put default hyperparametrs that will apply to all draws. They may be
@@ -11,7 +19,7 @@ n_range_draws = 3
 fit_intercept = true
 random_state = 666
 
-# These will be sampled uniformly and appended (possibly overwriting) the 
+# These will be sampled uniformly and appended (possibly overwriting) the
 # defaults above. The number of samples is controlled by n_range_draws.
 # For every value, give a [min, max]
 [logistic.ranges]
