@@ -85,9 +85,11 @@ def model(ctx):
         dump(out['model'], model_fname)
 
         with open(metric_fname, 'w') as f:
-            f.write(toml.dumps(out['model_scores']))
+            toml.dump(out['model_scores'], f,
+                      encoder=toml.TomlNumpyEncoder())
 
         with open(param_fname, 'w') as f:
-            f.write(toml.dumps(out['params']))
+            toml.dump(out['params'], f,
+                      encoder=toml.TomlNumpyEncoder())
 
         info(f'written model {name}')

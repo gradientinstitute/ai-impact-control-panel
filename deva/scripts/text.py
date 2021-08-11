@@ -1,10 +1,9 @@
 import click
+import toml
 from deva.elicit import Toy
 import os
 import logging
-import pandas as pd
 from glob import glob
-import numpy as np
 
 
 def name_from_files(lst):
@@ -52,17 +51,8 @@ def cli(scenario):
 
     models = {}
     for name, fs in input_files.items():
-        fname = fs['scores']
-        df = pd.read_csv(fname)
-        is_flagged = df['is_flagged'].array.astype(bool)
-        is_fraud = df['is_fraud'].array.astype(bool)
-        tp = np.sum(np.logical_and(is_flagged, is_fraud))
-        tn = np.sum(np.logical_and(~is_flagged, ~is_fraud))
-        fp = np.sum(np.logical_and(is_flagged, ~is_fraud))
-        fn = np.sum(np.logical_and(~is_flagged, is_fraud))
-        fpr = fp / (tn + fp)
-        fnr = fn / (tp + fn)
-        models[name] = {'fpr': fpr, 'fnr': fnr}
+        fname = fs['metrics']
+        models[name] = toml.load(fname)
 
     eliciter = Toy(models)
     while not eliciter.finished():
