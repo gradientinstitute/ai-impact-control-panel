@@ -23,6 +23,7 @@ flake8 = "^3.9.2"
 [tool.poetry.scripts]
 deva-dash = "deva.scripts.dash:cli"
 deva-gen = "deva.scripts.gen:cli"
+deva-text = "deva.scripts.text:cli"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

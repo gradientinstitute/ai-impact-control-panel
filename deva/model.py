@@ -7,6 +7,16 @@ from sklearn.linear_model import LogisticRegression
 from deva.score import score_model
 
 
+def translate_config(cfg):
+    '''toml cant make dictionaries with integer keys'''
+    out = cfg.copy()
+    if 'positive_class_weight' in out:
+        w = out.pop('positive_class_weight')
+        d = {0: 1, 1: w}
+        out['class_weight'] = d
+    return out
+
+
 def iterate_hypers(base_cfg, range_cfg, list_cfg, instance_cfg, n_range_draws):
     if instance_cfg is not None:
         for set_name, params in instance_cfg.items():
@@ -53,7 +63,8 @@ def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
     piter = iterate_hypers(base_cfg, range_cfg, list_cfg,
                            instance_cfg, cfg['n_range_draws'])
     for param_name, param_dict in piter:
-        m = model_dict[model_str](**param_dict)
+        processed_params = translate_config(param_dict)
+        m = model_dict[model_str](**processed_params)
         m.fit(X_train, y_train)
         y_pred = m.predict(X_test)
         y_scores = m.predict_proba(X_test)[:, 1]
