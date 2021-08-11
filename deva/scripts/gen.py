@@ -85,7 +85,7 @@ def model(ctx):
         dump(out['model'], model_fname)
 
         with open(metric_fname, 'w') as f:
-            f.write(toml.dumps(out['metrics']))
+            f.write(toml.dumps(out['model_scores']))
 
         with open(param_fname, 'w') as f:
             f.write(toml.dumps(out['params']))

@@ -19,6 +19,7 @@ sklearn = "^0.0"
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 flake8 = "^3.9.2"
+ipython = "^7.26.0"
 
 [tool.poetry.scripts]
 deva-dash = "deva.scripts.dash:cli"

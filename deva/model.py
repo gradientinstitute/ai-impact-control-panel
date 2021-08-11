@@ -6,6 +6,11 @@ from sklearn.linear_model import LogisticRegression
 
 from deva.score import score_model
 
+model_dict = {
+        'randomforest': RandomForestClassifier,
+        'logistic': LogisticRegression
+        }
+
 
 def translate_config(cfg):
     '''toml cant make dictionaries with integer keys'''
@@ -42,11 +47,10 @@ def iterate_hypers(base_cfg, range_cfg, list_cfg, instance_cfg, n_range_draws):
 
 
 def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
-    model_dict = {
-            'randomforest': RandomForestClassifier,
-            'logistic': LogisticRegression
-            }
+
     model_str = set(model_dict.keys()).intersection(set(cfg.keys())).pop()
+
+    metrics_cfg = cfg["metrics"]
     model_cfg = cfg[model_str]
 
     base_cfg = model_cfg.copy()
@@ -68,13 +72,14 @@ def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
         m.fit(X_train, y_train)
         y_pred = m.predict(X_test)
         y_scores = m.predict_proba(X_test)[:, 1]
-        metrics = score_model(y_pred, y_scores, y_test)
+        model_scores = score_model(y_pred, y_scores, y_test, X_test,
+                                   metrics_cfg)
         d = {
                 'name': param_name,
                 'model': m,
                 'params': param_dict,
                 'y_pred': y_pred,
                 'y_scores': y_scores,
-                'metrics': metrics
+                'model_scores': model_scores
             }
         yield d
