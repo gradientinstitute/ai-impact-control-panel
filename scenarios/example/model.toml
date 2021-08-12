@@ -18,12 +18,17 @@ name = "Accuracy"
 [logistic]
 fit_intercept = true
 random_state = 666
+class_weight = 'balanced'
 
 # These will be sampled uniformly and appended (possibly overwriting) the
 # defaults above. The number of samples is controlled by n_range_draws.
 # For every value, give a [min, max]
 [logistic.ranges]
 tol = [1e-4, 1e-3]
+
+# this is a custom (non-scikit) workaround for not being able to use
+# integer keys in toml configs
+positive_class_weight = [1, 20]
 
 # These will be combinatorically gone through -- every combination of lists
 # entries in this section will result in a unique hyperparameter set. Again,
@@ -37,8 +42,10 @@ random_state = [111, 222, 333, 444]
 [logistic.instances.set1]
 random_state = 1
 tol = 1.1e-4
+positive_class_weight = 20
 
 # This is another instance: 'set2'
 [logistic.instances.set2]
 random_state = 2
 tol = 1.2e-4
+positive_class_weight = 10
