@@ -3,6 +3,7 @@ import toml
 from deva.elicit import Toy
 import os
 import logging
+import numpy as np
 from glob import glob
 
 
@@ -54,13 +55,30 @@ def cli(scenario):
         fname = fs['metrics']
         models[name] = toml.load(fname)
 
+
+    # Check if model is bested by another in every metric
+    print("Remove models not on the pareto front")
+    non_pareto = []
+    for i, m in enumerate(models):
+        for r in models:
+            if np.all(np.array(list(models[m].values())) < np.array(list(models[r].values()))):
+                non_pareto.append(m)
+                # print(models[m])
+                # print(models[r])
+                break
+    
+    # Delete all models that aren't on the pareto front
+    for m in non_pareto:
+        del models[m]
+
+
     eliciter = Toy(models)
     while not eliciter.finished():
         (m1, m1perf), (m2, m2perf) = eliciter.prompt()
         print("Which model do you prefer:\n")
         pretty_print_performance(m1, m1perf)
         pretty_print_performance(m2, m2perf)
-        print(f'(Answer {m1} or {m2})')
+        print(f'(Answer {m1} or {m2})') 
         print('> ', end='')
         i = input()
         choice = eliciter.user_input(i)
