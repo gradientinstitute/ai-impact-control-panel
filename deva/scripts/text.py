@@ -42,20 +42,7 @@ def pretty_print_performance(name, d):
         print(f'\t{k}: {d[k]:0.2f}')
     print('\n')
 
-
-@click.command()
-@click.argument('scenario', type=click.Path(
-    exists=True, file_okay=False, dir_okay=True, resolve_path=True))
-def cli(scenario):
-    logging.basicConfig(level=logging.INFO)
-    input_files = get_all_files(scenario)
-
-    models = {}
-    for name, fs in input_files.items():
-        fname = fs['metrics']
-        models[name] = toml.load(fname)
-
-
+def remove_non_pareto(models):
     # Check if model is bested by another in every metric
     print("Remove models not on the pareto front")
     non_pareto = []
@@ -71,6 +58,21 @@ def cli(scenario):
     for m in non_pareto:
         del models[m]
 
+    return models 
+
+@click.command()
+@click.argument('scenario', type=click.Path(
+    exists=True, file_okay=False, dir_okay=True, resolve_path=True))
+def cli(scenario):
+    logging.basicConfig(level=logging.INFO)
+    input_files = get_all_files(scenario)
+
+    models = {}
+    for name, fs in input_files.items():
+        fname = fs['metrics']
+        models[name] = toml.load(fname)
+
+    models = remove_non_pareto(models)
 
     eliciter = Toy(models)
     while not eliciter.finished():
