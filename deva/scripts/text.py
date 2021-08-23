@@ -48,6 +48,7 @@ def remove_non_pareto(models):
     non_pareto = []
     for i, m in enumerate(models):
         for r in models:
+            import IPython; IPython.embed()
             if np.all(np.array(list(models[m].values())) < np.array(list(models[r].values()))):
                 non_pareto.append(m)
                 # print(models[m])
