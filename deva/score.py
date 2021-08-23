@@ -18,8 +18,8 @@ def model_acc(y_test, y_pred):
 # First element of the value tuple is a function to calculate the score.
 # Second element of the value tuple is the optimal value of that score.
 metrics_dict = {
-        'accuracy': (model_acc, 1.),
-        'auc': (model_auc, 1.),
+        'accuracy': {'func': model_acc, 'optimal': 1.},
+        'auc': {'func': model_auc, 'optimal': 1.},
         }
 
 
@@ -27,6 +27,7 @@ def score_model(y_pred, y_scores, y_test, X_test, metrics_cfg):
     # Evaluates the models outputs against predefinted metrics
     d = {}
     for k, v in metrics_cfg.items():
-        score = metrics_dict[k][0](y_test, y_pred)
-        d[v["name"]] = (score, metrics_dict[k][1])
+        score = metrics_dict[k]['func'](y_test, y_pred)
+        #d[v["name"]] = (score, metrics_dict[k]['optimal'])
+        d[v["name"]] = {'score': score, 'optimal': metrics_dict[k]['optimal']}
     return d

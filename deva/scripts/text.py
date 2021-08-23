@@ -39,23 +39,24 @@ def get_all_files(scenario):
 def pretty_print_performance(name, d):
     print(f'Model {name}:')
     for k in sorted(d.keys()):
-        print(f'\t{k}: {d[k][0]:0.2f}')
+        print(f'\t{k}: {d[k]["score"]:0.2f}')
     print('\n')
 
 def remove_non_pareto(models):
+    """Removes all models that are strictly worse than another model."""
     # Check if model is bested by another in every metric
     print("Remove models not on the pareto front")
     non_pareto = []
     for i, m in enumerate(models):
         for r in models:
-            if m == r: # If comparing the model with itself, break.
+            if m == r: # If comparing the model with itself, skip check.
                         break
-            # Check which metrics are worse
+            # Check which metrics the model is worse at
             worse = np.zeros(len(models[r])).astype(bool)
             for j, met in enumerate(models[m].keys()):
-                optimal = models[m][met][1]
-                dist_m = np.abs(optimal - models[m][met][0])
-                dist_r = np.abs(optimal - models[r][met][0])
+                optimal = models[m][met]['optimal']
+                dist_m = np.abs(optimal - models[m][met]['score'])
+                dist_r = np.abs(optimal - models[r][met]['score'])
                 if dist_r <= dist_m:
                     worse[j] = True
             # If all are worse, model is not on the pareto front.
