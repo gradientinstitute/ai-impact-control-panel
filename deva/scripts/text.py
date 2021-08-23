@@ -42,6 +42,7 @@ def pretty_print_performance(name, d):
         print(f'\t{k}: {d[k]["score"]:0.2f}')
     print('\n')
 
+
 def remove_non_pareto(models):
     """Removes all models that are strictly worse than another model."""
     # Check if model is bested by another in every metric
@@ -49,8 +50,8 @@ def remove_non_pareto(models):
     non_pareto = []
     for i, m in enumerate(models):
         for r in models:
-            if m == r: # If comparing the model with itself, skip check.
-                        break
+            if m == r:  # If comparing the model with itself, skip check.
+                break
             # Check which metrics the model is worse at
             worse = np.zeros(len(models[r])).astype(bool)
             for j, met in enumerate(models[m].keys()):
@@ -63,12 +64,13 @@ def remove_non_pareto(models):
             if np.all(worse):
                 non_pareto.append(m)
                 break
-    
+
     # Delete all models that aren't on the pareto front
     for m in non_pareto:
         del models[m]
 
-    return models 
+    return models
+
 
 @click.command()
 @click.argument('scenario', type=click.Path(
@@ -90,7 +92,7 @@ def cli(scenario):
         print("Which model do you prefer:\n")
         pretty_print_performance(m1, m1perf)
         pretty_print_performance(m2, m2perf)
-        print(f'(Answer {m1} or {m2})') 
+        print(f'(Answer {m1} or {m2})')
         print('> ', end='')
         i = input()
         choice = eliciter.user_input(i)
