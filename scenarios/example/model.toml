@@ -20,6 +20,11 @@ fit_intercept = true
 random_state = 666
 class_weight = 'balanced'
 
+# this is a custom parameter for specifying a classification threshold apart
+# from the default using in a classifiers `predict` method.
+# threshold = 0.7
+ threshold = {"customer_is_female" = {"0"= 0.6, "1" = 0.4}}
+
 # These will be sampled uniformly and appended (possibly overwriting) the
 # defaults above. The number of samples is controlled by n_range_draws.
 # For every value, give a [min, max]
