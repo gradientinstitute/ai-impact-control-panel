@@ -3,6 +3,9 @@
 # if <model>.ranges section is defined, this gives the number of draws
 n_range_draws = 3
 
+# Define a customer ID
+customer_id = "customer_id"
+
 # Defines a sensitive attribute
 sensitive_attribute = "customer_is_female"
 
@@ -17,6 +20,19 @@ sensitive_attribute = "customer_is_female"
 name = "False Positives"
 [metrics.fn]
 name = "False Negatives"
+[metrics.fnwo]
+name = "People with >=3 FN"
+cutoff = 3
+[metrics.fpwo]
+name = "People with >=5 FP"
+cutoff = 5
+[metrics.profit]
+name = "Net profit"
+# Note - realistically this might require knowledge of the transaction value...
+TP = 0
+FP = 0
+TN = 1
+FN = -10
 
 # The name here must match the dictionary entry in deva/model.py iter_models
 # function. This tells the program what model you want to use.  In this
