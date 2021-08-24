@@ -1,5 +1,5 @@
 # Initialise parameters
-random_seed = 42
+random_seed = 45
 n_features = 5
 n_transactions = 50000
 n_days = 240

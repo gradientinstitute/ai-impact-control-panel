@@ -3,6 +3,8 @@ import toml
 from deva.elicit import Toy
 import os
 import logging
+# import numpy as np
+from deva.pareto import remove_non_pareto
 from glob import glob
 
 
@@ -38,7 +40,10 @@ def get_all_files(scenario):
 def pretty_print_performance(name, d):
     print(f'Model {name}:')
     for k in sorted(d.keys()):
-        print(f'\t{k}: {d[k]:0.2f}')
+        if d[k]["type"] == "int":
+            print(f'\t{k}: {d[k]["score"]}')
+        else:
+            print(f'\t{k}: {d[k]["score"]:0.2f}')
     print('\n')
 
 
@@ -53,6 +58,8 @@ def cli(scenario):
     for name, fs in input_files.items():
         fname = fs['metrics']
         models[name] = toml.load(fname)
+
+    models = remove_non_pareto(models)
 
     eliciter = Toy(models)
     while not eliciter.finished():
