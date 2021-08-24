@@ -3,6 +3,9 @@
 # if <model>.ranges section is defined, this gives the number of draws
 n_range_draws = 3
 
+# Defines a sensitive attribute
+sensitive_attribute = "customer_is_female"
+
 # These are the metrics to be run on the model outputs. The header names should
 # match those defined in metrics_dict defined in score.py
 [metrics]
@@ -24,6 +27,10 @@ fit_intercept = true
 random_state = 666
 class_weight = 'balanced'
 
+# this is a custom parameter for specifying a classification threshold apart
+# from the default using in a classifiers `predict` method.
+threshold = 0.5
+
 # These will be sampled uniformly and appended (possibly overwriting) the
 # defaults above. The number of samples is controlled by n_range_draws.
 # For every value, give a [min, max]
@@ -33,6 +40,11 @@ tol = [1e-4, 1e-3]
 # this is a custom (non-scikit) workaround for not being able to use
 # integer keys in toml configs
 positive_class_weight = [1, 20]
+
+# this is a custom parameter for applying a different threshold to the
+# sensitive attribute when it takes a value of 1, otherwise the `threshold`
+# value is applied.
+threshold_protected = [0.4, 0.5]
 
 # These will be combinatorically gone through -- every combination of lists
 # entries in this section will result in a unique hyperparameter set. Again,

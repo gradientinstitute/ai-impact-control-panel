@@ -22,6 +22,29 @@ def translate_config(cfg):
     return out
 
 
+def apply_threshold(
+    threshold,
+    threshold_protected,
+    y_scores,
+    sensitive_indicator
+):
+    '''apply binary threshold(s) to a score.'''
+    if threshold_protected is None:
+        y_pred = (y_scores > threshold).astype(int)
+        return y_pred
+
+    if sensitive_indicator is None:
+        raise TypeError('a protected attribute must be defined to apply '
+                        'separate thresholds.')
+
+    sind = sensitive_indicator.astype(bool)
+    y_pred = np.zeros(len(y_scores), dtype=int)
+    y_pred[sind] = y_scores[sind] > threshold_protected
+    y_pred[~sind] = y_scores[~sind] > threshold
+
+    return y_pred
+
+
 def iterate_hypers(base_cfg, range_cfg, list_cfg, instance_cfg, n_range_draws):
     if instance_cfg is not None:
         for set_name, params in instance_cfg.items():
@@ -64,14 +87,25 @@ def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
     if 'instances' in base_cfg:
         instance_cfg = base_cfg.pop('instances')
 
+    # Pull out the sensitive attribute indicator if it exists
+    sensitive_indicator = None
+    if 'sensitive_attribute' in cfg:
+        sensitive_indicator = X_test.loc[:, cfg['sensitive_attribute']]
+
     piter = iterate_hypers(base_cfg, range_cfg, list_cfg,
                            instance_cfg, cfg['n_range_draws'])
     for param_name, param_dict in piter:
         processed_params = translate_config(param_dict)
+        threshold = processed_params.pop('threshold', None)
+        threshold_protected = processed_params.pop('threshold_protected', None)
         m = model_dict[model_str](**processed_params)
         m.fit(X_train, y_train)
-        y_pred = m.predict(X_test)
-        y_scores = m.predict_proba(X_test)[:, 1]
+        y_scores = m.predict_proba(X_test)[:, 1]  # NOTE: assumes binary class.
+        if threshold is None:
+            y_pred = m.predict(X_test)
+        else:
+            y_pred = apply_threshold(threshold, threshold_protected, y_scores,
+                                     sensitive_indicator)
         model_scores = score_model(y_pred, y_scores, y_test, X_test,
                                    metrics_cfg)
         d = {
