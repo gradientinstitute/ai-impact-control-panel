@@ -92,6 +92,11 @@ def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
     if 'sensitive_attribute' in cfg:
         sensitive_indicator = X_test.loc[:, cfg['sensitive_attribute']]
 
+    # Attempt to extract customer id
+    customer_id = None
+    if 'customer_id' in cfg:
+        customer_id = X_test[cfg['customer_id']].values.astype(int)
+
     piter = iterate_hypers(base_cfg, range_cfg, list_cfg,
                            instance_cfg, cfg['n_range_draws'])
     for param_name, param_dict in piter:
@@ -107,7 +112,7 @@ def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
             y_pred = apply_threshold(threshold, threshold_protected, y_scores,
                                      sensitive_indicator)
         model_scores = score_model(y_pred, y_scores, y_test, X_test,
-                                   metrics_cfg)
+                                   metrics_cfg, customer_id)
         d = {
                 'name': param_name,
                 'model': m,
