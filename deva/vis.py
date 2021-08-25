@@ -11,7 +11,7 @@ def nice_number(x, sigfig=2):
     # Write a potentially large number in limited detail
     x = int(x)
     n = len(str(x))
-    x = round(x, -n+3) 
+    x = round(x, -n+3)
     if x > 1e6:
         s = f"{x/1e6:.1f}M"
     elif x > 1e3:
@@ -43,12 +43,10 @@ def load_icons(icon_file, pad=0):
             ))
         return icons
 
-
     return icons
 
-icons = load_icons("icons2.png", 50)
 
-def comparison(sys1, sys2):
+def comparison(sys1, sys2, icons):
 
     unit = {
         "profit": "profit",
@@ -79,7 +77,7 @@ def comparison(sys1, sys2):
 
     icon_h, icon_w = icons["FN"].shape[:2]
 
-    barw = 6 * icon_w 
+    barw = 6 * icon_w
     y = 0
     tiles = []
     for a in unit:
@@ -94,9 +92,12 @@ def comparison(sys1, sys2):
             yy = y + offset * icon_w
             patchw = sys[a] * barw / scale
             rx = icon_w * 1.1
-            patch = Rectangle((rx, yy), patchw, 0.2*icon_w, facecolor=col)
+            patch = Rectangle((rx, yy), patchw, barh*icon_w, facecolor=col)
             ax.add_patch(patch)
-            plt.text(rx + patchw + 0.125*icon_w, yy + 0.125*icon_w, pre+nice_number(sys[a]), ha="left", va="center", fontsize=fs, fontweight="bold")
+            text_x = rx + patchw + 0.125*icon_w
+            text_y = yy + 0.125*icon_w
+            plt.text(text_x, text_y, pre+nice_number(sys[a]),
+                     ha="left", va="center", fontsize=fs, fontweight="bold")
         y += icon_h
 
     img = np.vstack(tiles)
@@ -108,7 +109,7 @@ def comparison(sys1, sys2):
 
 
 def main():
-
+    icons = load_icons("icons2.png", 50)
 
     sys1 = {
         "profit": 40128,
@@ -126,10 +127,9 @@ def main():
         "FPWO": 6,
     }
 
-    plt.figure(figsize=(10,8))
-    comparison(sys1, sys2)
+    plt.figure(figsize=(10, 8))
+    comparison(sys1, sys2, icons)
     plt.show()
-
 
 
 if __name__ == "__main__":

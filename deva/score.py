@@ -32,7 +32,7 @@ def fnwo(y_test, y_pred, customer_id, cutoff):
     # aggregate to customers
     cid, ix = np.unique(customer_id, return_inverse=True)
     counts = np.bincount(ix[fn_flag])
-    return (counts>=cutoff).sum()
+    return (counts >= cutoff).sum()
 
 
 def fpwo(y_test, y_pred, customer_id, cutoff):
@@ -43,7 +43,7 @@ def fpwo(y_test, y_pred, customer_id, cutoff):
     # aggregate to customers
     cid, ix = np.unique(customer_id, return_inverse=True)
     counts = np.bincount(ix[fp_flag])
-    return (counts>=cutoff).sum()
+    return (counts >= cutoff).sum()
 
 
 def profit(y_test, y_pred, customer_id, TP, FP, TN, FN):
@@ -71,10 +71,9 @@ def score_model(y_pred, y_scores, y_test, X_test, metrics_cfg, customer_id):
 
     # Evaluates the models outputs against predefinted metrics
     d = {}
-    CID = X_test.customer_id  # TODO - how do we ensure
 
     for k, v in metrics_cfg.items():
-        args = {key:v[key] for key in v if key != "name"}
+        args = {key: v[key] for key in v if key != "name"}
         score = metrics_dict[k]['func'](y_test, y_pred, customer_id, **args)
         d[v["name"]] = {'score': score, 'optimal': metrics_dict[k]['optimal'],
                         'type': metrics_dict[k]['type']}
