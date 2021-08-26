@@ -6,6 +6,7 @@ from sklearn.linear_model import LogisticRegression
 
 from deva.score import score_model
 
+
 model_dict = {
         'randomforest': RandomForestClassifier,
         'logistic': LogisticRegression

@@ -57,14 +57,14 @@ def profit(y_test, y_pred, customer_id, TP, FP, TN, FN):
 # First element of the value tuple is a function to calculate the score.
 # Second element of the value tuple is the optimal value of that score.
 metrics_dict = {
-        'accuracy': {'func': model_acc, 'optimal': 1., 'type': 'float'},
-        'auc': {'func': model_auc, 'optimal': 1., 'type': 'float'},
-        'fp': {'func': fp, 'optimal': 0, 'type': 'int'},
-        'fn': {'func': fn, 'optimal': 0, 'type': 'int'},
-        'fnwo': {'func': fnwo, 'optimal': 0, 'type': 'int'},
-        'fpwo': {'func': fpwo, 'optimal': 0, 'type': 'int'},
-        'profit': {'func': profit, 'optimal': 1e8, 'type': 'float'},
-        }
+    'accuracy': {'func': model_acc, 'optimal': 1., 'type': 'float'},
+    'auc': {'func': model_auc, 'optimal': 1., 'type': 'float'},
+    'fp': {'func': fp, 'optimal': 0, 'type': 'int'},
+    'fn': {'func': fn, 'optimal': 0, 'type': 'int'},
+    'fnwo': {'func': fnwo, 'optimal': 0, 'type': 'int'},
+    'fpwo': {'func': fpwo, 'optimal': 0, 'type': 'int'},
+    'profit': {'func': profit, 'optimal': 1e8, 'type': 'float'},
+}
 
 
 def score_model(y_pred, y_scores, y_test, X_test, metrics_cfg, customer_id):
