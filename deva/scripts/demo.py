@@ -87,6 +87,7 @@ def cli(scenario):
 
     eliciter = Toy(models)
     plt.figure(figsize=(10, 8))
+    plt.ion()
 
     while not eliciter.finished():
         (m1, m1perf), (m2, m2perf) = eliciter.prompt()
@@ -100,7 +101,8 @@ def cli(scenario):
         plt.clf()
         # plt.gcf().set_size_inches(10, 8)
         comparison(sys1, sys2, scale=maxima)
-        plt.show(block=False)
+        plt.draw()
+        plt.pause(0.01)
 
         print("Which model do you prefer:\n")
         m1 = m1.split()[-1]  # just A or B
