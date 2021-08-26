@@ -43,7 +43,7 @@ def get_context(sys1, sys2, scale, a, high_is_good):
         context["rel"] = "relatively poor"
     else:
         context["rel"] = "average"
-    print(perf, context["rel"])
+    # print(perf, context["rel"])
     if sys2:
         v1 = sys1[a]
         v2 = sys2[a]
