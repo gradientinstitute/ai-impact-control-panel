@@ -33,6 +33,8 @@ TP = 0
 FP = 0
 TN = 1
 FN = -10
+[metrics.eo]
+name = "Equal Opportunity"
 
 # The name here must match the dictionary entry in deva/model.py iter_models
 # function. This tells the program what model you want to use.  In this

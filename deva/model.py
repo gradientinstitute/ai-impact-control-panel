@@ -112,7 +112,8 @@ def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
             y_pred = apply_threshold(threshold, threshold_protected, y_scores,
                                      sensitive_indicator)
         model_scores = score_model(y_pred, y_scores, y_test, X_test,
-                                   metrics_cfg, customer_id)
+                                   metrics_cfg, customer_id,
+                                   sensitive_indicator)
         d = {
                 'name': param_name,
                 'model': m,
