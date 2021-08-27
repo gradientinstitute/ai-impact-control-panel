@@ -1,0 +1,85 @@
+## EXAMPLE MODEL CONFIG
+
+# if <model>.ranges section is defined, this gives the number of draws
+n_range_draws = 3
+
+# Define a customer ID
+customer_id = "customer_id"
+
+# Defines a sensitive attribute
+sensitive_attribute = "customer_is_female"
+
+# These are the metrics to be run on the model outputs. The header names should
+# match those defined in metrics_dict defined in score.py
+[metrics]
+# [metrics.auc]
+# name = "Area under the ROC curve"
+# [metrics.accuracy]
+# name = "Accuracy"
+[metrics.fp]
+name = "False Positives"
+[metrics.fn]
+name = "False Negatives"
+[metrics.fnwo]
+name = "People with >=3 FN"
+cutoff = 3
+[metrics.fpwo]
+name = "People with >=5 FP"
+cutoff = 5
+[metrics.profit]
+name = "Net profit"
+# Note - realistically this might require knowledge of the transaction value...
+TP = 0
+FP = 0
+TN = 1
+FN = -10
+[metrics.eo]
+name = "Equal Opportunity"
+
+# The name here must match the dictionary entry in deva/model.py iter_models
+# function. This tells the program what model you want to use.  In this
+# section, put default hyperparametrs that will apply to all draws. They may be
+# overwritten by lower sections.
+[logistic]
+fit_intercept = true
+random_state = 666
+class_weight = 'balanced'
+
+# this is a custom parameter for specifying a classification threshold apart
+# from the default using in a classifiers `predict` method.
+threshold = 0.5
+
+# These will be sampled uniformly and appended (possibly overwriting) the
+# defaults above. The number of samples is controlled by n_range_draws.
+# For every value, give a [min, max]
+[logistic.ranges]
+tol = [1e-4, 1e-3]
+
+# this is a custom (non-scikit) workaround for not being able to use
+# integer keys in toml configs
+positive_class_weight = [1, 20]
+
+# this is a custom parameter for applying a different threshold to the
+# sensitive attribute when it takes a value of 1, otherwise the `threshold`
+# value is applied.
+threshold_protected = [0.4, 0.5]
+
+# These will be combinatorically gone through -- every combination of lists
+# entries in this section will result in a unique hyperparameter set. Again,
+# they will be appended (possibly overwriting) the defaults above
+[logistic.lists]
+random_state = [111, 222, 333, 444]
+
+# These are instances, they will be added to the runs as-is, (after appending
+# and possibly overwriting the defaults)
+# The name of the instance here is 'set1'
+[logistic.instances.set1]
+random_state = 1
+tol = 1.1e-4
+positive_class_weight = 20
+
+# This is another instance: 'set2'
+[logistic.instances.set2]
+random_state = 2
+tol = 1.2e-4
+positive_class_weight = 10

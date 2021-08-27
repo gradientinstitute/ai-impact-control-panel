@@ -27,4 +27,8 @@ def remove_non_pareto(models):
     for m in non_pareto:
         del models[m]
 
+    # Print the number of models deleted
+    s = "" if len(non_pareto) == 1 else "s"
+    print("Deleted {} model{}.".format(len(non_pareto), s))
+
     return models
