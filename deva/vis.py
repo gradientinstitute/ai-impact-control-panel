@@ -136,8 +136,8 @@ def comparison(sys1, sys2, scale=None, buttons=False, show_units=True,
 
     # clobber the above if user specifies a specific naming scheme
     if remap:
-        unmap = {k:v for v, k in remap.items()}
-        attribute = {k:unmap[k] for k in unit}
+        unmap = {k: v for v, k in remap.items()}
+        attribute = {k: unmap[k] for k in unit}
 
     isgood = {
         "profit": True,
@@ -214,7 +214,7 @@ def comparison(sys1, sys2, scale=None, buttons=False, show_units=True,
         context = get_context(sys1, sys2, scale, a, isgood[a])
 
         title_x = (margin + right)/2
-        title_y = y # - 0.25 * icon_w
+        title_y = y  # - 0.25 * icon_w
         plt.text(
             title_x, title_y, attribute[a], fontsize=12,
             va="center", ha="center", fontweight="bold")
