@@ -27,6 +27,7 @@ def get_context(sys1, sys2, scale, a, high_is_good):
 
     context = {
         "A": sys1["name"],
+        "a": sys1["name"].split()[-1],
         "X": nice_number(sys1[a]),
     }
 
@@ -47,22 +48,32 @@ def get_context(sys1, sys2, scale, a, high_is_good):
     if sys2:
         v1 = sys1[a]
         v2 = sys2[a]
-        context["X"] = nice_number(np.abs(v1-v2))
+        diff = np.abs(v1-v2)
+        if np.isclose(diff, 0):
+            context["X"] = ""
+        else:
+            context["X"] = nice_number(diff)
         context["B"] = sys2["name"]
+        context["b"] = sys2["name"].split()[-1]
+
+        # prime the potential context words
+        for word in ["less", "more", "fewer", "additional", "higher", "lower",
+                     "same", "equal"]:
+            context[word] = ""
+
         if v1 > v2:
-            context["less"] = ""
             context["more"] = "more"
-            context["fewer"] = ""
             context["additional"] = "additional"
             context["higher"] = context["A"]
             context["lower"] = context["B"]
-        else:
+        elif v2 > v1:
             context["less"] = "less"
-            context["more"] = ""
             context["fewer"] = "fewer"
-            context["additional"] = ""
             context["higher"] = context["B"]
             context["lower"] = context["A"]
+        else:
+            context["same"] = "the same number of"
+            context["equal"] = "equal"
 
     return context
 
@@ -99,18 +110,34 @@ def load_icons(icon_file, pad=0):
     return icons
 
 
-def comparison(sys1, sys2, scale=None, buttons=False):
+def comparison(sys1, sys2, scale=None, buttons=False, show_units=True,
+               remap=None):
     global icons
     if not icons:
-        icons = load_icons("icons2.png", 50)
+        icons = load_icons("icons2.png", 200)  # for top title
+        # icons = load_icons("icons2.png", 50)
 
     unit = {
-        "profit": "profit",
-        "FN": "transaction",
-        "FP": "transaction",
-        "FNWO": "person",
-        "FPWO": "person",
+        "profit": "",  # special case"profit",
+        "FN": "transactions",
+        "FP": "transactions",
+        "FNWO": "customers",
+        "FPWO": "customers",
     }
+
+    # long descriptions
+    attribute = {
+        "profit": "Net profit",
+        "FN": "Undetected fraudulent transactions",
+        "FP": "Incorrectly blocked transactions",
+        "FNWO": "Recurrent undetected fraud",
+        "FPWO": "Recurrent incorrect blocking",
+    }
+
+    # clobber the above if user specifies a specific naming scheme
+    if remap:
+        unmap = {k:v for v, k in remap.items()}
+        attribute = {k:unmap[k] for k in unit}
 
     isgood = {
         "profit": True,
@@ -136,16 +163,25 @@ def comparison(sys1, sys2, scale=None, buttons=False):
                 if (u not in scale) or (v > scale[u]):
                     scale[u] = v
 
+    # comparison = {
+    #     "profit": "{higher} is better: it generates ${X} more profit.",
+    #     "FN": ("{lower} is better: it prevents an additional {X}"
+    #            " fraudulent transactions."),
+    #     "FNWO": ("{lower} is better: {X} fewer customers experience"
+    #              " repeated fraud."),
+    #     "FP": ("{lower} is better: it "
+    #            "approves an additional {X} legitimate transactions."),
+    #     "FPWO": ("{lower} is better: {X} fewer customers are "
+    #              "repeatedly blocked."),
+    # }
     comparison = {
-        "profit": "{higher} is better: it generates ${X} more profit.",
-        "FN": ("{lower} is better: it prevents an additional {X}"
-               " fraudulent transactions."),
-        "FNWO": ("{lower} is better: {X} fewer customers experience"
-                 " repeated fraud."),
-        "FP": ("{lower} is better: it "
-               "approves an additional {X} legitimate transactions."),
-        "FPWO": ("{lower} is better: {X} fewer customers are "
-                 "repeatedly blocked."),
+        "profit": "{A} generates ${X} {more}{less}{equal} profit.",
+        "FN": "{A} misses {X} {more}{fewer}{same} fraudulent transactions.",
+        "FNWO": ("{A} burdens {X} {additional}{fewer}{same} customers with"
+                 " recurrent undetected fraud."),
+        "FP": ("{A} blocks {X} {more}{fewer}{same} legitimate transactions."),
+        "FPWO": ("{A} burdens {X} {additional}{fewer}{same} customers with "
+                 "recurrent incorrect blocking."),
     }
 
     description = {
@@ -162,7 +198,8 @@ def comparison(sys1, sys2, scale=None, buttons=False):
     icon_h, icon_w = icons["FN"].shape[:2]
 
     barw = 6 * icon_w
-    left = icon_w * 1.1
+    margin = icon_w * 1.05  # adjust margin here
+    left = icon_w * 1.3  # adjust margin here
     right = left + barw
 
     y = 0
@@ -174,8 +211,13 @@ def comparison(sys1, sys2, scale=None, buttons=False):
         s = scale[a]  # scale[unit[a]]
         barh = .2
         pre = "$" if a == "profit" else ""
-
         context = get_context(sys1, sys2, scale, a, isgood[a])
+
+        title_x = (margin + right)/2
+        title_y = y # - 0.25 * icon_w
+        plt.text(
+            title_x, title_y, attribute[a], fontsize=12,
+            va="center", ha="center", fontweight="bold")
 
         if sys2 is not None:
             text = comparison
@@ -198,33 +240,31 @@ def comparison(sys1, sys2, scale=None, buttons=False):
             patchw = sys[a] * barw / s
             rx = left
             text_x = right + 0.125 * icon_w
-            # text_x = left + patchw + 0.125*icon_w
             text_y = yy + 0.125*icon_w
             midy = yy + barh * icon_w/2
-
+            plt.text(margin, text_y, sys["name"].split()[-1], fontsize=fs,
+                     va="center", fontweight="bold")
             if isgood[a]:
                 plt.plot([rx+1+patchw, right+1],  [midy, midy], ":",
                          color=bad_cols[colind], linewidth=3, alpha=0.5)
             else:
                 rx = right - patchw  # flip
-                # text_x = right + 0.125 * icon_w
                 plt.plot([left-1, rx-1],  [midy, midy], ":",
-                         color=good_cols[colind],
-                         linewidth=3, alpha=0.5)
+                         color=good_cols[colind], linewidth=3, alpha=0.5)
 
-            # why would this plot not work?
             patch = Rectangle((rx, yy), patchw, barh*icon_w, facecolor=col)
-
             ax.add_patch(patch)
-            plt.text(text_x, text_y, pre+nice_number(sys[a]),
-                     va="center", fontsize=fs, fontweight="bold")
+
+            post = " " + unit[a] if show_units else ""
+            plt.text(text_x, text_y, pre+nice_number(sys[a])+post,
+                     va="center", fontsize=fs)  # , fontweight="bold")
         y += icon_h
 
     img = np.vstack(tiles)
     plt.imshow(img)
     plt.axis('off')
     plt.ylim([0, img.shape[0]])
-    plt.xlim([0, icon_w * 8])
+    plt.xlim([0, icon_w * 10])
 
     if buttons:
         # draw the options to display
