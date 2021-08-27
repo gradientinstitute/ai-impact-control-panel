@@ -100,9 +100,10 @@ def cli(scenario):
 
         plt.clf()
         # plt.gcf().set_size_inches(10, 8)
-        comparison(sys1, sys2, scale=maxima)
+        comparison(sys1, sys2, scale=maxima)  # remap=remap
         plt.draw()
-        plt.pause(0.01)
+        plt.show(block=False)
+        # plt.pause(0.01)
 
         print("Which model do you prefer:\n")
         m1 = m1.split()[-1]  # just A or B
@@ -122,5 +123,7 @@ def cli(scenario):
     plt.clf()
     sys1 = {remap[k]: result[k]["score"] for k in remap}
     sys1["name"] = result_name
-    comparison(sys1, None, scale=maxima)
-    plt.show()
+    comparison(sys1, None, scale=maxima)  # remap=remap
+    plt.draw()
+    plt.pause(0.1)
+    input()
