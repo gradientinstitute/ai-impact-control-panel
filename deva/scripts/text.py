@@ -61,6 +61,12 @@ def cli(scenario):
 
     models = remove_non_pareto(models)
 
+    # Give all the models easy to remember names.... [optionally]
+    tmp = {}
+    for i, model in enumerate(models.values()):
+        tmp["System " + chr(65+i)] = model
+    models = tmp
+
     eliciter = Toy(models)
     while not eliciter.finished():
         (m1, m1perf), (m2, m2perf) = eliciter.prompt()
@@ -70,7 +76,7 @@ def cli(scenario):
         print(f'(Answer {m1} or {m2})')
         print('> ', end='')
         i = input()
-        choice = eliciter.user_input(i)
+        choice = eliciter.user_input("System " + i)
         if choice is not None:
             print(f'You preferred model {choice}')
         else:
