@@ -1,6 +1,16 @@
-# Getting Started with Create React App
+# Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+Using the typescript template.
+
+After that, tailwindcss was installed and configured following their
+[instructions](https://tailwindcss.com/docs/guides/create-react-app) 
+for create-react-app
+
+
+Finally axios (used for ajax queries) was install using `npm i axios --save`
+
 
 ## Available Scripts
 
