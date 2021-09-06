@@ -43,7 +43,7 @@ jobs:
       #    make typecheck      
       - name: Lint
         run: |
-          poetry run flake8 deva tests
+          poetry run flake8 deva tests server/mlserver
       - name: Test
         run: |
           poetry run pytest .

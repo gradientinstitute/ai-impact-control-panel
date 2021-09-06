@@ -18,27 +18,36 @@ type ModelChoice = {
 
 // https://codesandbox.io/s/jvvkoo8pq3?file=/src/index.js
 // https://www.robinwieruch.de/react-hooks-fetch-data
+// https://dmitripavlutin.com/react-useeffect-infinite-loop/
 function PairwiseComparator() {
-  const [models, setModels] = useState<ModelChoice>({ model1: "", model2: ""});
+  const [models, setModels] = useState<ModelChoice>({model1: "", model2: ""});
   const [modelChosen, setModelChosen] = useState("");
+  const [stage, setStage] = useState(0);
+  
   useEffect(() => {
-    let req = modelChosen === "" ? "choice" : "choice/" + modelChosen;
+    let init_req_str = "choice";
+    let req_str = "choice/" + stage + "/" + modelChosen;
+    let req = stage === 0 ? init_req_str : req_str;
     async function fetchData() {
-      const result = await axios.get<ModelChoice>(req)
+      const result = await axios.get<ModelChoice>(req);
       setModels(result.data);
     }
-    fetchData();
-    }, [modelChosen]);
+    if ((stage == 0) || (stage > 0 && modelChosen != "")) {
+      fetchData();
+      setStage(stage + 1);
+    }
+    return () => {setModelChosen(""); setStage(stage + 1);};
+    }, [modelChosen, stage]);
   
   return (
     <div className="flex flex-row gap-5">
       <div className="flex-1 space-y-5">
         <ModelView model={models.model1}/>
-        <ButtonInterface label="model1" onClick = { () => {setModelChosen("1")} } />
+        <ButtonInterface label="model1" onClick = { () => { setModelChosen("1") } } />
       </div>
       <div className="flex-1 space-y-5">
         <ModelView model={models.model2}/>
-        <ButtonInterface label="model2" onClick = { () => {setModelChosen("2")} } />
+        <ButtonInterface label="model2" onClick = { () => { setModelChosen("2") } } />
       </div>
     </div>
   )

@@ -6,7 +6,7 @@ that is actually running the elicitation.
 
 ## Starting up
 
-1. go into the mlserver folder and run `flask run -p 8666`
+1. go into the mlserver folder and run `./run.sh`
 2. go into the deva-ts folder and run `yarn start`
 
 The frontend should load in your browser.
