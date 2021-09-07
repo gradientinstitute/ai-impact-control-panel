@@ -6,6 +6,7 @@ from deva.datasim import simulate
 import logging
 from logging import info
 import pandas as pd
+import numpy as np
 from joblib import dump
 import toml
 
@@ -93,3 +94,89 @@ def model(ctx):
                       encoder=toml.TomlNumpyEncoder())
 
         info(f'written model {name}')
+
+
+@cli.command()
+@click.pass_context
+def pareto(ctx):
+    folder = ctx.obj['folder']
+    model_folder = os.path.join(folder, 'models')
+
+
+    
+    os.makedirs(model_folder, exist_ok=True)
+    delete_old_models = True
+    if delete_old_models:
+        delete_files(model_folder)
+
+    model_cfg_fname = os.path.join(folder, 'model.toml')
+    with open(model_cfg_fname, 'r') as f:
+        cfg = parse_config(f, build_tuple=False)
+
+    n_models = cfg["n_models"]
+    n_metrics = len(cfg["metrics"])
+
+    #Sample the hypersphere
+    samples = np.random.rand(n_models, n_metrics)
+    r = np.sqrt(np.sum(samples**2, axis=1))[:, np.newaxis]
+    norm_samples = (1/r) * samples
+    metric_values = norm_samples.copy()
+    # Transform samples to reflect metric ranges
+    for i, m_details in enumerate(cfg["metrics"].values()):
+        if m_details["range"][1] < m_details["range"][0]:
+            norm_samples[:, i] *= -1
+        scale = m_details["range"][1] - m_details["range"][0]
+        metric_values[:, i] *= scale
+        metric_values[:, i] += m_details["range"][0]
+
+
+
+        
+    metric_scores = {}
+    for model in range(n_models):
+        metric_fname = os.path.join(model_folder, f'metrics_{model}.toml')
+        out_fname = os.path.join(model_folder, f'scored_{model}.csv')
+        param_fname = os.path.join(model_folder, f'params_{model}.toml')
+        # Remove
+
+        for i, m_details in enumerate(cfg["metrics"].values()):
+            score = metric_values[model, i]
+            if m_details["type"] == "int":
+                score = int(score)
+            metric_scores[m_details["name"]] = {"score": score,
+                                                "optimal": m_details["optimal"],
+                                                "type": m_details["type"]}
+
+ 
+
+
+        with open(metric_fname, 'w') as f:
+            toml.dump(metric_scores, f,
+                      encoder=toml.TomlNumpyEncoder())
+
+        with open(out_fname, 'w') as f:
+            toml.dump({"Place": "Holder"}, f,
+                      encoder=toml.TomlNumpyEncoder())
+
+        with open(param_fname, 'w') as f:
+            toml.dump({"Place": "Holder"}, f,
+                      encoder=toml.TomlNumpyEncoder())
+
+
+ #   {'False Positives': {'score': 6147, 'optimal': 0, 'type': 'int'},
+ # 'False Negatives': {'score': 119, 'optimal': 0, 'type': 'int'},
+ # 'People with >=3 FN': {'score': 0, 'optimal': 0, 'type': 'int'},
+ # 'People with >=5 FP': {'score': 101, 'optimal': 0, 'type': 'int'},
+ # 'Net profit': {'score': 2074, 'optimal': 100000000.0, 'type': 'float'}}
+
+
+def delete_files(folder):
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
