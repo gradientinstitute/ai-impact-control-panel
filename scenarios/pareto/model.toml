@@ -3,12 +3,6 @@
 # if <model>.ranges section is defined, this gives the number of draws
 n_models = 5
 
-# Define a customer ID
-customer_id = "customer_id"
-
-# Defines a sensitive attribute
-sensitive_attribute = "customer_is_female"
-
 # These are the metrics to be run on the model outputs. The header names should
 # match those defined in metrics_dict defined in score.py
 # Range is from edge of unacceptable to optimal

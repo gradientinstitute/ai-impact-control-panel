@@ -102,8 +102,9 @@ def model(ctx):
 def pareto(ctx):
     folder = ctx.obj['folder']
     model_folder = os.path.join(folder, 'models')
-
     os.makedirs(model_folder, exist_ok=True)
+
+    # Ask user if they'd like to delete old model files
     print('Delete old models? y or [n]')
     print('> ', end='')
     delete_old_models = input()
@@ -140,8 +141,8 @@ def pareto(ctx):
         metric_fname = os.path.join(model_folder, f'metrics_{model}.toml')
         out_fname = os.path.join(model_folder, f'scored_{model}.csv')
         param_fname = os.path.join(model_folder, f'params_{model}.toml')
-        # Remove
 
+        # Loop over metrics to create dictionary for toml
         for i, m_details in enumerate(cfg["metrics"].values()):
             score = metric_values[model, i]
             if m_details["type"] == "int":
@@ -155,6 +156,7 @@ def pareto(ctx):
             toml.dump(metric_scores, f,
                       encoder=toml.TomlNumpyEncoder())
 
+        # Make dummy files to satisfy deva-text checks
         with open(out_fname, 'w') as f:
             toml.dump({"Place": "Holder"}, f,
                       encoder=toml.TomlNumpyEncoder())
