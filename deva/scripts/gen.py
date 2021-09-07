@@ -104,7 +104,7 @@ def pareto(ctx):
     model_folder = os.path.join(folder, 'models')
 
     os.makedirs(model_folder, exist_ok=True)
-    print(f'Delete old models? y or [n]')
+    print('Delete old models? y or [n]')
     print('> ', end='')
     delete_old_models = input()
     if delete_old_models == "y":
