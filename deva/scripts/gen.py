@@ -104,9 +104,14 @@ def pareto(ctx):
     model_folder = os.path.join(folder, 'models')
 
     os.makedirs(model_folder, exist_ok=True)
-    delete_old_models = True
-    if delete_old_models:
+    print(f'Delete old models? y or [n]')
+    print('> ', end='')
+    delete_old_models = input()
+    if delete_old_models == "y":
+        print("Deleting old models")
         delete_files(model_folder)
+    else:
+        print("Not deleting old models")
 
     model_cfg_fname = os.path.join(folder, 'model.toml')
     with open(model_cfg_fname, 'r') as f:
@@ -115,7 +120,8 @@ def pareto(ctx):
     n_models = cfg["n_models"]
     n_metrics = len(cfg["metrics"])
 
-    # Sample the hypersphere
+    # Sample the hypersphere for metric vectors
+    print("Generating sample metrics.")
     samples = np.random.rand(n_models, n_metrics)
     r = np.sqrt(np.sum(samples**2, axis=1))[:, np.newaxis]
     norm_samples = (1/r) * samples
@@ -128,6 +134,7 @@ def pareto(ctx):
         metric_values[:, i] *= scale
         metric_values[:, i] += m_details["range"][0]
 
+    print("Saving generated metrics to disk.")
     metric_scores = {}
     for model in range(n_models):
         metric_fname = os.path.join(model_folder, f'metrics_{model}.toml')
