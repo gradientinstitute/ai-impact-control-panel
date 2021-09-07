@@ -11,43 +11,64 @@ function App() {
   );
 }
 
-type ModelChoice = {
-  model1: string,
-  model2: string
-}
-
 // https://codesandbox.io/s/jvvkoo8pq3?file=/src/index.js
 // https://www.robinwieruch.de/react-hooks-fetch-data
 // https://dmitripavlutin.com/react-useeffect-infinite-loop/
 function PairwiseComparator() {
-  const [models, setModels] = useState<ModelChoice>({model1: "", model2: ""});
+  const [model1, setModel1] = useState<any>(null);
+  const [model2, setModel2] = useState<any>(null);
+  const [model1Name, setModel1Name] = useState("loading");
+  const [model2Name, setModel2Name] = useState("loading");
   const [modelChosen, setModelChosen] = useState("");
-  const [stage, setStage] = useState(0);
-  
+  const [stage, setStage] = useState(1);
+
+  // initial request on load
   useEffect(() => {
-    let init_req_str = "choice";
-    let req_str = "choice/" + stage + "/" + modelChosen;
-    let req = stage === 0 ? init_req_str : req_str;
+    let req = "choice";
     async function fetchData() {
-      const result = await axios.get<ModelChoice>(req);
-      setModels(result.data);
+      const result = await axios.get<any>(req);
+      setModel1(result.data.model1);
+      setModel2(result.data.model2);
     }
-    if ((stage == 0) || (stage > 0 && modelChosen != "")) {
+    fetchData();
+    }, []
+  );
+
+  //Update model names on request coming back
+  useEffect(() => {
+    if (model1 !== null) {
+      setModel1Name(model1.name);
+    }
+    if (model2 !== null) {
+      setModel2Name(model2.name);
+    }
+  }, [model1, model2]);
+  
+  // request on button push
+  useEffect(() => {
+    let req = "choice/" + stage + "/" + modelChosen;
+    async function fetchData() {
+      const result = await axios.get<any>(req);
+      setModel1(result.data.model1);
+      setModel2(result.data.model2);
+    }
+    if (modelChosen !== "") {
       fetchData();
-      setStage(stage + 1);
+      setModelChosen("");
+      setStage(stage => stage + 1);
     }
-    return () => {setModelChosen(""); setStage(stage + 1);};
-    }, [modelChosen, stage]);
+    }, [modelChosen]
+  );
   
   return (
     <div className="flex flex-row gap-5">
       <div className="flex-1 space-y-5">
-        <ModelView model={models.model1}/>
-        <ButtonInterface label="model1" onClick = { () => { setModelChosen("1") } } />
+        <ModelView model={model1}/>
+        <ButtonInterface label={model1Name} onClick = { () => { setModelChosen("1") } } />
       </div>
       <div className="flex-1 space-y-5">
-        <ModelView model={models.model2}/>
-        <ButtonInterface label="model2" onClick = { () => { setModelChosen("2") } } />
+        <ModelView model={model2}/>
+        <ButtonInterface label={model2Name} onClick = { () => { setModelChosen("2") } } />
       </div>
     </div>
   )
@@ -57,7 +78,7 @@ function ModelView(props) {
   return (
     <div className="h-48 bg-gray-50 flex flex-wrap content-center justify-center">
       <div>
-      <p>I am a picture of model {props.model}</p>
+      <p>I am a picture of model {JSON.stringify(props.model)}</p>
       </div>
     </div>
     )
