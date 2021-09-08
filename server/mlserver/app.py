@@ -1,31 +1,22 @@
-from flask import Flask, session, jsonify, g
+from flask import Flask, session, jsonify
 import toml
-from deva.elicit import Toy, Eliciter
+from deva.elicit import Toy
 from deva.pareto import remove_non_pareto
 from deva import fileio
 import random
 import string
 import os
-from dataclasses import dataclass
-
-
-@dataclass
-class ElicitState:
-    """Perhaps the eliciter object needs to expose more state?"""
-    eliciter: Eliciter
-    choices: list
-    stage: int
 
 
 def random_key(n):
+    """Make a random string of n characters."""
     return ''.join(random.choice(string.ascii_letters) for i in range(n))
 
 
 # In the future the user might request a particular scenario
 def load_models(scenario):
-    # Expand into absolute path
-    abs_path = os.path.join(fileio.repo_root(), "scenarios/"+scenario)
-
+    """Load and shortlist a scenario's pareto efficient models."""
+    abs_path = os.path.join(fileio.repo_root(), "scenarios/" + scenario)
     input_files = fileio.get_all_files(abs_path)
 
     models = {}
@@ -35,26 +26,27 @@ def load_models(scenario):
 
     models = remove_non_pareto(models)
 
-    # Give all the models easy to remember names.... [optionally]
-    tmp = {}
+    # Give all the models easy to remember names
+    renamed = {}
     for i, model in enumerate(models.values()):
-        tmp["System " + chr(65+i)] = model
-    models = tmp
+        renamed["System " + chr(65+i)] = model
 
-    return models
+    return renamed
 
 
+# Set up the flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = random_key(12)
 
-# the g application context didnt work - it has the lifetime of a request.
-states = {}
+# TODO: app-wide persistent server-side session data
+# flask g application context didnt work - it has the lifetime of a request.
+session_eliciters = {}
 models = None
 
 
 @app.route('/choice')
 def initial_view():
-    global states, models
+    global session_eliciters, models
 
     if models is None:
         print("Initialising")
@@ -67,50 +59,48 @@ def initial_view():
 
     eliciter = Toy(models)
     (m1, m1perf), (m2, m2perf) = eliciter.prompt()
+    eliciter.choice = (m1, m2)  # will change the eliciter API to remember this
 
     # assume a page reload means they want to start again
-    # potentially thread lock here
-    states[session["ID"]] = ElicitState(
-        eliciter=eliciter,
-        choices=[[m1, m2]],
-        stage=0,
-    )
+    session_eliciters[session["ID"]] = eliciter
 
-    # send the performance and choices
+    # send the performance and choices to the frontend
     m1perf["name"] = m1
     m2perf["name"] = m2
     return jsonify(model1=m1perf, model2=m2perf)
 
 
-@app.route('/choice/<stage>/<x>')
+@app.route('/choice/<stage>/<x>')  # TODO: replace stage with tuple as below
 def update(stage, x):
-    global states, models
+    global session_eliciters, models
     if "ID" not in session:
-        print("Invalid ID")
-        return
-    state = states[session["ID"]]
+        return jsonify("Invalid")
 
-    if not state.eliciter.finished():
-        stage = int(stage) - 1
-        if stage < state.stage:
-            print("Response from previous state.")
-            return
-        choice = state.choices[stage]
+    eliciter = session_eliciters[session["ID"]]
+
+    if not eliciter.finished():
+        # TODO: front-end needs a termination signal
+        # Only accept a choice if the eliciter has not terminated
+
+        # TODO: it would be unambiguous if front-end responded with name of
+        # preferred choice and non-preferred choice as a signal
         if x == "1":
-            select = choice[0]
+            select = eliciter.choice[0]
         elif x == "2":
-            select = choice[1]
-        state.eliciter.user_input(select)
+            select = eliciter.choice[1]
+        eliciter.user_input(select)
 
-    if state.eliciter.finished():
-        # Now we need some way of terminating?
-        result_name, result = state.eliciter.final_output()
+    if eliciter.finished():
+        result_name, result = eliciter.final_output()
         result["name"] = result_name
+
+        # TODO: front-end needs a termination signal
+        # For now just respond with two copies of the final model
         res = dict(model1=result, model2=result)
     else:
-        (m1, m1perf), (m2, m2perf) = state.eliciter.prompt()
-        state.stage += 1
-        state.choices.append([m1, m2])
+        # eliciter has not terminated - extract the next choice
+        (m1, m1perf), (m2, m2perf) = eliciter.prompt()
+        eliciter.choice = (m1, m2)
         m1perf["name"] = m1
         m2perf["name"] = m2
         res = dict(model1=m1perf, model2=m2perf)
