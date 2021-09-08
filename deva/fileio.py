@@ -33,5 +33,3 @@ def get_all_files(scenario):
                 'params': os.path.join(scenario, f'models/params_{n}.toml')
                 }
     return input_files
-
-
