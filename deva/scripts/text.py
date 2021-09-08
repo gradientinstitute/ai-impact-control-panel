@@ -1,11 +1,8 @@
 import click
 import toml
 from deva.elicit import Toy
-import os
 import logging
-# import numpy as np
 from deva.pareto import remove_non_pareto
-from glob import glob
 from deva import fileio
 
 

@@ -1,4 +1,5 @@
-from flask import Flask, session, jsonify
+from flask import Flask, session, jsonify, abort
+from os import urandom
 import toml
 from deva.elicit import Toy
 from deva.pareto import remove_non_pareto
@@ -36,9 +37,9 @@ def load_models(scenario):
 
 # Set up the flask app
 app = Flask(__name__)
-app.config['SECRET_KEY'] = random_key(12)
+app.config['SECRET_KEY'] = urandom(16)
 
-# TODO: app-wide persistent server-side session data
+# TODO: find an app-wide persistent server-side session data soution
 # flask g application context didnt work - it has the lifetime of a request.
 session_eliciters = {}
 models = None
@@ -53,15 +54,17 @@ def initial_view():
         models = load_models("example")
 
     if "ID" not in session:
-        print("New user")
-        session["ID"] = random_key(12)
+        print("Registering new user")
+        while (new_id := random_key(16)) in session_eliciters:
+            pass
+        session["ID"] = new_id
         session.modified = True
 
     eliciter = Toy(models)
     (m1, m1perf), (m2, m2perf) = eliciter.prompt()
-    eliciter.choice = (m1, m2)  # will change the eliciter API to remember this
+    eliciter.choice = (m1, m2)  # TODO: update eliciter API
 
-    # assume a page reload means they want to start again
+    # assume that a reload means user wants a restart
     session_eliciters[session["ID"]] = eliciter
 
     # send the performance and choices to the frontend
@@ -70,13 +73,15 @@ def initial_view():
     return jsonify(model1=m1perf, model2=m2perf)
 
 
-@app.route('/choice/<stage>/<x>')  # TODO: replace stage with tuple as below
+@app.route('/choice/<stage>/<x>')  # TODO: remove stage
 def update(stage, x):
     global session_eliciters, models
     if "ID" not in session:
-        return jsonify("Invalid")
+        abort(400)  # Not initialised
 
     eliciter = session_eliciters[session["ID"]]
+
+    print(session["ID"], eliciter.choice)
 
     if not eliciter.finished():
         # TODO: front-end needs a termination signal
