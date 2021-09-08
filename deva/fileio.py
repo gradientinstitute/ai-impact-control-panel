@@ -2,6 +2,10 @@ import os.path
 from glob import glob
 
 
+def repo_root():
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 def name_from_files(lst):
     """Extract the name from the filename for list of paths"""
     names = set([
