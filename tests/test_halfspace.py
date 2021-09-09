@@ -1,6 +1,18 @@
 '''Test the halfspace ranking algorithm.'''
 import numpy as np
-from deva.halfspace import hyperplane, shatter_test, impute_label, rank_ef_ex
+from deva.halfspace import (hyperplane, shatter_test, impute_label, rank_ex,
+                            ShuffleUnshuffle)
+
+
+def test_shuffleunshuffle(random):
+    '''Test the shuffle and unshuffle class does what is claimed.'''
+    sus = ShuffleUnshuffle(random)
+    X = np.hstack((np.arange(100), np.random.randn(100))).T
+
+    Xs = sus.shuffle(X)
+    assert ((X - Xs)**2).sum() > 0
+    Xus = sus.unshuffle(Xs)
+    assert ((X - Xus)**2).sum() == 0
 
 
 def test_hyperplane(random):
@@ -72,7 +84,7 @@ def test_ranking(random):
     '''Test the ranking algorithm'''
     n = 30
     X = random.randn(n, 2) * 2
-    r = np.array([-1, 1])
+    r = np.array([-1, 1])  # reference point for defining the ranking origin
     cnt = 0
 
     def oracle_fn(a, b):
@@ -80,10 +92,19 @@ def test_ranking(random):
         cnt += 1
         ar = ((a - r)**2).sum()
         br = ((b - r)**2).sum()
-        return 1 if ar <= br else -1
+        return -1 if ar < br else 1
+
+    ranks = np.zeros(n, dtype=int)
+    rank = rank_ex(X, ranks)
+    a, b = next(rank)
+    try:
+        while True:
+            y = oracle_fn(a, b)
+            a, b = rank.send(y)
+    except StopIteration:
+        pass
 
     dist = ((X - r)**2).sum(axis=1)
     true_ranks = np.argsort(dist)
-    ranks = rank_ef_ex(X, oracle_fn)
     assert np.all(true_ranks == ranks)
     assert cnt < n * (n - 1) // 2
