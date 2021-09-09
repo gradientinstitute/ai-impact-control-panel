@@ -4,7 +4,7 @@ import numpy as np
 def remove_non_pareto(models):
     """Removes all models that are strictly worse than another model."""
     # Check if model is bested by another in every metric
-    print("Remove models not on the pareto front")
+    print("\nRemove models not on the pareto front")
     non_pareto = []
     for i, m in enumerate(models):
         for r in models:

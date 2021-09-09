@@ -105,14 +105,24 @@ def remove_unacceptable(models):
     scores_df = get_scores_df(models)
     metric_optimals = get_optimals(models)
     # Show best case and worst case?
-    print(scores_df)
-    print("Input the worst acceptable value for each metric.")
+    print("\nShow candidates? y or [n]:")
+    print('> ', end='')
+    show_cand = input()
+    if show_cand == "y":
+        print(scores_df)
+
+    print("\nInput the worst acceptable value for each metric.")
     for met_name, met_opt in metric_optimals.items():
-        print("{} :".format(met_name))
-        i = input()
+
         if met_opt == "min":
+            print("Max acceptable {} :".format(met_name))
+            print('> ', end='')
+            i = input()
             unaccept_bool = scores_df[met_name] > float(i)
         elif met_opt == "max":
+            print("Min acceptable {} :".format(met_name))
+            print('> ', end='')            
+            i = input()
             unaccept_bool = scores_df[met_name] < float(i)
         else:
             print('Optimal value for metric should be either "max" or "min".')
