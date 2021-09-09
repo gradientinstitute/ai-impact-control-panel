@@ -109,25 +109,56 @@ def remove_unacceptable(models):
     print('> ', end='')
     show_cand = input()
     if show_cand == "y":
-        print(scores_df)
+        scores_summary(scores_df, metric_optimals)
 
     print("\nInput the worst acceptable value for each metric.")
     for met_name, met_opt in metric_optimals.items():
 
-        if met_opt == "min":
-            print("Max acceptable {} :".format(met_name))
-            print('> ', end='')
-            i = input()
-            unaccept_bool = scores_df[met_name] > float(i)
-        elif met_opt == "max":
-            print("Min acceptable {} :".format(met_name))
+        while True:
+            if met_opt == "min":
+                print("Max acceptable {} :".format(met_name))
+                print('> ', end='')
+                i = input()
+                unaccept_bool = scores_df[met_name] > float(i)
+            elif met_opt == "max":
+                print("Min acceptable {} :".format(met_name))
+                print('> ', end='')            
+                i = input()
+                unaccept_bool = scores_df[met_name] < float(i)
+            else:
+                print('Optimal value for metric should be either "max" or "min".')
+            
+            temp_scores_df = scores_df[~unaccept_bool]
+
+            if show_cand == "y":
+                print("\nRemaining candidates if suggested limit is implemented:")
+                scores_summary(temp_scores_df, metric_optimals)
+            print("\nDo you wish to implement this limit? y or [n]")
             print('> ', end='')            
             i = input()
-            unaccept_bool = scores_df[met_name] < float(i)
-        else:
-            print('Optimal value for metric should be either "max" or "min".')
-        print("Removing {} unacceptable models".format(np.sum(unaccept_bool)))
-        scores_df = scores_df[~unaccept_bool]
+            if i == "y":
+                print("Removing {} unacceptable models".format(np.sum(unaccept_bool)))
+                scores_df = scores_df[~unaccept_bool]
+                break
+
     
     models = {m_i: models[m_i] for m_i in scores_df.index}
     return models
+
+def scores_summary(scores_df, metric_optimals):
+    print(scores_df)
+    ideal = {}
+    nadir = {}
+    for m_name, m_opt in metric_optimals.items():
+        if m_opt == "max":
+            ideal[m_name] = np.max(scores_df[m_name])
+            nadir[m_name] = np.min(scores_df[m_name])
+        elif m_opt == "min":
+            ideal[m_name] = np.min(scores_df[m_name])
+            nadir[m_name] = np.max(scores_df[m_name])
+        else:
+            print("Metric optimal must be a max or min.")
+    print("\nBest achievable values:")
+    print(ideal)
+    # print("\nWorst possible values:")
+    # print(nadir)
