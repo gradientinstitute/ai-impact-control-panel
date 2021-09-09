@@ -1,5 +1,7 @@
 import click
 import toml
+import numpy as np
+import pandas as pd
 from deva.elicit import Toy
 import logging
 from deva.pareto import remove_non_pareto
@@ -30,6 +32,12 @@ def cli(scenario):
 
     models = remove_non_pareto(models)
 
+    models = remove_unacceptable(models)
+    if len(models) == 0:
+        print("There are no acceptable candidates.")
+        return
+
+
     # Give all the models easy to remember names.... [optionally]
     tmp = {}
     for i, model in enumerate(models.values()):
@@ -54,3 +62,62 @@ def cli(scenario):
     print('\n\nSelection complete.' +
           ' Based on your preferences you have selected:\n')
     pretty_print_performance(result_name, result)
+
+
+def get_scores_df(models):
+    # Create list of metric names
+    sample_model = models[next(iter(models))]
+    metrics = [met_name for met_name in iter(sample_model)]
+    metric_type = [met_type["type"] for met_type in sample_model.values()]
+
+    model_ids = []
+    scores = np.zeros((len(models), len(metrics)))
+    
+    # Make array of scores
+    for i, (model_id, model_scores) in enumerate(models.items()):
+        model_ids.append(model_id)
+        for j, metric in enumerate(model_scores.values()):
+            scores[i, j] = metric["score"]
+
+    scores_df = pd.DataFrame(scores, columns=metrics)
+    scores_df["model_id"] = np.array(model_ids)
+    scores_df.set_index("model_id", inplace=True)
+
+    # change int metrics to type int
+    int_metrics = [m_name for m_name, m_type in 
+                    zip(metrics, metric_type) if m_type == "int"]
+    scores_df[int_metrics] = scores_df[int_metrics].astype(int)
+
+    return scores_df
+
+def get_optimals(models):
+    
+    sample_model = models[next(iter(models))]
+    metrics = [met_name for met_name in iter(sample_model)]
+    metric_optimals = [met_type["optimal"] for met_type in sample_model.values()]
+
+    met_optimal_dict = {met_name: met_opt for met_name, met_opt 
+                        in zip(metrics, metric_optimals)}
+    return met_optimal_dict
+
+def remove_unacceptable(models):
+    # Create DataFrame of metrics and model scores
+    scores_df = get_scores_df(models)
+    metric_optimals = get_optimals(models)
+    # Show best case and worst case?
+    print(scores_df)
+    print("Input the worst acceptable value for each metric.")
+    for met_name, met_opt in metric_optimals.items():
+        print("{} :".format(met_name))
+        i = input()
+        if met_opt == "min":
+            unaccept_bool = scores_df[met_name] > float(i)
+        elif met_opt == "max":
+            unaccept_bool = scores_df[met_name] < float(i)
+        else:
+            print('Optimal value for metric should be either "max" or "min".')
+        print("Removing {} unacceptable models".format(np.sum(unaccept_bool)))
+        scores_df = scores_df[~unaccept_bool]
+    
+    models = {m_i: models[m_i] for m_i in scores_df.index}
+    return models

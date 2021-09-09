@@ -14,10 +14,14 @@ def remove_non_pareto(models):
             worse = np.zeros(len(models[r])).astype(bool)
             for j, met in enumerate(models[m].keys()):
                 optimal = models[m][met]['optimal']
-                dist_m = np.abs(optimal - models[m][met]['score'])
-                dist_r = np.abs(optimal - models[r][met]['score'])
-                if dist_r <= dist_m:
+
+                diff =  models[m][met]['score'] - models[r][met]['score']
+
+                if (optimal == 'max') and (diff <= 0):
                     worse[j] = True
+                elif (optimal == 'min') and (diff >= 0):
+                    worse[j] = True
+
             # If all are worse, model is not on the pareto front.
             if np.all(worse):
                 non_pareto.append(m)
