@@ -1,4 +1,5 @@
 from flask import Flask, session, jsonify, abort
+from flask_caching import Cache
 from os import urandom
 import toml
 from deva.elicit import Toy
@@ -38,25 +39,25 @@ def load_models(scenario):
 # Set up the flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = urandom(16)
+app.config['CACHE_TYPE'] = 'SimpleCache'
 
-# TODO: find an app-wide persistent server-side session data soution
-# flask g application context didnt work - it has the lifetime of a request.
-session_eliciters = {}
-models = None
+# Note: SimpleCache is not threadsafe, but doesn't requrie a database service.
+cache = Cache(app)
 
 
 @app.route('/choice')
 def initial_view():
-    global session_eliciters, models
 
+    models = cache.get("models")
     if models is None:
         print("Initialising")
         models = load_models("example")
+        cache.set("models", models)
+
 
     if "ID" not in session:
         print("Registering new user")
-        while (new_id := random_key(16)) in session_eliciters:
-            pass
+        while cache.get(new_id := random_key(16)): pass
         session["ID"] = new_id
         session.modified = True
 
@@ -65,7 +66,7 @@ def initial_view():
     eliciter.choice = (m1, m2)  # TODO: update eliciter API
 
     # assume that a reload means user wants a restart
-    session_eliciters[session["ID"]] = eliciter
+    cache.set(session["ID"], eliciter)
 
     # send the performance and choices to the frontend
     m1perf["name"] = m1
@@ -79,7 +80,7 @@ def update(stage, x):
     if "ID" not in session:
         abort(400)  # Not initialised
 
-    eliciter = session_eliciters[session["ID"]]
+    eliciter = cache.get(session["ID"])
 
     print(session["ID"], eliciter.choice)
 
@@ -110,4 +111,6 @@ def update(stage, x):
         m2perf["name"] = m2
         res = dict(model1=m1perf, model2=m2perf)
 
+    # In case cache backend copies
+    cache.set(session["ID"], eliciter)
     return jsonify(res)

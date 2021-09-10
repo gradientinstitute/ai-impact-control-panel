@@ -85,6 +85,7 @@ def cli(scenario):
             print(f'You preferred model {choice}')
         else:
             print('Invalid selection, please try again.')
+
     result_name, result = eliciter.final_output()
     print('\n\nYou have selected:', result_name)
     # pretty_print_performance(result_name, result)
