@@ -104,8 +104,9 @@ def remove_unacceptable(models):
     # Create DataFrame of metrics and model scores
     scores_df = get_scores_df(models)
     metric_optimals = get_optimals(models)
+    orig_scores_df = scores_df.copy()
     # Show best case and worst case?
-    print("\nShow candidates? y or [n]:")
+    print("\nShow changes to set of available candidates? y or [n]:")
     print('> ', end='')
     show_cand = input()
     if show_cand == "y":
@@ -131,8 +132,10 @@ def remove_unacceptable(models):
             temp_scores_df = scores_df[~unaccept_bool]
 
             if show_cand == "y":
-                print("\nRemaining candidates if suggested limit is implemented:")
-                scores_summary(temp_scores_df, metric_optimals)
+                # print("\nRemaining candidates if suggested limit is implemented:")
+                # scores_summary(temp_scores_df, metric_optimals)
+                text_plots(orig_scores_df, scores_df, temp_scores_df, metric_optimals)
+                #plot_comparison(scores_df, temp_scores_df)
             print("\nDo you wish to implement this limit? y or [n]")
             print('> ', end='')            
             i = input()
@@ -146,7 +149,7 @@ def remove_unacceptable(models):
     return models
 
 def scores_summary(scores_df, metric_optimals):
-    print(scores_df)
+    # print(scores_df)
     ideal = {}
     nadir = {}
     for m_name, m_opt in metric_optimals.items():
@@ -160,5 +163,63 @@ def scores_summary(scores_df, metric_optimals):
             print("Metric optimal must be a max or min.")
     print("\nBest achievable values:")
     print(ideal)
+    print("\nWorst achievable values:")
+    print(nadir)
     # print("\nWorst possible values:")
     # print(nadir)
+
+def plot_comparison(scores_df, temp_scores_df):
+    import matplotlib.pyplot as plt
+    # import IPython; IPython.embed()
+    n_metrics = len(scores_df.columns)
+    plt.figure()
+    for i, metric in enumerate(scores_df):
+        plt.subplot(n_metrics, 1, i+1)
+        plt.hist(scores_df[metric])
+        plt.hist(temp_scores_df[metric])
+        plt.xlabel(metric)
+    plt.show()
+
+
+def text_plots(orig_scores_df, scores_df, temp_scores_df, metric_optimals):
+    # import IPython; IPython.embed()
+    # n_metrics = len(scores_df.columns)
+    print("\n\nProposed limit removes {} or {} remaining candiates.".format(scores_df.shape[0] - temp_scores_df.shape[0], scores_df.shape[0]))
+    #import IPython; IPython.embed()
+    for i, metric in enumerate(scores_df):
+        orig_min = np.min(orig_scores_df[metric])
+        orig_max = np.max(orig_scores_df[metric])
+
+        scores_min = np.min(scores_df[metric])
+        scores_max = np.max(scores_df[metric])
+
+        temp_min = np.min(temp_scores_df[metric])
+        temp_max = np.max(temp_scores_df[metric])
+        print("\n{}. \nProposed min: {} (was {}). Proposed max: {} (was {}).".format(metric, temp_min, scores_min, temp_max, scores_max))
+
+        
+        orig_range = orig_max - orig_min
+        tick_size = orig_range / 100
+
+        # Calculate number of left dashes
+        scores_start = scores_min - orig_min
+        left_dashes = np.round(scores_start / tick_size).astype(int)
+
+        # Calculate number of left x's
+        temp_start = temp_min - scores_min
+        left_xs = np.round(temp_start / tick_size).astype(int)
+
+       # Calculate number of left oh's
+        temp_range = temp_max - temp_min
+        ohs = np.round(temp_range / tick_size).astype(int)
+
+        # Calculate number of right x's
+        right_xs = np.round((scores_max - temp_max) / tick_size).astype(int)
+
+        # Calculate number of right dashes
+        right_dashes = np.round((orig_max - scores_max) / tick_size).astype(int)
+
+        print(("." * left_dashes) + ("-" * left_xs) +
+        ("o" * ohs) + ("-" * right_xs) + ("." * right_dashes))
+
+
