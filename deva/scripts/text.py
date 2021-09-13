@@ -1,6 +1,6 @@
 import click
 import toml
-from deva.elicit import Toy, ActiveRanking
+from deva.elicit import Toy, ActiveRanking, ActiveMax
 import logging
 from deva.pareto import remove_non_pareto
 from deva import fileio
@@ -8,7 +8,8 @@ from deva import fileio
 
 METHODS = {
     'toy': Toy,
-    'active': ActiveRanking
+    'rank': ActiveRanking,
+    'max': ActiveMax
 }
 
 
@@ -25,8 +26,8 @@ def pretty_print_performance(name, d):
 @click.command()
 @click.argument('scenario', type=click.Path(
     exists=True, file_okay=False, dir_okay=True, resolve_path=True))
-@click.option('-m', '--method', default='active',
-              type=click.Choice(['active', 'toy'], case_sensitive=False))
+@click.option('-m', '--method', default='max',
+              type=click.Choice(['max', 'rank', 'toy'], case_sensitive=False))
 def cli(scenario, method):
     logging.basicConfig(level=logging.INFO)
     input_files = fileio.get_all_files(scenario)

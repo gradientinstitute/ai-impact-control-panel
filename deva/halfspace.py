@@ -208,34 +208,96 @@ def robust_impute_label(H, Y):
 #  Ranking algorithms
 #
 
-def rank_ex(X, rank, yield_indices=False):
-    '''Rank objects using the exhaustive algorithm.
+class _HalfspaceBase():
+
+    def __init__(self, X, yield_indices=False):
+        self.indices = yield_indices
+        self.result = None
+        self.response = None
+        self.query_gen = self._algorithm(X)
+        self.query = next(self.query_gen)
+        self.__first_round = True
+
+    def next_round(self):
+        '''Initiate the next round of query-response from the algorithm.
+
+        Returns
+        -------
+        bool:
+            `True` if there is a new query ready, `False` if the algorithm is
+            finished and the result is ready.
+        '''
+        if self.__first_round:
+            self.__first_round = False
+        else:
+            try:
+                self.query = self.query_gen.send(self.response)
+            except StopIteration:
+                return False
+        return True
+
+    def get_query(self):
+        '''Get a query.
+
+        Returns
+        -------
+        tuple:
+            two objects (x_1, x_2) to compare, in particular x_1 < x_2 ?
+        '''
+        return self.query
+
+    def put_response(self, response):
+        '''Give a response to the query.
+
+        Parameters
+        ----------
+        response: int
+            response to the query, x_1 < x_2? -1 if true, else 1.
+        '''
+        self.response = response
+
+    def get_result(self):
+        '''Get the final result from the algorithm.
+
+        Returns
+        -------
+        result: None or Any
+            Returns None if there is no result ready, or the result, the type
+            of which depends on the algorithm.
+        '''
+        return self.result
+
+    def _algorithm(self, X):
+        raise NotImplementedError('HalfspaceBase is a base class only.')
+
+
+class HalfspaceRanking(_HalfspaceBase):
+    '''Rank objects using the exhaustive active ranking algorithm.
 
     This is the "exhaustive" algorithm because it computes ALL (n choose 2)
     pairwise ranking comparisons for n object. However, it expected that only d
     log n queries will be made to an oracle on average, where each object has d
-    features. As the authors note (Jamieson and Nowak, 2011), the
-    computational complexity of the algorithm can be reduced by integrating the
-    query label inference into a binary sorting algorithm, rather than running
-    the sort on the result of the (n choose 2) comparisons.
+    features. As the authors note (Jamieson and Nowak, 2011), the computational
+    complexity of the algorithm can be reduced by integrating the query label
+    inference into a binary sorting algorithm, rather than running the sort on
+    the result of the (n choose 2) comparisons.
 
     Queries are of the form, x_1 < x_2. If this ordering is correct, the oracle
     should return -1, otherwise 1.
 
-    This a generator that requires a `send` response. The first time the
-    generator is called, it will yield a tuple query. Subsequent calls to the
-    generator should use its `send` attribute, and send back the previous
-    response. E.g.
+    This class should be used in a loop like follows,
 
     ```
-    gen = rank_ex(X, rank):
-    a, b = next(gen)  # get the first query
-    y = ... # generate a response from the oracle
-    a, b = gen.send(y)  # get the next query, respond to the last.
+    ranker = HalfspaceRanking(X)
+    while ranker.next_round():
+        a, b = ranker.get_query()
+        preference = oracle_fn(a, b)  # preference should be {-1, 1}
+        ranker.put_response(preference)
+
+    ranks = ranker.get_result()
     ```
 
-    A `StopIteration` exception will be raised when the algorithm has
-    completed and there are no more queries.
+    Where `ranks` are integer indexes into the object array `X`.
 
     The primary assumption behind this algorithm is that rankings can be
     computed as:
@@ -249,53 +311,96 @@ def rank_ex(X, rank, yield_indices=False):
     ----------
     X: ndarray
         The n-objects of shape (n, d) to be ranked.
-    rank: ndarray
-        An array of shape (n,) to copy the final ranking into (this is the
-        algorithm output).
     yield_indices: bool
         Yield indices into X (True) or the rows of X themselves (False) for the
         queries.
-
-    Yields
-    ------
-    (a, b): tuple
-        a pair of objects for querying the oracle. The query is of the form: a
-        < b? These are two rows of `X` if `yield_indices` is False, otherwise
-        they are two integer indexes into `X`.
-
-    Raises
-    ------
-    StopIteration:
-        When there are no more queries as the algorithm has finished. The final
-        resulting ranking is copied into the `rank` input array.
-    RuntimeError:
-        If the generator is iterated without sending a response when one is
-        expected (all but the first query).
 
     TODO
     ----
     Implement and hook up the robust label imputation algorithm.
     '''
-    n, d = X.shape
-    nC2 = (n * (n - 1)) // 2  # complete number of unique pairwise comparisons
-    Y = np.zeros(nC2)  # query labels
-    H = np.zeros((nC2, d+1))  # query hyperplanes
-    Q = np.zeros((n, n), dtype=int)  # All query labels, including reverse
 
-    # Note we have not randomly shuffled X.
-    c = 0
-    for j in range(1, n):
-        for i in range(j):
-            H[c, :] = hyperplane(X[j], X[i])  # compute equidistant hyperplane
-            impute_label(H[:c+1], Y[:c+1])  # impute hyperplane/query label
-            if Y[c] == 0:  # cannot impute label
-                y = (yield j, i) if yield_indices else (yield X[j], X[i])
+    def _algorithm(self, X):
+        n, d = X.shape
+        nC2 = (n * (n - 1)) // 2  # number of unique pairwise comparisons
+        Y = np.zeros(nC2)  # query labels
+        H = np.zeros((nC2, d+1))  # query hyperplanes
+        Q = np.zeros((n, n), dtype=int)  # All query labels, including reverse
+
+        # Note we have not randomly shuffled X.
+        c = 0
+        for j in range(1, n):
+            for i in range(j):
+                H[c, :] = hyperplane(X[j], X[i])  # equidistant hyperplane
+                impute_label(H[:c+1], Y[:c+1])  # impute hyperplane/query label
+                if Y[c] == 0:  # cannot impute label
+                    y = (yield j, i) if self.indices else (yield X[j], X[i])
+                    if y is None:
+                        raise RuntimeError('Expecting a query response.')
+                    Y[c] = y
+                Q[j, i], Q[i, j] = Y[c], - Y[c]  # query label, reverse query
+                c += 1
+
+        # binary sort positions in X using the comparisons in query_map
+        key = cmp_to_key(lambda a, b: Q[a, b])
+        self.result = np.array(sorted(range(n), key=key))
+
+
+class HalfspaceMax(_HalfspaceBase):
+    '''Find the max object using the halfspace comparison algorithm.
+
+    Queries are of the form, x_1 < x_2. If this ordering is correct, the oracle
+    should return -1, otherwise 1.
+
+    This class should be used in a loop like follows,
+
+    ```
+    maxer = HalfspaceRanking(X)
+    while maxer.next_round():
+        a, b = maxer.get_query()
+        preference = oracle_fn(a, b)  # preference should be {-1, 1}
+        maxer.put_response(preference)
+
+    maximum = maxer.get_result()
+    ```
+
+    Where `maximum` is an integer index into the object array `X`.
+
+    The primary assumption behind this algorithm is that rankings can be
+    computed as:
+
+        x_1 < x_2 <=> ||x_1 - r|| < ||x_2 - r||
+
+    For some unique reference point, r, in R^d that defines the "origin" of the
+    ranking.
+
+    Parameters
+    ----------
+    X: ndarray
+        The n-objects of shape (n, d) to be ranked.
+    yield_indices: bool
+        Yield indices into X (True) or the rows of X themselves (False) for the
+        queries.
+
+    TODO
+    ----
+    Implement and hook up the robust label imputation algorithm.
+    '''
+
+    def _algorithm(self, X):
+        n, d = X.shape
+        Y = np.zeros(n-1)  # query labels
+        H = np.zeros((n-1, d+1))  # query hyperplanes
+        mi = 0
+
+        for q, i in zip(range(0, n-1), range(1, n)):
+            H[q, :] = hyperplane(X[mi], X[i])
+            impute_label(H[:i], Y[:i])
+            if Y[q] == 0:  # cannot impute label
+                y = (yield mi, i) if self.indices else (yield X[mi], X[i])
                 if y is None:
                     raise RuntimeError('Expecting a query response.')
-                Y[c] = y
-            Q[j, i], Q[i, j] = Y[c], - Y[c]  # query label, and reverse query
-            c += 1
-
-    # rank = binary sort positions in X using the comparisons in query_map
-    key = cmp_to_key(lambda a, b: Q[a, b])
-    rank[:] = np.array(sorted(range(n), key=key))
+                Y[q] = y
+            if Y[q] == -1:
+                mi = i
+        self.result = mi

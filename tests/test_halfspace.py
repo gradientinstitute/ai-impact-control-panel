@@ -1,7 +1,7 @@
 '''Test the halfspace ranking algorithm.'''
 import numpy as np
-from deva.halfspace import (hyperplane, shatter_test, impute_label, rank_ex,
-                            ShuffleUnshuffle)
+from deva.halfspace import (hyperplane, shatter_test, impute_label,
+                            ShuffleUnshuffle, HalfspaceRanking, HalfspaceMax)
 
 
 def test_shuffleunshuffle(random):
@@ -80,7 +80,7 @@ def test_impute_label_random_order(random, shatterable_data):
     assert np.all(Y == Y_hat)
 
 
-def test_ranking(random):
+def test_arank(random):
     '''Test the ranking algorithm'''
     n = 30
     X = random.randn(n, 2) * 2
@@ -94,17 +94,37 @@ def test_ranking(random):
         br = ((b - r)**2).sum()
         return -1 if ar < br else 1
 
-    ranks = np.zeros(n, dtype=int)
-    rank = rank_ex(X, ranks)
-    a, b = next(rank)
-    try:
-        while True:
-            y = oracle_fn(a, b)
-            a, b = rank.send(y)
-    except StopIteration:
-        pass
+    ranker = HalfspaceRanking(X)
+    while ranker.next_round():
+        a, b = ranker.get_query()
+        ranker.put_response(oracle_fn(a, b))
 
     dist = ((X - r)**2).sum(axis=1)
     true_ranks = np.argsort(dist)
-    assert np.all(true_ranks == ranks)
+    assert np.all(true_ranks == ranker.get_result())
     assert cnt < n * (n - 1) // 2
+
+
+def test_amax(random):
+    '''Test the active max algorithm'''
+    n = 30
+    X = random.randn(n, 2) * 2
+    r = np.array([-1, 1])  # reference point for defining the ranking origin
+    cnt = 0
+
+    def oracle_fn(a, b):
+        nonlocal r, cnt
+        cnt += 1
+        ar = ((a - r)**2).sum()
+        br = ((b - r)**2).sum()
+        return -1 if ar < br else 1
+
+    maxer = HalfspaceMax(X)
+    while maxer.next_round():
+        a, b = maxer.get_query()
+        maxer.put_response(oracle_fn(a, b))
+
+    dist = ((X - r)**2).sum(axis=1)
+    true_max = np.argmax(dist)
+    assert np.all(true_max == maxer.get_result())
+    assert cnt < n
