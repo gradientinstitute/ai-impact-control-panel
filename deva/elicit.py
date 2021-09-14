@@ -1,54 +1,70 @@
+class Pairwise:
+    '''Pairwise comparison.'''
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+    def __contains__(self, x):
+        return (x==self.a) | (x == self.b)
+
+    def __getitem__(self, index):
+        if index == 0:
+            return self.a
+        elif index == 1:
+            return self.b
+        else:
+            raise IndexError()
+
+    def invert(self, x):
+        if (x==self.a):
+            return self.b
+        elif (x==self.b):
+            return self.a
+        else:
+            raise ValueError(f"{x} not in [{self.a}, {self.b}]")
+
+
+    def json(self):
+        '''return a representation to send to the front-end'''
+        return {
+            "type": "pairwise",
+            "options": [self.a, self.b],
+        }
 
 
 class Eliciter:
+    '''Base class for elicitation algorithms.'''
+    terminated = True  # finished
+    query = None  # current question
+    result = None  # terminating choice
 
-    def finished(self):
+    def __init__(self, models):
         raise NotImplementedError
 
-    def prompt(self):
-        raise NotImplementedError
-
-    def user_input(self, input):
-        raise NotImplementedError
-
-    def final_output(self):
+    def update(self, choice):
         raise NotImplementedError
 
 
 class Toy(Eliciter):
 
     def __init__(self, models):
-        '''Create new eliciter. Models is a dict with keys as model names
-        and values as dicts of performance metrics'''
+        '''Simple eliciter with sequential elimination.'''
+        self._candidates = list(models.keys())
+        self._update_query()
 
-        self.models = models
-        self.result = None
-        self.result_name = None
-        self.candidates = list(self.models.keys())
+    def update(self, choice):
+        '''Process user-preference.'''
+        if choice in self.query:
+            self._candidates.remove(self.query.invert(choice))
+            self._update_query()
 
-    def finished(self):
+    def _update_query(self):
         if len(self.candidates) == 1:
-            self.result_name = self.candidates[0]
-            self.result = self.models[self.result_name]
-            return True
+            self.terminated = True
+            self.result = self.candidates[0]
         else:
-            return False
+            self.terminated = False
+            self.query = Pairwise(self.candidates[0], self.candidates[1])
 
-    def prompt(self):
-        # get two models
-        m1 = self.candidates[0]
-        m2 = self.candidates[1]
-        self.just_asked = [m1, m2]
-        return (m1, self.models[m1]), (m2, self.models[m2])
 
-    def user_input(self, txt):
-        if txt in self.just_asked:
-            self.just_asked.remove(txt)
-            # delete the one they didnt like
-            self.candidates.remove(self.just_asked[0])
-            return txt
-        else:
-            return None
 
-    def final_output(self):
-        return self.result_name, self.result

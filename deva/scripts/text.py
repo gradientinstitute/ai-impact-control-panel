@@ -1,13 +1,13 @@
 import click
 import toml
-from deva.elicit import Toy
+from deva import elicit
 import logging
 from deva.pareto import remove_non_pareto
 from deva import fileio
 
 
 def pretty_print_performance(name, d):
-    print(f'Model {name}:')
+    print(f'{name}:')
     for k in sorted(d.keys()):
         if d[k]["type"] == "int":
             print(f'\t{k}: {d[k]["score"]}')
@@ -36,21 +36,22 @@ def cli(scenario):
         tmp["System " + chr(65+i)] = model
     models = tmp
 
-    eliciter = Toy(models)
-    while not eliciter.finished():
-        (m1, m1perf), (m2, m2perf) = eliciter.prompt()
+    eliciter = elicit.Toy(models)
+    while not eliciter.terminated:
+        assert isinstance(eliciter.query, elicit.Pairwise)
+        m1, m2 = eliciter.query
+        pretty_print_performance(m1, models[m1])
+        pretty_print_performance(m2, models[m2])
         print("Which model do you prefer:\n")
-        pretty_print_performance(m1, m1perf)
-        pretty_print_performance(m2, m2perf)
-        print(f'(Answer {m1} or {m2})')
-        print('> ', end='')
-        i = input()
-        choice = eliciter.user_input("System " + i)
-        if choice is not None:
-            print(f'You preferred model {choice}')
-        else:
-            print('Invalid selection, please try again.')
-    result_name, result = eliciter.final_output()
+
+        i = ""
+        while i not in eliciter.query:
+            print(f'(Answer {m1.split()[-1]} or {m2.split()[-1]})')
+            print('> ', end='')
+            i = "System " + input()
+
+        eliciter.update(i)
+
     print('\n\nSelection complete.' +
           ' Based on your preferences you have selected:\n')
-    pretty_print_performance(result_name, result)
+    pretty_print_performance(eliciter.result, models[eliciter.result])

@@ -2,7 +2,7 @@ from flask import Flask, session, jsonify, abort
 from flask_caching import Cache
 from os import urandom
 import toml
-from deva.elicit import Toy
+from deva import elicit
 from deva.pareto import remove_non_pareto
 from deva import fileio
 import random
@@ -39,38 +39,39 @@ def load_models(scenario):
 # Set up the flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = urandom(16)
-app.config['CACHE_TYPE'] = 'SimpleCache'
 
-# Note: SimpleCache is not threadsafe, but doesn't requrie a database service.
+# Note: SimpleCache is a dict backend so not threadsafe
+# by using this API, however, we can easily switch backend later
+app.config['CACHE_TYPE'] = 'SimpleCache'
 cache = Cache(app)
 
 
 @app.route('/choice')
 def initial_view():
 
-    models = cache.get("models")
-    if models is None:
-        print("Initialising")
+    if (models:=cache.get("models")) is None:
+        print("Load models")
         models = load_models("example")
         cache.set("models", models)
 
-
-    if "ID" not in session:
-        print("Registering new user")
+    if "ID" in session:
+        print("Reset session")
+    else:
+        print("New session")
         while cache.get(new_id := random_key(16)): pass
         session["ID"] = new_id
         session.modified = True
 
-    eliciter = Toy(models)
-    (m1, m1perf), (m2, m2perf) = eliciter.prompt()
-    eliciter.choice = (m1, m2)  # TODO: update eliciter API
+    eliciter = elicit.Toy(models)
 
     # assume that a reload means user wants a restart
     cache.set(session["ID"], eliciter)
 
     # send the performance and choices to the frontend
-    m1perf["name"] = m1
-    m2perf["name"] = m2
+    assert isinstance(eliciter.query, elicit.Pairwise)
+    m1, m2 = eliciter.query
+    m1perf = models[m1] + {"name": m1}
+    m2perf = models[m2] + {"name": m2}
     return jsonify(model1=m1perf, model2=m2perf)
 
 
