@@ -3,6 +3,7 @@ import toml
 from deva import elicit
 import logging
 from deva.pareto import remove_non_pareto
+from deva.bounds import remove_unacceptable
 from deva import fileio
 
 
@@ -38,6 +39,16 @@ def cli(scenario, method):
         models[name] = toml.load(fname)
 
     models = remove_non_pareto(models)
+
+    # Allow user to define acceptable region and remove models outside of that
+    print("\nDefine region of acceptability? y or [n]")
+    print('> ', end='')
+    i = input()
+    if i == "y":
+        models = remove_unacceptable(models)
+        if len(models) == 0:
+            print("There are no acceptable candidates.")
+            return
 
     # Give all the models easy to remember names.... [optionally]
     tmp = {}
