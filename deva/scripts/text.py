@@ -148,6 +148,7 @@ def remove_unacceptable(models):
             else:
                 print('Optimal value for metric should be' +
                       'either "max" or "min".')
+                raise
 
             temp_scores_df = scores_df[~unaccept_bool]
             if show_cand == "y":
