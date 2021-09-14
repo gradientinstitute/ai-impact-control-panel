@@ -2,10 +2,17 @@ import click
 import toml
 import numpy as np
 import pandas as pd
-from deva.elicit import Toy
+from deva.elicit import Toy, ActiveRanking, ActiveMax
 import logging
 from deva.pareto import remove_non_pareto
 from deva import fileio
+
+
+METHODS = {
+    'toy': Toy,
+    'rank': ActiveRanking,
+    'max': ActiveMax
+}
 
 
 def pretty_print_performance(name, d):
@@ -30,7 +37,9 @@ def pretty_print_dict(d):
 @click.command()
 @click.argument('scenario', type=click.Path(
     exists=True, file_okay=False, dir_okay=True, resolve_path=True))
-def cli(scenario):
+@click.option('-m', '--method', default='max',
+              type=click.Choice(['max', 'rank', 'toy'], case_sensitive=False))
+def cli(scenario, method):
     logging.basicConfig(level=logging.INFO)
     input_files = fileio.get_all_files(scenario)
 
@@ -57,7 +66,8 @@ def cli(scenario):
         tmp["System " + chr(65+i)] = model
     models = tmp
 
-    eliciter = Toy(models)
+    print(f'Starting elicitation using the {method} method.\n')
+    eliciter = METHODS[method.lower()](models)
     while not eliciter.finished():
         (m1, m1perf), (m2, m2perf) = eliciter.prompt()
         print("Which model do you prefer:\n")
