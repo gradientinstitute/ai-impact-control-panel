@@ -58,6 +58,8 @@ class Toy(Eliciter):
 
 class ActiveRanking(Eliciter):
 
+    _active_alg = HalfspaceRanking
+
     def __init__(self, models):
         model_feats = []
         self.model_attrs = []
@@ -67,7 +69,7 @@ class ActiveRanking(Eliciter):
             self.model_attrs.append(v)
             model_feats.append([s['score'] for s in v.values()])
         model_feats = np.array(model_feats)
-        self.active = self._active_alg()(model_feats, True)
+        self.active = self._active_alg(model_feats, True)
         self.query_map = {}
 
     def finished(self):
@@ -85,7 +87,7 @@ class ActiveRanking(Eliciter):
             self.active.put_response(self.query_map[txt])
             return txt
         else:
-            None
+            return None
 
     def final_output(self):
         res = self.active.get_result()
@@ -94,17 +96,13 @@ class ActiveRanking(Eliciter):
         best_ind = res[-1]
         return self.model_names[best_ind], self.model_attrs[best_ind]
 
-    def _active_alg(self):
-        return HalfspaceRanking
-
 
 class ActiveMax(ActiveRanking):
+
+    _active_alg = HalfspaceMax
 
     def final_output(self):
         res = self.active.get_result()
         if res is None:
             raise RuntimeError('Final result not ready.')
         return self.model_names[res], self.model_attrs[res]
-
-    def _active_alg(self):
-        return HalfspaceMax

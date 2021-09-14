@@ -10,67 +10,7 @@ from functools import cmp_to_key
 from scipy.optimize import linprog
 
 
-#
-#  Helper classes
-#
-
-class ShuffleUnshuffle():
-    '''Helper class for shuffling then un-shuffling objects.
-
-    Parameters
-    ----------
-    random_state: int, RandomState
-        The random seed or RandomState object to be used for randomly shuffling
-        the data.
-    '''
-
-    def __init__(self, random_state=None):
-        '''Initialise a ShuffleUnshuffle object.'''
-        if isinstance(random_state, np.random.RandomState):
-            self.random = random_state
-        else:
-            self.random = np.random.RandomState(random_state)
-
-    def shuffle(self, X):
-        '''Shuffle an array of object by their first axis.
-
-        Parameters
-        ----------
-        X: ndarray
-            The array of object to shuffle.
-
-        Returns
-        -------
-        X_shuffled: ndarray
-            A copy of the array, but shuffled.
-        '''
-        self.n = len(X)
-        self.pind = self.random.permutation(self.n)  # permutation
-        self.ipind = np.empty(self.n, dtype=int)
-        self.ipind[self.pind] = np.arange(self.n)  # inverse permutation
-        X_shuffled = np.copy(X[self.pind])
-        return X_shuffled
-
-    def unshuffle(self, X_shuffled):
-        '''Un-shuffle an array of object by their first axis.
-
-        Parameters
-        ----------
-        X_shuffled: ndarray
-            The array of object to un-shuffle.
-
-        Returns
-        -------
-        X: ndarray
-            A copy of the array, but unshuffled.
-        '''
-        if not hasattr(self, 'pind'):
-            raise RuntimeError('No call to shuffle() has yet been made.')
-        if len(X_shuffled) != self.n:
-            raise RuntimeWarning('The length of the object to unshuffle is '
-                                 'different from the original.')
-        X = np.copy(X_shuffled[self.ipind])
-        return X
+SHATTER_THRESH = 1e-10
 
 
 #
@@ -108,7 +48,7 @@ def hyperplane(a, b):
     return h
 
 
-def shatter_test(X, Y, return_hp=False):
+def shatter_test(X, Y):
     '''Test to see if the points in (X, Y) can be shattered by a hyperplane.
 
     This runs a linear program to see if the points in X labelled by Y can be
@@ -145,9 +85,7 @@ def shatter_test(X, Y, return_hp=False):
     b_ub = np.full(n, -1.)
     bounds = [(None, None)] * d + [(0., None)]  # s >= 0
     res = linprog(c, A_ub, b_ub, bounds=bounds, method='highs')
-    shattered = res.x[-1] < 1e-10
-    if return_hp:
-        return shattered, res.x[:-1]
+    shattered = res.x[-1] < SHATTER_THRESH
     return shattered
 
 
@@ -186,14 +124,17 @@ def impute_label(H, Y):
     negative = shatter_test(H, Y)
 
     # If positive and negative, then the query is ambiguous
+    imputable = True
     if positive and negative:
-        Y[-1] = 0
+        imputable = False
+        Y[-1] = 0  # just in case
     elif positive and not negative:
         Y[-1] = 1
     elif negative and not positive:
         Y[-1] = -1
     else:
         raise RuntimeError('Ranking has become inconsistent!')
+    return imputable
 
 
 def robust_impute_label(H, Y):
@@ -332,8 +273,7 @@ class HalfspaceRanking(_HalfspaceBase):
         for j in range(1, n):
             for i in range(j):
                 H[c, :] = hyperplane(X[j], X[i])  # equidistant hyperplane
-                impute_label(H[:c+1], Y[:c+1])  # impute hyperplane/query label
-                if Y[c] == 0:  # cannot impute label
+                if not impute_label(H[:c+1], Y[:c+1]):  # impute query label
                     y = (yield j, i) if self.indices else (yield X[j], X[i])
                     if y is None:
                         raise RuntimeError('Expecting a query response.')
@@ -395,8 +335,7 @@ class HalfspaceMax(_HalfspaceBase):
 
         for q, i in zip(range(0, n-1), range(1, n)):
             H[q, :] = hyperplane(X[mi], X[i])
-            impute_label(H[:i], Y[:i])
-            if Y[q] == 0:  # cannot impute label
+            if not impute_label(H[:i], Y[:i]):
                 y = (yield mi, i) if self.indices else (yield X[mi], X[i])
                 if y is None:
                     raise RuntimeError('Expecting a query response.')

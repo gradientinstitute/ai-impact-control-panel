@@ -1,18 +1,7 @@
 '''Test the halfspace ranking algorithm.'''
 import numpy as np
 from deva.halfspace import (hyperplane, shatter_test, impute_label,
-                            ShuffleUnshuffle, HalfspaceRanking, HalfspaceMax)
-
-
-def test_shuffleunshuffle(random):
-    '''Test the shuffle and unshuffle class does what is claimed.'''
-    sus = ShuffleUnshuffle(random)
-    X = np.hstack((np.arange(100), np.random.randn(100))).T
-
-    Xs = sus.shuffle(X)
-    assert ((X - Xs)**2).sum() > 0
-    Xus = sus.unshuffle(Xs)
-    assert ((X - Xus)**2).sum() == 0
+                            HalfspaceRanking, HalfspaceMax)
 
 
 def test_hyperplane(random):
