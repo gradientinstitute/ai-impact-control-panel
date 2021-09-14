@@ -7,22 +7,63 @@ function App() {
 
   // absolute: <model name> <action> <model value> <units>.
   // delta: <model name> <action> <delta> more <units> than <model name>
-  let unit = {
+  let unit1 = {
     name: "Profit",
     description: "Dollars per month net",
-    suffix: "/ month",
+    suffix: " / month",
     prefix: "$",
     higherIsBetter: true,
     action: "makes",
     min: 20,
     max: 80,
+  }
+  let unit2 = {
+    name: "False Positives",
+    description: "Falsely flagged transactions per month",
+    suffix: " trans / month",
+    prefix: "",
+    higherIsBetter: false,
+    action: "falsely flags",
+    min: 100,
+    max: 2000,
   };
   return (
     <div className="App container mx-auto text-center">
           <h1 className="pb-8">AI Governance Control Panel</h1>
-          <PairwiseComparator unit={unit} leftValue={40} 
+          <PairwiseComparator unit={unit1} leftValue={40} 
             rightValue={50} leftName={"System A"} rightName={"System B"}/>
+          <PairwiseComparator unit={unit2} leftValue={320} 
+            rightValue={550} leftName={"System A"} rightName={"System B"}/>
+          <InputGetter leftName={"System A"} rightName={"System B"} 
+            leftF ={() => {}} rightF={() => {}}/>
     </div>
+  );
+}
+
+function InputGetter(props) {
+  return (
+    <div className="w-auto mt-16 flex space-x-16">
+      <div className="my-auto" style={{width:"10%"}}>
+      </div>
+      <div className="my-auto" style={{width:"30%"}}>
+        <PreferenceButton onClick={props.leftF} label={props.leftName} />
+      </div>
+      <div className="my-auto" style={{width:"30%"}}>
+      </div>
+      <div className="my-auto" style={{width:"30%"}}>
+        <PreferenceButton onClick={props.rightF} label={props.rightName} />
+      </div>
+    </div>
+  );
+}
+
+function PreferenceButton(props) {
+  return (
+      <button className="bg-yellow-300 rounded-lg" onClick={() => props.onClick()}>
+        <div className="p-4">
+          I prefer {props.label}
+        </div>
+      </button>
   );
 }
 
@@ -30,15 +71,23 @@ function PairwiseComparator(props) {
 
   return (
     
-    <div className="flex space-x-20">
-      <Key unit={props.unit}/>
-      <Model unit={props.unit} name={props.leftName} 
-        value={props.leftValue} mirror={false}/>
-      <Comparison unit={props.unit} 
-        leftValue={props.leftValue} rightValue={props.rightValue}
-        leftName={props.leftName} rightName={props.rightName}/>
-      <Model unit={props.unit} name={props.rightName}
-        value={props.rightValue} mirror={true}/>
+    <div className="w-auto flex space-x-16">
+      <div className="my-auto" style={{width:"10%"}}>
+        <Key unit={props.unit}/>
+      </div>
+      <div className="" style={{width:"30%"}}>
+        <Model unit={props.unit} name={props.leftName} 
+          value={props.leftValue} mirror={false}/>
+      </div>
+      <div className="" style={{width:"30%"}}>
+        <Comparison unit={props.unit} 
+          leftValue={props.leftValue} rightValue={props.rightValue}
+          leftName={props.leftName} rightName={props.rightName}/>
+      </div>
+      <div className="" style={{width:"30%"}}>
+        <Model unit={props.unit} name={props.rightName}
+          value={props.rightValue} mirror={true}/>
+      </div>
     </div>
 
   );
@@ -47,12 +96,12 @@ function PairwiseComparator(props) {
 function Key(props) {
   let direction = props.unit.higherIsBetter === true ? "Higher" : "Lower";
     return (
-    <div>
+    <div className="my-auto">
       <div>
         {props.unit.name}
       </div>
-      <div>
-        {props.unit.prefix } {props.unit.suffix}
+      <div className="text-xs">
+        {props.unit.description}
       </div>
       <div>
         ({direction} is better)
@@ -77,11 +126,11 @@ function Performance(props) {
   return (
     
     <div className="flex">
-      <div className="text-xs w-1/4">{lv}<br />({lf} acheivable)</div>
+      <div className="my-auto text-xs w-1/4">{lv}<br />({lf} acheivable)</div>
       <div className="flex-grow py-3">
         <FillBar value={props.value} unit={props.unit} percentage={p} mirror={props.mirror} />
       </div>
-      <div className="text-xs w-1/4">{rv}<br />({rf} acheivable)</div>
+      <div className="my-auto text-xs w-1/4">{rv}<br />({rf} acheivable)</div>
     </div>
   );
 }
@@ -92,11 +141,12 @@ function FillBar(props) {
   let leftright = props.mirror === true ? " text-left ml-auto" : " text-right";
   let border = props.mirror === true ? "border-r-" + lwidth: "border-l-" + lwidth;
   let outer = "py-3 border-black " + border;
+  let color = props.unit.higherIsBetter === true ? "bg-green-400" : "bg-red-400";
 
   return (
     <div className={outer}>
     <div className="w-full bg-gray-200">
-      <div className={"h-24 min-h-full bg-green-400 text-xs text-left text-gray-500" + leftright} 
+      <div className={"h-24 min-h-full " + color + " text-xs text-left text-gray-500" + leftright} 
            style={{width:props.percentage + "%"}}
       >
       </div>
@@ -146,7 +196,7 @@ function ComparisonStatement(props) {
     delta = delta * -1;
   } 
   return (
-    <div>
+    <div className="text-xl font-bold">
       {n1} {props.unit.action} {props.unit.prefix}{delta}{props.unit.suffix} more than {n2}.
     </div>
 );
@@ -154,7 +204,7 @@ function ComparisonStatement(props) {
 
 function Model(props) {
   return (
-    <div className="flex-grow">
+    <div>
     <Performance unit={props.unit} value={props.value} mirror={props.mirror}/>
     <ValueStatement unit={props.unit} name={props.name} 
       value={props.value} />
@@ -164,7 +214,7 @@ function Model(props) {
 
 function Comparison(props) {
   return (
-    <div className="flex-grow">
+    <div>
       <DeltaBar unit={props.unit} leftValue={props.leftValue}
         rightValue={props.rightValue} />
       <ComparisonStatement unit={props.unit} leftName={props.leftName}
@@ -175,91 +225,89 @@ function Comparison(props) {
 }
 
 
-
-
 // https://codesandbox.io/s/jvvkoo8pq3?file=/src/index.js
 // https://www.robinwieruch.de/react-hooks-fetch-data
 // https://dmitripavlutin.com/react-useeffect-infinite-loop/
-function OldPairwiseComparator() {
-  const [model1, setModel1] = useState<any>(null);
-  const [model2, setModel2] = useState<any>(null);
-  const [model1Name, setModel1Name] = useState("loading");
-  const [model2Name, setModel2Name] = useState("loading");
-  const [modelChosen, setModelChosen] = useState("");
-  const [stage, setStage] = useState(1);
+//function OldPairwiseComparator() {
+//  const [model1, setModel1] = useState<any>(null);
+//  const [model2, setModel2] = useState<any>(null);
+//  const [model1Name, setModel1Name] = useState("loading");
+//  const [model2Name, setModel2Name] = useState("loading");
+//  const [modelChosen, setModelChosen] = useState("");
+//  const [stage, setStage] = useState(1);
 
-  // initial request on load
-  useEffect(() => {
-    let req = "choice";
-    async function fetchData() {
-      const result = await axios.get<any>(req);
-      setModel1(result.data.model1);
-      setModel2(result.data.model2);
-    }
-    fetchData();
-    }, []
-  );
+//  // initial request on load
+//  useEffect(() => {
+//    let req = "choice";
+//    async function fetchData() {
+//      const result = await axios.get<any>(req);
+//      setModel1(result.data.model1);
+//      setModel2(result.data.model2);
+//    }
+//    fetchData();
+//    }, []
+//  );
 
-  //Update model names on request coming back
-  useEffect(() => {
-    if (model1 !== null) {
-      setModel1Name(model1.name);
-    }
-    if (model2 !== null) {
-      setModel2Name(model2.name);
-    }
-  }, [model1, model2]);
+//  //Update model names on request coming back
+//  useEffect(() => {
+//    if (model1 !== null) {
+//      setModel1Name(model1.name);
+//    }
+//    if (model2 !== null) {
+//      setModel2Name(model2.name);
+//    }
+//  }, [model1, model2]);
   
-  // request on button push
-  useEffect(() => {
-    let req = "choice/" + stage + "/" + modelChosen;
-    async function fetchData() {
-      const result = await axios.get<any>(req);
-      setModel1(result.data.model1);
-      setModel2(result.data.model2);
-    }
-    if (modelChosen !== "") {
-      fetchData();
-      setModelChosen("");
-      setStage(stage => stage + 1);
-    }
-    }, [modelChosen]
-  );
+//  // request on button push
+//  useEffect(() => {
+//    let req = "choice/" + stage + "/" + modelChosen;
+//    async function fetchData() {
+//      const result = await axios.get<any>(req);
+//      setModel1(result.data.model1);
+//      setModel2(result.data.model2);
+//    }
+//    if (modelChosen !== "") {
+//      fetchData();
+//      setModelChosen("");
+//      setStage(stage => stage + 1);
+//    }
+//    }, [modelChosen]
+//  );
   
-  return (
-    <div className="flex flex-row gap-5">
-      <div className="flex-1 space-y-5">
-        <OldModelView model={model1}/>
-        <OldButtonInterface label={model1Name} onClick = { () => { setModelChosen("1") } } />
-      </div>
-      <div className="flex-1 space-y-5">
-        <OldModelView model={model2}/>
-        <OldButtonInterface label={model2Name} onClick = { () => { setModelChosen("2") } } />
-      </div>
-    </div>
-  )
-}
+  // return (
+  //   <div className="flex flex-row gap-5">
+  //     <div className="flex-1 space-y-5">
+  //       <OldModelView model={model1}/>
+  //       <OldButtonInterface label={model1Name} onClick = { () => { setModelChosen("1") } } />
+  //     </div>
+  //     <div className="flex-1 space-y-5">
+  //       <OldModelView model={model2}/>
+  //       <OldButtonInterface label={model2Name} onClick = { () => { setModelChosen("2") } } />
+  //     </div>
+  //   </div>
+  // )
+// }
 
-function OldModelView(props) {
-  return (
-    <div className="h-48 bg-gray-50 flex flex-wrap content-center justify-center">
-      <div>
-      <p>I am a picture of model {JSON.stringify(props.model)}</p>
-      </div>
-    </div>
-    )
-}
+// function OldModelView(props) {
+  // return (
+  //   <div className="h-48 bg-gray-50 flex flex-wrap content-center justify-center">
+  //     <div>
+  //     <p>I am a picture of model {JSON.stringify(props.model)}</p>
+  //     </div>
+  //   </div>
+  //   )
+// }
 
-function OldButtonInterface(props) {
-  return (
-    <div>
-      <button className="bg-green-500 rounded-lg" onClick={() => props.onClick()}>
-        <div className="p-4">
-          {props.label}
-        </div>
-      </button>
-    </div>
-  );
-}
+// function OldButtonInterface(props) {
+  // return (
+  //   <div>
+  //     <button className="bg-green-500 rounded-lg" onClick={() => props.onClick()}>
+  //       <div className="p-4">
+  //         {props.label}
+  //       </div>
+  //     </button>
+  //   </div>
+  // );
+// }
 
 export default App;
