@@ -1,7 +1,7 @@
 ## EXAMPLE MODEL CONFIG
 
 # if <model>.ranges section is defined, this gives the number of draws
-n_models = 5
+n_models = 100
 
 # These are the metrics to be run on the model outputs. The header names should
 # match those defined in metrics_dict defined in score.py
@@ -10,37 +10,37 @@ n_models = 5
 # [metrics.auc]
 # name = "Area under the ROC curve"
 # range = [0.5, 1.0]
-# optimal = 1.0
+# optimal = "max"
 # type = "float"
 # [metrics.accuracy]
 # name = "Accuracy"
 # range = [0.0, 1.0]
-# optimal = 1.0
+# optimal = "max"
 # type = "float"
 [metrics.fp]
 name = "False Positives"
 range = [1000, 0]
-optimal = 0
+optimal = "min"
 type = "int"
 [metrics.fn]
 name = "False Negatives"
 range = [100, 0]
-optimal = 0
+optimal = "min"
 type = "int"
 [metrics.fnwo]
 name = "People with >=3 FN"
 range = [100, 0]
-optimal = 0
+optimal = "min"
 type = "int"
 [metrics.fpwo]
 name = "People with >=5 FP"
 cutoff = 5
 range = [1000, 0]
-optimal = 0
+optimal = "min"
 type = "int"
 [metrics.profit]
 name = "Net profit"
 range = [1000.0, 5000.0]
-optimal = 100000000.0
+optimal = "max"
 type = "float"
 
