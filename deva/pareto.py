@@ -15,7 +15,7 @@ def remove_non_pareto(models):
             for j, met in enumerate(models[m].keys()):
                 optimal = models[m][met]['optimal']
 
-                diff =  models[m][met]['score'] - models[r][met]['score']
+                diff = models[m][met]['score'] - models[r][met]['score']
 
                 if (optimal == 'max') and (diff <= 0):
                     worse[j] = True
