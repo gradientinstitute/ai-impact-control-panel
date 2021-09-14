@@ -1,40 +1,16 @@
 import click
 import toml
-from deva.elicit import Toy
-import os
+from deva.elicit import Toy, ActiveRanking, ActiveMax
 import logging
-# import numpy as np
 from deva.pareto import remove_non_pareto
-from glob import glob
+from deva import fileio
 
 
-def name_from_files(lst):
-    """Extract the name from the filename for list of paths"""
-    names = set([
-        os.path.splitext(os.path.basename(i))[0].split('_')[-1]
-        for i in lst])
-    return names
-
-
-def get_all_files(scenario):
-    """Ensure all the models have metrics, scores and param files"""
-    scored_files = glob(os.path.join(scenario, "models/scored_*.csv"))
-    metric_files = glob(os.path.join(scenario, "models/metrics_*.toml"))
-    params_files = glob(os.path.join(scenario, "models/params_*.toml"))
-
-    scored_names = name_from_files(scored_files) \
-        .intersection(name_from_files(metric_files)) \
-        .intersection(name_from_files(params_files))
-
-    input_files = dict()
-
-    for n in scored_names:
-        input_files[n] = {
-                'scores': os.path.join(scenario, f'models/scored_{n}.csv'),
-                'metrics': os.path.join(scenario, f'models/metrics_{n}.toml'),
-                'params': os.path.join(scenario, f'models/params_{n}.toml')
-                }
-    return input_files
+METHODS = {
+    'toy': Toy,
+    'rank': ActiveRanking,
+    'max': ActiveMax
+}
 
 
 def pretty_print_performance(name, d):
@@ -50,9 +26,11 @@ def pretty_print_performance(name, d):
 @click.command()
 @click.argument('scenario', type=click.Path(
     exists=True, file_okay=False, dir_okay=True, resolve_path=True))
-def cli(scenario):
+@click.option('-m', '--method', default='max',
+              type=click.Choice(['max', 'rank', 'toy'], case_sensitive=False))
+def cli(scenario, method):
     logging.basicConfig(level=logging.INFO)
-    input_files = get_all_files(scenario)
+    input_files = fileio.get_all_files(scenario)
 
     models = {}
     for name, fs in input_files.items():
@@ -67,7 +45,8 @@ def cli(scenario):
         tmp["System " + chr(65+i)] = model
     models = tmp
 
-    eliciter = Toy(models)
+    print(f'Starting elicitation using the {method} method.\n')
+    eliciter = METHODS[method.lower()](models)
     while not eliciter.finished():
         (m1, m1perf), (m2, m2perf) = eliciter.prompt()
         print("Which model do you prefer:\n")
