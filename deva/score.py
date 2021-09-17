@@ -70,14 +70,14 @@ def eo(y_test, y_pred, _, sens_attrib):
 # First element of the value tuple is a function to calculate the score.
 # Second element of the value tuple is the optimal value of that score.
 metrics_dict = {
-        'accuracy': {'func': model_acc, 'optimal': 1., 'type': 'float'},
-        'auc': {'func': model_auc, 'optimal': 1., 'type': 'float'},
-        'fp': {'func': fp, 'optimal': 0, 'type': 'int'},
-        'fn': {'func': fn, 'optimal': 0, 'type': 'int'},
-        'fnwo': {'func': fnwo, 'optimal': 0, 'type': 'int'},
-        'fpwo': {'func': fpwo, 'optimal': 0, 'type': 'int'},
-        'profit': {'func': profit, 'optimal': 1e8, 'type': 'float'},
-        'eo': {'func': eo, 'optimal': 1e8, 'type': 'float'},
+        'accuracy': {'func': model_acc, 'optimal': 'max', 'type': 'float'},
+        'auc': {'func': model_auc, 'optimal': 'max', 'type': 'float'},
+        'fp': {'func': fp, 'optimal': 'min', 'type': 'int'},
+        'fn': {'func': fn, 'optimal': 'min', 'type': 'int'},
+        'fnwo': {'func': fnwo, 'optimal': 'min', 'type': 'int'},
+        'fpwo': {'func': fpwo, 'optimal': 'min', 'type': 'int'},
+        'profit': {'func': profit, 'optimal': 'max', 'type': 'float'},
+        'eo': {'func': eo, 'optimal': 'max', 'type': 'float'},
         }
 
 
