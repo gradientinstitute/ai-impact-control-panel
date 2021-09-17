@@ -4,10 +4,8 @@ import './App.css';
 
 function App() {
 
-
-  // absolute: <model name> <action> <model value> <units>.
-  // delta: <model name> <action> <delta> more <units> than <model name>
   let unit1 = {
+    uid: "profit",
     name: "Profit",
     description: "Dollars per month net",
     suffix: " / month",
@@ -18,6 +16,7 @@ function App() {
     max: 80,
   }
   let unit2 = {
+    uid: "fp",
     name: "False Positives",
     description: "Falsely flagged transactions per month",
     suffix: " trans / month",
@@ -27,13 +26,42 @@ function App() {
     min: 100,
     max: 2000,
   };
+  let units = [unit1, unit2];
+  
+  let response = {
+    type: "pairwise", 
+    model1: {
+      name: "System A",
+      profit: 40, 
+      fp: 320,
+      }, 
+    model2: {
+      name: "System B", 
+      profit: 50, 
+      fp: 550}
+  };
+
+  function comparisons() {
+    let result = []; 
+    for (const u of units) {
+      result.push(
+        <PairwiseComparator 
+          unit={u} 
+          leftValue={response.model1[u.uid]} 
+          rightValue={response.model2[u.uid]} 
+          leftName={response.model1.name} 
+          rightName={response.model2.name}
+        />
+      );
+    }
+    return result;
+  }
+
+
   return (
     <div className="App container mx-auto text-center">
           <h1 className="pb-8">AI Governance Control Panel</h1>
-          <PairwiseComparator unit={unit1} leftValue={40} 
-            rightValue={50} leftName={"System A"} rightName={"System B"}/>
-          <PairwiseComparator unit={unit2} leftValue={320} 
-            rightValue={550} leftName={"System A"} rightName={"System B"}/>
+          {comparisons()}
           <InputGetter leftName={"System A"} rightName={"System B"} 
             leftF ={() => {}} rightF={() => {}}/>
     </div>
