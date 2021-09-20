@@ -26,8 +26,7 @@ ipython = "^7.26.0"
 [tool.poetry.scripts]
 deva-dash = "deva.scripts.dash:cli"
 deva-gen = "deva.scripts.gen:cli"
-deva-text = "deva.scripts.text:cli"
-deva-gui = "deva.scripts.demo:cli"
+deva-demo = "deva.scripts.demo:cli"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

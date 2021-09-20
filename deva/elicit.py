@@ -1,124 +1,141 @@
+from deva import halfspace
 import numpy as np
-from deva.halfspace import HalfspaceMax, HalfspaceRanking
 
 
-class Pairwise:
-    '''Pairwise comparison.'''
-    def __init__(self, a, b):
-        self.a = a
-        self.b = b
+class Candidate:
+    def __init__(self, name, attributes):
+        self.name = name
+        self.attributes = attributes
+
+    def __getitem__(self, key):
+        return self.attributes[key]
+
+    def __repr__(self):
+        return f"Candidate({self.name})"
+
+
+class Pair(tuple):
+    def __new__(self, a: Candidate, b: Candidate):
+        assert isinstance(a, Candidate) and isinstance(b, Candidate)
+        return tuple.__new__(self, (a, b))
 
     def __contains__(self, x):
-        return (x==self.a) | (x == self.b)
+        return ((x == self[0].name) or (x == self[1].name)
+                or tuple.__contains__(self, x))
 
-    def __getitem__(self, index):
-        if index == 0:
-            return self.a
-        elif index == 1:
-            return self.b
-        else:
-            raise IndexError()
+    def __repr__(self):
+        return f"Pair({self[0].name}, {self[1].name})"
 
-    def invert(self, x):
-        if (x==self.a):
-            return self.b
-        elif (x==self.b):
-            return self.a
-        else:
-            raise ValueError(f"{x} not in [{self.a}, {self.b}]")
-
-
-    def json(self):
-        '''return a representation to send to the front-end'''
-        return {
-            "type": "pairwise",
-            "options": [self.a, self.b],
-        }
 
 
 class Eliciter:
     '''Base class for elicitation algorithms.'''
-    terminated = True  # finished
-    query = None  # current question
-    result = None  # terminating choice
 
-    def __init__(self, models):
+    # Just a promise that inheriting classes will have these members
+    def terminated(self, choice):
         raise NotImplementedError
 
-    def update(self, choice):
+    @property
+    def query(self, choice):
+        raise NotImplementedError
+
+    @property
+    def result(self, choice):
+        raise NotImplementedError
+
+    def input(self, choice):
         raise NotImplementedError
 
 
 class Toy(Eliciter):
+    '''Simple eliciter with sequential elimination.'''
 
-    def __init__(self, models):
-        '''Simple eliciter with sequential elimination.'''
-        self._candidates = list(models.keys())
-        self._update_query()
+    def __init__(self, candidates):
+        assert candidates, "No candidate models"
+        Eliciter.__init__(self)
+        self.candidates = list(candidates)  # copy references
+        self._update()
 
-    def update(self, choice):
-        '''Process user-preference.'''
-        if choice in self.query:
-            self._candidates.remove(self.query.invert(choice))
-            self._update_query()
-
-    def _update_query(self):
-        if len(self.candidates) == 1:
-            self.terminated = True
-            self.result = self.candidates[0]
+    def input(self, choice):
+        assert self._query and choice in self._query, "Response mismatch."
+        if choice==self.query[1].name:
+            self.candidates.remove(self.query[0])
         else:
-            self.terminated = False
-            self.query = Pairwise(self.candidates[0], self.candidates[1])
+            self.candidates.remove(self.query[1])
+        self._update()
+
+    @property
+    def terminated(self):
+        return len(self.candidates) == 1
+
+    @property
+    def result(self):
+        assert len(self.candidates) == 1, "Not terminated."
+        return self.candidates[0]
+
+    @property
+    def query(self):
+        return self._query
+
+    def _update(self):
+        if len(self.candidates) > 1:
+            self._query = Pair(self.candidates[0], self.candidates[1])
+        else:
+            self._query = None
 
 
-
+# Eliciter implementations
 class ActiveRanking(Eliciter):
 
-    _active_alg = HalfspaceRanking
+    _active_alg = halfspace.HalfspaceRanking
 
-    def __init__(self, models):
-        model_feats = []
-        self.model_attrs = []
-        self.model_names = []
-        for k, v in models.items():
-            self.model_names.append(k)
-            self.model_attrs.append(v)
-            model_feats.append([s['score'] for s in v.values()])
-        model_feats = np.array(model_feats)
-        self.active = self._active_alg(model_feats, True)
-        self.query_map = {}
+    def __init__(self, candidates):
+        assert candidates, "No candidate models"
+        Eliciter.__init__(self)
+        self.candidates = list(candidates)
+        attribs = list(candidates[0].attributes.keys())
+        self._result = None
 
-    def finished(self):
-        return not self.active.next_round()
+        # convert data structures to a numpy array
+        data = []
+        for c in candidates:
+            data.append([c[a] for a in attribs])
 
-    def prompt(self):
-        a, b = self.active.get_query()
-        self.query_map = {self.model_names[a]: 1, self.model_names[b]: -1}
-        qa = (self.model_names[a], self.model_attrs[a])
-        qb = (self.model_names[b], self.model_attrs[b])
-        return qa, qb
+        self.active = self._active_alg(np.array(data), True)
+        self._update()
 
-    def user_input(self, txt):
-        if txt in self.query_map:
-            self.active.put_response(self.query_map[txt])
-            return txt
+    def input(self, choice):
+        assert self._query and choice in self._query, "Response mismatch."
+        if choice==self._query[0].name:
+            val = 1
         else:
-            return None
+            val = -1
+        self.active.put_response(val)
+        self._update()
 
-    def final_output(self):
-        res = self.active.get_result()
-        if res is None:
-            raise RuntimeError('Final result not ready.')
-        best_ind = res[-1]
-        return self.model_names[best_ind], self.model_attrs[best_ind]
+    def _update(self):
+        if self.active.next_round():
+            a, b = self.active.get_query()
+            self._query = Pair(self.candidates[a], self.candidates[b])
+        else:
+            res = self.active.get_result()
+            ind = res if isinstance(res, int) else res[-1]
+            self._result = self.candidates[ind]
+            self._query = None
+
+    @property
+    def result(self):
+        return self._result
+
+    @property
+    def query(self):
+        return self._query
+
+    @property
+    def terminated(self):
+        return self._result is not None
 
 
 class ActiveMax(ActiveRanking):
 
-    _active_alg = HalfspaceMax
-
-    def final_output(self):
-        res = self.active.get_result()
-        if res is None:
-            raise RuntimeError('Final result not ready.')
-        return self.model_names[res], self.model_attrs[res]
+    _active_alg = halfspace.HalfspaceMax

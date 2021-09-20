@@ -1,99 +1,155 @@
 import click
 import toml
-from deva.elicit import Toy
-from deva import fileio
+from deva import elicit
 import logging
 from deva.pareto import remove_non_pareto
+from deva.bounds import remove_unacceptable
+from deva import fileio
+from deva import halfspace
 import matplotlib.pyplot as plt
 from deva.vis import comparison
+from deva import interface
 
-
-def pretty_print_performance(name, d):
-    print(f'Model {name}:')
-    for k in sorted(d.keys()):
-        if d[k]["type"] == "int":
-            print(f'\t{k}: {d[k]["score"]}')
-        else:
-            print(f'\t{k}: {d[k]["score"]:0.2f}')
-    print('\n')
+# Elicitation methods
+METHODS = {
+    'toy': elicit.Toy,
+    'rank': elicit.ActiveRanking,
+    'max': elicit.ActiveMax,
+}
 
 
 @click.command()
 @click.argument('scenario', type=click.Path(
     exists=True, file_okay=False, dir_okay=True, resolve_path=True))
-def cli(scenario):
+@click.option('-m', '--method', default='max',
+              type=click.Choice(['max', 'rank', 'toy'], case_sensitive=False))
+@click.option('-g', '--gui', default=False, is_flag=True)
+@click.option('-b', '--bounds', default=False, is_flag=True)
+def cli(scenario, method, bounds, gui):
     logging.basicConfig(level=logging.INFO)
-    input_files = fileio.get_all_files(scenario)
 
+    # Load all scenario files
+    input_files = fileio.get_all_files(scenario)
     models = {}
     for name, fs in input_files.items():
         fname = fs['metrics']
         models[name] = toml.load(fname)
 
+    # Filter efficient set
     models = remove_non_pareto(models)
 
-    # icon_key = ["profit", "FNWO", "FPWO", "FP", "FN", "CORRECT", "INCORRECT"]
-    remap = {
-        'False Positives': 'FP',
-        'False Negatives': 'FN',
-        'People with >=3 FN': 'FNWO',
-        'People with >=5 FP': 'FPWO',
-        'Net profit': 'profit'
+    # [Optionally] allow the user to define acceptability bounds prior
+    if bounds:
+        models = remove_unacceptable(models)
+
+    if len(models) == 0:
+        print("There are no acceptable candidates.")
+        return
+
+    candidates, scenario = demux(models)
+
+    eliciter = METHODS[method](candidates)
+    show = interface.mpl if gui else interface.text
+
+    # should the loop be event driven or a loop with blocking calls?
+    while not eliciter.terminated:
+        show(eliciter.query, scenario)
+
+        i = None
+        print(f'(Answer {eliciter.query[0].name} or {eliciter.query[1].name})')
+        while i not in eliciter.query:
+            i = input()
+            if len(i) == 1:
+                i = "System " + i
+        eliciter.input(i)
+
+    print('You have selected:')
+    show(eliciter.result, scenario)
+
+
+def demux(models):
+    """Demux candidates from scenario metadata.
+    If we are happy with this, it will be a future issue to represent the
+    config in this format to begin with.
+    """
+    # TODO: change the way a scenario config is encoded
+    scenario = {
+        "False Positives": {
+            "icon":"FP",
+            "description": "legitimate transaction{s} per month",
+            "more": "additional",
+            "less": "fewer",
+            "prefix": "",
+            "suffix": "trans / month",
+            "action": "falsely flag{s}",
+            "higherIsBetter": False,
+            "countable": "number",
+        },
+        "False Negatives": {
+            "icon": "FN",
+            "description": "fraudulent transaction{s} per month",
+            "more": "additional",
+            "less": "fewer",
+            "prefix": "",
+            "suffix": "trans / month",
+            "action": "overlook{s}",
+            "higherIsBetter": False,
+            "countable": "number",
+        },
+        "People with >=3 FN": {
+            "icon": "FNWO",
+            "description": "customer{s} with 3 or more overlooked fraud transactions",
+            "more": "additional",
+            "less": "fewer",
+            "prefix": "",
+            "suffix": "person{s}",
+            "action": "burden{s}",
+            "higherIsBetter": False,
+            "countable": "number",
+        },
+        "People with >=5 FP": {
+            "icon": "FPWO",
+            "description": "customer{s} with 5 or more false flags",
+            "more": "additional",
+            "less": "fewer",
+            "prefix": "",
+            "suffix": "person{s}",
+            "action": "burden{s}",
+            "countable": "number",
+        },
+        "Net profit": {
+            "icon": "profit",
+            "description": "net profit",
+            "more": "more",
+            "less": "less",
+            "prefix": "$",
+            "suffix": "",
+            "action": "make{s}",
+            "higherIsBetter": True,
+            "countable": "amount",
+        }
     }
-    maxima = {}
 
-    # Give all the models easy to remember names.... [optionally]
-    tmp = {}
-    for i, model in enumerate(models.values()):
-        tmp["System " + chr(65+i)] = model
-    models = tmp
+    processed = set()
+    scores = {}
+    for i, vals in enumerate(models.values()):
+        name = "System " + chr(65 + i)  # TODO: don't always rename
+        scores[name] = {}
+        for u in vals:
+            assert u in scenario
+            # Auto insert min, max name, extract score
+            score = vals[u]['score']
+            scores[name][u] = score
 
-    # compute set-wide maxima  - assuming positive for demo purposes
-    for model in models.values():
-        for k, v in model.items():
-            a = remap[k]
-            maxima[a] = max(maxima.get(a, 0), v["score"])
+            if u not in processed:
+                processed.add(u)
+                scenario[u]["max"] = score
+                scenario[u]["min"] = score
+                scenario[u]["name"] = u  # not needed here, but in frontend
+            else:
+                scenario[u]["max"] = max(scenario[u]["max"], score)
+                scenario[u]["min"] = min(scenario[u]["min"], score)
 
-    eliciter = Toy(models)
-    plt.figure(figsize=(10, 8))
-    plt.ion()
-
-    while not eliciter.finished():
-        (m1, m1perf), (m2, m2perf) = eliciter.prompt()
-
-        # patch into the visualisation
-        sys1 = {remap[k]: m1perf[k]["score"] for k in remap}
-        sys2 = {remap[k]: m2perf[k]["score"] for k in remap}
-        sys1["name"] = m1
-        sys2["name"] = m2
-
-        plt.clf()
-        # plt.gcf().set_size_inches(10, 8)
-        comparison(sys1, sys2, scale=maxima)  # remap=remap
-        plt.draw()
-        plt.show(block=False)
-        # plt.pause(0.01)
-
-        print("Which model do you prefer:\n")
-        m1 = m1.split()[-1]  # just A or B
-        m2 = m2.split()[-1]
-        print(f'(Answer {m1} or {m2})')
-        print('> ', end='')
-        i = input()
-        choice = eliciter.user_input("System " + i)
-        if choice is not None:
-            print(f'You preferred model {choice}')
-        else:
-            print('Invalid selection, please try again.')
-
-    result_name, result = eliciter.final_output()
-    print('\n\nYou have selected:', result_name)
-    # pretty_print_performance(result_name, result)
-
-    plt.clf()
-    sys1 = {remap[k]: result[k]["score"] for k in remap}
-    sys1["name"] = result_name
-    comparison(sys1, None, scale=maxima)  # remap=remap
-    plt.draw()
-    plt.pause(0.1)
-    input()
+    # Put into candidate format...
+    candidates = [elicit.Candidate(k, v) for k, v in scores.items()]
+    return candidates, scenario
