@@ -34,6 +34,7 @@ FP = 0
 TN = 1
 FN = -10
 
+
 # The name here must match the dictionary entry in deva/model.py iter_models
 # function. This tells the program what model you want to use.  In this
 # section, put default hyperparametrs that will apply to all draws. They may be
@@ -81,3 +82,16 @@ positive_class_weight = 20
 random_state = 2
 tol = 1.2e-4
 positive_class_weight = 10
+
+[randomclassifier]
+[randomclassifier.instances.random]
+stratify_attribute = "customer_is_female"
+
+[dummyclassifier]
+[dummyclassifier.instances.positive]
+strategy = "constant"
+constant = 1
+
+[dummyclassifier.instances.negative]
+strategy = "constant"
+constant = 0
