@@ -4,29 +4,31 @@ import './App.css';
 
 function App() {
 
-  let unit1 = {
-    uid: "profit",
-    name: "Profit",
-    description: "Dollars per month net",
-    suffix: " / month",
-    prefix: "$",
-    higherIsBetter: true,
-    action: "makes",
-    min: 20,
-    max: 80,
-  }
-  let unit2 = {
-    uid: "fp",
-    name: "False Positives",
-    description: "Falsely flagged transactions per month",
-    suffix: " trans / month",
-    prefix: "",
-    higherIsBetter: false,
-    action: "falsely flags",
-    min: 100,
-    max: 2000,
-  };
-  let units = [unit1, unit2];
+  const [units, setUnits] = useState<any>(null);
+  const [candidates, setCandidates] = useState<any>(null);
+  // initial request on load
+  useEffect(() => {
+    let req = "scenario";
+    async function fetchData() {
+      const result = await axios.get<any>(req);
+      setUnits(result.data);
+    }
+    fetchData();
+  }, []
+  );
+
+  // initial loading of candidates
+  useEffect(() => {
+    let req = "scenario/choice";
+    async function fetchData() {
+      const result = await axios.get<any>(req);
+      setCandidates(result.data);
+    }
+    if (units != null) {
+      fetchData();
+    }
+  }, [units]
+  );
   
   let response = {
     type: "pairwise", 
@@ -42,15 +44,20 @@ function App() {
   };
 
   function comparisons() {
+    if (units == null || candidates == null) {
+      return <p>Loading...</p>
+    }
     let result = []; 
-    for (const u of units) {
+    for (const [uid, u] of Object.entries(units)) {
+      const [name1, model1] = Object.entries(candidates)[0];
+      const [name2, model2] = Object.entries(candidates)[1];
       result.push(
         <PairwiseComparator 
           unit={u} 
-          leftValue={response.model1[u.uid]} 
-          rightValue={response.model2[u.uid]} 
-          leftName={response.model1.name} 
-          rightName={response.model2.name}
+          leftValue={model1[uid]} 
+          rightValue={model2[uid]} 
+          leftName={name1} 
+          rightName={name2}
         />
       );
     }
