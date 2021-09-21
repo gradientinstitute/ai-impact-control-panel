@@ -49,7 +49,7 @@ cache = Cache(app)
 @app.route('/choice')
 def initial_view():
 
-    if (models:=cache.get("models")) is None:
+    if (models := cache.get("models")) is None:
         print("Load models")
         models = load_models("example")
         cache.set("models", models)
@@ -58,7 +58,8 @@ def initial_view():
         print("Reset session")
     else:
         print("New session")
-        while cache.get(new_id := random_key(16)): pass
+        while cache.get(new_id := random_key(16)):
+            continue
         session["ID"] = new_id
         session.modified = True
 

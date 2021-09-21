@@ -1,0 +1,59 @@
+["False Positives"]
+    name = "False Positives"
+    icon = "FP"
+    description = "legitimate transaction{s} per month"
+    more = "additional"
+    less = "fewer"
+    prefix = ""
+    suffix = "trans / month"
+    action = "falsely flag{s}"
+    higherIsBetter = false
+    countable = "number"
+
+["False Negatives"]
+    name = "False Negatives"
+    icon = "FN"
+    description = "fraudulent transaction{s} per month"
+    more = "additional"
+    less = "fewer"
+    prefix = ""
+    suffix = "trans / month"
+    action = "overlook{s}"
+    higherIsBetter = false
+    countable = "number"
+
+["People with >=3 FN"]
+    name = "People with >=3 FN"
+    icon = "FNWO"
+    description = "customer{s} with 3 or more overlooked fraud transactions"
+    more = "additional"
+    less = "fewer"
+    prefix = ""
+    suffix = "person{s}"
+    action = "burden{s}"
+    higherIsBetter = false
+    countable = "number"
+
+["People with >=5 FP"]
+    name = "People with >=5 FP"
+    icon = "FPWO"
+    description = "customer{s} with 5 or more false flags"
+    more = "additional"
+    less = "fewer"
+    prefix = ""
+    suffix = "person{s}"
+    action = "burden{s}"
+    higherIsBetter = false
+    countable = "number"
+
+["Net profit"]
+    name = "Net profit"
+    icon = "profit"
+    description = "net profit"
+    more = "more"
+    less = "less"
+    prefix = "$"
+    suffix = ""
+    action = "make{s}"
+    higherIsBetter = true
+    countable = "amount"

@@ -5,9 +5,10 @@ import logging
 from deva.pareto import remove_non_pareto
 from deva.bounds import remove_unacceptable
 from deva import fileio
-from deva import halfspace
 import matplotlib.pyplot as plt
 from deva import interface
+import os.path
+
 
 # Elicitation methods
 METHODS = {
@@ -34,6 +35,8 @@ def cli(scenario, method, bounds, gui):
         fname = fs['metrics']
         models[name] = toml.load(fname)
 
+    scenario = toml.load(os.path.join(scenario, "metadata.toml"))
+
     # Filter efficient set
     models = remove_non_pareto(models)
 
@@ -45,7 +48,12 @@ def cli(scenario, method, bounds, gui):
         print("There are no acceptable candidates.")
         return
 
-    candidates, scenario = demux(models)
+    candidates = get_candidates(models)
+
+    # Auto-insert the set-min and set-max into the scenario
+    for u in scenario:
+        scenario[u]["max"] = max(c[u] for c in candidates)
+        scenario[u]["min"] = min(c[u] for c in candidates)
 
     eliciter = METHODS[method](candidates)
     show = interface.text
@@ -71,90 +79,17 @@ def cli(scenario, method, bounds, gui):
     input()
 
 
-def demux(models):
-    """Demux candidates from scenario metadata.
-    If we are happy with this, it will be a future issue to represent the
-    config in this format to begin with.
+def get_candidates(models):
     """
-    # TODO: change the way a scenario config is encoded
-    scenario = {
-        "False Positives": {
-            "icon":"FP",
-            "description": "legitimate transaction{s} per month",
-            "more": "additional",
-            "less": "fewer",
-            "prefix": "",
-            "suffix": "trans / month",
-            "action": "falsely flag{s}",
-            "higherIsBetter": False,
-            "countable": "number",
-        },
-        "False Negatives": {
-            "icon": "FN",
-            "description": "fraudulent transaction{s} per month",
-            "more": "additional",
-            "less": "fewer",
-            "prefix": "",
-            "suffix": "trans / month",
-            "action": "overlook{s}",
-            "higherIsBetter": False,
-            "countable": "number",
-        },
-        "People with >=3 FN": {
-            "icon": "FNWO",
-            "description": "customer{s} with 3 or more overlooked fraud transactions",
-            "more": "additional",
-            "less": "fewer",
-            "prefix": "",
-            "suffix": "person{s}",
-            "action": "burden{s}",
-            "higherIsBetter": False,
-            "countable": "number",
-        },
-        "People with >=5 FP": {
-            "icon": "FPWO",
-            "description": "customer{s} with 5 or more false flags",
-            "more": "additional",
-            "less": "fewer",
-            "prefix": "",
-            "suffix": "person{s}",
-            "action": "burden{s}",
-            "higherIsBetter": False,
-            "countable": "number",
-        },
-        "Net profit": {
-            "icon": "profit",
-            "description": "net profit",
-            "more": "more",
-            "less": "less",
-            "prefix": "$",
-            "suffix": "",
-            "action": "make{s}",
-            "higherIsBetter": True,
-            "countable": "amount",
-        }
-    }
+    Convert the TOML-loaded dictionaries into candidate objects.
+    TODO: change format upstream to remove metadata from model score files.
+    """
+    candidates = []
 
-    processed = set()
-    scores = {}
-    for i, vals in enumerate(models.values()):
-        name = "System " + chr(65 + i)  # TODO: don't always rename
-        scores[name] = {}
-        for u in vals:
-            assert u in scenario
-            # Auto insert min, max name, extract score
-            score = vals[u]['score']
-            scores[name][u] = score
+    for perf in models.values():
+        # TODO: retain "special" names of reference models.
+        name = "System " + chr(65 + len(candidates))
+        scores = {k: v['score'] for k, v in perf.items()}
+        candidates.append(elicit.Candidate(name, scores))
 
-            if u not in processed:
-                processed.add(u)
-                scenario[u]["max"] = score
-                scenario[u]["min"] = score
-                scenario[u]["name"] = u  # not needed here, but in frontend
-            else:
-                scenario[u]["max"] = max(scenario[u]["max"], score)
-                scenario[u]["min"] = min(scenario[u]["min"], score)
-
-    # Put into candidate format...
-    candidates = [elicit.Candidate(k, v) for k, v in scores.items()]
-    return candidates, scenario
+    return candidates

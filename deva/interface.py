@@ -4,7 +4,6 @@ from deva import elicit
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from os import path
-import numpy as np
 
 icons = {}  # Icon image cache
 
@@ -23,7 +22,7 @@ def readout(x, info, suffix=False, sigfig=2):
     s = info["prefix"] + s.replace(".0", "")
 
     if suffix:
-         s += " " + plural(info["suffix"], x)
+        s += " " + plural(info["suffix"], x)
 
     return s
 
@@ -42,7 +41,7 @@ def compare(sys1, sys2, meta, attribute):
     v1 = sys1[attribute]
     v2 = sys2[attribute]
     name1 = sys1.name
-    name2 = sys2.name
+    # name2 = sys2.name
 
     rtol = 1.05  # 5% difference
     atol = 0  # single count difference
@@ -125,15 +124,14 @@ def mpl(value, meta):
     elif isinstance(value, elicit.Candidate):
         sys1, sys2 = value, None
 
-    # Settings
+    # Layout parameters
     title_x = 7
     title_y = 0
     row_w = 14
     row_h = 2.5
     icon_l = 0.1
     icon_r = 1.4
-    icon_t = 1 + 0.5 * (icon_l - icon_r)  # center
-    text_y = icon_r + 0.25 # just below icon
+    text_y = icon_r + 0.25
     name_l = 1.8
     bar_l = 3.5
     bar_w = 8
@@ -159,7 +157,7 @@ def mpl(value, meta):
     for row, a in enumerate(sorted(sys1.attributes)):
         y = row * row_h
         plt.text(title_x, title_y + y, a, fontsize=12,
-            va="center", ha="center", fontweight="bold")
+                 va="center", ha="center", fontweight="bold")
         info = meta[a]
 
         # Draw the icon
@@ -175,7 +173,6 @@ def mpl(value, meta):
 
         plt.text(title_x, y + text_y, text, fontsize=10, va='center',
                  ha='center')
-
 
         # Bar charts
         for sys, offset, shade in bars:
@@ -205,7 +202,7 @@ def draw_bar(x, y, w, h, val, info, shade):
     cols = {
         'dark': ('darkgreen', 'darkred'),
         'light': ('springgreen', 'salmon'),
-        'normal':('green', 'red')
+        'normal': ('green', 'red')
     }[shade]
 
     alpha = (val - minv)/(maxv - minv + 1e-3)
@@ -224,4 +221,3 @@ def draw_bar(x, y, w, h, val, info, shade):
         patch = Rectangle((mid, top), (right-mid), h, facecolor=cols[1])
 
     plt.gca().add_patch(patch)
-

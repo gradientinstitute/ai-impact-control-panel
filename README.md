@@ -58,7 +58,7 @@ Use a matplotlib display (no longer under active development).
 
 `-b, --bounds`
 
-Ask about minimum performance bounds (will become its own demo in the future).
+Ask about minimum performance bounds (will become its own demo/research fork in the future).
 
 `SCENARIO` is the folder location of the scenario models, e.g.
 `scenarios/example`

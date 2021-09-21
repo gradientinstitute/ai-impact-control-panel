@@ -27,7 +27,6 @@ class Pair(tuple):
         return f"Pair({self[0].name}, {self[1].name})"
 
 
-
 class Eliciter:
     '''Base class for elicitation algorithms.'''
 
@@ -58,7 +57,7 @@ class Toy(Eliciter):
 
     def input(self, choice):
         assert self._query and choice in self._query, "Response mismatch."
-        if choice==self.query[1].name:
+        if choice == self.query[1].name:
             self.candidates.remove(self.query[0])
         else:
             self.candidates.remove(self.query[1])
@@ -106,7 +105,7 @@ class ActiveRanking(Eliciter):
 
     def input(self, choice):
         assert self._query and choice in self._query, "Response mismatch."
-        if choice==self._query[0].name:
+        if choice == self._query[0].name:
             val = 1
         else:
             val = -1
