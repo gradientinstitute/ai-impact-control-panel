@@ -7,7 +7,6 @@ from deva.bounds import remove_unacceptable
 from deva import fileio
 from deva import halfspace
 import matplotlib.pyplot as plt
-from deva.vis import comparison
 from deva import interface
 
 # Elicitation methods
@@ -49,7 +48,11 @@ def cli(scenario, method, bounds, gui):
     candidates, scenario = demux(models)
 
     eliciter = METHODS[method](candidates)
-    show = interface.mpl if gui else interface.text
+    show = interface.text
+
+    if gui:
+        show = interface.mpl
+        plt.figure(figsize=(10, 6), dpi=120)
 
     # should the loop be event driven or a loop with blocking calls?
     while not eliciter.terminated:
@@ -63,8 +66,9 @@ def cli(scenario, method, bounds, gui):
                 i = "System " + i
         eliciter.input(i)
 
-    print('You have selected:')
+    print('You have selected: ', eliciter.result.name)
     show(eliciter.result, scenario)
+    input()
 
 
 def demux(models):
@@ -115,6 +119,7 @@ def demux(models):
             "prefix": "",
             "suffix": "person{s}",
             "action": "burden{s}",
+            "higherIsBetter": False,
             "countable": "number",
         },
         "Net profit": {
