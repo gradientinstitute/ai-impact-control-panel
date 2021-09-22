@@ -7,20 +7,13 @@ import './App.css';
 // https://www.robinwieruch.de/react-hooks-fetch-data
 // https://dmitripavlutin.com/react-useeffect-infinite-loop/
 function App() {
-  return (
-    <div className="App container mx-auto text-center">
-      <h1 className="pb-8">AI Governance Control Panel</h1>
-      <MainPane />
-    </div>
-  );
-}
 
-
-function MainPane() {
-
+  // they've read and understood the problem setup
+  const [ready, setReady] = useState(false);
+  // the metadata for the problem
   const [units, setUnits] = useState<any>(null);
-  const [candidates, setCandidates] = useState<any>(null);
-  const [choice, setChoice] = useState<string>("");
+  // the result that comes back at the end
+  const [result, setResult] = useState(null);
 
   // initial request on load
   useEffect(() => {
@@ -32,16 +25,93 @@ function MainPane() {
     fetchData();
   }, []
   );
+  
+  let pane = (<h2>Loading...</h2>);
+  if (units != null && ready === false) {
+    pane = (<IntroPane units={units} onClick={() => {setReady(true)}}/>);
+  } else if (units!= null && ready === true && result == null) {
+    pane = (<MainPane units={units} setResult={setResult} />)
+  } else if (units != null && ready === true && result != null) {
+    pane = (<ResultPane units={units} result={result}/>);
+  } 
+
+  return (
+    <div className="App container mx-auto text-center">
+      <h1 className="pb-8">AI Governance Control Panel</h1>
+      {pane}
+    </div>
+  );
+}
+
+function IntroPane(props) {
+
+  function rows() {
+    let result = [];
+    for (const [name, d] of Object.entries(props.units)) {
+      const deets = JSON.stringify(d, null, 2);
+      result.push(
+        <div>
+          <h2>{name}</h2>
+          <pre className="text-left">{deets}</pre>
+        </div>
+      );
+    }
+    return result;
+  }
+
+  return (
+    <div>
+      <h1> Intro material </h1>
+      <div className="flex flex-wrap space-x-10 mt-8">
+        {rows()}
+      </div>
+      <ReadyButton onClick={props.onClick} />
+    </div>
+  );
+}
+
+
+function ResultPane(props) {
+  const deets = JSON.stringify(props.result, null, 2)
+  return (
+    <div>
+      <h1> Result model </h1>
+      <pre>{deets} </pre>
+    </div>
+  );
+}
+
+function ReadyButton(props) {
+  return (
+      <button className="bg-yellow-300 rounded-lg" 
+        onClick={() => props.onClick()}>
+        <div className="p-4">
+          Begin
+        </div>
+      </button>
+  );
+}
+
+
+function MainPane(props) {
+  const units = props.units;
+  const [candidates, setCandidates] = useState<any>(null);
+  const [choice, setChoice] = useState<string>("");
 
   async function fetchCandidates(req: string) {
     const result = await axios.get<any>(req);
     const d = result.data;
-    const leftName = Object.keys(d)[0];
-    const rightName = Object.keys(d)[1];
-    setCandidates({
-        left: {name: leftName, values: d[leftName]},
-        right:{name: rightName, values: d[rightName]}
-    });
+    const k = Object.keys(d);
+    if (k.length == 1) {
+      props.setResult(d);
+    } else {
+      const leftName = Object.keys(d)[0];
+      const rightName = Object.keys(d)[1];
+      setCandidates({
+          left: {name: leftName, values: d[leftName]},
+          right:{name: rightName, values: d[rightName]}
+      });
+    }
   }
 
   // initial loading of candidates
