@@ -2,7 +2,7 @@
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_array, check_X_y
+from sklearn.utils import check_array, check_X_y, check_random_state
 from sklearn.utils.validation import check_is_fitted
 from sklearn.preprocessing import LabelBinarizer
 
@@ -21,6 +21,9 @@ class RandomClassifier(BaseEstimator, ClassifierMixin):
         base rate of labels is used for all of the data. Otherwise this column
         will indicate how to split the labels into different groups, and a base
         rate for each group will be computed.
+    random_state: None, int or RandomState
+        An int seed for to control the random state, or a numpy RandomState
+        object.
 
     Note
     ----
@@ -29,13 +32,15 @@ class RandomClassifier(BaseEstimator, ClassifierMixin):
 
     def __init__(
         self,
-        stratify_attribute=None
+        stratify_attribute=None,
+        random_state=None
     ):
         '''Construct a random classifier object.'''
         if not isinstance(stratify_attribute, (str, int)) and \
                 stratify_attribute is not None:
             raise TypeError('stratify_attribute must be a string or integer')
         self.stratify_attribute = stratify_attribute
+        self.random_state = check_random_state(random_state)
 
     def fit(self, X, y):
         '''Fit a random classifier.
@@ -91,7 +96,7 @@ class RandomClassifier(BaseEstimator, ClassifierMixin):
             (for each sensitive attribute if stratify_attribute has been set).
         '''
         py = self.predict_proba(X)[:, 1]
-        y_hat = np.random.binomial(n=1, p=py)
+        y_hat = self.random_state.binomial(n=1, p=py)
         return self.labelenc_.inverse_transform(y_hat)
 
     def predict_proba(self, X):

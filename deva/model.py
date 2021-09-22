@@ -1,8 +1,9 @@
 import itertools
 import numpy as np
 
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 from sklearn.dummy import DummyClassifier
 
 from deva.score import score_model
@@ -11,6 +12,8 @@ from deva.references import RandomClassifier
 model_dict = {
     'randomforest': RandomForestClassifier,
     'logistic': LogisticRegression,
+    'adaboost': AdaBoostClassifier,
+    'svm': SVC,
     'randomclassifier': RandomClassifier,
     'dummyclassifier': DummyClassifier
 }
@@ -120,7 +123,7 @@ def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
                                    metrics_cfg, customer_id,
                                    sensitive_indicator)
         d = {
-                'name': param_name,
+                'name': f'{model_str}_{param_name}',
                 'model': m,
                 'params': param_dict,
                 'y_pred': y_pred,
