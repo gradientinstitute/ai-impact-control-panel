@@ -3,14 +3,17 @@ import numpy as np
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.dummy import DummyClassifier
 
 from deva.score import score_model
-
+from deva.references import RandomClassifier
 
 model_dict = {
-        'randomforest': RandomForestClassifier,
-        'logistic': LogisticRegression
-        }
+    'randomforest': RandomForestClassifier,
+    'logistic': LogisticRegression,
+    'randomclassifier': RandomClassifier,
+    'dummyclassifier': DummyClassifier
+}
 
 
 def translate_config(cfg):
@@ -46,47 +49,48 @@ def apply_threshold(
     return y_pred
 
 
-def iterate_hypers(base_cfg, range_cfg, list_cfg, instance_cfg, n_range_draws):
-    if instance_cfg is not None:
-        for set_name, params in instance_cfg.items():
-            full_dict = base_cfg.copy()
+def iter_hypers(base_cfg, range_cfg, list_cfg, instance_cfg, n_range_draws):
+    for model_name, instance_items in instance_cfg.items():
+        for set_name, params in instance_items.items():
+            full_dict = base_cfg[model_name].copy()
             full_dict.update(params)
-            yield set_name, full_dict
+            yield model_name, set_name, full_dict
 
-    if list_cfg is not None:
-        iters = [[(pname, val) for val in l] for pname, l in list_cfg.items()]
+    for model_name, list_items in list_cfg.items():
+        iters = [[(pname, v) for v in l] for pname, l in list_items.items()]
         for i, kv in enumerate(itertools.product(*iters)):
             d = {k: v for (k, v) in kv}
-            full_dict = base_cfg.copy()
+            full_dict = base_cfg[model_name].copy()
             full_dict.update(d)
-            yield f'list{i}', full_dict
+            yield model_name, f'list{i}', full_dict
 
-    if range_cfg is not None:
+    for model_name, range_items in range_cfg.items():
         for i in range(n_range_draws):
             d = {k: np.random.uniform(v[0], v[1])
-                 for k, v in range_cfg.items()}
-            full_dict = base_cfg.copy()
+                 for k, v in range_items.items()}
+            full_dict = base_cfg[model_name].copy()
             full_dict.update(d)
-            yield f'range{i}', full_dict
+            yield model_name, f'range{i}', full_dict
 
 
 def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
 
-    model_str = set(model_dict.keys()).intersection(set(cfg.keys())).pop()
-
+    model_keys = set(model_dict.keys()).intersection(set(cfg.keys()))
     metrics_cfg = cfg["metrics"]
-    model_cfg = cfg[model_str]
+    base_cfg = {}
+    range_cfg = {}
+    list_cfg = {}
+    instance_cfg = {}
 
-    base_cfg = model_cfg.copy()
-    range_cfg = None
-    list_cfg = None
-    instance_cfg = None
-    if 'ranges' in base_cfg:
-        range_cfg = base_cfg.pop('ranges')
-    if 'lists' in base_cfg:
-        list_cfg = base_cfg.pop('lists')
-    if 'instances' in base_cfg:
-        instance_cfg = base_cfg.pop('instances')
+    for model_key in model_keys:
+        model_cfg = cfg[model_key]
+        base_cfg[model_key] = model_cfg.copy()
+        if 'ranges' in base_cfg[model_key]:
+            range_cfg[model_key] = base_cfg[model_key].pop('ranges')
+        if 'lists' in base_cfg[model_key]:
+            list_cfg[model_key] = base_cfg[model_key].pop('lists')
+        if 'instances' in base_cfg[model_key]:
+            instance_cfg[model_key] = base_cfg[model_key].pop('instances')
 
     # Pull out the sensitive attribute indicator if it exists
     sensitive_indicator = None
@@ -98,9 +102,9 @@ def iter_models(X_train, y_train, t_train, X_test, y_test, t_test, cfg):
     if 'customer_id' in cfg:
         customer_id = X_test[cfg['customer_id']].values.astype(int)
 
-    piter = iterate_hypers(base_cfg, range_cfg, list_cfg,
-                           instance_cfg, cfg['n_range_draws'])
-    for param_name, param_dict in piter:
+    piter = iter_hypers(base_cfg, range_cfg, list_cfg, instance_cfg,
+                        cfg['n_range_draws'])
+    for model_str, param_name, param_dict in piter:
         processed_params = translate_config(param_dict)
         threshold = processed_params.pop('threshold', None)
         threshold_protected = processed_params.pop('threshold_protected', None)
