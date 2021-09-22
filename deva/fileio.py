@@ -13,7 +13,7 @@ def repo_root():
 def name_from_files(lst):
     """Extract the name from the filename for list of paths"""
     names = set([
-        os.path.splitext(os.path.basename(i))[0].split('_')[-1]
+        "_".join(os.path.splitext(os.path.basename(i))[0].split('_')[-2:])
         for i in lst])
     return names
 

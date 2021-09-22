@@ -24,7 +24,7 @@ def test_no_sensitive(random):
     X = random.randn(n, 2)  # This doesn't do anything
     y = random.binomial(n=1, p=p_true, size=n)
 
-    clf = RandomClassifier()
+    clf = RandomClassifier(random_state=random)
     clf.fit(X, y)
     assert within_one_percent(clf.py_, p_true)
     assert np.allclose(clf.py_, clf.predict_proba(X)[:, 1])
@@ -52,7 +52,7 @@ def test_stratification(random, attr):
     y[amask] = random.binomial(n=1, p=pya, size=na)
     y[~amask] = random.binomial(n=1, p=py, size=n-na)
 
-    clf = RandomClassifier(stratify_attribute=attr)
+    clf = RandomClassifier(stratify_attribute=attr, random_state=random)
     clf.fit(X, y)
     assert isinstance(clf.py_, list)
     assert within_one_percent(clf.py_[0], py)
