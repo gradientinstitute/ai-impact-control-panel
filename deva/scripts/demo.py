@@ -1,16 +1,11 @@
+"""Python demo that does not invoke a frontend server."""
 import click
-import toml
 from deva import elicit
 import logging
-from deva.pareto import remove_non_pareto
-from deva.bounds import remove_unacceptable
 from deva import fileio
 import matplotlib.pyplot as plt
 from deva import interface
-import os.path
 
-
-# Elicitation methods
 METHODS = {
     'toy': elicit.Toy,
     'rank': elicit.ActiveRanking,
@@ -28,33 +23,7 @@ METHODS = {
 def cli(scenario, method, bounds, gui):
     logging.basicConfig(level=logging.INFO)
 
-    # Load all scenario files
-    input_files = fileio.get_all_files(scenario)
-    models = {}
-    for name, fs in input_files.items():
-        fname = fs['metrics']
-        models[name] = toml.load(fname)
-
-    scenario = toml.load(os.path.join(scenario, "metadata.toml"))
-
-    # Filter efficient set
-    models = remove_non_pareto(models)
-
-    # [Optionally] allow the user to define acceptability bounds prior
-    if bounds:
-        models = remove_unacceptable(models)
-
-    if len(models) == 0:
-        print("There are no acceptable candidates.")
-        return
-
-    candidates = get_candidates(models)
-
-    # Auto-insert the set-min and set-max into the scenario
-    for u in scenario:
-        scenario[u]["max"] = max(c[u] for c in candidates)
-        scenario[u]["min"] = min(c[u] for c in candidates)
-
+    candidates, scenario = fileio.load_scenario(scenario, bounds)
     eliciter = METHODS[method](candidates)
     show = interface.text
 
@@ -77,19 +46,3 @@ def cli(scenario, method, bounds, gui):
     print('You have selected: ', eliciter.result.name)
     show(eliciter.result, scenario)
     input()
-
-
-def get_candidates(models):
-    """
-    Convert the TOML-loaded dictionaries into candidate objects.
-    TODO: change format upstream to remove metadata from model score files.
-    """
-    candidates = []
-
-    for perf in models.values():
-        # TODO: retain "special" names of reference models.
-        name = "System " + chr(65 + len(candidates))
-        scores = {k: v['score'] for k, v in perf.items()}
-        candidates.append(elicit.Candidate(name, scores))
-
-    return candidates

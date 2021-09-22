@@ -1,5 +1,4 @@
-"""Designed to behave a bit like a web front-end in terms of receiving a data
-package and displaying it."""
+"""Python interfaces for displaying and comparing models."""
 from deva import elicit
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
