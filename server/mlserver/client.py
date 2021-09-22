@@ -1,6 +1,7 @@
-# Chat to the serverL
+"""Basic client to chat to the server with a console interface."""
 import requests
 from deva import interface, elicit
+
 
 def main():
     # make a persistent session
@@ -20,7 +21,6 @@ def main():
     print("Initial comparison:")
     choices = sess.get(request).json()
     print("Return:", choices)
-
 
     while True:
         if len(choices) != 2:

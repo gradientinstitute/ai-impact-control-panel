@@ -52,10 +52,6 @@ Options:
 Where `max` is an active maximum-finding algorithm, `rank` is an active ranking
 algorithm, and `toy` is a simple "follow the leader" style algorithm.
 
-`-g, --gui`
-
-Use a matplotlib display (no longer under active development).
-
 `-b, --bounds`
 
 Ask about minimum performance bounds (will become its own demo/research fork in the future).
