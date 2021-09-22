@@ -24,7 +24,7 @@ function MainPane() {
 
   // initial request on load
   useEffect(() => {
-    let req = "scenario";
+    let req = "metadata";
     async function fetchData() {
       const result = await axios.get<any>(req);
       setUnits(result.data);
@@ -47,7 +47,7 @@ function MainPane() {
   // initial loading of candidates
   useEffect(() => {
     if (units != null) {
-      let req = "scenario/choice";
+      let req = "choice";
       fetchCandidates(req);
     }
   }, [units]
@@ -56,7 +56,7 @@ function MainPane() {
   // request on button push
   useEffect(() => {
     if (choice !== "") {
-      let req = "scenario/choice/" + choice;
+      let req = "choice/" + choice;
       fetchCandidates(req);
       setChoice("");
     }}, [choice]);
@@ -91,8 +91,10 @@ function MainPane() {
       <InputGetter 
         leftName={candidates.left.name} 
         rightName={candidates.right.name} 
-        leftF ={() => {setChoice(candidates.left.name)}} 
-        rightF={() => {setChoice(candidates.right.name)}}
+        leftF ={() => {setChoice(candidates.left.name + 
+          "/" + candidates.right.name)}} 
+        rightF={() => {setChoice(candidates.right.name +
+          "/" + candidates.left.name)}}
       />
     </div>
   );
@@ -174,13 +176,17 @@ function Performance(props) {
     (props.unit.max - props.unit.min) * 100;
   let lf = "min";
   let rf = "max";
-  let lv = props.unit.prefix + props.unit.min + props.unit.suffix;
-  let rv = props.unit.prefix + props.unit.max + props.unit.suffix;
+  let lv = props.unit.prefix + props.unit.min.toFixed() 
+    + " " + props.unit.suffix;
+  let rv = props.unit.prefix + props.unit.max.toFixed() 
+    + " " + props.unit.suffix;
   if (props.mirror === true) {
     lf = "max";
     rf = "min";
-    lv = props.unit.prefix + props.unit.max + props.unit.suffix;
-    rv = props.unit.prefix + props.unit.min + props.unit.suffix;
+    lv = props.unit.prefix + props.unit.max.toFixed() 
+      + " " + props.unit.suffix;
+    rv = props.unit.prefix + props.unit.min.toFixed()
+      + " " + props.unit.suffix;
   }
 
   return (
@@ -262,8 +268,8 @@ function DeltaBar(props) {
 function ValueStatement(props) {
   return (
     <div>
-      {props.name} {props.unit.action} {props.unit.prefix}{props.value}
-      {props.unit.suffix}. 
+      {props.name} {props.unit.action} {props.unit.prefix}
+      {props.value.toFixed()} {props.unit.suffix}. 
     </div>
 );
 }
@@ -280,7 +286,7 @@ function ComparisonStatement(props) {
   return (
     <div className="text-xl font-bold">
       {n1} {props.unit.action} {props.unit.prefix}
-      {delta}{props.unit.suffix} more than {n2}.
+      {delta.toFixed()} {props.unit.suffix} more than {n2}.
     </div>
 );
 }
