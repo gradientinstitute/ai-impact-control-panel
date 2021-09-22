@@ -2,55 +2,152 @@ import React, {useState, useEffect} from 'react';
 import axios from 'axios';
 import './App.css';
 
+// References for fetching from server
+// https://codesandbox.io/s/jvvkoo8pq3?file=/src/index.js
+// https://www.robinwieruch.de/react-hooks-fetch-data
+// https://dmitripavlutin.com/react-useeffect-infinite-loop/
 function App() {
 
-  let unit1 = {
-    uid: "profit",
-    name: "Profit",
-    description: "Dollars per month net",
-    suffix: " / month",
-    prefix: "$",
-    higherIsBetter: true,
-    action: "makes",
-    min: 20,
-    max: 80,
-  }
-  let unit2 = {
-    uid: "fp",
-    name: "False Positives",
-    description: "Falsely flagged transactions per month",
-    suffix: " trans / month",
-    prefix: "",
-    higherIsBetter: false,
-    action: "falsely flags",
-    min: 100,
-    max: 2000,
-  };
-  let units = [unit1, unit2];
+  // they've read and understood the problem setup
+  const [ready, setReady] = useState(false);
+  // the metadata for the problem
+  const [units, setUnits] = useState<any>(null);
+  // the result that comes back at the end
+  const [result, setResult] = useState(null);
+
+  // initial request on load
+  useEffect(() => {
+    let req = "metadata";
+    async function fetchData() {
+      const result = await axios.get<any>(req);
+      setUnits(result.data);
+    }
+    fetchData();
+  }, []
+  );
   
-  let response = {
-    type: "pairwise", 
-    model1: {
-      name: "System A",
-      profit: 40, 
-      fp: 320,
-      }, 
-    model2: {
-      name: "System B", 
-      profit: 50, 
-      fp: 550}
-  };
+  let pane = (<h2>Loading...</h2>);
+  if (units != null && ready === false) {
+    pane = (<IntroPane units={units} onClick={() => {setReady(true)}}/>);
+  } else if (units!= null && ready === true && result == null) {
+    pane = (<MainPane units={units} setResult={setResult} />)
+  } else if (units != null && ready === true && result != null) {
+    pane = (<ResultPane units={units} result={result}/>);
+  } 
+
+  return (
+    <div className="App container mx-auto text-center">
+      <h1 className="pb-8">AI Governance Control Panel</h1>
+      {pane}
+    </div>
+  );
+}
+
+function IntroPane(props) {
+
+  function rows() {
+    let result = [];
+    for (const [name, d] of Object.entries(props.units)) {
+      const deets = JSON.stringify(d, null, 2);
+      result.push(
+        <div>
+          <h2>{name}</h2>
+          <pre className="text-left">{deets}</pre>
+        </div>
+      );
+    }
+    return result;
+  }
+
+  return (
+    <div>
+      <h1> Intro material </h1>
+      <div className="flex flex-wrap space-x-10 mt-8">
+        {rows()}
+      </div>
+      <ReadyButton onClick={props.onClick} />
+    </div>
+  );
+}
+
+
+function ResultPane(props) {
+  const deets = JSON.stringify(props.result, null, 2)
+  return (
+    <div>
+      <h1> Result model </h1>
+      <pre>{deets} </pre>
+    </div>
+  );
+}
+
+function ReadyButton(props) {
+  return (
+      <button className="bg-yellow-300 rounded-lg" 
+        onClick={() => props.onClick()}>
+        <div className="p-4">
+          Begin
+        </div>
+      </button>
+  );
+}
+
+
+function MainPane(props) {
+  const units = props.units;
+  const [candidates, setCandidates] = useState<any>(null);
+  const [choice, setChoice] = useState<string>("");
+
+  async function fetchCandidates(req: string) {
+    const result = await axios.get<any>(req);
+    const d = result.data;
+    const k = Object.keys(d);
+    if (k.length == 1) {
+      props.setResult(d);
+    } else {
+      const leftName = Object.keys(d)[0];
+      const rightName = Object.keys(d)[1];
+      setCandidates({
+          left: {name: leftName, values: d[leftName]},
+          right:{name: rightName, values: d[rightName]}
+      });
+    }
+  }
+
+  // initial loading of candidates
+  useEffect(() => {
+    if (units != null) {
+      let req = "choice";
+      fetchCandidates(req);
+    }
+  }, [units]
+  );
+
+  // request on button push
+  useEffect(() => {
+    if (choice !== "") {
+      let req = "choice/" + choice;
+      fetchCandidates(req);
+      setChoice("");
+    }}, [choice]);
+
+  // loading condition
+  if (units == null || candidates == null) {
+    return (<h2>Loading...</h2>);
+  }
 
   function comparisons() {
+    console.log(candidates);
     let result = []; 
-    for (const u of units) {
+    for (const [uid, u] of Object.entries(units)) {
       result.push(
         <PairwiseComparator 
+          key={uid}
           unit={u} 
-          leftValue={response.model1[u.uid]} 
-          rightValue={response.model2[u.uid]} 
-          leftName={response.model1.name} 
-          rightName={response.model2.name}
+          leftValue={candidates.left.values[uid]} 
+          rightValue={candidates.right.values[uid]} 
+          leftName={candidates.left.name} 
+          rightName={candidates.right.name}
         />
       );
     }
@@ -59,11 +156,16 @@ function App() {
 
 
   return (
-    <div className="App container mx-auto text-center">
-          <h1 className="pb-8">AI Governance Control Panel</h1>
-          {comparisons()}
-          <InputGetter leftName={"System A"} rightName={"System B"} 
-            leftF ={() => {}} rightF={() => {}}/>
+    <div className="">
+      {comparisons()}
+      <InputGetter 
+        leftName={candidates.left.name} 
+        rightName={candidates.right.name} 
+        leftF ={() => {setChoice(candidates.left.name + 
+          "/" + candidates.right.name)}} 
+        rightF={() => {setChoice(candidates.right.name +
+          "/" + candidates.left.name)}}
+      />
     </div>
   );
 }
@@ -87,7 +189,8 @@ function InputGetter(props) {
 
 function PreferenceButton(props) {
   return (
-      <button className="bg-yellow-300 rounded-lg" onClick={() => props.onClick()}>
+      <button className="bg-yellow-300 rounded-lg" 
+        onClick={() => props.onClick()}>
         <div className="p-4">
           I prefer {props.label}
         </div>
@@ -139,16 +242,21 @@ function Key(props) {
 }
 
 function Performance(props) {
-  let p = (props.value - props.unit.min) / (props.unit.max - props.unit.min) * 100;
+  let p = (props.value - props.unit.min) / 
+    (props.unit.max - props.unit.min) * 100;
   let lf = "min";
   let rf = "max";
-  let lv = props.unit.prefix + props.unit.min + props.unit.suffix;
-  let rv = props.unit.prefix + props.unit.max + props.unit.suffix;
+  let lv = props.unit.prefix + props.unit.min.toFixed() 
+    + " " + props.unit.suffix;
+  let rv = props.unit.prefix + props.unit.max.toFixed() 
+    + " " + props.unit.suffix;
   if (props.mirror === true) {
     lf = "max";
     rf = "min";
-    lv = props.unit.prefix + props.unit.max + props.unit.suffix;
-    rv = props.unit.prefix + props.unit.min + props.unit.suffix;
+    lv = props.unit.prefix + props.unit.max.toFixed() 
+      + " " + props.unit.suffix;
+    rv = props.unit.prefix + props.unit.min.toFixed()
+      + " " + props.unit.suffix;
   }
 
   return (
@@ -156,7 +264,12 @@ function Performance(props) {
     <div className="flex">
       <div className="my-auto text-xs w-1/4">{lv}<br />({lf} acheivable)</div>
       <div className="flex-grow py-3">
-        <FillBar value={props.value} unit={props.unit} percentage={p} mirror={props.mirror} />
+        <FillBar 
+          value={props.value} 
+          unit={props.unit} 
+          percentage={p} 
+          mirror={props.mirror}
+        />
       </div>
       <div className="my-auto text-xs w-1/4">{rv}<br />({rf} acheivable)</div>
     </div>
@@ -166,15 +279,19 @@ function Performance(props) {
 
 function FillBar(props) {
   let lwidth = props.thin === true? 2 : 4;
-  let leftright = props.mirror === true ? " text-left ml-auto" : " text-right";
-  let border = props.mirror === true ? "border-r-" + lwidth: "border-l-" + lwidth;
+  let leftright = props.mirror === true ? 
+    " text-left ml-auto" : " text-right";
+  let border = props.mirror === true ? 
+    "border-r-" + lwidth: "border-l-" + lwidth;
   let outer = "py-3 border-black " + border;
-  let color = props.unit.higherIsBetter === true ? "bg-green-400" : "bg-red-400";
+  let color = props.unit.higherIsBetter === true ? 
+    "bg-green-400" : "bg-red-400";
 
   return (
     <div className={outer}>
     <div className="w-full bg-gray-200">
-      <div className={"h-24 min-h-full " + color + " text-xs text-left text-gray-500" + leftright} 
+      <div className={"h-24 min-h-full " + color + 
+        " text-xs text-left text-gray-500" + leftright} 
            style={{width:props.percentage + "%"}}
       >
       </div>
@@ -197,10 +314,22 @@ function DeltaBar(props) {
   return (
     <div className="w-full flex">
       <div className="w-1/2 py-3">
-        <FillBar mirror={true} thin={true} unit={props.unit} value={leftValue} percentage={leftP} />
+        <FillBar 
+          mirror={true} 
+          thin={true} 
+          unit={props.unit} 
+          value={leftValue} 
+          percentage={leftP} 
+        />
       </div>
       <div className="w-1/2 py-3">
-        <FillBar mirror={false} thin={true} unit={props.unit} value={rightValue} percentage={rightP} />
+        <FillBar 
+          mirror={false} 
+          thin={true} 
+          unit={props.unit} 
+          value={rightValue} 
+          percentage={rightP} 
+        />
       </div>
     </div>
   );
@@ -209,7 +338,8 @@ function DeltaBar(props) {
 function ValueStatement(props) {
   return (
     <div>
-      {props.name} {props.unit.action} {props.unit.prefix}{props.value} {props.unit.suffix}. 
+      {props.name} {props.unit.action} {props.unit.prefix}
+      {props.value.toFixed()} {props.unit.suffix}. 
     </div>
 );
 }
@@ -225,7 +355,8 @@ function ComparisonStatement(props) {
   } 
   return (
     <div className="text-xl font-bold">
-      {n1} {props.unit.action} {props.unit.prefix}{delta}{props.unit.suffix} more than {n2}.
+      {n1} {props.unit.action} {props.unit.prefix}
+      {delta.toFixed()} {props.unit.suffix} more than {n2}.
     </div>
 );
 }
@@ -251,91 +382,5 @@ function Comparison(props) {
     </div>
   );
 }
-
-
-// https://codesandbox.io/s/jvvkoo8pq3?file=/src/index.js
-// https://www.robinwieruch.de/react-hooks-fetch-data
-// https://dmitripavlutin.com/react-useeffect-infinite-loop/
-//function OldPairwiseComparator() {
-//  const [model1, setModel1] = useState<any>(null);
-//  const [model2, setModel2] = useState<any>(null);
-//  const [model1Name, setModel1Name] = useState("loading");
-//  const [model2Name, setModel2Name] = useState("loading");
-//  const [modelChosen, setModelChosen] = useState("");
-//  const [stage, setStage] = useState(1);
-
-//  // initial request on load
-//  useEffect(() => {
-//    let req = "choice";
-//    async function fetchData() {
-//      const result = await axios.get<any>(req);
-//      setModel1(result.data.model1);
-//      setModel2(result.data.model2);
-//    }
-//    fetchData();
-//    }, []
-//  );
-
-//  //Update model names on request coming back
-//  useEffect(() => {
-//    if (model1 !== null) {
-//      setModel1Name(model1.name);
-//    }
-//    if (model2 !== null) {
-//      setModel2Name(model2.name);
-//    }
-//  }, [model1, model2]);
-  
-//  // request on button push
-//  useEffect(() => {
-//    let req = "choice/" + stage + "/" + modelChosen;
-//    async function fetchData() {
-//      const result = await axios.get<any>(req);
-//      setModel1(result.data.model1);
-//      setModel2(result.data.model2);
-//    }
-//    if (modelChosen !== "") {
-//      fetchData();
-//      setModelChosen("");
-//      setStage(stage => stage + 1);
-//    }
-//    }, [modelChosen]
-//  );
-  
-  // return (
-  //   <div className="flex flex-row gap-5">
-  //     <div className="flex-1 space-y-5">
-  //       <OldModelView model={model1}/>
-  //       <OldButtonInterface label={model1Name} onClick = { () => { setModelChosen("1") } } />
-  //     </div>
-  //     <div className="flex-1 space-y-5">
-  //       <OldModelView model={model2}/>
-  //       <OldButtonInterface label={model2Name} onClick = { () => { setModelChosen("2") } } />
-  //     </div>
-  //   </div>
-  // )
-// }
-
-// function OldModelView(props) {
-  // return (
-  //   <div className="h-48 bg-gray-50 flex flex-wrap content-center justify-center">
-  //     <div>
-  //     <p>I am a picture of model {JSON.stringify(props.model)}</p>
-  //     </div>
-  //   </div>
-  //   )
-// }
-
-// function OldButtonInterface(props) {
-  // return (
-  //   <div>
-  //     <button className="bg-green-500 rounded-lg" onClick={() => props.onClick()}>
-  //       <div className="p-4">
-  //         {props.label}
-  //       </div>
-  //     </button>
-  //   </div>
-  // );
-// }
 
 export default App;
