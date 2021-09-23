@@ -6,12 +6,12 @@ that is actually running the elicitation.
 
 ## Installing packages
 
-go into the deva-ts folder and run `npm install`.
+go into the deva-ts folder and run `yarn install`.
 
 ## Starting up
 
-1. go into the mlserver folder and run `./run.sh`
-2. go into the deva-ts folder and run `yarn start`
+1. go into the mlserver folder and run `./run.sh` (do this first)
+2. go into the deva-ts folder and run `yarn start` (do this second)
 
 The frontend should load in your browser.
 
