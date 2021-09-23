@@ -8,7 +8,7 @@
     suffix = "trans / month"
     action = "falsely flag{s}"
     higherIsBetter = false
-    countable = "number"
+    decimals = 0
 
 ["False Negatives"]
     name = "False Negatives"
@@ -20,7 +20,7 @@
     suffix = "trans / month"
     action = "overlook{s}"
     higherIsBetter = false
-    countable = "number"
+    decimals = 0
 
 ["People with >=3 FN"]
     name = "People with >=3 FN"
@@ -32,7 +32,7 @@
     suffix = "person{s}"
     action = "burden{s}"
     higherIsBetter = false
-    countable = "number"
+    decimals = 0
 
 ["People with >=5 FP"]
     name = "People with >=5 FP"
@@ -44,7 +44,7 @@
     suffix = "person{s}"
     action = "burden{s}"
     higherIsBetter = false
-    countable = "number"
+    decimals = 0
 
 ["Net profit"]
     name = "Net profit"
@@ -56,7 +56,7 @@
     suffix = ""
     action = "make{s}"
     higherIsBetter = true
-    countable = "amount"
+    decimals = 2
 
 ["Equal Opportunity"]
     name = "Equal Opportunity"
@@ -68,4 +68,4 @@
     suffix = "rate"
     action = "give{s}"
     higherIsBetter = true
-    countable = "amount"
+    decimals = 2
