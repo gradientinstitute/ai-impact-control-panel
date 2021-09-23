@@ -3,17 +3,18 @@ from deva import elicit
 
 
 def readout(x, info, suffix=False, sigfig=2):
-    # Write a potentially large number in limited detail
-    x = int(x)
-    n = len(str(x))
-    x = round(x, -n+3)
+    # prep a number for text display
+    fmt = f"{{:.{sigfig-1}f}}"
+
     if x > 1e6:
-        s = f"{x/1e6:.1f}M"
+        s = fmt.format(x/1e6) + "M"
     elif x > 1e3:
-        s = f"{x/1e3:.1f}K"
+        s = fmt.format(x/1e3) + "K"
     else:
-        s = str(x)
-    s = info["prefix"] + s.replace(".0", "")
+        fmt = f"{{:.{info['decimals']}f}}"
+        s = fmt.format(x)  # use natrual display
+
+    s = info["prefix"] + s
 
     if suffix:
         s += " " + plural(info["suffix"], x)
@@ -42,17 +43,19 @@ def compare(sys1, sys2, meta, attribute):
 
     diffv = abs(v1-v2)
     diff = readout(diffv, info)
-    action = plural(info["action"], v2-v1+1)
+    action = info["action"].format(s="")
     descr = plural(info["description"], diffv)
     focus = "The systems"
 
     # Which direction is better doesn't matter if the unit format is consistent
     if v1 > v2 * rtol + atol:
         focus = name1
+        action = info["action"].format(s="s")  # single focus system
         diff += " " + info["more"]
     elif v2 > v1 * rtol + atol:
         focus = name1
         diff += " " + info["less"]
+        action = info["action"].format(s="s")  # single focus system
     else:
         if v1 == v2:
             diff = "the same"

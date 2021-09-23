@@ -58,7 +58,8 @@ def load_scenario(scenario, bounds):
     # It's on the issue stack to update it to work with candidate objects.
     if bounds:
         models = remove_unacceptable(models)
-        assert len(models) > 0, "There are no acceptable candidates."
+
+    assert len(models) > 0, "There are no candidate models."
 
     # Convert the TOML-loaded dictionaries into candidate objects.
     # TODO: change format upstream to remove metadata from model score files.
@@ -73,5 +74,8 @@ def load_scenario(scenario, bounds):
     for u in scenario:
         scenario[u]["max"] = max(c[u] for c in candidates)
         scenario[u]["min"] = min(c[u] for c in candidates)
+        scenario[u]["decimals"] = int(scenario[u]["decimals"])
+        scenario[u]["countable"] = (
+            "number" if scenario[u]["decimals"] == 0 else "amount")
 
     return candidates, scenario
