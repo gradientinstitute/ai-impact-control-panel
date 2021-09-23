@@ -138,9 +138,10 @@ def pareto(ctx):
     print("Saving generated metrics to disk.")
     metric_scores = {}
     for model in range(n_models):
-        metric_fname = os.path.join(model_folder, f'metrics_{model}.toml')
-        out_fname = os.path.join(model_folder, f'scored_{model}.csv')
-        param_fname = os.path.join(model_folder, f'params_{model}.toml')
+        metric_fname = os.path.join(model_folder,
+                                    f'metrics_pareto_{model}.toml')
+        out_fname = os.path.join(model_folder, f'scored_pareto_{model}.csv')
+        param_fname = os.path.join(model_folder, f'params_pareto_{model}.toml')
 
         # Loop over metrics to create dictionary for toml
         for i, m_details in enumerate(cfg["metrics"].values()):
