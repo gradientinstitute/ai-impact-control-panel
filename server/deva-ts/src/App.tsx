@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useReducer, useContext} from 'react';
 import axios from 'axios';
 import './App.css';
 
@@ -88,10 +88,17 @@ function ReadyButton(props) {
   );
 }
 
+const ChoiceDispatch = React.createContext(null);
+
+function choiceReducer(_state, action) {
+  return action.first + "/" + action.second;
+}
+
 function MainPane(props) {
   const units = props.units;
   const [candidates, setCandidates] = useState<any>(null);
-  const [choice, setChoice] = useState<string>("");
+  // const [choice, setChoice] = useState<string>("");
+  const [choice, dispatch] = useReducer(choiceReducer, "");
   const setResult = props.setResult;
 
   // loading of candidates
@@ -144,18 +151,15 @@ function MainPane(props) {
     return result;
   }
 
-
   return (
     <div className="">
       {comparisons()}
-      <InputGetter 
-        leftName={candidates.left.name} 
-        rightName={candidates.right.name} 
-        leftF ={() => {setChoice(candidates.left.name + 
-          "/" + candidates.right.name)}} 
-        rightF={() => {setChoice(candidates.right.name +
-          "/" + candidates.left.name)}}
-      />
+      <ChoiceDispatch.Provider value={dispatch}>
+        <InputGetter 
+          leftName={candidates.left.name} 
+          rightName={candidates.right.name} 
+        />
+      </ChoiceDispatch.Provider>
     </div>
   );
 }
@@ -166,21 +170,35 @@ function InputGetter(props) {
       <div className="my-auto" style={{width:"10%"}}>
       </div>
       <div className="my-auto" style={{width:"30%"}}>
-        <PreferenceButton onClick={props.leftF} label={props.leftName} />
+        <PreferenceButton 
+          label={props.leftName} 
+          me={props.leftName}
+          other={props.rightName}
+        />
       </div>
       <div className="my-auto" style={{width:"30%"}}>
       </div>
       <div className="my-auto" style={{width:"30%"}}>
-        <PreferenceButton onClick={props.rightF} label={props.rightName} />
+        <PreferenceButton 
+          label={props.rightName} 
+          me={props.rightName}
+          other={props.leftName}
+        />
       </div>
     </div>
   );
 }
 
 function PreferenceButton(props) {
+
+  const dispatch = useContext(ChoiceDispatch);
+  function handleClick() {
+    dispatch({ first: props.me, second: props.other });
+  }
+
   return (
       <button className="bg-yellow-300 rounded-lg" 
-        onClick={() => props.onClick()}>
+        onClick={handleClick}>
         <div className="p-4">
           I prefer {props.label}
         </div>
