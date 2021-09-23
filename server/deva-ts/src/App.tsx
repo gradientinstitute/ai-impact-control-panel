@@ -2,10 +2,6 @@ import React, {useState, useEffect} from 'react';
 import axios from 'axios';
 import './App.css';
 
-// References for fetching from server
-// https://codesandbox.io/s/jvvkoo8pq3?file=/src/index.js
-// https://www.robinwieruch.de/react-hooks-fetch-data
-// https://dmitripavlutin.com/react-useeffect-infinite-loop/
 function App() {
 
   // they've read and understood the problem setup
@@ -50,7 +46,7 @@ function IntroPane(props) {
     for (const [name, d] of Object.entries(props.units)) {
       const deets = JSON.stringify(d, null, 2);
       result.push(
-        <div>
+        <div key={name}>
           <h2>{name}</h2>
           <pre className="text-left">{deets}</pre>
         </div>
@@ -92,46 +88,40 @@ function ReadyButton(props) {
   );
 }
 
-
 function MainPane(props) {
   const units = props.units;
   const [candidates, setCandidates] = useState<any>(null);
   const [choice, setChoice] = useState<string>("");
+  const setResult = props.setResult;
 
-  async function fetchCandidates(req: string) {
-    const result = await axios.get<any>(req);
-    const d = result.data;
-    const k = Object.keys(d);
-    if (k.length == 1) {
-      props.setResult(d);
-    } else {
-      const leftName = Object.keys(d)[0];
-      const rightName = Object.keys(d)[1];
-      setCandidates({
+  // loading of candidates
+  useEffect(() => {
+    if (units == null) {
+      return
+    }
+    
+    let req = choice === "" ? "choice" : "choice/" + choice;
+    const fetch = async () => {
+      const result = await axios.get<any>(req);
+      const d = result.data;
+      const k = Object.keys(d);
+      if (k.length === 1) {
+        setResult(d);
+      } else {
+        const leftName = Object.keys(d)[0];
+        const rightName = Object.keys(d)[1];
+        setCandidates({
           left: {name: leftName, values: d[leftName]},
           right:{name: rightName, values: d[rightName]}
-      });
+        });
+      }
     }
-  }
-
-  // initial loading of candidates
-  useEffect(() => {
-    if (units != null) {
-      let req = "choice";
-      fetchCandidates(req);
-    }
-  }, [units]
+    fetch();
+  }, [units, choice, setResult]
   );
 
-  // request on button push
-  useEffect(() => {
-    if (choice !== "") {
-      let req = "choice/" + choice;
-      fetchCandidates(req);
-      setChoice("");
-    }}, [choice]);
-
   // loading condition
+  // must come after the useEffect so useEffect always runs
   if (units == null || candidates == null) {
     return (<h2>Loading...</h2>);
   }
