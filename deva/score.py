@@ -1,6 +1,11 @@
 import numpy as np
 from sklearn import metrics
 
+_TN = (0, 0)
+_TP = (1, 1)
+_FN = (1, 0)
+_FP = (0, 1)
+
 
 def model_auc(y_test, y_pred, *_):
     fpr, tpr, thresholds = metrics.roc_curve(y_test, y_pred, pos_label=1)
@@ -51,18 +56,57 @@ def profit(y_test, y_pred, customer_id, _, TP, FP, TN, FN):
     return np.dot(confuse, [TN, FP, FN, TP])
 
 
-def eo(y_test, y_pred, _, sens_attrib):
+def eo_disadv_rate(y_test, y_pred, _, sens_attrib):
+    '''Equality of opportunity rate difference for the disadvantaged class.
+
+        EO = max(0, TPR_adv - TPR_dis)
+    '''
+    return _eo(y_test, y_pred, sens_attrib, True, True)
+
+
+def eo_adv_rate(y_test, y_pred, _, sens_attrib):
+    '''Equality of opportunity rate difference for the advantaged class.
+
+        EO = max(0, TPR_dis - TPR_adv)
+    '''
+    return _eo(y_test, y_pred, sens_attrib, False, True)
+
+
+def eo_disadv(y_test, y_pred, _, sens_attrib):
+    '''Equality of opportunity difference for the disadvantaged class.
+        EO = max(0, TP_adv - TP_dis)
+    '''
+    return _eo(y_test, y_pred, sens_attrib, True, False)
+
+
+def eo_adv(y_test, y_pred, _, sens_attrib):
+    '''Equality of opportunity difference for the advantaged class.
+        EO = max(0, TP_dis - TP_adv)
+    '''
+    return _eo(y_test, y_pred, sens_attrib, False, False)
+
+
+def _eo(y_test, y_pred, sens_attrib, disadvantage, rate):
     # Equal opportunity
-    confuse_sens = metrics.confusion_matrix(y_test[sens_attrib == 1],
-                                            y_pred[sens_attrib == 1]).ravel()
-    confuse_nonsens = metrics.confusion_matrix(y_test[sens_attrib == 0],
-                                               y_pred[sens_attrib == 0]
-                                               ).ravel()
-    tpr_sens = confuse_sens[3] / (confuse_sens[3] + confuse_sens[2])
-    tpr_nonsens = confuse_nonsens[3] / (confuse_nonsens[3] +
-                                        confuse_nonsens[2])
-    eo = (tpr_sens + 1) / (tpr_nonsens + 1)  # +1 smoothing to eliminate nans
-    return eo
+    confuse_sens = metrics.confusion_matrix(
+        y_test[sens_attrib == 1],
+        y_pred[sens_attrib == 1]
+    )
+    confuse_nonsens = metrics.confusion_matrix(
+        y_test[sens_attrib == 0],
+        y_pred[sens_attrib == 0]
+    )
+    tp_sens = _tpr(confuse_sens) if rate else confuse_sens[_TP]
+    tp_nonsens = _tpr(confuse_nonsens) if rate else confuse_nonsens[_TP]
+
+    diff = tp_nonsens - tp_sens
+    eq_opp = max(0, diff if disadvantage else -diff)
+    return eq_opp
+
+
+def _tpr(confmat):
+    tpr = confmat[_TP] / (confmat[_TP] + confmat[_FN])
+    return tpr
 
 
 # A dictionary that maps config dictionary metric headings to functions.
@@ -77,7 +121,14 @@ metrics_dict = {
         'fnwo': {'func': fnwo, 'optimal': 'min', 'type': 'int'},
         'fpwo': {'func': fpwo, 'optimal': 'min', 'type': 'int'},
         'profit': {'func': profit, 'optimal': 'max', 'type': 'float'},
-        'eo': {'func': eo, 'optimal': 'max', 'type': 'float'},
+        'eo_advantage':
+                {'func': eo_adv, 'optimal': 'min', 'type': 'float'},
+        'eo_disadvantage':
+                {'func': eo_disadv, 'optimal': 'min', 'type': 'float'},
+        'eo_advantage_rate':
+                {'func': eo_adv_rate, 'optimal': 'min', 'type': 'float'},
+        'eo_disadvantage_rate':
+                {'func': eo_disadv_rate, 'optimal': 'min', 'type': 'float'},
         }
 
 

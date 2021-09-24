@@ -7,10 +7,6 @@ import pandas as pd
 from deva.references import RandomClassifier
 
 
-def within_one_percent(pred, true):
-    return np.abs(pred - true) / true < 1e-2
-
-
 # Getting this working is more effort than it is worth.
 # def test_estimator():
 #     est = RandomClassifier()
@@ -26,13 +22,13 @@ def test_no_sensitive(random):
 
     clf = RandomClassifier(random_state=random)
     clf.fit(X, y)
-    assert within_one_percent(clf.py_, p_true)
+    assert np.allclose(clf.py_, p_true, rtol=1e-2)
     assert np.allclose(clf.py_, clf.predict_proba(X)[:, 1])
 
     y_hat = clf.predict(X)
     p_hat = np.mean(y_hat)
     assert not np.allclose(y, y_hat)
-    assert within_one_percent(clf.py_, p_hat)
+    assert np.allclose(clf.py_, p_hat, rtol=1e-2)
 
 
 @pytest.mark.parametrize('attr', ['protected', 1])
@@ -55,8 +51,8 @@ def test_stratification(random, attr):
     clf = RandomClassifier(stratify_attribute=attr, random_state=random)
     clf.fit(X, y)
     assert isinstance(clf.py_, list)
-    assert within_one_percent(clf.py_[0], py)
-    assert within_one_percent(clf.py_[1], pya)
+    assert np.allclose(clf.py_[0], py, rtol=1e-2)
+    assert np.allclose(clf.py_[1], pya, rtol=1e-2)
 
     p_pred = clf.predict_proba(X)[:, 1]
     assert np.allclose(clf.py_[0], p_pred[~amask])
@@ -65,5 +61,5 @@ def test_stratification(random, attr):
     y_hat = clf.predict(X)
     pa_hat = np.mean(y_hat[amask])
     p_hat = np.mean(y_hat[~amask])
-    assert within_one_percent(clf.py_[0], p_hat)
-    assert within_one_percent(clf.py_[1], pa_hat)
+    assert np.allclose(clf.py_[0], p_hat, rtol=1e-2)
+    assert np.allclose(clf.py_[1], pa_hat, rtol=1e-2)
