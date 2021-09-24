@@ -24,9 +24,10 @@ def cli(scenario, method, bounds):
     candidates, scenario = fileio.load_scenario(scenario, bounds)
     eliciter = METHODS[method](candidates)
     display = interface.text
+    metrics = scenario["metrics"]
 
     while not eliciter.terminated:
-        display(eliciter.query, scenario)
+        display(eliciter.query, metrics)
 
         i = None
         print(f'(Answer {eliciter.query[0].name} or {eliciter.query[1].name})')
@@ -38,5 +39,5 @@ def cli(scenario, method, bounds):
         eliciter.input(i)
 
     print('You have selected: ', eliciter.result.name)
-    display(eliciter.result, scenario)
+    display(eliciter.result, metrics)
     input()

@@ -1,4 +1,7 @@
-["False Positives"]
+[intro]
+    text = "A long time ago in a galaxy far, far away...."
+
+[metrics.fp]
     name = "False Positives"
     icon = "FP"
     description = "legitimate transaction{s} per month"
@@ -10,7 +13,7 @@
     higherIsBetter = false
     decimals = 0
 
-["False Negatives"]
+[metrics.fn]
     name = "False Negatives"
     icon = "FN"
     description = "fraudulent transaction{s} per month"
@@ -22,7 +25,7 @@
     higherIsBetter = false
     decimals = 0
 
-["People with >=3 FN"]
+[metrics.fn3]
     name = "People with >=3 FN"
     icon = "FNWO"
     description = "customer{s} with 3 or more overlooked fraud transactions"
@@ -34,7 +37,7 @@
     higherIsBetter = false
     decimals = 0
 
-["People with >=5 FP"]
+[metrics.fp5]
     name = "People with >=5 FP"
     icon = "FPWO"
     description = "customer{s} with 5 or more false flags"
@@ -46,7 +49,7 @@
     higherIsBetter = false
     decimals = 0
 
-["Net profit"]
+[metrics.profit]
     name = "Net profit"
     icon = "profit"
     description = "net profit"
@@ -58,7 +61,7 @@
     higherIsBetter = true
     decimals = 2
 
-["Equal Opportunity Female"]
+[metrics.eqop_f]
     name = "Equal Opportunity Female"
     icon = "FN"
     description = "correctly identified fraudulent transactions proportionally on females"
@@ -70,7 +73,7 @@
     higherIsBetter = false
     decimals = 2
 
-["Equal Opportunity Male"]
+[metrics.eqop_m]
     name = "Equal Opportunity Male"
     icon = "FN"
     description = "correctly identified fraudulent transactions proportionally on males"

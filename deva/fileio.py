@@ -62,20 +62,25 @@ def load_scenario(scenario, bounds):
     assert len(models) > 0, "There are no candidate models."
 
     # Convert the TOML-loaded dictionaries into candidate objects.
-    # TODO: change format upstream to remove metadata from model score files.
     candidates = []
+    metrics = scenario["metrics"]
+
+    # TODO: change format upstream to remove metadata from model score files.
+    # TODO: change the data-gen code so fields match id not name
+    # For now we can adapt them
+    name2id = {metrics[uid]["name"]: uid for uid in metrics}
+
     for perf in models.values():
         # TODO: retain "special" names of reference models.
         name = "System " + chr(65 + len(candidates))
-        scores = {k: v['score'] for k, v in perf.items()}
+        scores = {name2id[k]: v['score'] for k, v in perf.items()}
         candidates.append(elicit.Candidate(name, scores))
 
-    # Auto-insert the set-min and set-max into the scenario
-    for u in scenario:
-        scenario[u]["max"] = max(c[u] for c in candidates)
-        scenario[u]["min"] = min(c[u] for c in candidates)
-        scenario[u]["decimals"] = int(scenario[u]["decimals"])
-        scenario[u]["countable"] = (
-            "number" if scenario[u]["decimals"] == 0 else "amount")
+    for u in metrics:
+        metrics[u]["max"] = max(c[u] for c in candidates)
+        metrics[u]["min"] = min(c[u] for c in candidates)
+        metrics[u]["decimals"] = int(metrics[u]["decimals"])
+        metrics[u]["countable"] = (
+            "number" if metrics[u]["decimals"] == 0 else "amount")
 
     return candidates, scenario
