@@ -13,6 +13,7 @@ def main():
     print("Attribute metadata:")
     meta = sess.get(request).json()
     print(meta)
+    metrics = meta["metrics"]
     print()
 
     print("Starting new session")
@@ -31,7 +32,7 @@ def main():
             elicit.Candidate(options[0], choices[options[0]]),
             elicit.Candidate(options[1], choices[options[1]]),
         )
-        interface.text(fchoice, meta)
+        interface.text(fchoice, metrics)
 
         i = None
         print(f'(Answer {options[0]} or {options[1]})')
@@ -55,7 +56,7 @@ def main():
     uid = list(choices.keys())[0]
     result = elicit.Candidate(uid, choices[uid])
     print("You have chosen:")
-    interface.text(result, meta)
+    interface.text(result, metrics)
 
 
 if __name__ == "__main__":

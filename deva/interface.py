@@ -87,7 +87,7 @@ def text(value, meta):
             v1 = readout(a[attrib], info, suffix=True)
             v2 = readout(b[attrib], info, suffix=True)
             comparison = compare(value[0], value[1], meta, attrib)
-            print(f"{attrib:25s}{v1:20s}{v2:20s}{comparison}")
+            print(f"{info['name']:25s}{v1:20s}{v2:20s}{comparison}")
 
     elif isinstance(value, elicit.Candidate):
         # Display a single candidate
@@ -98,4 +98,4 @@ def text(value, meta):
             v = value[attrib]
             desc = describe(value, meta, attrib)
             reading = readout(v, info, suffix=True)
-            print(f"{attrib:25s}{reading:20s}{desc}")
+            print(f"{info['name']:25s}{reading:20s}{desc}")
