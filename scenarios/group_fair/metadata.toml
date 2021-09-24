@@ -58,14 +58,26 @@
     higherIsBetter = true
     decimals = 2
 
-["Equal Opportunity"]
-    name = "Equal Opportunity"
+["Equal Opportunity Female"]
+    name = "Equal Opportunity Female"
     icon = "FN"
-    description = "Equal opportunity - nonsensical"
+    description = "correctly identified fraudulent transactions proportionally on females"
     more = "more"
-    less = "less"
+    less = "fewer"
     prefix = ""
     suffix = "rate"
-    action = "give{s}"
-    higherIsBetter = true
+    action = "make{s}"
+    higherIsBetter = false
+    decimals = 2
+
+["Equal Opportunity Male"]
+    name = "Equal Opportunity Male"
+    icon = "FN"
+    description = "correctly identified fraudulent transactions proportionally on males"
+    more = "more"
+    less = "fewer"
+    prefix = ""
+    suffix = "rate"
+    action = "make{s}"
+    higherIsBetter = false
     decimals = 2

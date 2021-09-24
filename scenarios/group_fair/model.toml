@@ -35,8 +35,13 @@ TP = 0
 FP = 0
 TN = 1
 FN = -10
-[metrics.eo]
-name = "Equal Opportunity"
+
+[metrics.eo_disadvantage_rate]
+name = "Equal Opportunity Female"
+
+[metrics.eo_advantage_rate]
+name = "Equal Opportunity Male"
+
 
 #
 # Proper ML models
@@ -46,26 +51,13 @@ name = "Equal Opportunity"
 fit_intercept = true
 random_state = 666
 class_weight = 'balanced'
+max_iter = 1000
 threshold = 0.5
 
 [logistic.lists]
-threshold_protected = [0.4, 0.5, 0.6]
-C = [0.5, 1.0, 2.0] 
-
-[randomforest]
-random_state = 666
-threshold = 0.5
-
-[randomforest.lists]
-threshold_protected = [0.4, 0.5, 0.6]
-max_depth = [1, 2, 3]
-
-[adaboost]
-random_state = 666
-
-[adaboost.lists]
-threshold_protected = [0.4, 0.5, 0.6]
-learning_rate = [0.9, 1.0, 1.1]
+threshold_protected = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+C = [0.1, 0.5, 1.0] 
+positive_class_weight = [1, 10, 20]
 
 
 #
