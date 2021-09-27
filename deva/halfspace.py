@@ -8,7 +8,7 @@ Advances in Neural Information Processing Systems (NeurIPS) 24, 9.
 import numpy as np
 from functools import cmp_to_key
 from scipy.optimize import linprog
-
+from sklearn.utils import check_random_state
 
 SHATTER_THRESH = 1e-10
 
@@ -137,12 +137,27 @@ def impute_label(H, Y):
     return imputable
 
 
-def robust_impute_label(H, Y):
-    '''Attempt to impute a label of a query, which is the last object in H.
+def gen_comparisons(X, random_state):
+    '''Attempt to generate some initially informative pairwise comparisons.'''
+    n = len(X)
+    inds = list(range(n))
 
-    This uses a strategy that is robust to noisy oracle inputs.
-    '''
-    raise NotImplementedError
+    # Standardise X
+    Xstd = (X - X.mean(axis=0)) / X.std(axis=0)
+
+    # Get the largest magnitude point for the first query
+    norms = (Xstd**2).sum(axis=1)
+    first = np.argmax(norms)
+
+    # Find the most distant point for the second query
+    second = np.argmax(((Xstd[first] - Xstd)**2).sum(axis=1))
+    inds.remove(first)
+    inds.remove(second)
+
+    # All subsequent queries are random
+    random = check_random_state(random_state)
+    random_inds = random.permutation(inds)
+    return first, np.concatenate(([second], random_inds))
 
 
 #
@@ -151,8 +166,9 @@ def robust_impute_label(H, Y):
 
 class _HalfspaceBase():
 
-    def __init__(self, X, yield_indices=False):
+    def __init__(self, X, yield_indices=False, random_state=None):
         self.indices = yield_indices
+        self.random_state = random_state
         self.result = None
         self.response = None
         self.query_gen = self._algorithm(X)
@@ -331,15 +347,15 @@ class HalfspaceMax(_HalfspaceBase):
         n, d = X.shape
         Y = np.zeros(n-1)  # query labels
         H = np.zeros((n-1, d+1))  # query hyperplanes
-        mi = 0
+        mi, compinds = gen_comparisons(X, self.random_state)
 
-        for q, i in zip(range(0, n-1), range(1, n)):
-            H[q, :] = hyperplane(X[mi], X[i])
-            if not impute_label(H[:i], Y[:i]):
+        for j, i in enumerate(compinds):
+            H[j, :] = hyperplane(X[mi], X[i])
+            if not impute_label(H[:j+1], Y[:j+1]):
                 y = (yield mi, i) if self.indices else (yield X[mi], X[i])
                 if y is None:
                     raise RuntimeError('Expecting a query response.')
-                Y[q] = y
-            if Y[q] == -1:
+                Y[j] = y
+            if Y[j] == -1:
                 mi = i
         self.result = mi

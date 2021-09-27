@@ -118,7 +118,7 @@ class ActiveRanking(Eliciter):
             self._query = Pair(self.candidates[a], self.candidates[b])
         else:
             res = self.active.get_result()
-            ind = res if isinstance(res, int) else res[-1]
+            ind = res if np.issubdtype(type(res), np.int64) else res[-1]
             self._result = self.candidates[ind]
             self._query = None
 

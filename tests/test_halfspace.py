@@ -97,7 +97,11 @@ def test_arank(random):
 def test_amax(random):
     '''Test the active max algorithm'''
     n = 30
-    X = random.randn(n, 2) * 2
+    X = random.multivariate_normal(
+        mean=[0, 0],
+        cov=[[3., 1.], [1., 1.5]],
+        size=n
+    )
     r = np.array([-1, 1])  # reference point for defining the ranking origin
     cnt = 0
 
@@ -108,10 +112,12 @@ def test_amax(random):
         br = ((b - r)**2).sum()
         return -1 if ar < br else 1
 
-    maxer = HalfspaceMax(X)
+    maxer = HalfspaceMax(X, random_state=random)
     while maxer.next_round():
         a, b = maxer.get_query()
         maxer.put_response(oracle_fn(a, b))
+
+    print(cnt)
 
     dist = ((X - r)**2).sum(axis=1)
     true_max = np.argmax(dist)
