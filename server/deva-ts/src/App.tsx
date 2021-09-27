@@ -35,7 +35,7 @@ function App() {
   } 
 
   return (
-    <div className="App container mx-auto text-center">
+    <div className="App mx-auto pt-8 bg-gray-300">
       <h1 className="pb-8">AI Governance Control Panel</h1>
       {pane}
     </div>
