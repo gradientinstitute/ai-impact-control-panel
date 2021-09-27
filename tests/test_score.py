@@ -52,7 +52,7 @@ def test_eo_disadv(random, tpr_a):
     eo = max(0, tpr * N - tpr_a * N_A) * PY
     eo_hat = eo_disadv(y, y_hat, None, a)
 
-    assert np.allclose(eo_hat, eo, rtol=5e-2, atol=250)
+    assert np.allclose(eo_hat, eo, rtol=5e-2, atol=500)
 
 
 @pytest.mark.parametrize('tpr_a', [0.7, 0.8, 0.9])
@@ -64,4 +64,4 @@ def test_eo_adv(random, tpr_a):
     eo = max(0, tpr_a * N - tpr * N_A) * PY
     eo_hat = eo_adv(y, y_hat, None, a)
 
-    assert np.allclose(eo_hat, eo, rtol=5e-2, atol=250)
+    assert np.allclose(eo_hat, eo, rtol=5e-2, atol=500)
