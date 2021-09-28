@@ -47,14 +47,16 @@ Usage: `deva-demo [OPTIONS] SCENARIOS`
 
 Options: 
 
-`-m, --method [max|rank|toy]`
+`-m, --method [max|max_smooth|rank|toy]`
 
-Where `max` is an active maximum-finding algorithm, `rank` is an active ranking
-algorithm, and `toy` is a simple "follow the leader" style algorithm.
+Where `max` and `max_smooth` are active maximum-finding algorithms, smooth
+refers to presenting smoothly varying queries to the user. `rank` is an active
+ranking algorithm, and `toy` is a simple "follow the leader" style algorithm.
 
 `-b, --bounds`
 
-Ask about minimum performance bounds (will become its own demo/research fork in the future).
+Ask about minimum performance bounds (will become its own demo/research fork in
+the future).
 
 `SCENARIO` is the folder location of the scenario models, e.g.
 `scenarios/example`

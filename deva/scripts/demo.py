@@ -9,14 +9,15 @@ METHODS = {
     'toy': elicit.Toy,
     'rank': elicit.ActiveRanking,
     'max': elicit.ActiveMax,
+    'max_smooth': elicit.ActiveMaxSmooth,
 }
 
 
 @click.command()
 @click.argument('scenario', type=click.Path(
     exists=True, file_okay=False, dir_okay=True, resolve_path=True))
-@click.option('-m', '--method', default='max',
-              type=click.Choice(['max', 'rank', 'toy'], case_sensitive=False))
+@click.option('-m', '--method', default='max_rand',
+              type=click.Choice(list(METHODS.keys()), case_sensitive=False))
 @click.option('-b', '--bounds', default=False, is_flag=True)
 def cli(scenario, method, bounds):
     logging.basicConfig(level=logging.INFO)
