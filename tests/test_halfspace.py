@@ -1,7 +1,9 @@
 '''Test the halfspace ranking algorithm.'''
+import pytest
 import numpy as np
 from deva.halfspace import (hyperplane, shatter_test, impute_label,
-                            HalfspaceRanking, HalfspaceMax)
+                            HalfspaceRanking, HalfspaceMax, max_compar_rand,
+                            max_compar_smooth)
 
 
 def test_hyperplane(random):
@@ -94,7 +96,8 @@ def test_arank(random):
     assert cnt < n * (n - 1) // 2
 
 
-def test_amax(random):
+@pytest.mark.parametrize('query_order', [max_compar_smooth, max_compar_rand])
+def test_amax(random, query_order):
     '''Test the active max algorithm'''
     n = 30
     X = random.multivariate_normal(
@@ -112,12 +115,10 @@ def test_amax(random):
         br = ((b - r)**2).sum()
         return -1 if ar < br else 1
 
-    maxer = HalfspaceMax(X, random_state=random)
+    maxer = HalfspaceMax(X, random_state=random, query_order=query_order)
     while maxer.next_round():
         a, b = maxer.get_query()
         maxer.put_response(oracle_fn(a, b))
-
-    print(cnt)
 
     dist = ((X - r)**2).sum(axis=1)
     true_max = np.argmax(dist)

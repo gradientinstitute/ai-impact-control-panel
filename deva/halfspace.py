@@ -9,6 +9,8 @@ import numpy as np
 from functools import cmp_to_key
 from scipy.optimize import linprog
 from sklearn.utils import check_random_state
+from sklearn.decomposition import PCA
+
 
 SHATTER_THRESH = 1e-10
 
@@ -137,8 +139,17 @@ def impute_label(H, Y):
     return imputable
 
 
-def gen_comparisons(X, random_state):
-    '''Attempt to generate some initially informative pairwise comparisons.'''
+def max_compar_smooth(X, random_state):
+    '''Generate "smoothly transitioning" pairwise comparisons.'''
+    Xstd = (X - X.mean(axis=0))
+    Xstd /= Xstd.std(axis=0)
+    Xproj = np.squeeze(PCA(n_components=1).fit_transform(Xstd))
+    order = np.argsort(Xproj)[::-1]  # largest first
+    return order[0], order[1:]
+
+
+def max_compar_rand(X, random_state):
+    '''Generate random comparisons, with the largest magnitude object first.'''
     n = len(X)
     inds = list(range(n))
 
@@ -271,10 +282,8 @@ class HalfspaceRanking(_HalfspaceBase):
     yield_indices: bool
         Yield indices into X (True) or the rows of X themselves (False) for the
         queries.
-
-    TODO
-    ----
-    Implement and hook up the robust label imputation algorithm.
+    random_state: int, RandomState
+        Random state seed or object to control the random state of the queries.
     '''
 
     def _algorithm(self, X):
@@ -337,25 +346,36 @@ class HalfspaceMax(_HalfspaceBase):
     yield_indices: bool
         Yield indices into X (True) or the rows of X themselves (False) for the
         queries.
-
-    TODO
-    ----
-    Implement and hook up the robust label imputation algorithm.
+    random_state: int, RandomState
+        Random state seed or object to control the random state of the queries.
+    query_order: callable
+        A callable that returns the initial max object index guess and a
+        sequence of indices for subsequent comparisons.
     '''
+
+    def __init__(
+        self,
+        X,
+        yield_indices=False,
+        random_state=None,
+        query_order=max_compar_rand
+    ):
+        self.query_order = query_order
+        super().__init__(X, yield_indices, random_state)
 
     def _algorithm(self, X):
         n, d = X.shape
         Y = np.zeros(n-1)  # query labels
         H = np.zeros((n-1, d+1))  # query hyperplanes
-        mi, compinds = gen_comparisons(X, self.random_state)
+        maxi, compinds = self.query_order(X, self.random_state)
 
         for j, i in enumerate(compinds):
-            H[j, :] = hyperplane(X[mi], X[i])
+            H[j, :] = hyperplane(X[maxi], X[i])
             if not impute_label(H[:j+1], Y[:j+1]):
-                y = (yield mi, i) if self.indices else (yield X[mi], X[i])
+                y = (yield maxi, i) if self.indices else (yield X[maxi], X[i])
                 if y is None:
                     raise RuntimeError('Expecting a query response.')
                 Y[j] = y
             if Y[j] == -1:
-                mi = i
-        self.result = mi
+                maxi = i
+        self.result = maxi
