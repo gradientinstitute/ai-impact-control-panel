@@ -367,15 +367,15 @@ class HalfspaceMax(_HalfspaceBase):
         n, d = X.shape
         Y = np.zeros(n-1)  # query labels
         H = np.zeros((n-1, d+1))  # query hyperplanes
-        mi, compinds = self.query_order(X, self.random_state)
+        maxi, compinds = self.query_order(X, self.random_state)
 
         for j, i in enumerate(compinds):
-            H[j, :] = hyperplane(X[mi], X[i])
+            H[j, :] = hyperplane(X[maxi], X[i])
             if not impute_label(H[:j+1], Y[:j+1]):
-                y = (yield mi, i) if self.indices else (yield X[mi], X[i])
+                y = (yield maxi, i) if self.indices else (yield X[maxi], X[i])
                 if y is None:
                     raise RuntimeError('Expecting a query response.')
                 Y[j] = y
             if Y[j] == -1:
-                mi = i
-        self.result = mi
+                maxi = i
+        self.result = maxi
