@@ -185,8 +185,8 @@ function UnitRange(props) {
   const min_str = data.prefix + data.min.toFixed(sigfig) + " " + data.suffix;
   const max_str = data.prefix + data.max.toFixed(sigfig) + " " + data.suffix;
 
-  const best_str = h ? min_str : max_str;
-  const worst_str = h ? max_str : min_str;
+  const best_str = h ? max_str : min_str;
+  const worst_str = h ? min_str : max_str;
   const change_str = h ? "Increases" : "Decreases";
 
   return (
