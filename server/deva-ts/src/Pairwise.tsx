@@ -9,14 +9,13 @@ function choiceReducer(_state, action) {
 
 export function MainPane(props) {
   const metadata = props.metadata;
-  const units = props.units;
   const [candidates, setCandidates] = useState<any>(null);
   const [choice, dispatch] = useReducer(choiceReducer, "");
   const setResult = props.setResult;
 
   // loading of candidates
   useEffect(() => {
-    if (units == null) {
+    if (metadata == null) {
       return
     }
     
@@ -37,19 +36,19 @@ export function MainPane(props) {
       }
     }
     fetch();
-  }, [units, choice, setResult]
+  }, [metadata, choice, setResult]
   );
 
   // loading condition
   // must come after the useEffect so useEffect always runs
-  if (units == null || candidates == null) {
+  if (metadata == null || candidates == null) {
     return (<h2>Loading...</h2>);
   }
 
   function comparisons() {
     console.log(candidates);
     let result = []; 
-    for (const [uid, u] of Object.entries(units)) {
+    for (const [uid, u] of Object.entries(metadata.metrics)) {
       result.push(
       <div className="bg-gray-700 rounded-lg p-3">
         <PairwiseComparator 
