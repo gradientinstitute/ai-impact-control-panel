@@ -28,7 +28,7 @@ export function IntroPane(props) {
   const objDescriptions = _.mapValues(metadata.objectives, "description");
 
   return (
-    <div className="mx-auto max-w-screen-lg grid gap-x-8 gap-y-6 grid-cols-1 text-center items-center">
+    <div className="mx-auto max-w-screen-lg pb-8 grid gap-x-8 gap-y-6 grid-cols-1 text-center items-center">
 
       <div className="mb-8">
         <h1 className=""> System under study: {metadata.name} </h1>
