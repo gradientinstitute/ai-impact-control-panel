@@ -4,6 +4,7 @@ import {MainPane} from './Pairwise';
 import {IntroPane} from './Intro';
 import {ResultPane} from './Result';
 import './App.css';
+import logo from './logo-dark-small.svg';
 
 function App() {
 
@@ -35,8 +36,12 @@ function App() {
   } 
 
   return (
-    <div className="App mx-auto pt-8 bg-gray-300">
-      <h1 className="pb-8">AI Governance Control Panel</h1>
+    <div className="App container text-gray-200 mx-auto px-8 pt-8 bg-gray-800">
+      <div className="grid grid-cols-12 text-center items-center mb-8">
+        <img className="col-span-2 h-16" src={logo} alt="Gradient Institute logo" />
+        <h1 className="col-span-8 text-3xl">AI Governance Control Panel</h1>
+        <div className="col-span-2" />
+      </div>
       {pane}
     </div>
   );

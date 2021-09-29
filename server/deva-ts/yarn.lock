@@ -1781,6 +1781,11 @@
   resolved "https://registry.npmjs.org/@types/json5/-/json5-0.0.29.tgz"
   integrity sha1-7ihweulOEdK4J7y+UnC86n8+ce4=
 
+"@types/lodash@^4.14.175":
+  version "4.14.175"
+  resolved "https://registry.npmjs.org/@types/lodash/-/lodash-4.14.175.tgz"
+  integrity sha512-XmdEOrKQ8a1Y/yxQFOMbC47G/V2VDO1GvMRnl4O75M4GW/abC5tnfzadQYkqEveqRM1dEJGFFegfPNA2vvx2iw==
+
 "@types/minimatch@*":
   version "3.0.3"
   resolved "https://registry.npmjs.org/@types/minimatch/-/minimatch-3.0.3.tgz"
@@ -9259,6 +9264,14 @@ react-app-polyfill@^2.0.0:
     regenerator-runtime "^0.13.7"
     whatwg-fetch "^3.4.1"
 
+react-archer@^3.2.2:
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/react-archer/-/react-archer-3.2.2.tgz#d1b0d334b4ae4294f6f67766328450c23464fc9b"
+  integrity sha512-DrxUjKg6C7cl4i/L6qJd/T9YYkv3e5fYT6s6RsLdQ06TVJm38PM8DOEwrcXMq1Pu0p14PcfRjwUiKvoY/m4lOw==
+  dependencies:
+    react-fast-compare "^2.0.4"
+    resize-observer-polyfill "1.5.0"
+
 react-dev-utils@^11.0.3:
   version "11.0.4"
   resolved "https://registry.npmjs.org/react-dev-utils/-/react-dev-utils-11.0.4.tgz"
@@ -9302,6 +9315,11 @@ react-error-overlay@^6.0.9:
   version "6.0.9"
   resolved "https://registry.npmjs.org/react-error-overlay/-/react-error-overlay-6.0.9.tgz"
   integrity sha512-nQTTcUu+ATDbrSD1BZHr5kgSD4oF8OFjxun8uAaL8RwPBacGBNPf/yAuVVdx17N8XNzRDMrZ9XcKZHCjPW+9ew==
+
+react-fast-compare@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/react-fast-compare/-/react-fast-compare-2.0.4.tgz#e84b4d455b0fec113e0402c329352715196f81f9"
+  integrity sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==
 
 react-fetch-hook@^1.8.5:
   version "1.8.5"
@@ -9672,6 +9690,11 @@ requires-port@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/requires-port/-/requires-port-1.0.0.tgz"
   integrity sha1-kl0mAdOaxIXgkc8NpcbmlNw9yv8=
+
+resize-observer-polyfill@1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/resize-observer-polyfill/-/resize-observer-polyfill-1.5.0.tgz#660ff1d9712a2382baa2cad450a4716209f9ca69"
+  integrity sha512-M2AelyJDVR/oLnToJLtuDJRBBWUGUvvGigj1411hXhAdyFWqMaqHp7TixW3FpiLuVaikIcR1QL+zqoJoZlOgpg==
 
 resolve-cwd@^2.0.0:
   version "2.0.0"
@@ -11355,7 +11378,7 @@ web-vitals@^1.0.1:
 
 webfontloader@^1.6.28:
   version "1.6.28"
-  resolved "https://registry.yarnpkg.com/webfontloader/-/webfontloader-1.6.28.tgz#db786129253cb6e8eae54c2fb05f870af6675bae"
+  resolved "https://registry.npmjs.org/webfontloader/-/webfontloader-1.6.28.tgz"
   integrity sha1-23hhKSU8tujq5UwvsF+HCvZnW64=
 
 webidl-conversions@^5.0.0:
