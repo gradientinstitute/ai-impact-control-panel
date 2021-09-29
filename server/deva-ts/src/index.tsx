@@ -1,8 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import WebFont from 'webfontloader';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+
+WebFont.load({
+  google: {
+    families: ['Source Sans Pro:300,400,700', 'Merriweather:400,700']
+  }
+});
 
 ReactDOM.render(
   <React.StrictMode>
