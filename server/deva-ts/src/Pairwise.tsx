@@ -8,9 +8,9 @@ function choiceReducer(_state, action) {
 }
 
 export function MainPane(props) {
+  const metadata = props.metadata;
   const units = props.units;
   const [candidates, setCandidates] = useState<any>(null);
-  // const [choice, setChoice] = useState<string>("");
   const [choice, dispatch] = useReducer(choiceReducer, "");
   const setResult = props.setResult;
 
@@ -51,6 +51,7 @@ export function MainPane(props) {
     let result = []; 
     for (const [uid, u] of Object.entries(units)) {
       result.push(
+      <div className="bg-gray-700 rounded-lg p-3">
         <PairwiseComparator 
           key={uid}
           unit={u} 
@@ -59,13 +60,19 @@ export function MainPane(props) {
           leftName={candidates.left.name} 
           rightName={candidates.right.name}
         />
+      </div>
       );
     }
     return result;
   }
 
+    // <div className="">
   return (
-    <div className="">
+    <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-6 grid-cols-1 text-center items-center">
+      <div>
+        <h1 className="text-5x1 font-bold">Pairwise Preference Elicitation: {metadata.name}</h1>
+        <p className="italic">A system designed to {metadata.purpose}</p>
+      </div>
       {comparisons()}
       <ChoiceDispatch.Provider value={dispatch}>
         <InputGetter 
@@ -79,7 +86,7 @@ export function MainPane(props) {
 
 function InputGetter(props) {
   return (
-    <div className="w-auto mt-16 flex space-x-16">
+    <div className="w-auto mb-8 flex space-x-16">
       <div className="my-auto" style={{width:"10%"}}>
       </div>
       <div className="my-auto" style={{width:"30%"}}>
@@ -110,9 +117,9 @@ function PreferenceButton(props) {
   }
 
   return (
-      <button className="bg-yellow-300 rounded-lg" 
+      <button className="bg-gray-200 rounded-lg" 
         onClick={handleClick}>
-        <div className="p-4">
+        <div className="p-4 text-3xl text-black">
           I prefer {props.label}
         </div>
       </button>
@@ -149,7 +156,7 @@ function Key(props) {
   let direction = props.unit.higherIsBetter === true ? "Higher" : "Lower";
     return (
     <div className="my-auto">
-      <div>
+      <div className="text-lg font-bold">
         {props.unit.name}
       </div>
       <div className="text-xs">
@@ -183,7 +190,7 @@ function Performance(props) {
   return (
     
     <div className="flex">
-      <div className="my-auto text-xs w-1/4">{lv}<br />({lf} acheivable)</div>
+      <div className="my-auto pr-2 text-right text-xs w-1/4">{lv}<br />({lf} acheivable)</div>
       <div className="flex-grow py-3">
         <FillBar 
           value={props.value} 
@@ -192,7 +199,7 @@ function Performance(props) {
           mirror={props.mirror}
         />
       </div>
-      <div className="my-auto text-xs w-1/4">{rv}<br />({rf} acheivable)</div>
+      <div className="my-auto text-left pl-2 text-xs w-1/4">{rv}<br />({rf} acheivable)</div>
     </div>
   );
 }
@@ -206,11 +213,11 @@ function FillBar(props) {
     "border-r-" + lwidth: "border-l-" + lwidth;
   let outer = "py-3 border-black " + border;
   let color = props.unit.higherIsBetter === true ? 
-    "bg-green-400" : "bg-red-400";
+    "bg-green-700" : "bg-red-800";
 
   return (
     <div className={outer}>
-    <div className="w-full bg-gray-200">
+    <div className="w-full bg-gray-500">
       <div className={"h-24 min-h-full " + color + 
         " text-xs text-left text-gray-500" + leftright} 
            style={{width:props.percentage + "%"}}
