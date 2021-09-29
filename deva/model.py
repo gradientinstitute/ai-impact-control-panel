@@ -1,7 +1,8 @@
 import itertools
 import numpy as np
 
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.ensemble import (RandomForestClassifier, AdaBoostClassifier,
+                              GradientBoostingClassifier, ExtraTreesClassifier)
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.dummy import DummyClassifier
@@ -13,6 +14,8 @@ model_dict = {
     'randomforest': RandomForestClassifier,
     'logistic': LogisticRegression,
     'adaboost': AdaBoostClassifier,
+    'gradientboost': GradientBoostingClassifier,
+    'extratrees': ExtraTreesClassifier,
     'svm': SVC,
     'randomclassifier': RandomClassifier,
     'dummyclassifier': DummyClassifier

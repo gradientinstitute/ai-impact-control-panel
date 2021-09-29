@@ -1,4 +1,4 @@
-'''Pytest fixtures.'''
+'''Pytest fixtures and utilities.'''
 
 import numpy as np
 import pytest

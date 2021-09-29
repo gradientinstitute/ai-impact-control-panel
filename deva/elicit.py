@@ -87,6 +87,7 @@ class Toy(Eliciter):
 class ActiveRanking(Eliciter):
 
     _active_alg = halfspace.HalfspaceRanking
+    _active_kw = {}
 
     def __init__(self, candidates):
         assert candidates, "No candidate models"
@@ -100,7 +101,7 @@ class ActiveRanking(Eliciter):
         for c in candidates:
             data.append([c[a] for a in attribs])
 
-        self.active = self._active_alg(np.array(data), True)
+        self.active = self._active_alg(np.array(data), True, **self._active_kw)
         self._update()
 
     def input(self, choice):
@@ -118,7 +119,7 @@ class ActiveRanking(Eliciter):
             self._query = Pair(self.candidates[a], self.candidates[b])
         else:
             res = self.active.get_result()
-            ind = res if isinstance(res, int) else res[-1]
+            ind = res if np.issubdtype(type(res), np.int64) else res[-1]
             self._result = self.candidates[ind]
             self._query = None
 
@@ -138,3 +139,10 @@ class ActiveRanking(Eliciter):
 class ActiveMax(ActiveRanking):
 
     _active_alg = halfspace.HalfspaceMax
+    _active_kw = {'query_order': halfspace.max_compar_rand}
+
+
+class ActiveMaxSmooth(ActiveRanking):
+
+    _active_alg = halfspace.HalfspaceMax
+    _active_kw = {'query_order': halfspace.max_compar_smooth}

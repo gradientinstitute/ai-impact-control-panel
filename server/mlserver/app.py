@@ -28,12 +28,12 @@ def _scenario(name="pareto"):
 
         # Massage the metadata
         models, spec = data
-        for attr in spec:
-            spec[attr]["name"] = attr  # uid may differ in the future
-            for key in spec[attr]:
+        metrics = spec["metrics"]
+        for attr in metrics:
+            for key in metrics[attr]:
                 # get rid of my plural adjustments for now
-                if isinstance(spec[attr][key], str):
-                    spec[attr][key] = spec[attr][key].format(s="s")
+                if isinstance(metrics[attr][key], str):
+                    metrics[attr][key] = metrics[attr][key].format(s="s")
 
         for m in models:
             # make html-friendly uuid
@@ -67,7 +67,7 @@ def initial_view():
     # assume that a reload means user wants a restart
     print("Init new session for ", session["ID"])
     candidates, _ = _scenario()
-    eliciter = elicit.ActiveMax(candidates)  # TODO: user choice?
+    eliciter = elicit.ActiveMaxSmooth(candidates)  # TODO: user choice?
     eliciters[session["ID"]] = eliciter
 
     # send the performance and choices to the frontend

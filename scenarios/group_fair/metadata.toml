@@ -1,4 +1,7 @@
-["False Positives"]
+[intro]
+    text = "A long time ago in a galaxy far, far away...."
+
+[metrics.fp]
     name = "False Positives"
     icon = "FP"
     description = "legitimate transaction{s} per month"
@@ -8,9 +11,9 @@
     suffix = "trans / month"
     action = "falsely flag{s}"
     higherIsBetter = false
-    countable = "number"
+    decimals = 0
 
-["False Negatives"]
+[metrics.fn]
     name = "False Negatives"
     icon = "FN"
     description = "fraudulent transaction{s} per month"
@@ -20,9 +23,9 @@
     suffix = "trans / month"
     action = "overlook{s}"
     higherIsBetter = false
-    countable = "number"
+    decimals = 0
 
-["People with >=3 FN"]
+[metrics.fn3]
     name = "People with >=3 FN"
     icon = "FNWO"
     description = "customer{s} with 3 or more overlooked fraud transactions"
@@ -32,9 +35,9 @@
     suffix = "person{s}"
     action = "burden{s}"
     higherIsBetter = false
-    countable = "number"
+    decimals = 0
 
-["People with >=5 FP"]
+[metrics.fp5]
     name = "People with >=5 FP"
     icon = "FPWO"
     description = "customer{s} with 5 or more false flags"
@@ -44,9 +47,9 @@
     suffix = "person{s}"
     action = "burden{s}"
     higherIsBetter = false
-    countable = "number"
+    decimals = 0
 
-["Net profit"]
+[metrics.profit]
     name = "Net profit"
     icon = "profit"
     description = "net profit"
@@ -56,16 +59,28 @@
     suffix = ""
     action = "make{s}"
     higherIsBetter = true
-    countable = "amount"
+    decimals = 2
 
-["Equal Opportunity"]
-    name = "Equal Opportunity"
+[metrics.eqop_f]
+    name = "Equal Opportunity Female"
     icon = "FN"
-    description = "Equal opportunity - nonsensical"
+    description = "correctly identified fraudulent transactions proportionally on females"
     more = "more"
-    less = "less"
+    less = "fewer"
     prefix = ""
     suffix = "rate"
-    action = "give{s}"
-    higherIsBetter = true
-    countable = "amount"
+    action = "make{s}"
+    higherIsBetter = false
+    decimals = 2
+
+[metrics.eqop_m]
+    name = "Equal Opportunity Male"
+    icon = "FN"
+    description = "correctly identified fraudulent transactions proportionally on males"
+    more = "more"
+    less = "fewer"
+    prefix = ""
+    suffix = "rate"
+    action = "make{s}"
+    higherIsBetter = false
+    decimals = 2
