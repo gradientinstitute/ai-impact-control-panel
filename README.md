@@ -58,6 +58,10 @@ ranking algorithm, and `toy` is a simple "follow the leader" style algorithm.
 Ask about minimum performance bounds (will become its own demo/research fork in
 the future).
 
+`-f, --nofilter`                  
+
+Do not apply Pareto efficient model filter.
+
 `SCENARIO` is the folder location of the scenario models, e.g.
 `scenarios/example`
 

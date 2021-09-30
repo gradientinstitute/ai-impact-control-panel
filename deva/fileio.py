@@ -39,7 +39,7 @@ def get_all_files(scenario):
     return input_files
 
 
-def load_scenario(scenario, bounds):
+def load_scenario(scenario, bounds, pfilter=True):
     # Load all scenario files
     scenario_path = os.path.join(repo_root(), 'scenarios', scenario)
     print("Scanning ", scenario_path)
@@ -52,7 +52,8 @@ def load_scenario(scenario, bounds):
     scenario = toml.load(os.path.join(scenario_path, "metadata.toml"))
 
     # Filter efficient set
-    models = remove_non_pareto(models)
+    if pfilter:
+        models = remove_non_pareto(models)
 
     # TODO: Simon's remove_unacceptable is here temporarily.
     # It's on the issue stack to update it to work with candidate objects.
