@@ -17,13 +17,18 @@ METHODS = {
 @click.argument('scenario', type=click.Path(
     exists=True, file_okay=False, dir_okay=True, resolve_path=True))
 @click.option('-m', '--method', default='max_rand',
-              type=click.Choice(METHODS, case_sensitive=False))
-@click.option('-b', '--bounds', default=False, is_flag=True)
-def cli(scenario, method, bounds):
+              type=click.Choice(METHODS, case_sensitive=False),
+              help='interactive model selection method.')
+@click.option('-b', '--bounds', default=False, is_flag=True,
+              help='interactively choose acceptable performance bounds.')
+@click.option('-f', '--nofilter', default=False, is_flag=True,
+              help='do not apply Pareto efficient model filter.')
+def cli(scenario, method, bounds, nofilter):
     logging.basicConfig(level=logging.INFO)
 
-    candidates, scenario = fileio.load_scenario(scenario, bounds)
-    eliciter = METHODS[method](candidates)
+    candidates, scenario = fileio.load_scenario(scenario, bounds, not nofilter)
+
+    eliciter = METHODS[method](candidates, scenario)
     display = interface.text
     metrics = scenario["metrics"]
 

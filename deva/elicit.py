@@ -49,7 +49,7 @@ class Eliciter:
 class Toy(Eliciter):
     '''Simple eliciter with sequential elimination.'''
 
-    def __init__(self, candidates):
+    def __init__(self, candidates, scenario):
         assert candidates, "No candidate models"
         Eliciter.__init__(self)
         self.candidates = list(candidates)  # copy references
@@ -89,7 +89,7 @@ class ActiveRanking(Eliciter):
     _active_alg = halfspace.HalfspaceRanking
     _active_kw = {}
 
-    def __init__(self, candidates):
+    def __init__(self, candidates, scenario):
         assert candidates, "No candidate models"
         Eliciter.__init__(self)
         self.candidates = list(candidates)
@@ -101,7 +101,11 @@ class ActiveRanking(Eliciter):
         for c in candidates:
             data.append([c[a] for a in attribs])
 
-        self.active = self._active_alg(np.array(data), True, **self._active_kw)
+        metrics = scenario['metrics']
+        signs = [1 if metrics[a]['higherIsBetter'] else -1 for a in attribs]
+        data = np.array(data) * np.array(signs)
+
+        self.active = self._active_alg(data, True, **self._active_kw)
         self._update()
 
     def input(self, choice):

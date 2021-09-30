@@ -311,6 +311,10 @@ class HalfspaceRanking(_HalfspaceBase):
         self.result = np.array(sorted(range(n), key=key))
 
 
+#
+# Max algorithms
+#
+
 class HalfspaceMax(_HalfspaceBase):
     '''Find the max object using the halfspace comparison algorithm.
 

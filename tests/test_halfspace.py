@@ -74,7 +74,11 @@ def test_impute_label_random_order(random, shatterable_data):
 def test_arank(random):
     '''Test the ranking algorithm'''
     n = 30
-    X = random.randn(n, 2) * 2
+    X = random.multivariate_normal(
+        mean=[0, 0],
+        cov=[[3., 1.], [1., 1.5]],
+        size=n
+    )
     r = np.array([-1, 1])  # reference point for defining the ranking origin
     cnt = 0
 

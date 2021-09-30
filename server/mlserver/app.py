@@ -66,8 +66,8 @@ def initial_view():
 
     # assume that a reload means user wants a restart
     print("Init new session for ", session["ID"])
-    candidates, _ = _scenario()
-    eliciter = elicit.ActiveMaxSmooth(candidates)  # TODO: user choice?
+    candidates, spec = _scenario()
+    eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
     eliciters[session["ID"]] = eliciter
 
     # send the performance and choices to the frontend
