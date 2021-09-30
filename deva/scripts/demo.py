@@ -10,6 +10,7 @@ METHODS = {
     'rank': elicit.ActiveRanking,
     'max': elicit.ActiveMax,
     'max_smooth': elicit.ActiveMaxSmooth,
+    'max_prim': elicit.ActiveMaxPrimary,
 }
 
 

@@ -1,5 +1,6 @@
-from deva import halfspace
 import numpy as np
+from functools import partial
+from deva import halfspace
 
 
 class Candidate:
@@ -87,7 +88,7 @@ class Toy(Eliciter):
 class ActiveRanking(Eliciter):
 
     _active_alg = halfspace.HalfspaceRanking
-    _active_kw = {}
+    _active_kw = {'query_order': halfspace.rank_compar_ord}
 
     def __init__(self, candidates, scenario):
         assert candidates, "No candidate models"
@@ -105,7 +106,11 @@ class ActiveRanking(Eliciter):
         signs = [1 if metrics[a]['higherIsBetter'] else -1 for a in attribs]
         data = np.array(data) * np.array(signs)
 
-        self.active = self._active_alg(data, True, **self._active_kw)
+        self.active = self._active_alg(
+            data,
+            yield_indices=True,
+            **self._active_kw
+        )
         self._update()
 
     def input(self, choice):
@@ -150,3 +155,19 @@ class ActiveMaxSmooth(ActiveRanking):
 
     _active_alg = halfspace.HalfspaceMax
     _active_kw = {'query_order': halfspace.max_compar_smooth}
+
+
+class ActiveMaxPrimary(ActiveRanking):
+
+    _active_alg = halfspace.HalfspaceMax
+
+    def __init__(self, candidates, scenario):
+        if 'primary_metric' not in scenario:
+            raise RuntimeError('Expecting a primary_metric to be specified in'
+                               ' the metadata.')
+        pmetric = scenario['primary_metric']
+        attribs = list(candidates[0].attributes.keys())
+        pri_ind = attribs.index(pmetric)
+        qorder = partial(halfspace.max_compar_primary, primary_index=pri_ind)
+        self._active_kw = {'query_order': qorder}
+        super().__init__(candidates, scenario)
