@@ -16,7 +16,7 @@ METHODS = {
 @click.command()
 @click.argument('scenario', type=click.Path(
     exists=True, file_okay=False, dir_okay=True, resolve_path=True))
-@click.option('-m', '--method', default='max_rand',
+@click.option('-m', '--method', default='max',
               type=click.Choice(METHODS, case_sensitive=False),
               help='interactive model selection method.')
 @click.option('-b', '--bounds', default=False, is_flag=True,

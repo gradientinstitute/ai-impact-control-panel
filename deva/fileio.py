@@ -95,4 +95,9 @@ def load_scenario(scenario, bounds, pfilter=True):
         metrics[u]["countable"] = (
             "number" if metrics[u]["decimals"] == 0 else "amount")
 
+    if 'primary_metric' in scenario:
+        primary = scenario['primary_metric']
+        if primary not in metrics:
+            raise RuntimeError(f'{primary} is not in the scenario metrics.')
+
     return candidates, scenario
