@@ -39,6 +39,18 @@ def get_all_files(scenario):
     return input_files
 
 
+def autoname(ind):
+    # sequence A-Z, AA-AZ-ZZ, AAA-AAZ-AZZ-ZZZ ...
+    chars = []
+    while True:
+        chars.append(chr(65 + ind%26))
+        if ind < 26:
+            break
+        ind = ind // 26 - 1
+    return "System " + "".join(chars[::-1])
+
+
+
 def load_scenario(scenario, bounds, pfilter=True):
     # Load all scenario files
     scenario_path = os.path.join(repo_root(), 'scenarios', scenario)
@@ -73,7 +85,7 @@ def load_scenario(scenario, bounds, pfilter=True):
 
     for perf in models.values():
         # TODO: retain "special" names of reference models.
-        name = "System " + chr(65 + len(candidates))
+        name = autoname(len(candidates))
         scores = {name2id[k]: v['score'] for k, v in perf.items()}
         candidates.append(elicit.Candidate(name, scores))
 
