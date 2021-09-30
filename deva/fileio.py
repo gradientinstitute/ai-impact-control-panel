@@ -43,12 +43,11 @@ def autoname(ind):
     # sequence A-Z, AA-AZ-ZZ, AAA-AAZ-AZZ-ZZZ ...
     chars = []
     while True:
-        chars.append(chr(65 + ind%26))
+        chars.append(chr(65 + ind % 26))
         if ind < 26:
             break
         ind = ind // 26 - 1
     return "System " + "".join(chars[::-1])
-
 
 
 def load_scenario(scenario, bounds, pfilter=True):
