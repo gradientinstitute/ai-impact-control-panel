@@ -28,6 +28,30 @@ def fp(y_test, y_pred, *_):
     return fp
 
 
+def fn_cvar(y_test, y_pred, customer_id, _, alpha):
+    """Compute average fn of the worst off individuals."""
+    fn_flag = y_test.astype(bool) & ~y_pred.astype(bool)
+    return _cvar(fn_flag, customer_id, alpha)
+
+
+def fp_cvar(y_test, y_pred, customer_id, _, alpha):
+    """Compute average fn of the worst off individuals."""
+    fp_flag = ~y_test.astype(bool) & y_pred.astype(bool)
+    return _cvar(fp_flag, customer_id, alpha)
+
+
+def _cvar(flag, cid, alpha):
+    # aggregate to customers
+    assert 0 < alpha < 1
+    uid, ix = np.unique(cid, return_inverse=True)
+    counts = np.sort(np.bincount(ix[flag], minlength=len(uid)))
+    assert len(counts)
+    # tail will always include at least a single worst off person
+    tail = max(1, int(len(counts) * alpha + 0.5))
+    tailc = counts[-tail:]
+    return tailc.mean()
+
+
 def fnwo(y_test, y_pred, customer_id, _, cutoff):
     # compute how many customers have false negative errors > cutoff
 
@@ -113,11 +137,14 @@ def _tpr(confmat):
 # The key must match the heading in the model toml
 # First element of the value tuple is a function to calculate the score.
 # Second element of the value tuple is the optimal value of that score.
+# TODO: optimal doesn't belong here anymore
 metrics_dict = {
         'accuracy': {'func': model_acc, 'optimal': 'max', 'type': 'float'},
         'auc': {'func': model_auc, 'optimal': 'max', 'type': 'float'},
         'fp': {'func': fp, 'optimal': 'min', 'type': 'int'},
         'fn': {'func': fn, 'optimal': 'min', 'type': 'int'},
+        'fn_cvar': {'func': fn_cvar, 'optimal': 'min', 'type': 'int'},
+        'fp_cvar': {'func': fp_cvar, 'optimal': 'min', 'type': 'int'},
         'fnwo': {'func': fnwo, 'optimal': 'min', 'type': 'int'},
         'fpwo': {'func': fpwo, 'optimal': 'min', 'type': 'int'},
         'profit': {'func': profit, 'optimal': 'max', 'type': 'float'},

@@ -18,20 +18,23 @@ fraudulent = "The transaction is fraudulent, i.e. not being conducted with the i
 [objectives.catch_fraud]
 description = "Prevent as many fraudulent transactions as possible for the sake of the bank and the customers"
 
+[objectives.minimise_recurrent_undetected_fraud]
+description = "Prevent any customers from experiencing recurring undetected fraudulent transactions"
+
 [objectives.avoid_interference]
 description = "Minimise the number of legitimate transactions blocked to prevent annoying customers"
 
 [objectives.minimise_excess_interference]
-descriptions = "Prevent any customers from experiencing exessive false blockings"
+description = "Prevent any customers from experiencing exessive false blockings"
 
 [objectives.dont_disadvantage_women]
 description = "Ensure system doesnt make more errors on women"
 
 [metrics.fp]
     name = "False Positives"
+    icon = "FP"
     captures = ["catch_fraud", "avoid_interference"]
     limitations = "description of metrics limitations in capturing objective to be added here"
-    icon = "FP"
     description = "legitimate transaction{s} per month"
     more = "additional"
     less = "fewer"
@@ -40,6 +43,21 @@ description = "Ensure system doesnt make more errors on women"
     action = "falsely flag{s}"
     higherIsBetter = false
     decimals = 0
+
+[metrics.fn_cvar]
+    name = "False Negative CVaR 10%"
+    captures = ["minimise_recurrent_undetected_fraud"]
+    limitations = "placeholder"
+    icon = "FNWO"
+    description = "undetected fraud{s} per month (avg)"
+    more = "extra"
+    less = "fewer"
+    prefix = ""
+    suffix = "trans / month"
+    action = "burden{s} the worst-off individuals with"
+    countable = "number"
+    higherIsBetter = false
+    decimals = 1
 
 [metrics.fn]
     name = "False Negatives"
@@ -55,33 +73,49 @@ description = "Ensure system doesnt make more errors on women"
     higherIsBetter = false
     decimals = 0
 
-[metrics.fn3]
-    name = "People with >=3 FN"
-    captures = ["catch_fraud", "avoid_interference"]
-    limitations = "description of metrics limitations in capturing objective to be added here"
-    icon = "FNWO"
-    description = "customer{s} with 3 or more overlooked fraud transactions"
-    more = "additional"
-    less = "fewer"
-    prefix = ""
-    suffix = "person{s}"
-    action = "burden{s}"
-    higherIsBetter = false
-    decimals = 0
-
-[metrics.fp5]
-    name = "People with >=5 FP"
-    captures = ["catch_fraud", "avoid_interference"]
-    limitations = "description of metrics limitations in capturing objective to be added here"
+[metrics.fp_cvar]
+    name = "False Positive CVaR 10%"
+    captures = ["minimise_excess_interference"]
+    limitations = "placeholder"
     icon = "FPWO"
-    description = "customer{s} with 5 or more false flags"
-    more = "additional"
+    description = "false flag{s} per month (avg)"
+    more = "extra"
     less = "fewer"
     prefix = ""
-    suffix = "person{s}"
-    action = "burden{s}"
+    suffix = "trans / month"
+    action = "burden{s} the worst-off individuals with"
+    countable = "number"
     higherIsBetter = false
-    decimals = 0
+    decimals = 1
+
+
+# [metrics.fn3]
+#     name = "People with >=3 FN"
+#     captures = ["catch_fraud", "avoid_interference"]
+#     limitations = "description of metrics limitations in capturing objective to be added here"
+#     icon = "FNWO"
+#     description = "customer{s} with 3 or more overlooked fraud transactions"
+#     more = "additional"
+#     less = "fewer"
+#     prefix = ""
+#     suffix = "person{s}"
+#     action = "burden{s}"
+#     higherIsBetter = false
+#     decimals = 0
+# 
+# [metrics.fp5]
+#     name = "People with >=5 FP"
+#     captures = ["catch_fraud", "avoid_interference"]
+#     limitations = "description of metrics limitations in capturing objective to be added here"
+#     icon = "FPWO"
+#     description = "customer{s} with 5 or more false flags"
+#     more = "additional"
+#     less = "fewer"
+#     prefix = ""
+#     suffix = "person{s}"
+#     action = "burden{s}"
+#     higherIsBetter = false
+#     decimals = 0
 
 [metrics.profit]
     name = "Net profit"

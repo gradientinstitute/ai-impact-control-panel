@@ -92,7 +92,9 @@ def load_scenario(scenario, bounds, pfilter=True):
         metrics[u]["max"] = max(c[u] for c in candidates)
         metrics[u]["min"] = min(c[u] for c in candidates)
         metrics[u]["decimals"] = int(metrics[u]["decimals"])
-        metrics[u]["countable"] = (
-            "number" if metrics[u]["decimals"] == 0 else "amount")
+        if "countable" not in metrics[u]:
+            # auto-fill optional field
+            metrics[u]["countable"] = (
+                "number" if metrics[u]["decimals"] == 0 else "amount")
 
     return candidates, scenario
