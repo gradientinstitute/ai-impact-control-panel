@@ -47,11 +47,13 @@ Usage: `deva-demo [OPTIONS] SCENARIOS`
 
 Options: 
 
-`-m, --method [max|max_smooth|rank|toy]`
+`-m, --method [max|max_smooth|max_prim|rank|toy]`
 
-Where `max` and `max_smooth` are active maximum-finding algorithms, smooth
-refers to presenting smoothly varying queries to the user. `rank` is an active
-ranking algorithm, and `toy` is a simple "follow the leader" style algorithm.
+Where `max` and `max_smooth` are active maximum-finding algorithms.
+`max_smooth` refers to presenting smoothly varying queries to the user.
+`max_prim` sorts the queries based on the value of a specified primary metric
+(`primary_metric` in the metadata). `rank` is an active ranking algorithm, and
+`toy` is a simple "follow the leader" style algorithm.
 
 `-b, --bounds`
 

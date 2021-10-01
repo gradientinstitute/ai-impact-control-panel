@@ -115,7 +115,7 @@ def impute_label(H, Y):
     assert len(H) == len(Y)
 
     if len(Y) < 2:
-        return 0
+        return False
 
     # Test if the query could be positive
     Y[-1] = 1
@@ -139,16 +139,27 @@ def impute_label(H, Y):
     return imputable
 
 
-def max_compar_smooth(X, random_state):
+#
+#  Query order generators
+#
+
+def max_compar_primary(X, primary_index):
+    '''Generate comparisons based on the order of the primary metric.'''
+    pmetric = X[:, primary_index]
+    order = np.argsort(pmetric)[::-1]
+    return order
+
+
+def max_compar_smooth(X):
     '''Generate "smoothly transitioning" pairwise comparisons.'''
     Xstd = (X - X.mean(axis=0))
     Xstd /= Xstd.std(axis=0)
     Xproj = np.squeeze(PCA(n_components=1).fit_transform(Xstd))
     order = np.argsort(Xproj)[::-1]  # largest first
-    return order[0], order[1:]
+    return order
 
 
-def max_compar_rand(X, random_state):
+def max_compar_rand(X, random_state=None):
     '''Generate random comparisons, with the largest magnitude object first.'''
     n = len(X)
     inds = list(range(n))
@@ -168,7 +179,15 @@ def max_compar_rand(X, random_state):
     # All subsequent queries are random
     random = check_random_state(random_state)
     random_inds = random.permutation(inds)
-    return first, np.concatenate(([second], random_inds))
+    return np.concatenate(([first, second], random_inds))
+
+
+def rank_compar_ord(X):
+    '''Generate all n choose 2 comparisons in order.'''
+    n = len(X)
+    for j in range(1, n):
+        for i in range(j):
+            yield (j, i)
 
 
 #
@@ -177,9 +196,9 @@ def max_compar_rand(X, random_state):
 
 class _HalfspaceBase():
 
-    def __init__(self, X, yield_indices=False, random_state=None):
+    def __init__(self, X, query_order, yield_indices=False):
         self.indices = yield_indices
-        self.random_state = random_state
+        self.query_order = query_order
         self.result = None
         self.response = None
         self.query_gen = self._algorithm(X)
@@ -282,8 +301,6 @@ class HalfspaceRanking(_HalfspaceBase):
     yield_indices: bool
         Yield indices into X (True) or the rows of X themselves (False) for the
         queries.
-    random_state: int, RandomState
-        Random state seed or object to control the random state of the queries.
     '''
 
     def _algorithm(self, X):
@@ -294,17 +311,15 @@ class HalfspaceRanking(_HalfspaceBase):
         Q = np.zeros((n, n), dtype=int)  # All query labels, including reverse
 
         # Note we have not randomly shuffled X.
-        c = 0
-        for j in range(1, n):
-            for i in range(j):
-                H[c, :] = hyperplane(X[j], X[i])  # equidistant hyperplane
-                if not impute_label(H[:c+1], Y[:c+1]):  # impute query label
-                    y = (yield j, i) if self.indices else (yield X[j], X[i])
-                    if y is None:
-                        raise RuntimeError('Expecting a query response.')
-                    Y[c] = y
-                Q[j, i], Q[i, j] = Y[c], - Y[c]  # query label, reverse query
-                c += 1
+        qorder = self.query_order(X)
+        for c, (j, i) in enumerate(qorder):
+            H[c, :] = hyperplane(X[j], X[i])  # equidistant hyperplane
+            if not impute_label(H[:c+1], Y[:c+1]):  # impute query label
+                y = (yield j, i) if self.indices else (yield X[j], X[i])
+                if y is None:
+                    raise RuntimeError('Expecting a query response.')
+                Y[c] = y
+            Q[j, i], Q[i, j] = Y[c], - Y[c]  # query label, reverse query
 
         # binary sort positions in X using the comparisons in query_map
         key = cmp_to_key(lambda a, b: Q[a, b])
@@ -350,30 +365,20 @@ class HalfspaceMax(_HalfspaceBase):
     yield_indices: bool
         Yield indices into X (True) or the rows of X themselves (False) for the
         queries.
-    random_state: int, RandomState
-        Random state seed or object to control the random state of the queries.
     query_order: callable
         A callable that returns the initial max object index guess and a
         sequence of indices for subsequent comparisons.
     '''
 
-    def __init__(
-        self,
-        X,
-        yield_indices=False,
-        random_state=None,
-        query_order=max_compar_rand
-    ):
-        self.query_order = query_order
-        super().__init__(X, yield_indices, random_state)
-
     def _algorithm(self, X):
         n, d = X.shape
         Y = np.zeros(n-1)  # query labels
         H = np.zeros((n-1, d+1))  # query hyperplanes
-        maxi, compinds = self.query_order(X, self.random_state)
 
-        for j, i in enumerate(compinds):
+        qorder = self.query_order(X)
+        maxi, qorder = qorder[0], qorder[1:]
+
+        for j, i in enumerate(qorder):
             H[j, :] = hyperplane(X[maxi], X[i])
             if not impute_label(H[:j+1], Y[:j+1]):
                 y = (yield maxi, i) if self.indices else (yield X[maxi], X[i])

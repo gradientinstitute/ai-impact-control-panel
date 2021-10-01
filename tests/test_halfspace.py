@@ -1,9 +1,8 @@
 '''Test the halfspace ranking algorithm.'''
 import pytest
 import numpy as np
-from deva.halfspace import (hyperplane, shatter_test, impute_label,
-                            HalfspaceRanking, HalfspaceMax, max_compar_rand,
-                            max_compar_smooth)
+from functools import partial
+from deva import halfspace
 
 
 def test_hyperplane(random):
@@ -11,7 +10,7 @@ def test_hyperplane(random):
     a = random.randn(10)
     b = random.randn(10)
 
-    h = hyperplane(a, b)
+    h = halfspace.hyperplane(a, b)
 
     assert len(h) == (len(a) + 1)
     a_hs = h[:-1] @ a - h[-1]
@@ -24,11 +23,11 @@ def test_shatter(shatterable_data):
     '''Test the shatter test can actually shatter points.'''
     # This can be shattered
     X, Y = shatterable_data
-    assert shatter_test(X, Y)
+    assert halfspace.shatter_test(X, Y)
 
     # This cannot be shattered
     Y[0] = -1.
-    assert not shatter_test(X, Y)
+    assert not halfspace.shatter_test(X, Y)
 
 
 def test_impute_label(shatterable_data):
@@ -38,17 +37,17 @@ def test_impute_label(shatterable_data):
     # This should be a positive label
     X = np.vstack((X, [2, 2]))
     Y = np.append(Y, 0)
-    impute_label(X, Y)
+    halfspace.impute_label(X, Y)
     assert Y[-1] > 0
 
     # This should be a negative label
     X[-1, :] = np.array([-2, -2])
-    impute_label(X, Y)
+    halfspace.impute_label(X, Y)
     assert Y[-1] < 0
 
     # This label should be ambiguous
     X[-1, :] = np.array([0, -2])
-    impute_label(X, Y)
+    halfspace.impute_label(X, Y)
     assert Y[-1] == 0
 
 
@@ -64,7 +63,7 @@ def test_impute_label_random_order(random, shatterable_data):
     Y_hat[0] = Y[0]
 
     for i in range(2, n+1):
-        impute_label(X[:i], Y_hat[:i])
+        halfspace.impute_label(X[:i], Y_hat[:i])
         if Y_hat[i-1] == 0:
             Y_hat[i-1] = Y[i-1]
 
@@ -89,7 +88,10 @@ def test_arank(random):
         br = ((b - r)**2).sum()
         return -1 if ar < br else 1
 
-    ranker = HalfspaceRanking(X)
+    ranker = halfspace.HalfspaceRanking(
+        X,
+        query_order=halfspace.rank_compar_ord
+    )
     while ranker.next_round():
         a, b = ranker.get_query()
         ranker.put_response(oracle_fn(a, b))
@@ -100,7 +102,11 @@ def test_arank(random):
     assert cnt < n * (n - 1) // 2
 
 
-@pytest.mark.parametrize('query_order', [max_compar_smooth, max_compar_rand])
+@pytest.mark.parametrize('query_order', [
+    halfspace.max_compar_smooth,
+    halfspace.max_compar_rand,
+    partial(halfspace.max_compar_primary, primary_index=0)
+])
 def test_amax(random, query_order):
     '''Test the active max algorithm'''
     n = 30
@@ -119,7 +125,7 @@ def test_amax(random, query_order):
         br = ((b - r)**2).sum()
         return -1 if ar < br else 1
 
-    maxer = HalfspaceMax(X, random_state=random, query_order=query_order)
+    maxer = halfspace.HalfspaceMax(X, query_order=query_order)
     while maxer.next_round():
         a, b = maxer.get_query()
         maxer.put_response(oracle_fn(a, b))
