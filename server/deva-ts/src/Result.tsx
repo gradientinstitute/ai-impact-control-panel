@@ -4,8 +4,8 @@ import {Key, Model} from './Widgets';
 export function ResultPane(props) {
   const metadata = props.metadata;
   const [name, attr_spec] = Object.entries(props.result)[0];
-  const [, value] = Object.entries(attr_spec)[0];
-  const [, spec] = Object.entries(attr_spec)[1];
+  const attr = attr_spec["attr"]
+  const spec = attr_spec["spec"]
 
   function comparisons() {
     let result = []; 
@@ -15,7 +15,7 @@ export function ResultPane(props) {
         <ResultOnMetric
           key={uid}
           unit={u} 
-          value={value[uid]} 
+          value={attr[uid]} 
           name={uid} 
         />
       </div>
