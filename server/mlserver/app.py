@@ -95,8 +95,10 @@ def update(x, y):
     if eliciter.terminated:
         # terminate by sending a single model
         result = eliciter.result
-        # TODO: send the model name and spec name separately
-        res = {f'{result.name} ({result.spec_name})': result.attributes}
+        res = {result.name: {
+                'attr': result.attributes,
+                'spec': result.spec_name
+        }}
     else:
         # eliciter has not terminated - extract the next choice
         assert isinstance(eliciter.query, elicit.Pair)

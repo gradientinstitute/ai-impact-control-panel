@@ -3,7 +3,9 @@ import {Key, Model} from './Widgets';
 
 export function ResultPane(props) {
   const metadata = props.metadata;
-  const [name, value] = Object.entries(props.result)[0];
+  const [name, attr_spec] = Object.entries(props.result)[0];
+  const [, value] = Object.entries(attr_spec)[0];
+  const [, spec] = Object.entries(attr_spec)[1];
 
   function comparisons() {
     let result = []; 
@@ -31,6 +33,10 @@ export function ResultPane(props) {
       </h2>
       <h1 className="text-4xl">{name} Impacts</h1>
       {comparisons()}
+      <p>
+        See <b>metrics_{spec}.toml</b> and <b>params_{spec}.toml</b> for more
+        details of {name}.
+      </p>
       <StartOver />
     </div>
   );
