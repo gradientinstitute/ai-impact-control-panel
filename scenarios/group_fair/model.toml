@@ -22,12 +22,12 @@ sensitive_attribute = "customer_is_female"
 name = "False Positives"
 [metrics.fn]
 name = "False Negatives"
-[metrics.fnwo]
-name = "People with >=3 FN"
-cutoff = 3
-[metrics.fpwo]
-name = "People with >=5 FP"
-cutoff = 5
+[metrics.fn_cvar]
+name = "False Negative CVaR 10%"
+alpha = 0.1
+[metrics.fp_cvar]
+name = "False Positive CVaR 10%"
+alpha = 0.1
 [metrics.profit]
 name = "Net profit"
 # Note - realistically this might require knowledge of the transaction value...

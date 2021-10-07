@@ -152,10 +152,10 @@ def max_compar_primary(X, primary_index):
 
 def max_compar_smooth(X):
     '''Generate "smoothly transitioning" pairwise comparisons.'''
-    Xstd = (X - X.mean(axis=0))
-    Xstd /= Xstd.std(axis=0)
+    Xstd = (X - X.mean(axis=0)) / X.std(axis=0)
     Xproj = np.squeeze(PCA(n_components=1).fit_transform(Xstd))
     order = np.argsort(Xproj)[::-1]  # largest first
+
     return order
 
 
