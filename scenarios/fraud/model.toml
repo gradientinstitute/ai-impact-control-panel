@@ -1,0 +1,81 @@
+## Model config for group fairness
+
+## What data to use
+data_simulation = "fraud"
+
+# if <model>.ranges section is defined, this gives the number of draws
+n_range_draws = 10
+
+# Define a customer ID
+customer_id = "customer_id"
+
+# Defines a sensitive attribute
+sensitive_attribute = "customer_is_female"
+
+#
+# Model metrics
+#
+
+[metrics]
+# [metrics.auc]
+# name = "Area under the ROC curve"
+# [metrics.accuracy]
+# name = "Accuracy"
+[metrics.fp]
+name = "False Positives"
+[metrics.fn]
+name = "False Negatives"
+[metrics.fnwo]
+name = "People with >=3 FN"
+cutoff = 3
+[metrics.fpwo]
+name = "People with >=5 FP"
+cutoff = 5
+[metrics.profit]
+name = "Net profit"
+# Note - realistically this might require knowledge of the transaction value...
+TP = 0
+FP = 0
+TN = 1
+FN = -10
+
+[metrics.eo_disadvantage_rate]
+name = "Equal Opportunity Female"
+
+[metrics.eo_advantage_rate]
+name = "Equal Opportunity Male"
+
+
+#
+# Proper ML models
+#
+
+[logistic]
+fit_intercept = true
+random_state = 666
+class_weight = 'balanced'
+max_iter = 1000
+threshold = 0.5
+
+[logistic.lists]
+threshold_protected = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+C = [0.1, 0.5, 1.0] 
+positive_class_weight = [1, 10, 20]
+
+
+#
+# Reference baseline models
+#
+
+[randomclassifier]
+[randomclassifier.instances.random]
+stratify_attribute = "customer_is_female"
+
+[dummyclassifier]
+[dummyclassifier.instances.positive]
+strategy = "constant"
+constant = 1
+
+[dummyclassifier.instances.negative]
+strategy = "constant"
+constant = 0
