@@ -28,11 +28,17 @@ def cli(scenario, method, bounds, nofilter):
     logging.basicConfig(level=logging.INFO)
 
     candidates, scenario = fileio.load_scenario(scenario, bounds, not nofilter)
-
-    eliciter = METHODS[method](candidates, scenario)
     display = interface.text
     metrics = scenario["metrics"]
 
+    if len(candidates) == 1:
+        result = candidates[0]
+        print('Remaining model: ', result.name)
+        display(result, metrics)
+        input()
+        return
+
+    eliciter = METHODS[method](candidates, scenario)
     while not eliciter.terminated:
         display(eliciter.query, metrics)
 

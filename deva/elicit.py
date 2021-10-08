@@ -92,7 +92,8 @@ class ActiveRanking(Eliciter):
     _active_kw = {'query_order': halfspace.rank_compar_ord}
 
     def __init__(self, candidates, scenario):
-        assert candidates, "No candidate models"
+        if len(candidates) < 2:
+            raise RuntimeError('Two or more candidates required.')
         Eliciter.__init__(self)
         self.candidates = list(candidates)
         attribs = list(candidates[0].attributes.keys())
