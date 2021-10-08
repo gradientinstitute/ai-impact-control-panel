@@ -131,4 +131,5 @@ dmypy.json
 # data
 **/*/models
 **/*/data
+data/*.csv
 tests/tmp/

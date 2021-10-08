@@ -1,5 +1,5 @@
 from click.testing import CliRunner
-from deva.scripts.gen import cli
+from deva.scripts import gen, sim
 import traceback
 from shutil import copyfile
 import os
@@ -8,14 +8,13 @@ test_dir = 'tests/tmp'
 
 
 def test_data_model():
-    copyfile('scenarios/example/sim.toml',
-             os.path.join(test_dir, 'sim.toml'))
-    copyfile('scenarios/example/model.toml',
+    copyfile('data/fraud.toml', os.path.join(test_dir, 'fraud.toml'))
+    copyfile('scenarios/fraud/model.toml',
              os.path.join(test_dir, 'model.toml'))
 
     outfiles = [
-            'data/test.csv',
-            'data/train.csv',
+            'fraud_test.csv',
+            'fraud_train.csv',
             ]
     outfiles = [os.path.join(test_dir, f) for f in outfiles]
     for f in outfiles:
@@ -23,7 +22,7 @@ def test_data_model():
             os.remove(f)
 
     runner = CliRunner()
-    result = runner.invoke(cli, [test_dir, 'data'])
+    result = runner.invoke(sim.cli, [os.path.join(test_dir, 'fraud.toml')])
     if result.exception:
         traceback.print_exception(*result.exc_info)
     assert result.exit_code == 0
@@ -35,45 +34,25 @@ def test_data_model():
         'models/metrics_logistic_list1.toml',
         'models/metrics_logistic_list2.toml',
         'models/metrics_logistic_list3.toml',
-        'models/metrics_logistic_range0.toml',
-        'models/metrics_logistic_range1.toml',
-        'models/metrics_logistic_range2.toml',
-        'models/metrics_logistic_set1.toml',
-        'models/metrics_logistic_set2.toml',
         'models/model_logistic_list0.joblib',
         'models/model_logistic_list1.joblib',
         'models/model_logistic_list2.joblib',
         'models/model_logistic_list3.joblib',
-        'models/model_logistic_range0.joblib',
-        'models/model_logistic_range1.joblib',
-        'models/model_logistic_range2.joblib',
-        'models/model_logistic_set1.joblib',
-        'models/model_logistic_set2.joblib',
         'models/params_logistic_list0.toml',
         'models/params_logistic_list1.toml',
         'models/params_logistic_list2.toml',
         'models/params_logistic_list3.toml',
-        'models/params_logistic_range0.toml',
-        'models/params_logistic_range1.toml',
-        'models/params_logistic_range2.toml',
-        'models/params_logistic_set1.toml',
-        'models/params_logistic_set2.toml',
         'models/scored_logistic_list0.csv',
         'models/scored_logistic_list1.csv',
         'models/scored_logistic_list2.csv',
-        'models/scored_logistic_list3.csv',
-        'models/scored_logistic_range0.csv',
-        'models/scored_logistic_range1.csv',
-        'models/scored_logistic_range2.csv',
-        'models/scored_logistic_set1.csv',
-        'models/scored_logistic_set2.csv']
+        'models/scored_logistic_list3.csv']
 
     model_outfiles = [os.path.join(test_dir, f) for f in model_outfiles]
     for f in model_outfiles:
         if os.path.exists(f):
             os.remove(f)
     runner = CliRunner()
-    result = runner.invoke(cli, [test_dir, 'model'])
+    result = runner.invoke(gen.cli, [test_dir, '--data-folder', test_dir])
     if result.exception:
         traceback.print_exception(*result.exc_info)
     assert result.exit_code == 0

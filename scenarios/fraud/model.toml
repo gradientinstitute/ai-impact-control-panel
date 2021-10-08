@@ -1,5 +1,8 @@
 ## Model config for group fairness
 
+## What data to use
+data_simulation = "fraud"
+
 # if <model>.ranges section is defined, this gives the number of draws
 n_range_draws = 10
 
