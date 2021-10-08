@@ -163,7 +163,7 @@ def score_model(y_pred, y_scores, y_test, X_test,
                 metrics_cfg, customer_id,
                 sensitive_indicator):
 
-    # Evaluates the models outputs against predefinted metrics
+    # Evaluates the models outputs against predefined metrics
     d = {}
 
     for k, v in metrics_cfg.items():
@@ -171,7 +171,7 @@ def score_model(y_pred, y_scores, y_test, X_test,
         score = metrics_dict[k]['func'](y_test, y_pred,
                                         customer_id, sensitive_indicator,
                                         **args)
-        d[v["name"]] = {'score': score, 'optimal': metrics_dict[k]['optimal'],
-                        'type': metrics_dict[k]['type']}
+        d[k] = {'score': score, 'optimal': metrics_dict[k]['optimal'],
+                'type': metrics_dict[k]['type']}
 
     return d

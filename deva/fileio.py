@@ -79,14 +79,9 @@ def load_scenario(scenario, bounds, pfilter=True):
     candidates = []
     metrics = scenario["metrics"]
 
-    # TODO: change format upstream to remove metadata from model score files.
-    # TODO: change the data-gen code so fields match id not name
-    # For now we can adapt them
-    name2id = {metrics[uid]["name"]: uid for uid in metrics}
-
     for spec_name, perf in models.items():
         name = autoname(len(candidates))
-        scores = {name2id[k]: v['score'] for k, v in perf.items()}
+        scores = {k: v['score'] for k, v in perf.items()}
         candidates.append(elicit.Candidate(name, scores, spec_name))
 
     for u in metrics:
