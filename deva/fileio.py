@@ -84,11 +84,10 @@ def load_scenario(scenario, bounds, pfilter=True):
     # For now we can adapt them
     name2id = {metrics[uid]["name"]: uid for uid in metrics}
 
-    for perf in models.values():
-        # TODO: retain "special" names of reference models.
+    for spec_name, perf in models.items():
         name = autoname(len(candidates))
         scores = {name2id[k]: v['score'] for k, v in perf.items()}
-        candidates.append(elicit.Candidate(name, scores))
+        candidates.append(elicit.Candidate(name, scores, spec_name))
 
     for u in metrics:
         metrics[u]["max"] = max(c[u] for c in candidates)

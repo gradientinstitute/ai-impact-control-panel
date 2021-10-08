@@ -91,7 +91,7 @@ def text(value, meta):
 
     elif isinstance(value, elicit.Candidate):
         # Display a single candidate
-        print(value.name)
+        print(f'{value.name} ({value.spec_name})')
 
         for attrib in sorted(value.attributes):
             info = meta[attrib]
