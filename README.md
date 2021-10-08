@@ -15,29 +15,36 @@ along with venv creation and dependencies.
 
 To get into a venv, do `poetry shell`.
 
-## Generating data and models
+## Generating data
 
-`deva-gen` is the command for generating. See the --help.
+`deva-sim` is the command for generating data. See the --help.
 
-It takes a scenario folder -- see `scenario/example` for an example.
+It takes a toml configuration file -- see `data/fraud.toml` for an example.
 
 For generating data, run:
 
-`deva-gen scenarios/example data`
+`deva-sim data/fraud.toml`
 
-For a model on that data:
+It will output `data/fraud_train.csv` and `data/fraud_test.csv`.
 
-`deva-gen scenarios/example model`
+
+## Generating Scenarios
+
+These are fake clients, with their own candidate models trained on the data
+To generate candidate models, run, for example:
+
+`deva-gen scenarios/fraud`
 
 ## Data and Model configs
 
 See the example scenario for commented versions of the configs.
 
-## Running the dash
 
-Currently just a skeleton, but try:
+## Running the server
 
-`deva-dash`
+Go to the server folder. start the backend with `server/mlserver/run.sh`
+
+To start the frontend, go to `server/deva-ts` and from there run `yarn start`.
 
 ## Running an interactive demo
 
