@@ -9,12 +9,13 @@ from joblib import dump
 import toml
 
 
+@click.option('--data-folder', default='data', type=click.Path(
+    exists=True, file_okay=False, dir_okay=True, resolve_path=True))
 @click.argument('scenario', type=click.Path(
     exists=True, file_okay=False, dir_okay=True, resolve_path=True))
 @click.command()
-def cli(scenario):
+def cli(data_folder, scenario):
     logging.basicConfig(level=logging.INFO)
-    data_folder = os.path.join(os.getcwd(), 'data')
     model_folder = os.path.join(scenario, 'models')
     os.makedirs(model_folder, exist_ok=True)
     model_cfg_fname = os.path.join(scenario, 'model.toml')

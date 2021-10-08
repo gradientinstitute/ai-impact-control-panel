@@ -52,7 +52,7 @@ def test_data_model():
         if os.path.exists(f):
             os.remove(f)
     runner = CliRunner()
-    result = runner.invoke(gen.cli, [test_dir])
+    result = runner.invoke(gen.cli, [test_dir, '--data-folder', test_dir])
     if result.exception:
         traceback.print_exception(*result.exc_info)
     assert result.exit_code == 0
