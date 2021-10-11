@@ -3,6 +3,7 @@ import axios from 'axios';
 import {Key, Model, FillBar} from './Widgets';
 
 const ChoiceDispatch = React.createContext(null);
+const sigfig = 2
 
 function choiceReducer(_state, action) {
   return action.first + "/" + action.second;
@@ -199,7 +200,7 @@ function ComparisonStatement(props) {
   return (
     <div className="text-xl font-bold">
       {n1} {props.unit.action} {props.unit.prefix}
-      {delta.toFixed()} {props.unit.suffix} more than {n2}.
+      {delta.toFixed(sigfig)} {props.unit.suffix} more than {n2}.
     </div>
 );
 }

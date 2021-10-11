@@ -180,7 +180,9 @@ function UnitRange(props) {
   const level = "level" in props? props.level : 1;
   const color = colors[level];
   const data = props.data;
-  const sigfig = data.countable == "number" ? 0 : 2;
+  // TODO: this is not properly detecting floating points (e.g. CVaR)
+  // const sigfig = data.countable == "number" ? 0 : 2;
+  const sigfig = 2
   const h = data.higherIsBetter;
   const min_str = data.prefix + data.min.toFixed(sigfig) + " " + data.suffix;
   const max_str = data.prefix + data.max.toFixed(sigfig) + " " + data.suffix;

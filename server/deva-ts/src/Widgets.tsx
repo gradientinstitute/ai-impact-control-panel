@@ -1,5 +1,5 @@
 import React from 'react';
-
+const sigfig = 2
 
 function Model(props) {
   return (
@@ -34,16 +34,16 @@ function Performance(props) {
     (props.unit.max - props.unit.min) * 100;
   let lf = "min";
   let rf = "max";
-  let lv = props.unit.prefix + props.unit.min.toFixed() 
+  let lv = props.unit.prefix + props.unit.min.toFixed(sigfig) 
     + " " + props.unit.suffix;
-  let rv = props.unit.prefix + props.unit.max.toFixed() 
+  let rv = props.unit.prefix + props.unit.max.toFixed(sigfig) 
     + " " + props.unit.suffix;
   if (props.mirror === true) {
     lf = "max";
     rf = "min";
-    lv = props.unit.prefix + props.unit.max.toFixed() 
+    lv = props.unit.prefix + props.unit.max.toFixed(sigfig) 
       + " " + props.unit.suffix;
-    rv = props.unit.prefix + props.unit.min.toFixed()
+    rv = props.unit.prefix + props.unit.min.toFixed(sigfig)
       + " " + props.unit.suffix;
   }
 
@@ -68,7 +68,7 @@ function ValueStatement(props) {
   return (
     <div>
       {props.name} {props.unit.action} {props.unit.prefix}
-      {props.value.toFixed()} {props.unit.suffix}. 
+      {props.value.toFixed(sigfig)} {props.unit.suffix}. 
     </div>
 );
 }
