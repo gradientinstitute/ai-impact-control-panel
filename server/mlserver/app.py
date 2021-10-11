@@ -20,7 +20,7 @@ eliciters = {}
 scenarios = {}
 
 
-def _scenario(name="fraud"):
+def _scenario(name="simple_fraud"):
     global scenarios
 
     if name not in scenarios:

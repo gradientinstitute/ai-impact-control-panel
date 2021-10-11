@@ -25,8 +25,12 @@ FP = 0
 TN = 1
 FN = -10
 
-[metrics.eo_disadvantage_rate]
-name = "Equal Opportunity Female"
+[metrics.fn_cvar]
+name = "False Negative CVaR 10%"
+alpha = 0.1
+
+# [metrics.eo_disadvantage_rate]
+# name = "Equal Opportunity Female"
 
 #
 # Proper ML models
@@ -37,12 +41,15 @@ fit_intercept = true
 random_state = 666
 class_weight = 'balanced'
 max_iter = 1000
-threshold = 0.5
+# threshold = 0.5
+# positive_class_weight = 10
 
 [logistic.lists]
-threshold_protected = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-C = [0.1, 0.5, 1.0] 
-positive_class_weight = [1, 10, 20]
+threshold = [0.4, 0.425, 0.45, 0.475, 0.5]
+positive_class_weight = [9.5, 10.0, 10.5]
+# # threshold_protected = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+C = [0.1, 1.0] 
+# positive_class_weight = [1, 10, 100]
 
 
 #

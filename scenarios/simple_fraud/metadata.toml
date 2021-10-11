@@ -36,9 +36,8 @@ name = "Create Revenue"
 description = """Create revenue from the system by minimisng cost of fraud and
 retaining customers"""
 
-[objectives.dont_disadvantage_women]
-name = "Don't Disadvantage Women"
-description = """Ensure system doesnt make more errors on women"""
+[objectives.fraud_concentration]
+description = "Minimise harm of repeated fraud to those most affected by it."
 
 [metrics.profit]
     name = "Net profit"
@@ -55,18 +54,17 @@ description = """Ensure system doesnt make more errors on women"""
     higherIsBetter = true
     decimals = 2
 
-[metrics.eo_disadvantage_rate]
-    name = "Equal Opportunity Female"
-    icon = "FN"
-    description = """correctly identified fraudulent transactions
-    proportionally on females"""
-    captures = ["dont_disadvantage_women"]
-    limitations = """description of metrics limitations in capturing objective
-    to be added here"""
-    more = "more"
+[metrics.fn_cvar]
+    name = "False Negative CVaR 10%"
+    captures = ["minimise_recurrent_undetected_fraud"]
+    limitations = "placeholder"
+    icon = "FNWO"
+    description = "undetected fraud{s} per month (avg)"
+    more = "extra"
     less = "fewer"
     prefix = ""
-    suffix = "rate"
-    action = "make{s}"
+    suffix = "trans / month"
+    action = "burden{s} the worst-off individuals with"
+    countable = "number"
     higherIsBetter = false
-    decimals = 2
+    decimals = 1
