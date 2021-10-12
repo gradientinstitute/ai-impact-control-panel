@@ -18,6 +18,7 @@ app.config['SECRET_KEY'] = random_key(16)
 
 # todo: find some sort of persistent cache
 eliciters = {}
+bounders = {}
 scenarios = {}
 ranges = {}
 
@@ -156,3 +157,31 @@ def get_choice(scenario):
                     }
             }
     return jsonify(res)
+
+
+# @app.route('/bounds')
+# def initial_view():
+#     global bounders
+
+#     if "ID" in session:
+#         print("Reset stage1 session")
+#     else:
+#         print("New connection detected - assigning ID")
+#         while (new_id := random_key(16)) in eliciters:
+#             continue
+#         session["ID"] = new_id
+#         session.modified = True
+
+#     # assume that a reload means user wants a restart
+#     print("Init Stage1 session for ", session["ID"])
+#     candidates, spec = _scenario()
+#     import smart_embed
+#     smart_embed.embed(locals(), globals())
+
+#     eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
+#     eliciters[session["ID"]] = eliciter
+
+#     # send the performance and choices to the frontend
+#     assert isinstance(eliciter.query, elicit.Pair)
+#     m1, m2 = eliciter.query
+#     return jsonify({m1.name: m1.attributes, m2.name: m2.attributes})
