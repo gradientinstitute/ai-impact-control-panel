@@ -6,6 +6,8 @@ import logo_FP from './FP.png';
 import logo_FNWO from './FNWO.png';
 import logo_FPWO from './FPWO.png';
 import logo_profit from './profit.png';
+import logo_fairness from './fairness.png';
+import {SigFigs} from './Widgets';
 
 const logos = {
   FN: logo_FN,
@@ -13,6 +15,7 @@ const logos = {
   FNWO: logo_FNWO,
   FPWO: logo_FPWO,
   profit: logo_profit,
+  fairness: logo_fairness,
 }
 
 const colors = {
@@ -24,8 +27,6 @@ const colors = {
 export function IntroPane(props) {
 
   const metadata = props.metadata;
-
-  const objDescriptions = _.mapValues(metadata.objectives, "description");
 
   return (
     <div className="mx-auto max-w-screen-lg pb-8 grid gap-x-8 gap-y-6 grid-cols-1 text-center items-center">
@@ -42,8 +43,8 @@ export function IntroPane(props) {
         valueSize="xl"
       />
 
-      <BlockWithSubBlocks
-        items={objDescriptions}
+      <ObjectiveBlock
+        items={metadata.objectives}
         title={"Objectives"} />
 
       <Pipeline metadata={metadata} />
@@ -180,9 +181,7 @@ function UnitRange(props) {
   const level = "level" in props? props.level : 1;
   const color = colors[level];
   const data = props.data;
-  // TODO: this is not properly detecting floating points (e.g. CVaR)
-  // const sigfig = data.countable == "number" ? 0 : 2;
-  const sigfig = 2
+  const sigfig = SigFigs(data);
   const h = data.higherIsBetter;
   const min_str = data.prefix + data.min.toFixed(sigfig) + " " + data.suffix;
   const max_str = data.prefix + data.max.toFixed(sigfig) + " " + data.suffix;
@@ -237,6 +236,30 @@ function SimpleBlock(props) {
   );
 }
 
+function ObjectiveBlock(props) {
+
+  const level = "level" in props ? props.level : 1;
+  const color = colors[level];
+  const subColor = colors[level + 1];
+  const items = Object.entries(props.items).map(([name, v]) => {
+    return (
+      <div key={name} className={subColor + " p-3 rounded-lg"}>
+        <h3 className="font-bold">{v["name"]}</h3>
+        <p>({name})</p>
+        <p>{v["description"]}</p>
+      </div>
+    );
+  });
+  return (
+    <div className={color +" p-3 rounded-lg"}>
+      <h2 className="font-bold text-xl mb-3">{props.title}</h2>
+      <div className="flex gap-3">
+        {items}
+      </div>
+    </div>
+  );
+}
+
 function BlockWithSubBlocks(props) {
 
   const level = "level" in props ? props.level : 1;
@@ -245,7 +268,7 @@ function BlockWithSubBlocks(props) {
   const items = Object.entries(props.items).map(([name, d]) => {
     return (
       <div key={name} className={subColor + " p-3 rounded-lg"}>
-        <h3 className="font-bold">{name}</h3>
+        <h3 className="font-bold">{name.replaceAll("_", " ")}</h3>
         <p>{d}</p>
       </div>
     );

@@ -37,13 +37,14 @@ description = """Create revenue from the system by minimisng cost of fraud and
 retaining customers"""
 
 [objectives.fraud_concentration]
+name = "Fraud Concentration"
 description = "Minimise harm of repeated fraud to those most affected by it."
 
 [metrics.profit]
     name = "Net profit"
     captures = ["create_revenue"]
-    limitations = """description of metrics limitations in capturing objective
-    to be added here"""
+    limitations = """fails to capture harms and benefits not easily
+    quantifiable in $"""
     icon = "profit"
     description = "net profit"
     more = "more"
@@ -57,7 +58,7 @@ description = "Minimise harm of repeated fraud to those most affected by it."
 [metrics.fn_cvar]
     name = "False Negative CVaR 10%"
     captures = ["minimise_recurrent_undetected_fraud"]
-    limitations = "placeholder"
+    limitations = "does not capture the number of FNs or the overall FNR"
     icon = "FNWO"
     description = "undetected fraud{s} per month (avg)"
     more = "extra"

@@ -1,5 +1,11 @@
 import React from 'react';
-const sigfig = 2
+
+function SigFigs(values) {
+    if (Number.isInteger(values.min) && Number.isInteger(values.max)) {
+        return 0;
+    }
+    return 2;
+}
 
 function Model(props) {
   return (
@@ -34,6 +40,7 @@ function Performance(props) {
     (props.unit.max - props.unit.min) * 100;
   let lf = "min";
   let rf = "max";
+  const sigfig = SigFigs(props.unit)
   let lv = props.unit.prefix + props.unit.min.toFixed(sigfig) 
     + " " + props.unit.suffix;
   let rv = props.unit.prefix + props.unit.max.toFixed(sigfig) 
@@ -50,7 +57,7 @@ function Performance(props) {
   return (
     
     <div className="flex">
-      <div className="my-auto pr-2 text-right text-xs w-1/4">{lv}<br />({lf} acheivable)</div>
+      <div className="my-auto pr-2 text-right text-xs w-1/4">{lv}<br />({lf} achievable)</div>
       <div className="flex-grow py-3">
         <FillBar 
           value={props.value} 
@@ -59,12 +66,13 @@ function Performance(props) {
           mirror={props.mirror}
         />
       </div>
-      <div className="my-auto text-left pl-2 text-xs w-1/4">{rv}<br />({rf} acheivable)</div>
+      <div className="my-auto text-left pl-2 text-xs w-1/4">{rv}<br />({rf} achievable)</div>
     </div>
   );
 }
 
 function ValueStatement(props) {
+  const sigfig = Number.isInteger(props.value) ? 0 : 2;
   return (
     <div>
       {props.name} {props.unit.action} {props.unit.prefix}
@@ -96,4 +104,4 @@ function FillBar(props) {
   );
 }
 
-export {Key, Model, FillBar};
+export {Key, Model, FillBar, SigFigs};

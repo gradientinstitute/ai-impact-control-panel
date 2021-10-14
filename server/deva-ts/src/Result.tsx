@@ -62,7 +62,7 @@ function ResultOnMetric(props) {
         <Key unit={props.unit}/>
       </div>
       <div className="col-span-9">
-        <Model unit={props.unit} name={props.name} 
+        <Model unit={props.unit} name={"The chosen system"} 
           value={props.value} mirror={false}/>
       </div>
     </div>
