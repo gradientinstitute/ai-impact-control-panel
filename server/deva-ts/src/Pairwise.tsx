@@ -146,7 +146,7 @@ function PairwiseComparator(props) {
       </div>
       <div className="" style={{width:"30%"}}>
         <Model unit={props.unit} name={props.rightName}
-          value={props.rightValue} mirror={true}/>
+          value={props.rightValue} mirror={false}/>
       </div>
     </div>
 
