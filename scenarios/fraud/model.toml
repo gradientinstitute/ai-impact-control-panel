@@ -31,8 +31,8 @@ name = "False Negatives"
 [metrics.fp_cvar]
 name = "False Positive CVaR 10%"
 alpha = 0.1
-[metrics.profit]
-name = "Net profit"
+[metrics.revenue]
+name = "Net revenue protected"
 # Note - realistically this might require knowledge of the transaction value...
 TP = 0
 FP = 0

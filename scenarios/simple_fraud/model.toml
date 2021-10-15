@@ -17,8 +17,8 @@ sensitive_attribute = "customer_is_female"
 #
 
 [metrics]
-[metrics.profit]
-name = "Net profit"
+[metrics.revenue]
+name = "Net revenue protected"
 # Note - realistically this might require knowledge of the transaction value...
 TP = 0
 FP = 0
