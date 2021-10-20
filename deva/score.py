@@ -74,7 +74,7 @@ def fpwo(y_test, y_pred, customer_id, _, cutoff):
     return (counts >= cutoff).sum()
 
 
-def profit(y_test, y_pred, customer_id, _, TP, FP, TN, FN):
+def revenue(y_test, y_pred, customer_id, _, TP, FP, TN, FN):
     # compute how many customers have false negative errors > cutoff
     confuse = metrics.confusion_matrix(y_test, y_pred).ravel()
     return np.dot(confuse, [TN, FP, FN, TP])
@@ -147,7 +147,7 @@ metrics_dict = {
         'fp_cvar': {'func': fp_cvar, 'optimal': 'min', 'type': 'int'},
         'fnwo': {'func': fnwo, 'optimal': 'min', 'type': 'int'},
         'fpwo': {'func': fpwo, 'optimal': 'min', 'type': 'int'},
-        'profit': {'func': profit, 'optimal': 'max', 'type': 'float'},
+        'revenue': {'func': revenue, 'optimal': 'max', 'type': 'float'},
         'eo_advantage':
                 {'func': eo_adv, 'optimal': 'min', 'type': 'float'},
         'eo_disadvantage':

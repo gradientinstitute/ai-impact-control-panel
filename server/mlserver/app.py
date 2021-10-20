@@ -20,7 +20,7 @@ eliciters = {}
 scenarios = {}
 
 
-def _scenario(name="simple_fraud"):
+def _scenario(name="fraud"):
     global scenarios
 
     if name not in scenarios:
@@ -68,6 +68,7 @@ def initial_view():
     print("Init new session for ", session["ID"])
     candidates, spec = _scenario()
     eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
+    # eliciter = elicit.ActiveMax(candidates, spec)
     eliciters[session["ID"]] = eliciter
 
     # send the performance and choices to the frontend

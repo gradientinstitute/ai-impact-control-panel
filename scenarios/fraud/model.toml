@@ -25,14 +25,14 @@ sensitive_attribute = "customer_is_female"
 name = "False Positives"
 [metrics.fn]
 name = "False Negatives"
-[metrics.fn_cvar]
-name = "False Negative CVaR 10%"
-alpha = 0.1
+# [metrics.fn_cvar]
+# name = "False Negative CVaR 10%"
+# alpha = 0.1
 [metrics.fp_cvar]
 name = "False Positive CVaR 10%"
 alpha = 0.1
-[metrics.profit]
-name = "Net profit"
+[metrics.revenue]
+name = "Net revenue protected"
 # Note - realistically this might require knowledge of the transaction value...
 TP = 0
 FP = 0
@@ -42,8 +42,8 @@ FN = -10
 [metrics.eo_disadvantage_rate]
 name = "Equal Opportunity Female"
 
-[metrics.eo_advantage_rate]
-name = "Equal Opportunity Male"
+# [metrics.eo_advantage_rate]
+# name = "Equal Opportunity Male"
 
 
 #
@@ -55,21 +55,21 @@ fit_intercept = true
 random_state = 666
 class_weight = 'balanced'
 max_iter = 1000
-threshold = 0.5
+positive_class_weight = 10.0
 
 [logistic.lists]
-threshold_protected = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-C = [0.1, 0.5, 1.0] 
-positive_class_weight = [1, 10, 20]
-
+# threshold_protected = [0.4, 0.5, 0.6]
+# threshold = [0.4, 0.5, 0.6]
+threshold_protected = [0.4, 0.5]
+threshold = [0.4, 0.5]
 
 #
 # Reference baseline models
 #
 
-[randomclassifier]
-[randomclassifier.instances.random]
-stratify_attribute = "customer_is_female"
+# [randomclassifier]
+# [randomclassifier.instances.random]
+# stratify_attribute = "customer_is_female"
 
 [dummyclassifier]
 [dummyclassifier.instances.positive]
