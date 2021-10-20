@@ -49,11 +49,11 @@ name = "Don't Disadvantage Women"
 description = "Ensure system doesnt make disproportionate errors on women"
 
 [metrics.fn]
-    name = "False Negatives"
+    name = "Undetected fraud (FN)"
     icon = "FN"
     captures = ["catch_fraud"]
-    limitations = """does not measure the concentration of FNs on particular
-    people"""
+    limitations = """does not measure the concentration of undetected
+    fraudulent transactions on particular people"""
     description = "fraudulent transaction{s} per month"
     more = "additional"
     less = "fewer"
@@ -64,10 +64,10 @@ description = "Ensure system doesnt make disproportionate errors on women"
     decimals = 0
 
 [metrics.fp]
-    name = "False Positives"
+    name = "Falsly flagged fraud (FP)"
     captures = ["avoid_interference"]
-    limitations = """does not measure the concentration of FPs on particular
-    people"""
+    limitations = """does not measure the concentration of falsely flagged
+    transactions on particular people"""
     icon = "FP"
     description = "legitimate transaction{s} per month"
     more = "additional"
@@ -79,9 +79,10 @@ description = "Ensure system doesnt make disproportionate errors on women"
     decimals = 0
 
 [metrics.fp_cvar]
-    name = "False Positive CVaR 10%"
+    name = "Concentration of falsely flagged fraud (FP CVaR)"
     captures = ["minimise_excess_interference"]
-    limitations = "does not capture the number of FPs or the overall FPR"
+    limitations = """does not capture the number or rate of falsely flagged
+    transactions"""
     icon = "FPWO"
     description = """number of false flags per month on customers most likely
     to be flagged"""
