@@ -85,21 +85,32 @@ export function MainPane(props) {
   );
 }
 
+
+function Motivation(props) {
+  return (
+    <div>
+      <p className="text-xl mb-5"> What is motivating your choice? </p>
+      <textarea id="reasons" className="w-full" rows={5}></textarea>
+    </div>
+  );
+}
+
 function InputGetter(props) {
   return (
     <div className="w-auto mb-8 flex space-x-16">
       <div className="my-auto" style={{width:"10%"}}>
       </div>
-      <div className="my-auto" style={{width:"30%"}}>
+      <div className="my-auto" style={{width:"20%"}}>
         <PreferenceButton 
           label={props.leftName} 
           me={props.leftName}
           other={props.rightName}
         />
       </div>
-      <div className="my-auto" style={{width:"30%"}}>
+      <div className="my-auto" style={{width:"50%"}}>
+        <Motivation />
       </div>
-      <div className="my-auto" style={{width:"30%"}}>
+      <div className="my-auto" style={{width:"20%"}}>
         <PreferenceButton 
           label={props.rightName} 
           me={props.rightName}
@@ -111,6 +122,17 @@ function InputGetter(props) {
 }
 
 function PreferenceButton(props) {
+
+  //TODO remove / implement, utter hack for demo
+  useEffect(() => {
+    const textBox: any = document.getElementById("reasons");
+    textBox.value =  "";
+    const checkBoxes = document.getElementsByName("important");
+    for (let i=0; i < checkBoxes.length; i++) {
+      checkBoxes[i]["checked"] = false;
+    }
+
+  }, [props.label]);
 
   const dispatch = useContext(ChoiceDispatch);
   function handleClick() {
@@ -127,11 +149,23 @@ function PreferenceButton(props) {
   );
 }
 
+function FlagImportant(props) {
+  return (
+    <div>
+      <input type="checkbox" name="important" value="yes" />
+      <p className="text-s">Important consideration</p>
+    </div>
+  );
+}
+
 function PairwiseComparator(props) {
 
   return (
     
     <div className="w-auto flex space-x-16">
+      <div className="my-auto" style={{width:"10%"}}>
+        <FlagImportant />
+      </div>
       <div className="my-auto" style={{width:"10%"}}>
         <Key unit={props.unit}/>
       </div>
@@ -139,7 +173,7 @@ function PairwiseComparator(props) {
         <Model unit={props.unit} name={props.leftName} 
           value={props.leftValue} mirror={false}/>
       </div>
-      <div className="" style={{width:"30%"}}>
+      <div className="" style={{width:"20%"}}>
         <Comparison unit={props.unit} 
           leftValue={props.leftValue} rightValue={props.rightValue}
           leftName={props.leftName} rightName={props.rightName}/>
