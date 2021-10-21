@@ -46,11 +46,12 @@ role recommendations more than men."""
     captures = ["shortlist_appropriate_candidates"]
     limitations = """Does not capture candidates who were appropriate but
     missed by the system"""
-    description = "recommended to suitable candidates"
+    description = """Proportion of candidates who are suitable for the role
+    found by the system"""
     more = "more"
     less = "fewer"
     prefix = ""
-    suffix = "candidates per role"
+    suffix = "proportion of suitable candidates"
     action = "recommend{s}"
     higherIsBetter = true
     decimals = 2
@@ -61,12 +62,13 @@ role recommendations more than men."""
     limitations = """Does not capture how many candidates miss out from
     different genders/races etc."""
     icon = "missout"
-    description = "missed candidates"
+    description = """Proportion of candidates who were appropriate for the role
+    but were missed by the system."""
     more = "more"
     less = "fewer"
     prefix = ""
-    suffix = "candidates per role"
-    action = "missed"
+    suffix = "proportion of suitable candidates"
+    action = "missed a"
     higherIsBetter = false
     decimals = 2
 
