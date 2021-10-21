@@ -1,14 +1,14 @@
 [precision]
-score = 0.6
+score = 60
 optimal = "max"
-type = "float"
+type = "int"
 
 [fnr]
-score = 0.5
+score = 50
 optimal = "min"
-type = "float"
+type = "int"
 
 [fnr_difference]
-score = 0.1
+score = 10
 optimal = "min"
-type = "float"
+type = "int"

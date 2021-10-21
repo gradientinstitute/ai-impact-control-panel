@@ -1,5 +1,6 @@
 name = "Job Recommender Pro" 
-purpose = "to shortlist candidates who are likely to perform well in a role."
+purpose = """to match candidates who are likely to perform well in a role to
+roles that are suited to their qualifications and experience."""
 operation = """The system recommends advertised roles to individual users on
 the platform. The recommended roles should suit the user's field, skills and
 experience."""
@@ -19,70 +20,73 @@ sweeps."""
 primary_metric = "precision"  # This has to refer to a metric
 
 [actions]
-recommend = "Recommend the role to a shortlist of users on the platform."
+recommend = """Recommend the role to selected users on their platform home
+page."""
   
 [targets]
 interviewed = """The user applied for the role and was interviewed by 
 the organisation for the role."""
   
-[objectives.shortlist_appropriate_candidates]
-name = "Shortlist Appropriate Candidates for Role"
-description = """Ensure the shortlist of candidates to recommend the job
-advertisement to are likely to be suitable for the role."""
+[objectives.shortlist_suitable_candidates]
+name = "Shortlist Appropriate Candidates"
+description = "Ensure that candidates shortlisted for the role are suitable."
 
 [objectives.minimise_missing_out]
-name = "Minimise missing out"
-description = """Minimise the chance appropriate candidates will miss out on
-being recommended an appropriate role."""
+name = "Minimise Missing Out"
+description = """Minimise the chance suitable candidates will miss out on
+being recommended a role."""
 
 [objectives.dont_disadvantage_women]
-name = "Do not Disadvantage Women"
-description = """Ensure the system does not make women miss out on appropriate
+name = "Don't Disadvantage Women"
+description = """Ensure the system does not make women miss out on suitable
 role recommendations more than men."""
 
 [metrics.precision]
-    name = "Proportion of correctly shortlisted candidates"
+    name = "Correctly shortlisted candidates"
     icon = "shortlist"
-    captures = ["shortlist_appropriate_candidates"]
-    limitations = """Does not capture candidates who were appropriate but
-    missed by the system"""
-    description = """Proportion of candidates who are suitable for the role
-    found by the system"""
+    captures = ["shortlist_suitable_candidates"]
+    limitations = """Does not consider if the candidates will actually be hired
+    for the role, only that they may be interviewed."""
+    description = """Number of candidates shortlisted per 100 who are suitable
+    for the role."""
     more = "more"
     less = "fewer"
     prefix = ""
-    suffix = "proportion of suitable candidates"
+    suffix = "candidates per 100 suitable"
     action = "recommend{s}"
     higherIsBetter = true
-    decimals = 2
+    decimals = 0
+    countable = true
 
 [metrics.fnr]
-    name = "Proportion of appropriate candidates missed"
+    name = "Proportion of suitable candidates missed"
     captures = ["minimise_missing_out"]
-    limitations = """Does not capture how many candidates miss out from
-    different genders/races etc."""
+    limitations = """False negatives (missed candidates) are difficult to
+    capture if the training data is from an existing AI system."""
     icon = "missout"
-    description = """Proportion of candidates who were appropriate for the role
+    description = """Proportion of candidates who were suitable for the role
     but were missed by the system."""
     more = "more"
     less = "fewer"
     prefix = ""
-    suffix = "proportion of suitable candidates"
-    action = "missed a"
+    suffix = "candidates per 100 suitable"
+    action = "missed"
     higherIsBetter = false
-    decimals = 2
+    decimals = 0
+    countable = true
 
 [metrics.fnr_difference]
     name = "Inequality of missing out"
     icon = "fairness"
-    description = """difference in proportion of men and women missing out on
-    being recommended appropriate roles."""
+    description = """Difference in proportion of men and women missing out on
+    being recommended roles they are suited to."""
     captures = ["minimise_missing_out", "dont_disadvantage_women"]
-    limitations = "does not consider if men are being disadvantaged"
+    limitations = "Does not consider if men are being disadvantaged."
     more = "more"
     less = "fewer"
     prefix = ""
-    suffix = "proportionally worse at recommending appropriate women"
-    action = "is"
+    suffix = "fewer suitable women than men per 100 candidates"
+    action = "recommends"
     higherIsBetter = false
-    decimals = 2
+    decimals = 0
+    countable = true
