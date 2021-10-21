@@ -81,7 +81,8 @@ role recommendations more than men."""
     description = """Difference in proportion of men and women missing out on
     being recommended roles they are suited to."""
     captures = ["minimise_missing_out", "dont_disadvantage_women"]
-    limitations = "Does not consider if men are being disadvantaged."
+    limitations = """Sensitive to bias against interviewing women in historical
+    data."""
     more = "more"
     less = "fewer"
     prefix = ""
