@@ -1,0 +1,14 @@
+[precision]
+score = 0.4
+optimal = "max"
+type = "float"
+
+[fnr]
+score = 0.1
+optimal = "min"
+type = "float"
+
+[fnr_difference]
+score = 0.2
+optimal = "min"
+type = "float"

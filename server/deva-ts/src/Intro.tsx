@@ -7,6 +7,8 @@ import logo_FNWO from './FNWO.png';
 import logo_FPWO from './FPWO.png';
 import logo_profit from './profit.png';
 import logo_fairness from './fairness.png';
+import logo_missout from './missout.png';
+import logo_shortlist from './shortlist.png';
 import {SigFigs} from './Widgets';
 
 const logos = {
@@ -16,6 +18,8 @@ const logos = {
   FPWO: logo_FPWO,
   profit: logo_profit,
   fairness: logo_fairness,
+  missout: logo_missout,
+  shortlist: logo_shortlist,
 }
 
 const colors = {
