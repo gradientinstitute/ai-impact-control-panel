@@ -15,7 +15,7 @@ def repo_root():
 def name_from_files(lst):
     """Extract the name from the filename for list of paths"""
     names = set([
-        "_".join(os.path.splitext(os.path.basename(i))[0].split('_')[-2:])
+        "_".join(os.path.splitext(os.path.basename(i))[0].split('_')[1:])
         for i in lst])
     return names
 
@@ -64,6 +64,8 @@ def load_scenario(scenario, bounds, pfilter=True):
 
     scenario = toml.load(os.path.join(scenario_path, "metadata.toml"))
 
+    assert len(models) > 0, "There are no candidate models."
+
     # Filter efficient set
     if pfilter:
         models = remove_non_pareto(models)
@@ -73,7 +75,7 @@ def load_scenario(scenario, bounds, pfilter=True):
     if bounds:
         models = remove_unacceptable(models)
 
-    assert len(models) > 0, "There are no candidate models."
+    assert len(models) > 0, "There are no candidate models after filtering."
 
     # Convert the TOML-loaded dictionaries into candidate objects.
     candidates = []
