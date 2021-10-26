@@ -9,7 +9,7 @@ import logo_profit from './profit.png';
 import logo_fairness from './fairness.png';
 import logo_missout from './missout.png';
 import logo_shortlist from './shortlist.png';
-import {SigFigs} from './Widgets';
+import {sigFigs} from './Widgets';
 
 const logos = {
   FN: logo_FN,
@@ -28,9 +28,7 @@ const colors = {
   3: "bg-gray-600",
 }
 
-export function IntroPane(props) {
-
-  const metadata = props.metadata;
+export function IntroPane({metadata, onClick}) {
 
   return (
     <div className="mx-auto max-w-screen-lg pb-8 grid gap-x-8 gap-y-6 grid-cols-1 text-center items-center">
@@ -55,13 +53,12 @@ export function IntroPane(props) {
 
       <Metrics items={metadata.metrics}/>
 
-      <ReadyButton onClick={props.onClick} />
+      <ReadyButton onClick={onClick} />
     </div>
   );
 }
 
-function Pipeline(props) {
-  const metadata = props.metadata;
+function Pipeline({metadata}) {
   return (
     <div className="bg-gray-700 rounded-lg p-3">
     <h2 className="mb-3 font-bold font-xl">Pipeline</h2>
@@ -83,7 +80,6 @@ function Pipeline(props) {
             <SimpleBlock
               title={"Data"}
               value={metadata.data}
-              level={2}
             />
           </div>
         </ArcherElement>
@@ -104,7 +100,7 @@ function Pipeline(props) {
             <BlockWithSubBlocks 
               items={metadata.targets} 
               title={"Predictions"}
-              level={2} />
+              />
           </div>
         </ArcherElement>
 
@@ -123,7 +119,6 @@ function Pipeline(props) {
             <SimpleBlock
               title={"Decision Rules"}
               value={metadata.decision_rules}
-              level={2}
             />
           </div>
         </ArcherElement>
@@ -133,7 +128,7 @@ function Pipeline(props) {
             <BlockWithSubBlocks
               items={metadata.actions}
               title={"Actions"}
-              level={2} />
+              />
           </div>
         </ArcherElement>
 
@@ -143,49 +138,40 @@ function Pipeline(props) {
   );
 }
 
-function Metrics(props) {
+function Metrics({items}) {
 
-  const color = colors[1];
-  const subColor = colors[2];
-  
-  const items = Object.entries(props.items).map((x) => {
+  const mapped_items = Object.entries(items).map((x) => {
     const uid: string = x[0];
     const data: any = x[1];
     const capt = data.captures.join(", ");
 
     return (
-      <div key={uid} className={subColor + " grid grid-cols-1 gap-3 rounded-lg p-3"}>
+      <div key={uid} className={"grid grid-cols-1 gap-3 rounded-lg p-3"}>
         <div className="text-left grid grid-cols-5">
           <img className="col-span-2 row-span-2 h-20" src={logos[data.icon]} />
           <h3 className="col-span-3 font-bold">{data.name}</h3>
           <p className="col-span-3 italic">{data.description}</p>
         </div>
-        <SimpleBlock title={"Captures"} value={capt} level={3}/>
-        <SimpleBlock title={"Limitations"} level={3} value={data.limitations} />
-        <UnitRange data={data} level={3}/>
+        <SimpleBlock title={"Captures"} value={capt} />
+        <SimpleBlock title={"Limitations"} value={data.limitations} />
+        <UnitRange data={data} />
       </div>
     );
   });
 
-  
-
-
   return (
 
-    <div className={color + " rounded-lg p-3"}>
+    <div className={"rounded-lg p-3"}>
       <h3 className="text-xl font-bold">Metrics</h3>
       <div className="grid grid-cols-3 gap-3"> 
-        {items}
+        {mapped_items}
       </div>
     </div>
   );
 }
 
-function UnitRange(props) {
-  const level = "level" in props? props.level : 1;
-  const color = colors[level];
-  const data = props.data;
-  const sigfig = SigFigs(data);
+function UnitRange({data}) {
+  const sigfig = sigFigs(data);
   const h = data.higherIsBetter;
   const min_str = data.prefix + data.min.toFixed(sigfig) + " " + data.suffix;
   const max_str = data.prefix + data.max.toFixed(sigfig) + " " + data.suffix;
@@ -195,7 +181,7 @@ function UnitRange(props) {
   const change_str = h ? "Increases" : "Decreases";
 
   return (
-  <div className={color + " grid grid-cols-3 rounded-lg p-3 items-center"}>
+  <div className={"grid grid-cols-3 rounded-lg p-3 items-center"}>
     <div className="col-span-1">
       <p className="font-bold">Worst case</p>
       <p>{worst_str}</p>
@@ -210,44 +196,33 @@ function UnitRange(props) {
   </div>);
 }
 
-function KeyValue(props) {
+function KeyValue({title, value, titleSize, valueSize}) {
   
-  const titleSize = 'titleSize' in props ? "text-" + props.titleSize : "";
-  const valueSize = 'valueSize' in props ? "text-" + props.valueSize : "";
-  const colorLevel = 'level' in props? props.colorLevel : 1;
   return (
-  <div className={colors[colorLevel] + " grid gap-x-3 p-3 grid-cols-12 rounded-lg items-center"}>
+  <div className={"grid gap-x-3 p-3 grid-cols-12 rounded-lg items-center"}>
     <div className="col-span-3 text-center font-bold">
-      <h3 className={"" + titleSize}>{props.title}</h3>
+      <h3 className={"" + titleSize}>{title}</h3>
     </div>
     <div className={"col-span-9 text-left " + valueSize}>
-      <p>{props.value}</p>
+      <p>{value}</p>
     </div>
   </div>
   );
 }
 
-function SimpleBlock(props) {
-  
-  const level = "level" in props ? props.level : 1;
-  const color = colors[level];
-  
+function SimpleBlock({title, value}) {
   return (
-    <div className={color + " p-3 rounded-lg"}>
-      <h2 className="font-bold">{props.title}</h2>
-      <p>{props.value}</p>
+    <div className={"p-3 rounded-lg"}>
+      <h2 className="font-bold">{title}</h2>
+      <p>{value}</p>
     </div>
   );
 }
 
-function ObjectiveBlock(props) {
-
-  const level = "level" in props ? props.level : 1;
-  const color = colors[level];
-  const subColor = colors[level + 1];
-  const items = Object.entries(props.items).map(([name, v]) => {
+function ObjectiveBlock({title, items}) {
+  const mapped_items = Object.entries(items).map(([name, v]) => {
     return (
-      <div key={name} className={subColor + " p-3 rounded-lg"}>
+      <div key={name} className={"p-3 rounded-lg"}>
         <h3 className="font-bold">{v["name"]}</h3>
         <p>({name})</p>
         <p>{v["description"]}</p>
@@ -255,42 +230,39 @@ function ObjectiveBlock(props) {
     );
   });
   return (
-    <div className={color +" p-3 rounded-lg"}>
-      <h2 className="font-bold text-xl mb-3">{props.title}</h2>
+    <div className={"p-3 rounded-lg"}>
+      <h2 className="font-bold text-xl mb-3">{title}</h2>
       <div className="flex gap-3">
-        {items}
+        {mapped_items}
       </div>
     </div>
   );
 }
 
-function BlockWithSubBlocks(props) {
+function BlockWithSubBlocks({title, items}) {
 
-  const level = "level" in props ? props.level : 1;
-  const color = colors[level];
-  const subColor = colors[level + 1];
-  const items = Object.entries(props.items).map(([name, d]) => {
+  const mapped_items = Object.entries(items).map(([name, d]) => {
     return (
-      <div key={name} className={subColor + " p-3 rounded-lg"}>
+      <div key={name} className={"p-3 rounded-lg"}>
         <h3 className="font-bold">{name.replaceAll("_", " ")}</h3>
         <p>{d}</p>
       </div>
     );
   });
   return (
-    <div className={color +" p-3 rounded-lg"}>
-      <h2 className="font-bold text-xl mb-3">{props.title}</h2>
+    <div className={"p-3 rounded-lg"}>
+      <h2 className="font-bold text-xl mb-3">{title}</h2>
       <div className="flex gap-3">
-        {items}
+        {mapped_items}
       </div>
     </div>
   );
 }
 
-function ReadyButton(props) {
+function ReadyButton({onClick}) {
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
-        onClick={() => props.onClick()}>
+        onClick={onClick}>
         <div className="p-4 text-5xl">
           Begin
         </div>

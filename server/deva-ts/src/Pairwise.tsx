@@ -9,11 +9,9 @@ function choiceReducer(_state, action) {
   return action.first + "/" + action.second;
 }
 
-export function MainPane(props) {
-  const metadata = props.metadata;
+export function MainPane({metadata, setResult}) {
   const [candidates, setCandidates] = useState<any>(null);
   const [choice, dispatch] = useReducer(choiceReducer, "");
-  const setResult = props.setResult;
 
   // loading of candidates
   useEffect(() => {
@@ -86,7 +84,7 @@ export function MainPane(props) {
 }
 
 
-function Motivation(props) {
+function Motivation({}) {
   return (
     <div>
       <p className="text-xl mb-5"> What is motivating your choice? </p>
@@ -95,16 +93,16 @@ function Motivation(props) {
   );
 }
 
-function InputGetter(props) {
+function InputGetter({leftName, rightName}) {
   return (
     <div className="w-auto mb-8 flex space-x-16">
       <div className="my-auto" style={{width:"10%"}}>
       </div>
       <div className="my-auto" style={{width:"20%"}}>
         <PreferenceButton 
-          label={props.leftName} 
-          me={props.leftName}
-          other={props.rightName}
+          label={leftName} 
+          me={leftName}
+          other={rightName}
         />
       </div>
       <div className="my-auto" style={{width:"50%"}}>
@@ -112,16 +110,16 @@ function InputGetter(props) {
       </div>
       <div className="my-auto" style={{width:"20%"}}>
         <PreferenceButton 
-          label={props.rightName} 
-          me={props.rightName}
-          other={props.leftName}
+          label={rightName} 
+          me={rightName}
+          other={leftName}
         />
       </div>
     </div>
   );
 }
 
-function PreferenceButton(props) {
+function PreferenceButton({me, other, label}) {
 
   //TODO remove / implement, utter hack for demo
   useEffect(() => {
@@ -132,24 +130,24 @@ function PreferenceButton(props) {
       checkBoxes[i]["checked"] = false;
     }
 
-  }, [props.label]);
+  }, [label]);
 
   const dispatch = useContext(ChoiceDispatch);
   function handleClick() {
-    dispatch({ first: props.me, second: props.other });
+    dispatch({ first: me, second: other });
   }
 
   return (
       <button className="bg-gray-200 rounded-lg" 
         onClick={handleClick}>
         <div className="p-4 text-3xl text-black">
-          I prefer {props.label}
+          I prefer {label}
         </div>
       </button>
   );
 }
 
-function FlagImportant(props) {
+function FlagImportant({}) {
   return (
     <div>
       <input type="checkbox" name="important" value="yes" />
@@ -158,7 +156,8 @@ function FlagImportant(props) {
   );
 }
 
-function PairwiseComparator(props) {
+function PairwiseComparator({leftName, leftValue, 
+  rightName, rightValue, unit}) {
 
   return (
     
@@ -167,34 +166,32 @@ function PairwiseComparator(props) {
         <FlagImportant />
       </div>
       <div className="my-auto" style={{width:"10%"}}>
-        <Key unit={props.unit}/>
+        <Key unit={unit}/>
       </div>
       <div className="" style={{width:"30%"}}>
-        <Model unit={props.unit} name={props.leftName} 
-          value={props.leftValue} mirror={false}/>
+        <Model unit={unit} name={leftName} 
+          value={leftValue} isMirror={false}/>
       </div>
       <div className="" style={{width:"20%"}}>
-        <Comparison unit={props.unit} 
-          leftValue={props.leftValue} rightValue={props.rightValue}
-          leftName={props.leftName} rightName={props.rightName}/>
+        <Comparison unit={unit} 
+          leftValue={leftValue} rightValue={rightValue}
+          leftName={leftName} rightName={rightName}/>
       </div>
       <div className="" style={{width:"30%"}}>
-        <Model unit={props.unit} name={props.rightName}
-          value={props.rightValue} mirror={false}/>
+        <Model unit={unit} name={rightName}
+          value={rightValue} isMirror={false}/>
       </div>
     </div>
 
   );
 }
 
-function DeltaBar(props) {
+function DeltaBar({leftValue, rightValue, unit}) {
   
-  let maxDelta = props.unit.max - props.unit.min;
-  let delta = (props.leftValue - props.rightValue);
+  let maxDelta = unit.max - unit.min;
+  let delta = (leftValue - rightValue);
   let onLeft = delta > 0;
   let pDelta = delta / maxDelta * 100;
-  let leftValue = onLeft === true ? delta : "";
-  let rightValue = onLeft === true ? "" : -1 * delta;
   let rightP = onLeft === true ? 0 : -1 * pDelta;
   let leftP = onLeft === true ? pDelta : 0;
 
@@ -202,19 +199,17 @@ function DeltaBar(props) {
     <div className="w-full flex">
       <div className="w-1/2 py-3">
         <FillBar 
-          mirror={true} 
-          thin={true} 
-          unit={props.unit} 
-          value={leftValue} 
+          isMirror={true} 
+          isThin={true} 
+          unit={unit} 
           percentage={leftP} 
         />
       </div>
       <div className="w-1/2 py-3">
         <FillBar 
-          mirror={false} 
-          thin={true} 
-          unit={props.unit} 
-          value={rightValue} 
+          isMirror={false} 
+          isThin={true} 
+          unit={unit} 
           percentage={rightP} 
         />
       </div>
@@ -222,31 +217,32 @@ function DeltaBar(props) {
   );
 }
 
-function ComparisonStatement(props) {
-  let delta = props.leftValue - props.rightValue; 
-  let n1 = props.leftName;
-  let n2 = props.rightName;
+function ComparisonStatement({leftName, leftValue, 
+  rightName, rightValue, unit}) {
+  let delta = leftValue - rightValue; 
+  let n1 = leftName;
+  let n2 = rightName;
   if (delta < 0) {
-    n1 = props.rightName;
-    n2 = props.leftName;
+    n1 = rightName;
+    n2 = leftName;
     delta = delta * -1;
   } 
   return (
     <div className="text-xl font-bold">
-      {n1} {props.unit.action} {props.unit.prefix}
-      {delta.toFixed(sigfig)} {props.unit.suffix} more than {n2}.
+      {n1} {unit.action} {unit.prefix}
+      {delta.toFixed(sigfig)} {unit.suffix} more than {n2}.
     </div>
 );
 }
 
-function Comparison(props) {
+function Comparison({leftValue, leftName, rightValue, rightName, unit}) {
   return (
     <div>
-      <DeltaBar unit={props.unit} leftValue={props.leftValue}
-        rightValue={props.rightValue} />
-      <ComparisonStatement unit={props.unit} leftName={props.leftName}
-        rightName={props.rightName} leftValue={props.leftValue} 
-        rightValue={props.rightValue}/>
+      <DeltaBar unit={unit} leftValue={leftValue}
+        rightValue={rightValue} />
+      <ComparisonStatement unit={unit} leftName={leftName}
+        rightName={rightName} leftValue={leftValue} 
+        rightValue={rightValue}/>
     </div>
   );
 }

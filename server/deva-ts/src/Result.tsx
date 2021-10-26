@@ -1,9 +1,8 @@
 import React, {useState, useEffect, useReducer, useContext} from 'react';
 import {Key, Model} from './Widgets';
 
-export function ResultPane(props) {
-  const metadata = props.metadata;
-  const [name, attr_spec] = Object.entries(props.result)[0];
+export function ResultPane({result, metadata}) {
+  const [name, attr_spec] = Object.entries(result)[0];
   const attr = attr_spec["attr"]
   const spec = attr_spec["spec"]
 
@@ -16,7 +15,6 @@ export function ResultPane(props) {
           key={uid}
           unit={u} 
           value={attr[uid]} 
-          name={uid} 
         />
       </div>
       );
@@ -42,7 +40,7 @@ export function ResultPane(props) {
   );
 }
 
-function StartOver(props) {
+function StartOver({}) {
   return (
       <button className="bg-gray-200 text-black rounded-lg mb-3" 
         onClick={() =>  window.location.href='/'}>
@@ -54,16 +52,16 @@ function StartOver(props) {
 }
 
 
-function ResultOnMetric(props) {
+function ResultOnMetric({value, unit}) {
 
   return (
     <div className="grid grid-cols-12">
       <div className="my-auto col-span-3">
-        <Key unit={props.unit}/>
+        <Key unit={unit}/>
       </div>
       <div className="col-span-9">
-        <Model unit={props.unit} name={"The chosen system"} 
-          value={props.value} mirror={false}/>
+        <Model unit={unit} name={"The chosen system"} 
+          value={value} isMirror={false}/>
       </div>
     </div>
 

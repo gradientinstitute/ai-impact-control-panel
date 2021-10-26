@@ -1,31 +1,31 @@
 import React from 'react';
 
-function SigFigs(values) {
-    if (Number.isInteger(values.min) && Number.isInteger(values.max)) {
+function sigFigs(unit) {
+    if (Number.isInteger(unit.min) && Number.isInteger(unit.max)) {
         return 0;
     }
     return 2;
 }
 
-function Model(props) {
+function Model({unit, value, name, isMirror}) {
   return (
     <div>
-    <Performance unit={props.unit} value={props.value} mirror={props.mirror}/>
-    <ValueStatement unit={props.unit} name={props.name} 
-      value={props.value} />
+    <Performance unit={unit} value={value} isMirror={isMirror}/>
+    <ValueStatement unit={unit} name={name} 
+      value={value} />
     </div>
   );
 }
 
-function Key(props) {
-  let direction = props.unit.higherIsBetter === true ? "Higher" : "Lower";
+function Key({unit}) {
+  let direction = unit.higherIsBetter === true ? "Higher" : "Lower";
     return (
     <div className="my-auto">
       <div className="text-lg font-bold">
-        {props.unit.name}
+        {unit.name}
       </div>
       <div className="text-xs">
-        {props.unit.description}
+        {unit.description}
       </div>
       <div>
         ({direction} is better)
@@ -35,23 +35,23 @@ function Key(props) {
 }
 
 
-function Performance(props) {
-  let p = (props.value - props.unit.min) / 
-    (props.unit.max - props.unit.min) * 100;
+function Performance({value, unit, isMirror}) {
+  let p = (value - unit.min) / 
+    (unit.max - unit.min) * 100;
   let lf = "min";
   let rf = "max";
-  const sigfig = SigFigs(props.unit)
-  let lv = props.unit.prefix + props.unit.min.toFixed(sigfig) 
-    + " " + props.unit.suffix;
-  let rv = props.unit.prefix + props.unit.max.toFixed(sigfig) 
-    + " " + props.unit.suffix;
-  if (props.mirror === true) {
+  const sigfig = sigFigs(unit)
+  let lv = unit.prefix + unit.min.toFixed(sigfig) 
+    + " " + unit.suffix;
+  let rv = unit.prefix + unit.max.toFixed(sigfig) 
+    + " " + unit.suffix;
+  if (isMirror === true) {
     lf = "max";
     rf = "min";
-    lv = props.unit.prefix + props.unit.max.toFixed(sigfig) 
-      + " " + props.unit.suffix;
-    rv = props.unit.prefix + props.unit.min.toFixed(sigfig)
-      + " " + props.unit.suffix;
+    lv = unit.prefix + unit.max.toFixed(sigfig) 
+      + " " + unit.suffix;
+    rv = unit.prefix + unit.min.toFixed(sigfig)
+      + " " + unit.suffix;
   }
 
   return (
@@ -60,10 +60,10 @@ function Performance(props) {
       <div className="my-auto pr-2 text-right text-xs w-1/4">{lv}<br />({lf} achievable)</div>
       <div className="flex-grow py-3">
         <FillBar 
-          value={props.value} 
-          unit={props.unit} 
+          unit={unit} 
           percentage={p} 
-          mirror={props.mirror}
+          isMirror={isMirror}
+          isThin={false}
         />
       </div>
       <div className="my-auto text-left pl-2 text-xs w-1/4">{rv}<br />({rf} achievable)</div>
@@ -71,24 +71,24 @@ function Performance(props) {
   );
 }
 
-function ValueStatement(props) {
-  const sigfig = Number.isInteger(props.value) ? 0 : 2;
+function ValueStatement({name, value, unit}) {
+  const sigfig = Number.isInteger(value) ? 0 : 2;
   return (
     <div>
-      {props.name} {props.unit.action} {props.unit.prefix}
-      {props.value.toFixed(sigfig)} {props.unit.suffix}. 
+      {name} {unit.action} {unit.prefix}
+      {value.toFixed(sigfig)} {unit.suffix}. 
     </div>
 );
 }
 
-function FillBar(props) {
-  let lwidth = props.thin === true? 2 : 4;
-  let leftright = props.mirror === true ? 
+function FillBar({percentage, unit, isThin, isMirror}) {
+  let lwidth = isThin === true? 2 : 4;
+  let leftright = isMirror === true ? 
     " text-left ml-auto" : " text-right";
-  let border = props.mirror === true ? 
+  let border = isMirror === true ? 
     "border-r-" + lwidth: "border-l-" + lwidth;
   let outer = "py-3 border-black " + border;
-  let color = props.unit.higherIsBetter === true ? 
+  let color = unit.higherIsBetter === true ? 
     "bg-green-700" : "bg-red-800";
 
   return (
@@ -96,7 +96,7 @@ function FillBar(props) {
     <div className="w-full bg-gray-500">
       <div className={"h-24 min-h-full " + color + 
         " text-xs text-left text-gray-500" + leftright} 
-           style={{width:props.percentage + "%"}}
+           style={{width:percentage + "%"}}
       >
       </div>
     </div>
@@ -104,4 +104,4 @@ function FillBar(props) {
   );
 }
 
-export {Key, Model, FillBar, SigFigs};
+export {Key, Model, FillBar, sigFigs};
