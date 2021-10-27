@@ -9,7 +9,10 @@ function choiceReducer(_state, action) {
   return action.first + "/" + action.second;
 }
 
-export function MainPane({metadata, setResult}) {
+export function PairwisePane({}) {
+  const metadata = null;
+  const setResult = (_x) => {};
+
   const [candidates, setCandidates] = useState<any>(null);
   const [choice, dispatch] = useReducer(choiceReducer, "");
 

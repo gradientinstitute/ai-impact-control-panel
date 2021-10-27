@@ -1,7 +1,11 @@
 import React, {useState, useEffect, useReducer, useContext} from 'react';
 import {Key, Model} from './Widgets';
 
-export function ResultPane({result, metadata}) {
+export function ResultPane({}) {
+
+  const metadata = null;
+  const result = null;
+
   const [name, attr_spec] = Object.entries(result)[0];
   const attr = attr_spec["attr"]
   const spec = attr_spec["spec"]

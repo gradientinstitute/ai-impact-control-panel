@@ -1,6 +1,12 @@
-import React, {useState, useEffect, useReducer, useContext} from 'react';
+import React, {useEffect, useContext} from 'react';
+import { useRecoilState } from 'recoil';
 import _ from "lodash";
+import axios from 'axios';
 import { ArcherContainer, ArcherElement } from 'react-archer';
+import { Pane, paneState, metadataState } from './Base';
+import {sigFigs} from './Widgets';
+
+// TODO get these from  the server
 import logo_FN from './FN.png';
 import logo_FP from './FP.png';
 import logo_FNWO from './FNWO.png';
@@ -9,7 +15,6 @@ import logo_profit from './profit.png';
 import logo_fairness from './fairness.png';
 import logo_missout from './missout.png';
 import logo_shortlist from './shortlist.png';
-import {sigFigs} from './Widgets';
 
 const logos = {
   FN: logo_FN,
@@ -28,7 +33,24 @@ const colors = {
   3: "bg-gray-600",
 }
 
-export function IntroPane({metadata, onClick}) {
+export function IntroPane({}) {
+  
+  const [metadata, setMetadata] = useRecoilState(metadataState);
+
+  // initial request on load
+  useEffect(() => {
+    let req = "metadata";
+    async function fetchData() {
+      const result = await axios.get<any>(req);
+      setMetadata(result.data);
+    }
+    fetchData();
+  }, []
+  );
+
+  if (metadata == null) {
+    return (<p>Loading...</p>);
+  }
 
   return (
     <div className="mx-auto max-w-screen-lg pb-8 grid gap-x-8 gap-y-6 grid-cols-1 text-center items-center">
@@ -53,7 +75,7 @@ export function IntroPane({metadata, onClick}) {
 
       <Metrics items={metadata.metrics}/>
 
-      <ReadyButton onClick={onClick} />
+      <ReadyButton />
     </div>
   );
 }
@@ -259,10 +281,11 @@ function BlockWithSubBlocks({title, items}) {
   );
 }
 
-function ReadyButton({onClick}) {
+function ReadyButton({}) {
+  const [_pane, setPane] = useRecoilState(paneState);
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
-        onClick={onClick}>
+        onClick={() => {setPane(Pane.Constrain)}}>
         <div className="p-4 text-5xl">
           Begin
         </div>
