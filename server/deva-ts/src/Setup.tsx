@@ -13,6 +13,11 @@ const currentScenarioState = atom({
   default: null,
 });
 
+const passwordState = atom({
+  key: 'password',
+  default: "",
+});
+
 export function SetupPane({}) {
 
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
@@ -31,16 +36,15 @@ export function SetupPane({}) {
 
   return (
     <div>
-      <h1 className="my-auto text-center">Setup Pane</h1>
+      <h1 className="my-auto text-center mb-4">Login</h1>
       <div className="grid grid-cols-4 gap-4 p-4">
-        <div className="col-span-1">
+        <div className="col-span-2">
           <Login />
         </div>
-        <div className="col-span-3">
+        <div className="col-span-2">
           <Summary />
         </div>
       </div>
-      <StartButton />
       </div>
   );
 }
@@ -50,26 +54,31 @@ function Login({}) {
   const scenarios = useRecoilValue(scenariosState);
   const [current, setCurrent] = useRecoilState(currentScenarioState);
   const [_login, setLogin] = useRecoilState(loginState);
+  const [_pword, setPword] = useRecoilState(passwordState);
 
   const elements = Object.entries(scenarios).map(([name, v]) => {
     return (<option value={name}>{v.name}</option>);
   });
   
   return (
-      <div className="p-4 gap-4 grid grid-cols-3" >
-        <p className="text-right col-span-1">login</p>
-        <input className="col-span-2" type="text" name="username" 
-          onChange={
-            (x) => {setLogin(x.target.value)}}/>
-        <p className="text-right col-span-1">password</p>
-        <input className="col-span-2" type="password" name="username" />
-
+      <div className="p-4 gap-4 rounded-lg bg-blue-700 grid grid-cols-3" >
         <p className="text-right col-span-1">Scenario</p>
         <select className="col-span-2" name="scenarios" value={current} 
           onChange={
             (x) => {setCurrent(x.target.value)}}>
           {elements}
         </select>
+        <p className="text-right col-span-1">login</p>
+        <input className="col-span-2" type="text" name="username" 
+          onChange={
+            (x) => {setLogin(x.target.value)}}/>
+        <p className="text-right col-span-1">password</p>
+        <input className="col-span-2" type="password" name="username" 
+          onChange={
+            (x) => {setPword(x.target.value)}}/>
+        <div className="col-span-3">
+          <StartButtons />
+        </div>
       </div>
     );
 }
@@ -83,29 +92,45 @@ function Summary({}) {
     return (<p>Loading...</p>);
   }
   return (
-      <div>
-        <h1>{scenarios[current].name}</h1>
-        <p>{"Purpose: " + scenarios[current].purpose}</p>
-        <p>{"Operation: " + scenarios[current].operation}</p>
-        <p>{"Objectives: " + Object.keys(scenarios[current].objectives).length}</p>
-        <p>{"Metrics: " + Object.keys(scenarios[current].metrics).length}</p>
+      <div className="grid grid-cols-2 rounded-lg bg-gray-600 gap-4 p-4">
+        <div className="col-span-2 rounded-lg bg-orange-700 py-4">
+          <h2 className="text-center">{scenarios[current].name}</h2>
+          <p className="text-center italic px-4">{"A system " + scenarios[current].purpose}</p>
+        </div>
+        <p className="col-span-2">{scenarios[current].operation}</p>
+        <p className="text-center py-2 rounded-lg bg-green-700">{"Objectives: " + Object.keys(scenarios[current].objectives).length}</p>
+        <p className="text-center py-2 rounded-lg bg-green-700">{"Metrics: " + Object.keys(scenarios[current].metrics).length}</p>
       </div>);
 }
 
-function StartButton({}) {
+function StartButtons({}) {
 
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
   const login = useRecoilValue(loginState);
+  const pword = useRecoilValue(passwordState);
+
+  const disabled = (current === null 
+    || login.length === 0 
+    || pword.length === 0);
   
   return (
-      <button className="bg-gray-200 text-black rounded-lg" 
-        onClick={() => {setPane(Pane.Intro)}}
-        disabled={current===null || login===null}>
-        <div className="p-4 text-5xl">
-          Ready
-        </div>
-      </button>
+      <div className="grid grid-cols-2 gap-4 p-4">
+        <button className="bg-gray-200 text-black rounded-lg" 
+          onClick={() => {setPane(Pane.Intro)}}
+          disabled={true}>
+          <div className="p-4 text-lg">
+            Elicit Boundaries
+          </div>
+        </button>
+        <button className="bg-gray-200 text-black rounded-lg" 
+          onClick={() => {setPane(Pane.Intro)}}
+          disabled={disabled}>
+          <div className="p-4 text-lg">
+            Elicit Deployment
+          </div>
+        </button>
+      </div>
   );
 }
 

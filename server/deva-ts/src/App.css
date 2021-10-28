@@ -22,3 +22,7 @@ select {
   background-color: #444444;
   color: #fff;
 }
+
+button[disabled=disabled], button:disabled {
+  color: #999999;
+}

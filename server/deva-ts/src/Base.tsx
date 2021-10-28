@@ -30,6 +30,6 @@ export const scenarioState = atom({
 
 export const loginState = atom({  
   key: 'login', 
-  default: null, 
+  default: "", 
 });
 
