@@ -27,11 +27,10 @@ const logos = {
   shortlist: logo_shortlist,
 }
 
-const colors = {
-  1: "bg-gray-700",
-  2: "bg-blue-700",
-  3: "bg-gray-600",
-}
+const HIGHLIGHT_COLOUR = "bg-orange-700";
+const FIRST_COLOUR = "bg-gray-700";
+const SECOND_COLOUR = "bg-blue-600";
+const THIRD_COLOUR = "bg-green-700";
 
 export function IntroPane({}) {
   
@@ -65,6 +64,7 @@ export function IntroPane({}) {
         titleSize="4xl" 
         value={metadata.operation} 
         valueSize="xl"
+        colour={HIGHLIGHT_COLOUR}
       />
 
       <ObjectiveBlock
@@ -82,7 +82,7 @@ export function IntroPane({}) {
 
 function Pipeline({metadata}) {
   return (
-    <div className="bg-gray-700 rounded-lg p-3">
+    <div className= {FIRST_COLOUR + " rounded-lg p-3"}>
     <h2 className="mb-3 font-bold font-xl">Pipeline</h2>
     <ArcherContainer strokeColor="white">
       <div className="grid grid-cols-2 gap-20 items-center">
@@ -102,6 +102,7 @@ function Pipeline({metadata}) {
             <SimpleBlock
               title={"Data"}
               value={metadata.data}
+              colour={SECOND_COLOUR}
             />
           </div>
         </ArcherElement>
@@ -141,6 +142,7 @@ function Pipeline({metadata}) {
             <SimpleBlock
               title={"Decision Rules"}
               value={metadata.decision_rules}
+              colour={SECOND_COLOUR}
             />
           </div>
         </ArcherElement>
@@ -168,14 +170,14 @@ function Metrics({items}) {
     const capt = data.captures.join(", ");
 
     return (
-      <div key={uid} className={"grid grid-cols-1 gap-3 rounded-lg p-3"}>
+      <div key={uid} className={SECOND_COLOUR + " grid grid-cols-1 gap-3 rounded-lg p-3"}>
         <div className="text-left grid grid-cols-5">
           <img className="col-span-2 row-span-2 h-20" src={logos[data.icon]} />
           <h3 className="col-span-3 font-bold">{data.name}</h3>
           <p className="col-span-3 italic">{data.description}</p>
         </div>
-        <SimpleBlock title={"Captures"} value={capt} />
-        <SimpleBlock title={"Limitations"} value={data.limitations} />
+        <SimpleBlock colour={THIRD_COLOUR} title={"Captures"} value={capt} />
+        <SimpleBlock colour={THIRD_COLOUR} title={"Limitations"} value={data.limitations} />
         <UnitRange data={data} />
       </div>
     );
@@ -183,7 +185,7 @@ function Metrics({items}) {
 
   return (
 
-    <div className={"rounded-lg p-3"}>
+    <div className={FIRST_COLOUR + " rounded-lg p-3"}>
       <h3 className="text-xl font-bold">Metrics</h3>
       <div className="grid grid-cols-3 gap-3"> 
         {mapped_items}
@@ -218,10 +220,10 @@ function UnitRange({data}) {
   </div>);
 }
 
-function KeyValue({title, value, titleSize, valueSize}) {
+function KeyValue({title, value, titleSize, valueSize, colour}) {
   
   return (
-  <div className={"grid gap-x-3 p-3 grid-cols-12 rounded-lg items-center"}>
+  <div className={colour + " grid gap-x-3 p-3 grid-cols-12 rounded-lg items-center"}>
     <div className="col-span-3 text-center font-bold">
       <h3 className={"" + titleSize}>{title}</h3>
     </div>
@@ -232,9 +234,9 @@ function KeyValue({title, value, titleSize, valueSize}) {
   );
 }
 
-function SimpleBlock({title, value}) {
+function SimpleBlock({title, value, colour}) {
   return (
-    <div className={"p-3 rounded-lg"}>
+    <div className={colour + " p-3 rounded-lg"}>
       <h2 className="font-bold">{title}</h2>
       <p>{value}</p>
     </div>
@@ -244,15 +246,14 @@ function SimpleBlock({title, value}) {
 function ObjectiveBlock({title, items}) {
   const mapped_items = Object.entries(items).map(([name, v]) => {
     return (
-      <div key={name} className={"p-3 rounded-lg"}>
-        <h3 className="font-bold">{v["name"]}</h3>
-        <p>({name})</p>
+      <div key={name} className={SECOND_COLOUR + " p-3 rounded-lg"}>
+        <h3 className="font-bold mb-4">{v["name"]}</h3>
         <p>{v["description"]}</p>
       </div>
     );
   });
   return (
-    <div className={"p-3 rounded-lg"}>
+    <div className={FIRST_COLOUR + " p-3 rounded-lg"}>
       <h2 className="font-bold text-xl mb-3">{title}</h2>
       <div className="flex gap-3">
         {mapped_items}
@@ -265,14 +266,14 @@ function BlockWithSubBlocks({title, items}) {
 
   const mapped_items = Object.entries(items).map(([name, d]) => {
     return (
-      <div key={name} className={"p-3 rounded-lg"}>
+      <div key={name} className={THIRD_COLOUR + " p-3 rounded-lg"}>
         <h3 className="font-bold">{name.replaceAll("_", " ")}</h3>
         <p>{d}</p>
       </div>
     );
   });
   return (
-    <div className={"p-3 rounded-lg"}>
+    <div className={SECOND_COLOUR + " p-3 rounded-lg"}>
       <h2 className="font-bold text-xl mb-3">{title}</h2>
       <div className="flex gap-3">
         {mapped_items}
