@@ -43,7 +43,7 @@ role recommendations more than men."""
 
 [metrics.precision]
     name = "Correctly shortlisted candidates"
-    icon = "shortlist"
+    icon = "shortlist.png"
     captures = ["shortlist_suitable_candidates"]
     limitations = """Does not consider if the candidates will actually be hired
     for the role, only that they may be interviewed."""
@@ -63,7 +63,7 @@ role recommendations more than men."""
     captures = ["minimise_missing_out"]
     limitations = """False negatives (missed candidates) are difficult to
     capture if the training data is from an existing AI system."""
-    icon = "missout"
+    icon = "missout.png"
     description = """Proportion of candidates who were suitable for the role
     but were missed by the system."""
     more = "more"
@@ -77,7 +77,7 @@ role recommendations more than men."""
 
 [metrics.fnr_difference]
     name = "Inequality of missing out"
-    icon = "fairness"
+    icon = "fairness.png"
     description = """Difference in proportion of men and women missing out on
     being recommended roles they are suited to."""
     captures = ["minimise_missing_out", "dont_disadvantage_women"]

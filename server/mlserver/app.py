@@ -1,9 +1,10 @@
-from flask import Flask, session, jsonify, abort, request
+from flask import Flask, session, jsonify, abort, request, send_from_directory
 # from flask_caching import Cache
 from deva import elicit
 from deva import fileio
 import random
 import string
+import os.path
 
 
 def random_key(n):
@@ -49,6 +50,12 @@ def _scenario(name="jobs"):
 #     # Perhaps accessing one also sets your next session's scenario?
 #     return _scenario()[1]
 
+
+@app.route('/images/<path:name>')
+def send_image(name):
+    print("trying to get image")
+    scenario_path = os.path.join(fileio.repo_root(), 'scenarios/jobs/images')
+    return send_from_directory(scenario_path, name)
 
 @app.route('/metadata')
 def init_session():

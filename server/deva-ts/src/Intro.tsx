@@ -6,27 +6,6 @@ import { ArcherContainer, ArcherElement } from 'react-archer';
 import { Pane, paneState, metadataState } from './Base';
 import {sigFigs} from './Widgets';
 
-// TODO get these from  the server
-import logo_FN from './FN.png';
-import logo_FP from './FP.png';
-import logo_FNWO from './FNWO.png';
-import logo_FPWO from './FPWO.png';
-import logo_profit from './profit.png';
-import logo_fairness from './fairness.png';
-import logo_missout from './missout.png';
-import logo_shortlist from './shortlist.png';
-
-const logos = {
-  FN: logo_FN,
-  FP: logo_FP,
-  FNWO: logo_FNWO,
-  FPWO: logo_FPWO,
-  profit: logo_profit,
-  fairness: logo_fairness,
-  missout: logo_missout,
-  shortlist: logo_shortlist,
-}
-
 const HIGHLIGHT_COLOUR = "bg-orange-700";
 const FIRST_COLOUR = "bg-gray-700";
 const SECOND_COLOUR = "bg-blue-600";
@@ -172,7 +151,7 @@ function Metrics({items}) {
     return (
       <div key={uid} className={SECOND_COLOUR + " grid grid-cols-1 gap-3 rounded-lg p-3"}>
         <div className="text-left grid grid-cols-5">
-          <img className="col-span-2 row-span-2 h-20" src={logos[data.icon]} />
+          <img className="col-span-2 row-span-2 h-20" src={"images/" + data.icon} />
           <h3 className="col-span-3 font-bold">{data.name}</h3>
           <p className="col-span-3 italic">{data.description}</p>
         </div>
