@@ -9,8 +9,6 @@ import {ConstraintPane} from './Constrain';
 import './App.css';
 import logo from './logo-dark-small.svg';
 
-
-
 function App() {
 
   return (

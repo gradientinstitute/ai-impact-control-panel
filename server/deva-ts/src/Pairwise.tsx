@@ -1,46 +1,66 @@
-import React, {useState, useEffect, useReducer, useContext} from 'react';
+import React, { useEffect } from 'react';
+import { atom, useRecoilState, useRecoilValue } from 'recoil';
+import {Pane, metadataState, paneState, resultState} from './Base';
+
 import axios from 'axios';
 import {Key, Model, FillBar} from './Widgets';
 
-const ChoiceDispatch = React.createContext(null);
 const sigfig = 2
 
-function choiceReducer(_state, action) {
-  return action.first + "/" + action.second;
-}
+const candidatesState = atom({
+  key: 'candidates',
+  default: null,
+});
+
+const choiceState = atom({
+  key: 'choice',
+  default: null,
+});
 
 export function PairwisePane({}) {
-  const metadata = null;
-  const setResult = (_x) => {};
+  
+  const metadata = useRecoilValue(metadataState);
+  const [_result, setResult] = useRecoilState(resultState);
+  const choice = useRecoilValue(choiceState);
+  const [candidates, setCandidates] = useRecoilState(candidatesState);
+  const [_pane, setPane] = useRecoilState(paneState);
 
-  const [candidates, setCandidates] = useState<any>(null);
-  const [choice, dispatch] = useReducer(choiceReducer, "");
-
-  // loading of candidates
+  // initial loading of candidates
   useEffect(() => {
-    if (metadata == null) {
-      return
-    }
-    
-    let req = choice === "" ? "choice" : "choice/" + choice;
     const fetch = async () => {
-      const result = await axios.get<any>(req);
+      const result = await axios.get<any>("choice");
       const d = result.data;
       const k = Object.keys(d);
       if (k.length === 1) {
         setResult(d);
+        setPane(Pane.Result);
       } else {
-        const leftName = Object.keys(d)[0];
-        const rightName = Object.keys(d)[1];
-        setCandidates({
-          left: {name: leftName, values: d[leftName]},
-          right:{name: rightName, values: d[rightName]}
-        });
+        setCandidates(d);
       }
     }
     fetch();
-  }, [metadata, choice, setResult]
+  }, []
   );
+
+  // sending new choice
+  useEffect(() => {
+    const send = async () => {
+      const result = await axios.put<any>("choice", choice);
+      const d = result.data;
+      const k = Object.keys(d);
+      if (k.length === 1) {
+        setResult(d);
+        setPane(Pane.Result);
+      } else {
+        setCandidates(d);
+      }
+    }
+    if (choice !== null) {
+      send();
+    }
+  }, [choice]
+  );
+
 
   // loading condition
   // must come after the useEffect so useEffect always runs
@@ -68,7 +88,6 @@ export function PairwisePane({}) {
     return result;
   }
 
-    // <div className="">
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-6 grid-cols-1 text-center items-center">
       <div>
@@ -76,12 +95,10 @@ export function PairwisePane({}) {
         <p className="italic">A system designed to {metadata.purpose}</p>
       </div>
       {comparisons()}
-      <ChoiceDispatch.Provider value={dispatch}>
         <InputGetter 
           leftName={candidates.left.name} 
           rightName={candidates.right.name} 
         />
-      </ChoiceDispatch.Provider>
     </div>
   );
 }
@@ -135,14 +152,15 @@ function PreferenceButton({me, other, label}) {
 
   }, [label]);
 
-  const dispatch = useContext(ChoiceDispatch);
-  function handleClick() {
-    dispatch({ first: me, second: other });
+  const [_choice, setChoice] = useRecoilState(choiceState);
+
+  function onClick() {
+    setChoice({first: me, second: other});
   }
 
   return (
       <button className="bg-gray-200 rounded-lg" 
-        onClick={handleClick}>
+        onClick={onClick}>
         <div className="p-4 text-3xl text-black">
           I prefer {label}
         </div>

@@ -1,11 +1,12 @@
-import React, {useState, useEffect, useReducer, useContext} from 'react';
+import { useRecoilValue } from 'recoil';
 import {Key, Model} from './Widgets';
+import {metadataState, resultState} from './Base';
 
 export function ResultPane({}) {
 
-  const metadata = null;
-  const result = null;
-
+  const metadata = useRecoilValue(metadataState);
+  const result = useRecoilValue(resultState);
+  
   const [name, attr_spec] = Object.entries(result)[0];
   const attr = attr_spec["attr"]
   const spec = attr_spec["spec"]

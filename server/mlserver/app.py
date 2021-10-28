@@ -1,4 +1,4 @@
-from flask import Flask, session, jsonify, abort
+from flask import Flask, session, jsonify, abort, request
 # from flask_caching import Cache
 from deva import elicit
 from deva import fileio
@@ -43,16 +43,15 @@ def _scenario(name="jobs"):
 
     return scenarios[name]
 
+# @app.route('/metadata')
+# def meta():
+#     # TODO - have scenario specific endpoints?
+#     # Perhaps accessing one also sets your next session's scenario?
+#     return _scenario()[1]
+
 
 @app.route('/metadata')
-def meta():
-    # TODO - have scenario specific endpoints?
-    # Perhaps accessing one also sets your next session's scenario?
-    return _scenario()[1]
-
-
-@app.route('/choice')
-def initial_view():
+def init_session():
     global eliciters
 
     if "ID" in session:
@@ -71,14 +70,11 @@ def initial_view():
     # eliciter = elicit.ActiveMax(candidates, spec)
     eliciters[session["ID"]] = eliciter
 
-    # send the performance and choices to the frontend
-    assert isinstance(eliciter.query, elicit.Pair)
-    m1, m2 = eliciter.query
-    return jsonify({m1.name: m1.attributes, m2.name: m2.attributes})
+    # send the metadata for the scenario
+    return _scenario()[1]
 
-
-@app.route('/choice/<x>/<y>')
-def update(x, y):
+@app.route('/choice', methods=['GET', 'PUT'])
+def get_choice():
     global eliciters
 
     if "ID" not in session:
@@ -87,12 +83,18 @@ def update(x, y):
 
     eliciter = eliciters[session["ID"]]
 
-    # Only pass valid choices on to the eliciter
-    if not eliciter.terminated:
-        choice = eliciter.query
-        if (x in choice) and (y in choice) and (x != y):
-            eliciter.input(x)
+    # if we got a choice, process it
+    if request.method == "PUT":
+        data = request.get_json(force=True)
+        x = data["first"]
+        y = data["second"]
+        # Only pass valid choices on to the eliciter
+        if not eliciter.terminated:
+            choice = eliciter.query
+            if (x in choice) and (y in choice) and (x != y):
+                eliciter.input(x)
 
+    # now give some new choices
     if eliciter.terminated:
         # terminate by sending a single model
         result = eliciter.result
@@ -104,6 +106,14 @@ def update(x, y):
         # eliciter has not terminated - extract the next choice
         assert isinstance(eliciter.query, elicit.Pair)
         m1, m2 = eliciter.query
-        res = {m1.name: m1.attributes, m2.name: m2.attributes}
-
+        res = {
+                "left": {
+                    "name": m1.name,
+                    "values": m1.attributes
+                    },
+                "right": {
+                    "name": m2.name,
+                    "values": m2.attributes
+                    }
+            }
     return jsonify(res)
