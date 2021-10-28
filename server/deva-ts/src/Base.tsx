@@ -23,3 +23,13 @@ export const resultState = atom({
   default: null, 
 });
 
+export const scenarioState = atom({  
+  key: 'scenario', 
+  default: null, 
+});
+
+export const loginState = atom({  
+  key: 'login', 
+  default: null, 
+});
+

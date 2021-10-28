@@ -52,6 +52,13 @@ def autoname(ind):
     return "System " + "".join(chars[::-1])
 
 
+def list_scenarios():
+    scenarios = glob(os.path.join(repo_root(), 'scenarios/*/'))
+    metadata_files = {os.path.basename(os.path.normpath(p)): toml.load(
+        os.path.join(p, "metadata.toml")) for p in scenarios}
+    return metadata_files
+
+
 def load_scenario(scenario, bounds, pfilter=True):
     # Load all scenario files
     scenario_path = os.path.join(repo_root(), 'scenarios', scenario)

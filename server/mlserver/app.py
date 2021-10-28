@@ -21,6 +21,12 @@ eliciters = {}
 scenarios = {}
 
 
+@app.route('/scenarios')
+def get_scenarios():
+    data = fileio.list_scenarios()
+    return jsonify(data)
+
+
 def _scenario(name="jobs"):
     global scenarios
 
