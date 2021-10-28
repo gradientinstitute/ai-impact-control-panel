@@ -39,7 +39,7 @@ being recommended a role."""
 [objectives.dont_disadvantage_women]
 name = "Don't Disadvantage Women"
 description = """Ensure the system does not make women miss out on suitable
-role recommendations more than men."""
+role recommendations more than average."""
 
 [metrics.precision]
     name = "Correctly shortlisted candidates"
@@ -78,15 +78,15 @@ role recommendations more than men."""
 [metrics.fnr_difference]
     name = "Inequality of missing out"
     icon = "fairness"
-    description = """Difference in proportion of men and women missing out on
-    being recommended roles they are suited to."""
-    captures = ["minimise_missing_out", "dont_disadvantage_women"]
+    description = """Difference in proportion of women missing out on
+    being recommended roles they are suited to compared to the average."""
+    captures = ["dont_disadvantage_women"]
     limitations = """Sensitive to bias against interviewing women in historical
     data."""
     more = "more"
     less = "fewer"
     prefix = ""
-    suffix = "fewer suitable women than men per 100 candidates"
+    suffix = "fewer suitable women than the average per 100 candidates"
     action = "recommends"
     higherIsBetter = false
     decimals = 0
