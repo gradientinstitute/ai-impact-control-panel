@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useReducer, useContext} from 'react';
 import { atom, useRecoilState, useRecoilValue} from 'recoil';
-import {Pane, paneState, loginState, scenarioState} from './Base';
+import {Pane, paneState, scenarioState} from './Base';
 import axios from 'axios';
 
 const scenariosState = atom({
@@ -88,18 +88,25 @@ function StartButtons({}) {
 
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
+  const [_scenario, setScenario] = useRecoilState(scenarioState);
 
   return (
       <div className="grid grid-cols-2 gap-10 py-10">
         <button className="bg-gray-200 text-black rounded-lg" 
-          onClick={() => {setPane(Pane.Intro)}}
+          onClick={() => {
+            setScenario(current);
+            setPane(Pane.Intro); 
+          }}
           disabled={true}>
           <div className="p-4 text-lg">
             Elicit Boundaries
           </div>
         </button>
         <button className="bg-gray-200 text-black rounded-lg" 
-          onClick={() => {setPane(Pane.Intro)}}
+          onClick={() => {
+            setScenario(current);
+            setPane(Pane.Intro); 
+          }}
           disabled={false}>
           <div className="p-4 text-lg">
             Elicit Deployment

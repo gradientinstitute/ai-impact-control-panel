@@ -50,21 +50,17 @@ def _scenario(name="jobs"):
 
     return scenarios[name]
 
-# @app.route('/metadata')
-# def meta():
-#     # TODO - have scenario specific endpoints?
-#     # Perhaps accessing one also sets your next session's scenario?
-#     return _scenario()[1]
 
-
-@app.route('/images/<path:name>')
-def send_image(name):
+@app.route('/<scenario>/images/<path:name>')
+def send_image(scenario, name):
     print("trying to get image")
-    scenario_path = os.path.join(fileio.repo_root(), 'scenarios/jobs/images')
+    scenario_path = os.path.join(fileio.repo_root(),
+                                 f'scenarios/{scenario}/images')
     return send_from_directory(scenario_path, name)
 
-@app.route('/metadata')
-def init_session():
+
+@app.route('/<scenario>/metadata')
+def init_session(scenario):
     global eliciters
 
     if "ID" in session:
@@ -78,16 +74,17 @@ def init_session():
 
     # assume that a reload means user wants a restart
     print("Init new session for ", session["ID"])
-    candidates, spec = _scenario()
+    candidates, spec = _scenario(scenario)
     eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
     # eliciter = elicit.ActiveMax(candidates, spec)
     eliciters[session["ID"]] = eliciter
 
     # send the metadata for the scenario
-    return _scenario()[1]
+    return spec
 
-@app.route('/choice', methods=['GET', 'PUT'])
-def get_choice():
+
+@app.route('/<scenario>/choice', methods=['GET', 'PUT'])
+def get_choice(scenario):
     global eliciters
 
     if "ID" not in session:

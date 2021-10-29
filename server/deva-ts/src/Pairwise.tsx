@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue } from 'recoil';
-import {Pane, metadataState, paneState, resultState} from './Base';
+import {Pane, metadataState, paneState, 
+  resultState, scenarioState} from './Base';
 
 import axios from 'axios';
 import {Key, Model, FillBar} from './Widgets';
@@ -20,6 +21,7 @@ const choiceState = atom({
 export function PairwisePane({}) {
   
   const metadata = useRecoilValue(metadataState);
+  const scenario = useRecoilValue(scenarioState);
   const [_result, setResult] = useRecoilState(resultState);
   const choice = useRecoilValue(choiceState);
   const [candidates, setCandidates] = useRecoilState(candidatesState);
@@ -28,7 +30,7 @@ export function PairwisePane({}) {
   // initial loading of candidates
   useEffect(() => {
     const fetch = async () => {
-      const result = await axios.get<any>("choice");
+      const result = await axios.get<any>(scenario + "/choice");
       const d = result.data;
       const k = Object.keys(d);
       if (k.length === 1) {
@@ -45,7 +47,7 @@ export function PairwisePane({}) {
   // sending new choice
   useEffect(() => {
     const send = async () => {
-      const result = await axios.put<any>("choice", choice);
+      const result = await axios.put<any>(scenario + "/choice", choice);
       const d = result.data;
       const k = Object.keys(d);
       if (k.length === 1) {

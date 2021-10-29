@@ -28,8 +28,3 @@ export const scenarioState = atom({
   default: null, 
 });
 
-export const loginState = atom({  
-  key: 'login', 
-  default: "", 
-});
-
