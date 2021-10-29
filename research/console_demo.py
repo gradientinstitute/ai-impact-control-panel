@@ -4,11 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d  # NOQA
 from deva import interface, elicit, bounds
+from matplotlib.animation import FuncAnimation
+
 Poly = mplot3d.art3d.Poly3DCollection
 
 
 def main():
-    np.random.seed(43)
+    np.random.seed(42)
 
     # Research ideas:
     # TODO: ask about 2 axes at a time only
@@ -55,7 +57,7 @@ def main():
             sign[i] = -1
 
     # now do some quantatative analysis... (simulate steps)
-    steps = 50  # how many samples
+    steps = 15  # how many samples
 
     # Invent a hidden ground truth
     w_true = 0.1 + 0.9 * np.random.rand(dims)  # positive
@@ -125,15 +127,23 @@ def main():
     # rad = radius  # don't need to clip tight
     rad = c.max(axis=0) - c.min(axis=0)
 
-    plot_weight_disc(w[:3], ref[:3], .8*rad[:3], 'r')
+    # plot_weight_disc(w[:3], ref[:3], .8*rad[:3], 'r')
     plot_weight_disc(w_true[:3], ref[:3], .8*rad[:3], 'b')
 
     # draw the planes as a dish?
     ax.plot3D(*c.T[:3], 'ko-', alpha=0.5)
-    ax.plot3D(*ref[:3], 'go')
-    ax.set_xlabel(attribs[0])
-    ax.set_ylabel(attribs[1])
-    ax.set_zlabel(attribs[2])
+
+    def m(name):
+        ren = {"fp":"false positives",
+               "fn":"false negatives",
+               "profit":"net revenue",}
+        return ren.get(name, name)
+
+    ax.set_xlabel(m(attribs[0]))
+    ax.set_ylabel(m(attribs[1]))
+    ax.set_zlabel(m(attribs[2]))
+
+    ax.plot3D(*ref[:3], 'o', markerfacecolor='#fff', markeredgecolor='#000', zorder=100 )
 
     def ranger(v):
         a = v.min()
@@ -143,6 +153,23 @@ def main():
     ax.set_xlim3d(*ranger(c[:, 0]))
     ax.set_ylim3d(*ranger(c[:, 1]))
     ax.set_zlim3d(*ranger(c[:, 2]))
+
+    # for angle in range(0, 360):
+    #     ax.view_init(30, angle)
+    #     plt.draw()
+    #     plt.pause(.001)
+
+    # fig = plt.gcf()
+    # def update(frame):
+        # xdata.append(frame)
+        # ydata.append(np.sin(frame))
+
+        # ln.set_data(xdata, ydata)
+        # return ln,
+
+    # ani = FuncAnimation(fig, update, frames=np.linspace(0, 360, 128),
+        #                 blit=True)
+
     plt.show()
 
 
