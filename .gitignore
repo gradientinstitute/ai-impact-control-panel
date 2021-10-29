@@ -133,3 +133,4 @@ dmypy.json
 **/*/data
 data/*.csv
 tests/tmp/
+**/*/flask_session
