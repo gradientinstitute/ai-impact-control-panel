@@ -18,6 +18,7 @@ Flask = "^2.0.1"
 requests = "^2.26.0"
 
 [tool.poetry.dev-dependencies]
+sphinx = "^4.2.0"
 pytest = "^5.2"
 flake8 = "^3.9.2"
 ipython = "^7.26.0"
