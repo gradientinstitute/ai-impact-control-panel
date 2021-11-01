@@ -50,7 +50,7 @@ description = "Ensure system doesnt make disproportionate errors on women"
 
 [metrics.fn]
     name = "Undetected fraud (FN)"
-    icon = "FN"
+    icon = "FN.png"
     captures = ["catch_fraud"]
     limitations = """does not measure the concentration of undetected
     fraudulent transactions on particular people"""
@@ -68,7 +68,7 @@ description = "Ensure system doesnt make disproportionate errors on women"
     captures = ["avoid_interference"]
     limitations = """does not measure the concentration of falsely flagged
     transactions on particular people"""
-    icon = "FP"
+    icon = "FP.png"
     description = "legitimate transaction{s} per month"
     more = "additional"
     less = "fewer"
@@ -83,7 +83,7 @@ description = "Ensure system doesnt make disproportionate errors on women"
     captures = ["minimise_excess_interference"]
     limitations = """does not capture the number or rate of falsely flagged
     transactions"""
-    icon = "FPWO"
+    icon = "FPWO.png"
     description = """number of false flags per month on customers most likely
     to be flagged"""
     more = "extra"
@@ -97,7 +97,7 @@ description = "Ensure system doesnt make disproportionate errors on women"
 
 [metrics.revenue]
     name = "Net revenue protected"
-    icon = "profit"
+    icon = "profit.png"
     captures = ["catch_fraud", "avoid_interference"]
     limitations = """fails to capture harms and benefits not easily
     quantifiable in $"""
@@ -112,7 +112,7 @@ description = "Ensure system doesnt make disproportionate errors on women"
 
 [metrics.eo_disadvantage_rate]
     name = "Inequality of Fraud Prevention"
-    icon = "fairness"
+    icon = "fairness.png"
     description = """difference in proportion of correctly identified
     fraudulent transactions between men and women"""
     captures = ["catch_fraud", "dont_disadvantage_women"]

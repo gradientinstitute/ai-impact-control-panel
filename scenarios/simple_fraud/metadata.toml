@@ -42,7 +42,7 @@ description = "Minimise harm of repeated fraud to those most affected by it."
 
 [metrics.revenue]
     name = "Net revenue protected"
-    icon = "profit"
+    icon = "profit.png"
     captures = ["catch_fraud", "avoid_interference"]
     limitations = """fails to capture harms and benefits not easily
     quantifiable in $"""
@@ -59,7 +59,7 @@ description = "Minimise harm of repeated fraud to those most affected by it."
     name = "False Negative CVaR 10%"
     captures = ["minimise_recurrent_undetected_fraud"]
     limitations = "does not capture the number of FNs or the overall FNR"
-    icon = "FNWO"
+    icon = "FNWO.png"
     description = "undetected fraud{s} per month (avg)"
     more = "extra"
     less = "fewer"
