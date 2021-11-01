@@ -19,6 +19,14 @@ app.config['SECRET_KEY'] = random_key(16)
 # todo: find some sort of persistent cache
 eliciters = {}
 scenarios = {}
+ranges = {}
+
+
+def calc_ranges(candidates, spec):
+    keys = spec['metrics'].keys()
+    points = [c.attributes for c in candidates]
+    collated = {k: [p[k] for p in points] for k in keys}
+    return points, collated
 
 
 @app.route('/scenarios')
@@ -78,9 +86,23 @@ def init_session(scenario):
     eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
     # eliciter = elicit.ActiveMax(candidates, spec)
     eliciters[session["ID"]] = eliciter
+    ranges[session["ID"]] = calc_ranges(candidates, spec)
 
     # send the metadata for the scenario
     return spec
+
+
+@app.route('/<scenario>/ranges', methods=['GET'])
+def get_ranges(scenario):
+    global ranges
+
+    if "ID" not in session:
+        print("Session not initialised!")
+        abort(400)  # Not initialised
+
+    candidates, spec = _scenario(scenario)
+    points, collated = calc_ranges(candidates, spec)
+    return jsonify({"points": points, "collated": collated})
 
 
 @app.route('/<scenario>/choice', methods=['GET', 'PUT'])

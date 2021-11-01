@@ -46,7 +46,7 @@ function ScenarioSelector({}) {
   const [current, setCurrent] = useRecoilState(currentScenarioState);
   
   const elements = Object.entries(scenarios).map(([name, v]) => {
-    return (<option value={name}>{v.name}</option>);
+    return (<option key={name} value={name}>{v.name}</option>);
   });
   
   return (
