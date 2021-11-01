@@ -1,22 +1,28 @@
-import React, {useState, useEffect, useReducer, useContext} from 'react';
+import { useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue} from 'recoil';
-import {Pane, paneState, scenarioState} from './Base';
 import axios from 'axios';
 
+import {Pane, paneState, scenarioState} from './Base';
+
+
+// the set of scenarios retrieved from the serever
 const scenariosState = atom({
   key: 'scenarios',
   default: [],
 });
 
+// the currently selected scenario from the selection dropdown
 const currentScenarioState = atom({
   key: 'currentScenario',
   default: null,
 });
 
+// the setup pane itself (ie root component)
 export function SetupPane({}) {
 
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
-  const [_current, setCurrent] = useRecoilState(currentScenarioState);
+  const [current, setCurrent] = useRecoilState(currentScenarioState);
+
   // initial loading of candidates
   useEffect(() => {
     const fetch = async () => {
@@ -27,7 +33,10 @@ export function SetupPane({}) {
     fetch();
   }, []
   );
-
+  
+  if (current === null) {
+    return (<p>Loading...</p>);
+  }
 
   return (
     <div>
@@ -40,6 +49,7 @@ export function SetupPane({}) {
   );
 }
 
+// Dropdown box for selecting a scenario
 function ScenarioSelector({}) {
   
   const scenarios = useRecoilValue(scenariosState);
@@ -53,39 +63,47 @@ function ScenarioSelector({}) {
       <div className="p-4 gap-4 bg-gray-500 grid grid-cols-3" >
         <p className="text-right col-span-1">Scenario</p>
         <select className="col-span-2" name="scenarios" value={current} 
-          onChange={
-            (x) => {setCurrent(x.target.value)}}>
+          onChange={ (x) => {setCurrent(x.target.value)}}>
           {elements}
         </select>
       </div>
     );
 }
 
+// Summary of the currently selected scenario
 function Summary({}) {
   
   const scenarios = useRecoilValue(scenariosState);
   const current = useRecoilValue(currentScenarioState);
-  
-  if (current === null) {
-    return (<p>Loading...</p>);
-  }
+
+  const desc_string = "A system " + scenarios[current].purpose;
+  const n_obj = Object.keys(scenarios[current].objectives).length;
+  const n_met = Object.keys(scenarios[current].metrics).length;
+
   return (
-      <div className="grid grid-cols-2 rounded-lg bg-gray-600 gap-4 p-4">
-        <div className="col-span-2">
-          <ScenarioSelector />
-        </div>
-        <div className="col-span-2 rounded-lg bg-orange-700 py-4">
-          <h2 className="text-center">{scenarios[current].name}</h2>
-          <p className="text-center italic px-4">{"A system " + scenarios[current].purpose}</p>
-        </div>
-        <p className="text-center py-2 rounded-lg bg-green-700">{"Objectives: " + Object.keys(scenarios[current].objectives).length}</p>
-        <p className="text-center py-2 rounded-lg bg-green-700">{"Metrics: " + Object.keys(scenarios[current].metrics).length}</p>
-        <p className="col-span-2">{scenarios[current].operation}</p>
-      </div>);
+    <div className="grid grid-cols-2 rounded-lg bg-gray-600 gap-4 p-4">
+      <div className="col-span-2">
+        <ScenarioSelector />
+      </div>
+      <div className="col-span-2 rounded-lg bg-orange-700 py-4">
+        <h2 className="text-center">{scenarios[current].name}</h2>
+        <p className="text-center italic px-4">{desc_string}</p>
+      </div>
+      <p className="text-center py-2 rounded-lg bg-green-700">
+        {"Objectives: " + n_obj}
+      </p>
+      <p className="text-center py-2 rounded-lg bg-green-700">
+        {"Metrics: " + n_met}
+      </p>
+      <p className="col-span-2">{scenarios[current].operation}</p>
+    </div>
+  );
 }
 
+// select the type of elicitation to do with two buttons
+// TODO: hook up to boundary elicitation when its implemented
 function StartButtons({}) {
-
+  
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
   const [_scenario, setScenario] = useRecoilState(scenarioState);

@@ -1,7 +1,9 @@
 import { useRecoilValue } from 'recoil';
+
 import {Key, Model} from './Widgets';
 import {metadataState, resultState} from './Base';
 
+// main pane
 export function ResultPane({}) {
 
   const metadata = useRecoilValue(metadataState);

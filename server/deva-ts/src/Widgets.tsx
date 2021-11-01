@@ -1,6 +1,5 @@
-import React from 'react';
 
-function sigFigs(unit) {
+function sigFigs(unit: any) {
     if (Number.isInteger(unit.min) && Number.isInteger(unit.max)) {
         return 0;
     }
@@ -34,7 +33,6 @@ function Key({unit}) {
     );
 }
 
-
 function Performance({value, unit, isMirror}) {
   let p = (value - unit.min) / 
     (unit.max - unit.min) * 100;
@@ -57,7 +55,9 @@ function Performance({value, unit, isMirror}) {
   return (
     
     <div className="flex">
-      <div className="my-auto pr-2 text-right text-xs w-1/4">{lv}<br />({lf} achievable)</div>
+      <div className="my-auto pr-2 text-right text-xs w-1/4">
+        {lv}<br />({lf} achievable)
+      </div>
       <div className="flex-grow py-3">
         <FillBar 
           unit={unit} 
@@ -66,7 +66,9 @@ function Performance({value, unit, isMirror}) {
           isThin={false}
         />
       </div>
-      <div className="my-auto text-left pl-2 text-xs w-1/4">{rv}<br />({rf} achievable)</div>
+      <div className="my-auto text-left pl-2 text-xs w-1/4">
+        {rv}<br />({rf} achievable)
+      </div>
     </div>
   );
 }
