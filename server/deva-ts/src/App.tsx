@@ -16,7 +16,7 @@ function App() {
     <div className="App container text-gray-200 mx-auto mb-32 px-8 pt-8 bg-gray-800">
       <div className="grid grid-cols-12 text-center items-center mb-8">
         <img className="col-span-2 h-16" src={logo} alt="Gradient Institute logo" />
-        <h1 className="col-span-8 text-3xl">AI Impact Governance Software</h1>
+        <h1 className="col-span-8 text-3xl">AI Impact Control Panel</h1>
         <div className="col-span-2" />
       </div>
       <Content />
