@@ -51,15 +51,16 @@ def hyperplane(a, b):
 
 
 def shatter_test(X, Y):
-    '''Test to see if the points in (X, Y) can be shattered by a hyperplane.
+    r'''Test to see if the points in (X, Y) can be shattered by a hyperplane.
 
     This runs a linear program to see if the points in X labelled by Y can be
     shattered by a homogeneous linear separator (hyperplane containing the
     origin). Specifically, the following linear program is used,
 
-        min_{w, s} s
-        s.t.    Y * X @ w + s >= 1
-                s >= 0
+    .. math::
+        \min_{w, s} s
+        \textrm{s.t.} Y * X @ w + s >= 1
+                      s >= 0
 
     If s is zero, then the points can be separated by the hyperplane [w 0].
     Otherwise the solution to the plane separation problem, Y * X @ w >= 1 for
