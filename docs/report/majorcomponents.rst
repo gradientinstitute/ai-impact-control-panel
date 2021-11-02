@@ -291,32 +291,187 @@ than others (on average).
 AI Governance Tool
 ------------------
 
-Scenario Summariser
-...................
+The AI governance tool helps system owners select acceptable and realisable
+combinations of performance metrics for their AI systems. Given a set of
+candidate models and their performance metrics, the tool interacts with a system
+owner through a visual user interface to elicit the system owner's preferences
+and select an acceptable model for deployment. 
 
-Acceptable Boundary of Operation
-................................
+.. _fig_govtool:
+.. figure:: governance_tool.svg
+    :width: 100%
+    :align: center
+    :alt: Governance tool
+    :figclass: align-center
+
+    Internal structure of the AI governance tool. The 'vis' and 'method' modules
+    are designed to be independent, and to support addition of new
+    visualisations and elicitation methods being added over time through a
+    well-defined API.
+
+The design of the governance tool has been divided into a series of discrete
+components:
+
+* an elicitation engine, which decides which model comparisons to present to the
+  user, and how to interpret their answers
+* a visualisation engine, which displays model comparisons in an ethically
+  meaningful way
+* a user interface, that interacts with the user by showing them visualisations
+  and obtaining their input
+* a configuration manager, which provides the required detail about the problem
+  context to the other components.
+
+The elicitation and visualisation engines are intended to be based on
+'plug-ins': independent blocks of code that provide a particular method of
+elicitation or a particular style of visualisation that can be added over time
+and used independently. This is both to help us perform experiments quickly as
+we develop the code, and also to make it more extensible by others in the
+future.
+
+More detail about the functioning of each of these components is provided in the
+following subsections.
+
+
+Visualisation Engine
+....................
+
+The visualisation engine presents comparisons of the system performance metrics
+to the user in an intuitive and easy to understand visual format. It will use
+specialised modules to explain particular metrics in terms of harms and benefits
+and how they are distributed. This is both to ensure that the user understands
+the performance of the system, and to enable comparisons between two candidate
+systems (or one candidate system and a baseline) in terms of multiple system
+metrics for the purposes of preference elicitation. The visualisation engine
+plugs in a set of relevant visualisation modules (selected from an extensible
+library of supported metrics).
+
+
+Inputs and outputs
+~~~~~~~~~~~~~~~~~~
+
+* The inputs of the visualisation engine are selected comparisons of candidate
+  models from the elicitation engine, the relevant performance metrics for those
+  models, and additional scenario context from a configuration file.  
+* The outputs of the visualisation engine are visual representations of model
+  comparisons that are presented in the user interface.
+
+
+Implementation status
+~~~~~~~~~~~~~~~~~~~~~
+
+TODO 
+
+This is a current focus of our development. We are drawing from our own
+experience in the fraud use-case specifically, and intend to iterate closely
+with the project collaborators and our UX team member to develop
+easy-to-understand visualisations specific to the collaborator’s use-case.
+
+We also intend to develop some generic visualisations that can be customised
+with configuration files, to assist users that cannot develop their own
+visualisations specific to their use-case. This would likely start with common
+classes of use-case such as binary classification (e.g. credit scoring)  and
+regression (e.g. insurance pricing). 
+
+
+User Interface
+..............
+
+Function
+~~~~~~~~
+
+The user interface displays the comparison visualisations to the user and
+obtains their input to send to the elicitation engine. This interface will be
+web-based to enable usage of the governance tool in the cloud.
+
+
+Inputs and outputs
+~~~~~~~~~~~~~~~~~~
+
+* The inputs to the user interface will be the comparison visualisations to
+  display to the user from the visualisation engine, the selections provided by
+  the user, as well as any additional parameters from a configuration file. 
+* The outputs of the user interface will be the selections provided by the user
+  which will be sent to the elicitation engine. 
+
+
+Implementation status
+~~~~~~~~~~~~~~~~~~~~~
+
+TODO
+
+The precise requirements for the user interface will not become clear until we
+have progressed both the elicitation and visualisation engines, so this work is
+a focus later in the project. We don’t anticipate requiring any functionality
+beyond that of standard graphical user interface toolkits. 
+
+
+Boundary Elicitation Engine
+...........................
 
 TODO
 
 
-Deployment System
-.................
+Deployment Elicitation Engine
+.............................
 
-Candidate Filter
-~~~~~~~~~~~~~~~~
+
+TODO
 
 * Pareto set filter
 * Acceptable bounds filter
 
 
-Elicitation Engine
+Function
+~~~~~~~~
+
+The system owner responsible for balancing a system’s objectives will often be
+addressing many requirements and objectives simultaneously. A preference
+elicitation engine is a tool to help these people understand and balance the
+trade-offs that exist between the different performance aspects of a system
+(such as how to balance a system's fairness against profitability). 
+
+There is no objectively correct solution to such decisions: the answer depends
+on the values and priorities of the system owner and the organisation they
+represent.  A preference elicitation algorithm breaks the nebulous question of
+‘what do you want?’ into manageable steps by iteratively asking the user to
+state a preference between specific combinations of impacts. The choices
+presented to the user are strategically designed to discover their preference,
+typically by asking about new combinations of metrics, or refining the tipping
+point at which a quantity of one metric balances out a different quantity of
+another.
+
+There is no ‘best’ approach for preference elicitation: different approaches
+will work well for different users and in different contexts. Hence, we have
+designed the elicitation engine to accept different elicitation algorithms in
+the form of interchangeable plug-ins, communicating with a common API. 
+
+Inputs and outputs
 ~~~~~~~~~~~~~~~~~~
 
+The inputs of the elicitation engine are performance metrics for each candidate
+model and additional scenario configuration parameters in a configuration file. 
 
-Visualisations
-~~~~~~~~~~~~~~
+The outputs of the elicitation engine are: 
+
+* rounds of  strategic choices that are presented to the user. These will
+  typically be in the form of comparisons between two candidate systems (or one
+  candidate and a baseline), where the capability of the visualisation engine
+  will be invoked to present the relevant information. The outcomes presented
+  might correspond to real systems, or to hypothetical systems.
+* (after multiple iterations of choices) a set of requirements on the system
+  performance and/or a precise specification of the user's chosen operating
+  point, depending on the algorithm
+* A descriptive record of the decision-process and the preferences provided by
+  the system owner for accountability purposes.
 
 
-User Interface
-~~~~~~~~~~~~~~
+Implementation Status
+~~~~~~~~~~~~~~~~~~~~~
+
+TODO
+
+
+Scenario Configuration Manager
+..............................
+
+TODO
