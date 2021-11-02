@@ -1,16 +1,20 @@
-import React, {useEffect, useContext} from 'react';
+import { useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
+import { ArcherContainer, ArcherElement } from 'react-archer';
 import _ from "lodash";
 import axios from 'axios';
-import { ArcherContainer, ArcherElement } from 'react-archer';
+
 import { Pane, paneState, metadataState, scenarioState } from './Base';
 import {sigFigs} from './Widgets';
 
+// TODO siigh css? 
 const HIGHLIGHT_COLOUR = "bg-orange-700";
 const FIRST_COLOUR = "bg-gray-700";
 const SECOND_COLOUR = "bg-blue-600";
 const THIRD_COLOUR = "bg-green-700";
 
+
+// the Introduction pane -- root node
 export function IntroPane({}) {
   
   const [metadata, setMetadata] = useRecoilState(metadataState);
@@ -27,12 +31,13 @@ export function IntroPane({}) {
   }, []
   );
 
-  if (metadata == null) {
+  if (metadata === null) {
     return (<p>Loading...</p>);
   }
 
   return (
-    <div className="mx-auto max-w-screen-lg pb-8 grid gap-x-8 gap-y-6 grid-cols-1 text-center items-center">
+    <div className="mx-auto max-w-screen-lg pb-8 grid gap-x-8 
+      gap-y-6 grid-cols-1 text-center items-center">
 
       <div className="mb-8">
         <h1 className=""> System under study: {metadata.name} </h1>
@@ -51,99 +56,106 @@ export function IntroPane({}) {
         items={metadata.objectives}
         title={"Objectives"} />
 
-      <Pipeline metadata={metadata} />
+      <Pipeline />
 
-      <Metrics items={metadata.metrics}/>
+      <Metrics />
 
       <ReadyButton />
     </div>
   );
 }
 
-function Pipeline({metadata}) {
+// visual-ish display of the data -> model -> decision pipeline
+function Pipeline({}) {
+
+  const metadata = useRecoilValue(metadataState);
+
   return (
     <div className= {FIRST_COLOUR + " rounded-lg p-3"}>
-    <h2 className="mb-3 font-bold font-xl">Pipeline</h2>
-    <ArcherContainer strokeColor="white">
-      <div className="grid grid-cols-2 gap-20 items-center">
+      <h2 className="mb-3 font-bold font-xl">Pipeline</h2>
+      <ArcherContainer strokeColor="white">
+        <div className="grid grid-cols-2 gap-20 items-center">
 
-        <ArcherElement
-          id="data"
-          relations={[
-            {
-              targetId:"predictions",
-              targetAnchor: "left",
-              sourceAnchor: "right",
-              style: { strokeWidth: 3},
-            },
-          ]}
-        >
-          <div className="col-span-1">
-            <SimpleBlock
-              title={"Data"}
-              value={metadata.data}
-              colour={SECOND_COLOUR}
-            />
-          </div>
-        </ArcherElement>
-
-
-        <ArcherElement
-          id="predictions"
-          relations={[
-            {
-              targetId:"decisions",
-              targetAnchor: "top",
-              sourceAnchor: "bottom",
-              style: { strokeWidth: 3},
-            },
-          ]}
-        >
-          <div className="col-span-1">
-            <BlockWithSubBlocks 
-              items={metadata.targets} 
-              title={"Predictions"}
+          <ArcherElement
+            id="data"
+            relations={[
+              {
+                targetId:"predictions",
+                targetAnchor: "left",
+                sourceAnchor: "right",
+                style: { strokeWidth: 3},
+              },
+            ]}
+          >
+            <div className="col-span-1">
+              <SimpleBlock
+                title={"Data"}
+                value={metadata.data}
+                colour={SECOND_COLOUR}
               />
-          </div>
-        </ArcherElement>
+            </div>
+          </ArcherElement>
 
-        <ArcherElement
-          id="decisions"
-          relations={[
-            {
-              targetId:"actions",
-              targetAnchor: "left",
-              sourceAnchor: "right",
-              style: { strokeWidth: 3},
-            },
-          ]}
-        >
-          <div className="col-span-1">
-            <SimpleBlock
-              title={"Decision Rules"}
-              value={metadata.decision_rules}
-              colour={SECOND_COLOUR}
-            />
-          </div>
-        </ArcherElement>
 
-        <ArcherElement id="actions">
-          <div className="col-span-1">
-            <BlockWithSubBlocks
-              items={metadata.actions}
-              title={"Actions"}
+          <ArcherElement
+            id="predictions"
+            relations={[
+              {
+                targetId:"decisions",
+                targetAnchor: "top",
+                sourceAnchor: "bottom",
+                style: { strokeWidth: 3},
+              },
+            ]}
+          >
+            <div className="col-span-1">
+              <BlockWithSubBlocks 
+                items={metadata.targets} 
+                title={"Predictions"}
+                />
+            </div>
+          </ArcherElement>
+
+          <ArcherElement
+            id="decisions"
+            relations={[
+              {
+                targetId:"actions",
+                targetAnchor: "left",
+                sourceAnchor: "right",
+                style: { strokeWidth: 3},
+              },
+            ]}
+          >
+            <div className="col-span-1">
+              <SimpleBlock
+                title={"Decision Rules"}
+                value={metadata.decision_rules}
+                colour={SECOND_COLOUR}
               />
-          </div>
-        </ArcherElement>
+            </div>
+          </ArcherElement>
 
-      </div>
-    </ArcherContainer>
+          <ArcherElement id="actions">
+            <div className="col-span-1">
+              <BlockWithSubBlocks
+                items={metadata.actions}
+                title={"Actions"}
+                />
+            </div>
+          </ArcherElement>
+
+        </div>
+      </ArcherContainer>
     </div>
   );
 }
 
-function Metrics({items}) {
+// the metrics used to capture the objectives
+function Metrics({}) {
 
+  const metadata = useRecoilValue(metadataState);
+  const items = metadata.metrics;
   const scenario = useRecoilValue(scenarioState);
 
   const mapped_items = Object.entries(items).map((x) => {
@@ -152,7 +164,8 @@ function Metrics({items}) {
     const capt = data.captures.join(", ");
 
     return (
-      <div key={uid} className={SECOND_COLOUR + " grid grid-cols-1 gap-3 rounded-lg p-3"}>
+      <div key={uid} 
+        className={SECOND_COLOUR + " grid grid-cols-1 gap-3 rounded-lg p-3"}>
         <div className="text-left grid grid-cols-5">
           <img className="col-span-2 row-span-2 h-20" 
             src={scenario + "/images/" + data.icon} />
@@ -160,14 +173,14 @@ function Metrics({items}) {
           <p className="col-span-3 italic">{data.description}</p>
         </div>
         <SimpleBlock colour={THIRD_COLOUR} title={"Captures"} value={capt} />
-        <SimpleBlock colour={THIRD_COLOUR} title={"Limitations"} value={data.limitations} />
+        <SimpleBlock colour={THIRD_COLOUR} title={"Limitations"} 
+          value={data.limitations} />
         <UnitRange data={data} />
       </div>
     );
   });
 
   return (
-
     <div className={FIRST_COLOUR + " rounded-lg p-3"}>
       <h3 className="text-xl font-bold">Metrics</h3>
       <div className="grid grid-cols-3 gap-3"> 
@@ -177,7 +190,9 @@ function Metrics({items}) {
   );
 }
 
+// show the best case & worst case of metrics from the candidates
 function UnitRange({data}) {
+
   const sigfig = sigFigs(data);
   const h = data.higherIsBetter;
   const min_str = data.prefix + data.min.toFixed(sigfig) + " " + data.suffix;
@@ -203,10 +218,12 @@ function UnitRange({data}) {
   </div>);
 }
 
+// Generic box with a title, and a named value (i.e. with units)
 function KeyValue({title, value, titleSize, valueSize, colour}) {
   
   return (
-  <div className={colour + " grid gap-x-3 p-3 grid-cols-12 rounded-lg items-center"}>
+  <div className={colour + 
+    " grid gap-x-3 p-3 grid-cols-12 rounded-lg items-center"}>
     <div className="col-span-3 text-center font-bold">
       <h3 className={"" + titleSize}>{title}</h3>
     </div>
@@ -217,6 +234,7 @@ function KeyValue({title, value, titleSize, valueSize, colour}) {
   );
 }
 
+// Generic box with a title and a value
 function SimpleBlock({title, value, colour}) {
   return (
     <div className={colour + " p-3 rounded-lg"}>
@@ -245,6 +263,7 @@ function ObjectiveBlock({title, items}) {
   );
 }
 
+// generic block that contains multiple simplebox items
 function BlockWithSubBlocks({title, items}) {
 
   const mapped_items = Object.entries(items).map(([name, d]) => {
@@ -265,6 +284,7 @@ function BlockWithSubBlocks({title, items}) {
   );
 }
 
+// button to proceed to the next pane
 function ReadyButton({}) {
   const [_pane, setPane] = useRecoilState(paneState);
   return (

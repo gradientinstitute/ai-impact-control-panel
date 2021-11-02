@@ -1,23 +1,28 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue } from 'recoil';
-import {Pane, metadataState, paneState, 
-  resultState, scenarioState} from './Base';
-
 import axios from 'axios';
+
+import {Pane, metadataState, paneState, 
+        resultState, scenarioState} from './Base';
 import {Key, Model, FillBar} from './Widgets';
 
+
+// TODO significant figures should be in the metadata config
 const sigfig = 2
 
+// the current pair of candidates sent from the server
 const candidatesState = atom({
   key: 'candidates',
   default: null,
 });
 
+// the choice the user expressed by clicking (for current candidates only)
 const choiceState = atom({
   key: 'choice',
   default: null,
 });
 
+// main panel
 export function PairwisePane({}) {
   
   const metadata = useRecoilValue(metadataState);
@@ -28,6 +33,8 @@ export function PairwisePane({}) {
   const [_pane, setPane] = useRecoilState(paneState);
 
   // initial loading of candidates
+  // a bit complicated by the fact we can get either candidates or a result
+  // should probably change the server interface one day
   useEffect(() => {
     const fetch = async () => {
       const result = await axios.get<any>(scenario + "/choice");
@@ -91,21 +98,25 @@ export function PairwisePane({}) {
   }
 
   return (
-    <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-6 grid-cols-1 text-center items-center">
+    <div className="mx-auto max-w-screen-2xl grid gap-x-8 
+      gap-y-6 grid-cols-1 text-center items-center">
       <div>
-        <h1 className="text-5x1 font-bold">Pairwise Preference Elicitation: {metadata.name}</h1>
+        <h1 className="text-5x1 font-bold">
+          Pairwise Preference Elicitation: {metadata.name}
+        </h1>
         <p className="italic">A system designed to {metadata.purpose}</p>
       </div>
       {comparisons()}
-        <InputGetter 
-          leftName={candidates.left.name} 
-          rightName={candidates.right.name} 
-        />
+      <InputGetter 
+        leftName={candidates.left.name} 
+        rightName={candidates.right.name} 
+      />
     </div>
   );
 }
 
-
+// Text box to fill in motivation for the choice of system
+// TODO: implement so it gets sent / recorded by server
 function Motivation({}) {
   return (
     <div>
@@ -115,6 +126,8 @@ function Motivation({}) {
   );
 }
 
+// The bottom part of the panel with the two buttons that asks for 
+// users input
 function InputGetter({leftName, rightName}) {
   return (
     <div className="w-auto mb-8 flex space-x-16">
@@ -143,7 +156,8 @@ function InputGetter({leftName, rightName}) {
 
 function PreferenceButton({me, other, label}) {
 
-  //TODO remove / implement, utter hack for demo
+  // TODO remove / implement, utter hack for demo
+  // used to clear the checkboxes and textbox after each submission
   useEffect(() => {
     const textBox: any = document.getElementById("reasons");
     textBox.value =  "";
