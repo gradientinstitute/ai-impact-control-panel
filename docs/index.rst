@@ -4,9 +4,13 @@ Documentation Contents
 ======================
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
+    :glob:
 
-   api/api
+    report/intro
+    api/api
+    server/server
+    scenarios/*
 
 
 
