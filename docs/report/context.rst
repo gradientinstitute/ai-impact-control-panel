@@ -43,17 +43,18 @@ changing these levers creates.
 This means that an AI system deployed by a bank to approve loans, for example,
 might be 'performing well' by its measure of average predictive accuracy
 (giving out loans to people who repay them) but it may be that most of the
-loans it mistakenly denies are from female applicants. The business running
-this loan system could reduce or eliminate this negative impact, but a) they
-don't know it's happening and b) they don't have the tools to understand what
-aspect of the design of the AI needs to be altered, and what the effect of that
-alteration would be on the system's operation.
+loans it mistakenly denies are from disadvantaged applicants. The business
+running this loan system could reduce or eliminate this negative impact, but a)
+they don't know it's happening and b) they don't have the tools to understand
+what aspect of the design of the AI needs to be altered, and what the effect of
+that alteration would be on the system's operation.
 
 As a result, the system acts according to parameters typically set by data
 scientists designing the system. These data scientists may be unaware of the
-significant consequences their choices may be having, and of the huge
-responsibility that has been left to them, unbeknownst to the senior decision
-makers in the organisation that should be bearing this responsibility.
+significant consequences of their choices, and of the huge responsibility that
+has been left to them, unbeknownst to the senior decision makers in the
+organisation that should be bearing this responsibility. This AI system
+development scenario has been depicted in :numref:`dev_process_common`.
 
 .. _dev_process_common:
 .. figure:: dev_process_common.svg
@@ -68,7 +69,8 @@ makers in the organisation that should be bearing this responsibility.
     organisational strategy is not taken into account until system deployment.
 
 We have created 'Deva' as a means to help senior decision makers and data
-scientists jointly develop these AI systems, see :numref:`dev_process_tool`.
+scientists *jointly* develop these AI systems as depicted in
+:numref:`dev_process_tool`.
 
 
 .. _dev_process_tool:
@@ -97,15 +99,54 @@ measures, the data science team then can develop the underlying statistical or
 machine learning models in light of them.
 
 It is typically impossible to satisfy all objectives simultaneously, especially
-when they conflict. AI systems typically do have conflicting objectives as the
-previously mentioned examples demonstrate. When the data scientists develop
-their AI models, they can create multiple candidates that trade-off these
-objectives in different amounts.
+when they are in conflict. AI systems typically do have conflicting objectives
+as the previously mentioned examples demonstrate. When the data scientists
+develop their AI models, they can create multiple candidates that trade-off
+these objectives in different amounts, as :numref:`tradeoffs` demonstrates.
 
-The *purpose* of Deva is to expose these different objectives to a person or
-people responsible for an AI system so that they can choose an AI model that
-appropriately trades off these objectives.
+.. _tradeoffs:
+.. figure:: pareto.svg
+    :width: 100%
+    :align: center
+    :alt: Simple objective tradeoff example
+    :figclass: align-center
 
-TODO elaborate and talk about documentation.
+    A simplified example of how some conflicting objectives in a loan approval
+    system can be tradded off by different AI systems. In this case the profit
+    from the system must traded off against how inclusive the loan approval
+    process is. This may be because the most profitable customers are those who
+    come from advantaged backgrounds, and so only approving loans for these
+    people means that fewer loans are given to people from disadvantaged
+    backgrounds. However, if the bank only approves these more profitable loans
+    it risks discouraging future cutomers, a bad public image and possibly even
+    intervention from the regulator. The exact balance of these objectives
+    cannot and should not be chosen by the data science team as it
+    fundamentally effects the core business. What they can do is prepare a few
+    candidate AI systems that acheive different tradeoffs (options A, B and C).
+    Using Deva, these candidate systems can be presented senior decicion
+    makers.  Deva can then elicit the senior decisions makers' preferred
+    candidates.
+
+The *purpose* of Deva is to help expose and communicate these different
+objectives to a person or people responsible for an AI system so that they can
+choose an AI model that appropriately trades off these objectives. It does this
+by showing a user a sequence of pair-wise choices between AI systems based on
+their real-world impacts (calculated on withheld historical data). Deva also
+allows the user to document each choice they make, including indicating which
+objectives were considered for each choice.
+
+There are two main functions within Deva:
+
+1. To elicit a boundary of acceptable performance for an AI system on its 
+   objectives. This is to primarily help with monitoring a deployed system,
+   since performance can degrade or change over time. This boundary helps to
+   make the decision at which point the current AI system needs to be replaced
+   by another system, or simply "switched off".
+2. To elicit which system to deploy to production from a set of candidate
+   systems, each with slightly different objective trade-offs.
+
+These functions and the corresponding software components are discussed more in
+:ref:`majorcomponents`.
+
 
 

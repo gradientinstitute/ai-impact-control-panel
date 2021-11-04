@@ -1,4 +1,4 @@
-.. _section1:
+.. _majorcomponents:
 
 Section 1: Major Components
 ===========================
