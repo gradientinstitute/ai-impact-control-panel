@@ -57,7 +57,7 @@ organisation that should be bearing this responsibility. This AI system
 development scenario has been depicted in :numref:`dev_process_common`.
 
 .. _dev_process_common:
-.. figure:: dev_process_common.svg
+.. figure:: dev_process_common.*
     :width: 100%
     :align: center
     :alt: Common AI development process
@@ -74,7 +74,7 @@ scientists *jointly* develop these AI systems as depicted in
 
 
 .. _dev_process_tool:
-.. figure:: dev_process_tool.svg
+.. figure:: dev_process_tool.*
     :width: 100%
     :align: center
     :alt: AI development process with Deva
@@ -105,7 +105,7 @@ develop their AI models, they can create multiple candidates that trade-off
 these objectives in different amounts, as :numref:`tradeoffs` demonstrates.
 
 .. _tradeoffs:
-.. figure:: pareto.svg
+.. figure:: pareto.*
     :width: 100%
     :align: center
     :alt: Simple objective tradeoff example

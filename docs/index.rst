@@ -1,4 +1,5 @@
-.. include:: ../README.rst
+..
+    .. include:: ../README.rst
 
 Documentation Contents
 ======================
@@ -8,26 +9,30 @@ Documentation Contents
     :glob:
 
     report/intro
+
+..
     api/api
     server/server
     scenarios/*
 
 
 
-Indices and tables
-==================
+..
+    Indices and tables
+    ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    * :ref:`genindex`
+    * :ref:`modindex`
+    * :ref:`search`
 
 
-Feedback
-========
+..
+    Feedback
+    ========
 
-If you have any suggestions or questions about **Deva** feel free to email
-us at lachlan@gradientinstitute.org.
+    If you have any suggestions or questions about **Deva** feel free to email
+    us at lachlan@gradientinstitute.org.
 
-If you encounter any errors or problems with **Deva**, please let us know!
-Open an Issue at the GitHub http://github.com/gradient/oversight-prototype main
-repository.
+    If you encounter any errors or problems with **Deva**, please let us know!
+    Open an Issue at the GitHub http://github.com/gradient/oversight-prototype main
+    repository.

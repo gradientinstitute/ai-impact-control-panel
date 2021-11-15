@@ -1,7 +1,7 @@
 .. _majorcomponents:
 
-Section 1: Major Components
-===========================
+Major Components
+================
 
 The main output of this work is a software tool to assist AI system owners and
 other stakeholders in selecting acceptable and realisable combinations of
@@ -40,7 +40,7 @@ with no generation necessary.
 
 
 .. _fig_systemIO:
-.. figure:: SystemIO.svg
+.. figure:: SystemIO.*
     :width: 500px
     :align: center
     :alt: System inputs and outputs
@@ -84,7 +84,7 @@ is performed by a separate component in the code, outlined in
 :numref:`fig_simulator` below.
 
 .. _fig_simulator:
-.. figure:: simulator.svg
+.. figure:: simulator.*
     :width: 500px
     :align: center
     :alt: Simulator
@@ -309,7 +309,7 @@ preferences. The elicits a system owners preferences for two tasks:
    `deployment elicitation`.
 
 .. _fig_govtool:
-.. figure:: governance_tool.svg
+.. figure:: governance_tool.*
     :width: 100%
     :align: center
     :alt: Governance tool
@@ -448,8 +448,8 @@ The elicitation engine has two specific sub-functions:
 
 * **Boundary elicitation**. Elicit from the system owner and stake holders what
   the acceptable operating limits are for the system. If the AI system fails to
-  meet these limits, then either a fallback system should be engaged, or the
-  system should cease operation.
+  meet these limits, then either a fallback (reference) system should be
+  engaged, or the system should cease operation.
 * **Deployment elicitation**. Elicit from the system owner and stake holders
   which system should be chosen for deployment, based on it's measured
   outcomes, from a set of candidate systems.
@@ -457,13 +457,29 @@ The elicitation engine has two specific sub-functions:
 
 Inputs and outputs - Boundary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-TODO
+
+The inputs to the boundary elicitation model are performance metrics for a
+reference (fallback) system; this may be a system (AI or not) that is currently
+in deployment, a hypothetical system or no system; and a set constraints or
+hard boundaries on performance metrics that are known a-priori.
+
+The outputs of the boundary elicitation engine are: 
+
+* rounds of strategic choices presented to the user. These will be of the form
+  of asking of a generated system is preferable to the reference system
+  provided.
+* (after multiple iterations of choices) a set of requirements on the system
+  performance before the reference system must be fallen back to.
+* a descriptive record of the decision-process and the preferences provided by
+  the system owner for accountability purposes.
+
 
 Inputs and outputs - Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The inputs of the elicitation engine are performance metrics for each candidate
-model and additional scenario configuration parameters in a configuration file. 
+The inputs of the deployment elicitation engine are performance metrics for
+each candidate model, a set of performance constraints is applicable, and
+additional scenario configuration parameters in a configuration file. 
 
 The outputs of the deployment elicitation engine are: 
 
@@ -472,12 +488,17 @@ The outputs of the deployment elicitation engine are:
   candidate and a baseline), where the capability of the visualisation engine
   will be invoked to present the relevant information. The outcomes presented
   might correspond to real systems, or to hypothetical systems.
-* (after multiple iterations of choices) a set of requirements on the system
-  performance and/or a precise specification of the user's chosen operating
-  point, depending on the algorithm
-* A descriptive record of the decision-process and the preferences provided by
+* a candidate model that is preferred above all others for deployment.
+* a descriptive record of the decision-process and the preferences provided by
   the system owner for accountability purposes.
 
 
 Implementation Status
 ~~~~~~~~~~~~~~~~~~~~~
+
+We currently have a pre-production prototype for the boundary elicitation
+engine. After feedback from the project advisors, we have to modify this
+prototype before incorporating it into the software tool.
+
+The deployment elicitation engine has been implemented with multiple selectable
+elicitation algorithms.

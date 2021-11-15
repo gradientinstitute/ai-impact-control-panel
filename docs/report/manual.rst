@@ -1,7 +1,7 @@
 .. _manual:
 
-Section 2: User Manual
-======================
+User Manual
+===========
 
 System Overview
 ---------------
