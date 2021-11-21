@@ -5,7 +5,6 @@ from glob import glob
 from deva import elicit
 import toml
 from deva.pareto import remove_non_pareto
-from deva.bounds import remove_unacceptable
 
 
 def repo_root():
@@ -72,12 +71,7 @@ def load_scenario(scenario, bounds, pfilter=True):
 
     # Filter efficient set
     if pfilter:
-        models = remove_non_pareto(models)
-
-    # TODO: Simon's remove_unacceptable is here temporarily.
-    # It's on the issue stack to update it to work with candidate objects.
-    if bounds:
-        models = remove_unacceptable(models)
+        models = remove_non_pareto(models, scenario)
 
     assert len(models) > 0, "There are no candidate models after filtering."
 
@@ -87,7 +81,7 @@ def load_scenario(scenario, bounds, pfilter=True):
 
     for spec_name, perf in models.items():
         name = autoname(len(candidates))
-        scores = {k: v['score'] for k, v in perf.items()}
+        scores = {k: v for k, v in perf.items()}
         candidates.append(elicit.Candidate(name, scores, spec_name))
 
     for u in metrics:

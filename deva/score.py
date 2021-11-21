@@ -133,30 +133,44 @@ def _tpr(confmat):
     return tpr
 
 
+# metrics_dict = {
+#         'accuracy': {'func': model_acc, 'optimal': 'max', 'type': 'float'},
+#         'auc': {'func': model_auc, 'optimal': 'max', 'type': 'float'},
+#         'fp': {'func': fp, 'optimal': 'min', 'type': 'int'},
+#         'fn': {'func': fn, 'optimal': 'min', 'type': 'int'},
+#         'fn_cvar': {'func': fn_cvar, 'optimal': 'min', 'type': 'int'},
+#         'fp_cvar': {'func': fp_cvar, 'optimal': 'min', 'type': 'int'},
+#         'fnwo': {'func': fnwo, 'optimal': 'min', 'type': 'int'},
+#         'fpwo': {'func': fpwo, 'optimal': 'min', 'type': 'int'},
+#         'revenue': {'func': revenue, 'optimal': 'max', 'type': 'float'},
+#         'eo_advantage':
+#                 {'func': eo_adv, 'optimal': 'min', 'type': 'float'},
+#         'eo_disadvantage':
+#                 {'func': eo_disadv, 'optimal': 'min', 'type': 'float'},
+#         'eo_advantage_rate':
+#                 {'func': eo_adv_rate, 'optimal': 'min', 'type': 'float'},
+#         'eo_disadvantage_rate':
+#                 {'func': eo_disadv_rate, 'optimal': 'min', 'type': 'float'},
+#         }
+
 # A dictionary that maps config dictionary metric headings to functions.
 # The key must match the heading in the model toml
-# First element of the value tuple is a function to calculate the score.
-# Second element of the value tuple is the optimal value of that score.
-# TODO: optimal doesn't belong here anymore
+# Value is a function to calculate the score.
 metrics_dict = {
-        'accuracy': {'func': model_acc, 'optimal': 'max', 'type': 'float'},
-        'auc': {'func': model_auc, 'optimal': 'max', 'type': 'float'},
-        'fp': {'func': fp, 'optimal': 'min', 'type': 'int'},
-        'fn': {'func': fn, 'optimal': 'min', 'type': 'int'},
-        'fn_cvar': {'func': fn_cvar, 'optimal': 'min', 'type': 'int'},
-        'fp_cvar': {'func': fp_cvar, 'optimal': 'min', 'type': 'int'},
-        'fnwo': {'func': fnwo, 'optimal': 'min', 'type': 'int'},
-        'fpwo': {'func': fpwo, 'optimal': 'min', 'type': 'int'},
-        'revenue': {'func': revenue, 'optimal': 'max', 'type': 'float'},
-        'eo_advantage':
-                {'func': eo_adv, 'optimal': 'min', 'type': 'float'},
-        'eo_disadvantage':
-                {'func': eo_disadv, 'optimal': 'min', 'type': 'float'},
-        'eo_advantage_rate':
-                {'func': eo_adv_rate, 'optimal': 'min', 'type': 'float'},
-        'eo_disadvantage_rate':
-                {'func': eo_disadv_rate, 'optimal': 'min', 'type': 'float'},
-        }
+        'accuracy': model_acc,
+        'auc': model_auc,
+        'fp': fp,
+        'fn': fn,
+        'fn_cvar': fn_cvar,
+        'fp_cvar': fp_cvar,
+        'fnwo': fnwo,
+        'fpwo': fpwo,
+        'revenue': revenue,
+        'eo_advantage': eo_adv,
+        'eo_disadvantage': eo_disadv,
+        'eo_advantage_rate': eo_adv_rate,
+        'eo_disadvantage_rate': eo_disadv_rate,
+    }
 
 
 def score_model(y_pred, y_scores, y_test, X_test,
@@ -168,10 +182,8 @@ def score_model(y_pred, y_scores, y_test, X_test,
 
     for k, v in metrics_cfg.items():
         args = {key: v[key] for key in v if key != "name"}
-        score = metrics_dict[k]['func'](y_test, y_pred,
-                                        customer_id, sensitive_indicator,
-                                        **args)
-        d[k] = {'score': score, 'optimal': metrics_dict[k]['optimal'],
-                'type': metrics_dict[k]['type']}
+        score = metrics_dict[k](y_test, y_pred,
+                                customer_id, sensitive_indicator, **args)
+        d[k] = score
 
     return d
