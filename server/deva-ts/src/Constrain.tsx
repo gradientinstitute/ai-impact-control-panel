@@ -6,30 +6,83 @@ import {Pane, paneState, scenarioState, metadataState } from './Base';
 import axios from 'axios';
 import _ from "lodash";
 
+
+
+
+// server payload
+export const payloadState = atom({  
+  key: 'payload', 
+  default: null, 
+});
+
+// the CURRENT state of the contraints
 export const constraintsState = atom({  
   key: 'constraints', 
   default: null, 
 });
 
-export const allCandidatesState = atom({  
+// list of all the candidates
+export const allCandidatesState = selector({  
   key: 'allCandidates', 
-  default: null, 
+  get: ({get}) => {
+    const p = get(payloadState);
+    if (p === null) {
+      return null;
+    }
+    return p.points;
+  },
 });
 
+// list of all the candidates grouped by metric
+export const allMetricsState = selector({  
+  key: 'allMetrics', 
+  get: ({get}) => {
+    const p = get(payloadState);
+    if (p === null) {
+      return null;
+    }
+    return p.collated;
+  },
+});
+
+
+function filterCandidates(candidates, bounds) {
+  const items = candidates.filter( (c) => {
+      return Object.entries(c).every(([k, v]) => {
+        const lower = v >= bounds[k][0];
+        const upper = v <= bounds[k][1];
+        return lower && upper
+      });
+    });
+  return items;
+}
+
+// filter all the candidates to just the ones
+// permissable by the currently selectede ranges
+export const currentCandidatesState = selector({
+  key: 'currentCandidates',
+  get: ({get}) => {
+  
+    const allCandidates = get(allCandidatesState);
+    const constraints = get(constraintsState);
+    if (allCandidates === null || constraints === null) {
+      return null;
+    }
+    return filterCandidates(allCandidates, constraints);
+  },
+});
+
+// maximum possible ranges (doesnt change)
 export const maxRangesState = selector({
   key: 'maxRanges',
   get: ({get}) => {
-    const metadata = get(metadataState);
-    const allCandidates = get(allCandidatesState);
-
-    if (allCandidates === null) {
+    const all = get(allMetricsState);
+    if (all === null) {
       return null;
     }
-
-    const items = _.mapValues(metadata.metrics, (_val, uid, _obj) => {
-      const vals = allCandidates.collated[uid];
-      const min = Math.min(...vals);
-      const max = Math.max(...vals);
+    const items = _.mapValues(all, (val, _uid, _obj) => {
+      const min = Math.min(...val);
+      const max = Math.max(...val);
       return [min, max];
     });
     return items;
@@ -40,15 +93,16 @@ export function ConstraintPane({}) {
 
   const scenario = useRecoilValue(scenarioState);
   const metadata = useRecoilValue(metadataState);
-  const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
   const maxRanges = useRecoilValue(maxRangesState);
   const [constraints, setConstraints] = useRecoilState(constraintsState);
+  const curr = useRecoilValue(currentCandidatesState);
+  const [_payload, setPayload] = useRecoilState(payloadState);
   
   // initial loading of candidates
   useEffect(() => {
     const fetch = async () => {
       const result = await axios.get<any>(scenario + "/ranges");
-      setAllCandidates(result.data);
+      setPayload(result.data);
     }
     fetch();
   }, []
@@ -69,6 +123,12 @@ export function ConstraintPane({}) {
       </div>
       <div className="width-1/4">
         <StartButton />
+      </div>
+      <div>
+        {JSON.stringify(curr)}
+      </div>
+      <div>
+        {JSON.stringify(constraints)}
       </div>
     </div>
   );
@@ -122,13 +182,17 @@ function RangeConstraint({uid, min, max}) {
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const val = constraints[uid];
   const [rangeProps, setRangeProps] = useState({}); 
-  
+  const all = useRecoilValue(allCandidatesState);
+
   function onChange(x: any) {
-    setConstraints((old: any) => {
-      let n = {...old};
-      n[uid] = x;
-      return n;
-    });
+    let n = {...constraints};
+    const oldval = n[uid];
+    n[uid] = x;
+    const withNew = filterCandidates(all, n);
+    if (withNew.length == 0) {
+      n[uid] = oldval;
+    }
+    setConstraints(n)
   }
   
   // Dodgy, dodgy hack
@@ -150,7 +214,7 @@ function RangeConstraint({uid, min, max}) {
         allowCross: false,
       });
     });
-  }, [val])
+  }, [constraints])
 
   return (
   <div>
