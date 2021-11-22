@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def remove_non_pareto(models):
+def remove_non_pareto(models, metadata):
     """Removes all models that are strictly worse than another model."""
     # Check if model is bested by another in every metric
     print("\nRemove models not on the pareto front")
@@ -13,13 +13,13 @@ def remove_non_pareto(models):
             # Check which metrics the model is worse at
             worse = np.zeros(len(models[r])).astype(bool)
             for j, met in enumerate(models[m].keys()):
-                optimal = models[m][met]['optimal']
+                higher_better = metadata['metrics'][met]['higherIsBetter']
 
-                diff = models[m][met]['score'] - models[r][met]['score']
+                diff = models[m][met] - models[r][met]
 
-                if (optimal == 'max') and (diff <= 0):
+                if higher_better and (diff <= 0):
                     worse[j] = True
-                elif (optimal == 'min') and (diff >= 0):
+                elif not higher_better and (diff >= 0):
                     worse[j] = True
 
             # If all are worse, model is not on the pareto front.

@@ -1,14 +1,3 @@
-[precision]
-score = 40
-optimal = "max"
-type = "int"
-
-[fnr]
-score = 70
-optimal = "min"
-type = "int"
-
-[fnr_difference]
-score = 1
-optimal = "min"
-type = "int"
+precision = 40
+fnr = 70
+fnr_difference = 1
