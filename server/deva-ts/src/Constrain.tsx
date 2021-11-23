@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useReducer, useContext} from 'react';
 import Slider, { Range } from 'rc-slider';
 import 'rc-slider/assets/index.css';
+import ReactSlider from 'react-slider'
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import {Pane, paneState, scenarioState, metadataState } from './Base';
 import axios from 'axios';
@@ -9,62 +10,33 @@ import _ from "lodash";
 
 
 
-// server payload
-export const payloadState = atom({  
-  key: 'payload', 
-  default: null, 
-});
-
 // the CURRENT state of the contraints
 export const constraintsState = atom({  
   key: 'constraints', 
   default: null, 
 });
 
-// the highlight status of the range sliders
-export const highlightState = atom({
-  key: 'highlight',
-  default: null,
-})
-
-// list of all the candidates
-export const allCandidatesState = selector({  
+export const allCandidatesState = atom({  
   key: 'allCandidates', 
-  get: ({get}) => {
-    const p = get(payloadState);
-    if (p === null) {
-      return null;
-    }
-    return p.points;
-  },
-});
-
-// list of all the candidates grouped by metric
-export const allMetricsState = selector({  
-  key: 'allMetrics', 
-  get: ({get}) => {
-    const p = get(payloadState);
-    if (p === null) {
-      return null;
-    }
-    return p.collated;
-  },
+  default: null, 
 });
 
 // maximum possible ranges (doesnt change)
 export const maxRangesState = selector({
   key: 'maxRanges',
   get: ({get}) => {
-    const all = get(allMetricsState);
+    const all = get(allCandidatesState);
+    const metadata = get(metadataState);
+
     if (all === null) {
       return null;
     }
-    const items = _.mapValues(all, (val, _uid, _obj) => {
-      const min = Math.min(...val);
-      const max = Math.max(...val);
-      return [min, max];
+    
+    const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
+      const tvals = all.map(x => x[uid]);
+      return [Math.min(...tvals), Math.max(...tvals)];
     });
-    return items;
+    return ranges;
   },
 });
 
@@ -94,66 +66,35 @@ export const currentCandidatesState = selector({
   },
 });
 
-
-export const currentDirectionsState = selector({
-  key: 'currentDirections',
-  get: ({get}) => {
-    const curr = get(constraintsState);
-    const range = get(maxRangesState);
-    const met = get(allMetricsState);
-    const all = get(allCandidatesState);
-
-    const res = _.mapValues(met, (val, uid, _obj) => {
-      let minval = range[uid][0];
-      let maxval = range[uid][1];
-
-      let n = {...curr};
-      n[uid] = minval;
-      const low = filterCandidates(all, n).length > 0;
-      n[uid] = maxval;
-      const high = filterCandidates(all, n).length > 0;
-      return [low, high];
-    });
-  },
-});
-
-
 export function ConstraintPane({}) {
 
   const scenario = useRecoilValue(scenarioState);
-  const metadata = useRecoilValue(metadataState);
   const maxRanges = useRecoilValue(maxRangesState);
-  const [constraints, setConstraints] = useRecoilState(constraintsState);
   const curr = useRecoilValue(currentCandidatesState);
-  const [_payload, setPayload] = useRecoilState(payloadState);
-  const [highlights, setHighlight] = useRecoilState(highlightState);
+
+  const [constraints, setConstraints] = useRecoilState(constraintsState);
+  const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+
   
   // initial loading of candidates
   useEffect(() => {
     const fetch = async () => {
-      const result = await axios.get<any>(scenario + "/ranges");
-      setPayload(result.data);
+      axios.get<any>(scenario + "/ranges")
+        .then( response => response.data)
+        .then( data => {
+          setAllCandidates(data);
+        });
     }
     fetch();
   }, []
   );
-      
-  // update constraints when we get ranges
+
+  // set initial value of the constraints
   useEffect(() => {
     setConstraints(maxRanges);
-    }, [maxRanges]
-  );
+  }, [maxRanges]);
 
-  // update highlights when we get ranges
-  useEffect(() => {
-    if (maxRanges !== null) {
-      const items = _.mapValues(maxRanges, _x => {
-        return [false, false];
-      });
-      setHighlight(items);
-    }
-  });
-
+      
   if (curr === null) {
     return (<div>Loading...</div>);
   }
@@ -233,15 +174,14 @@ function MultiRangeConstraint({}) {
   );
 }
 
-function RangeConstraint({uid, min, max}) {
+function RangeConstraint2({uid, min, max}) {
+  
   const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const val = constraints[uid];
-  const [rangeProps, setRangeProps] = useState({}); 
-  const all = useRecoilValue(allCandidatesState);
-  const [highlights, setHighlights] = useRecoilState(highlightState);
-  const h = highlights[uid];
+  const value = constraints[uid];
 
-  function onChange(x: any) {
+  const all = useRecoilValue(allCandidatesState);
+
+  function onChange(x: any, _index: any) {
     let n = {...constraints};
     const oldval = n[uid];
     n[uid] = x;
@@ -252,50 +192,46 @@ function RangeConstraint({uid, min, max}) {
     setConstraints(n)
   }
 
-  function onBeforeChange(x: any) {
-    let newh = [];
-    for (const uid in highlights) {
-      newh.push([true, true]);
+  return (
+    <div>
+      <ReactSlider
+        className="horizontal-slider"
+        min={min}
+        max={max}
+        value={value}
+        onChange={onChange}
+        defaultValue={[0, 100]}
+        pearling
+        thumbClassName="example-thumb"
+        trackClassName="example-track"
+        renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+      />
+    </div>
+  );
+}
+
+function RangeConstraint({uid, min, max}) {
+  const [constraints, setConstraints] = useRecoilState(constraintsState);
+  const val = constraints[uid];
+  const all = useRecoilValue(allCandidatesState);
+
+  function onChange(x: any) {
+    let n = {...constraints};
+    n[uid] = x;
+    const withNew = filterCandidates(all, n);
+    if (withNew.length > 0) {
+      setConstraints(n)
     }
-    setHighlights(newh);
-  }
-
-  function onAfterChange(x: any) {
-    const nn = _.mapValues(highlights, (_x) => {return [true, true]});
-    setHighlights(nn);
-  }
-
-  let hstylelow = {};
-  let hstylehigh = {};
-  if (h[0]) {
-    hstylelow = {backgroundColor: "black", borderColor: "red"};
-  }
-  if (h[1]) {
-    hstylehigh = {backgroundColor: "black", borderColor: "red"};
   }
   
-  
-  // Dodgy, dodgy hack
-  // https://github.com/react-component/slider/issues/366
-  // TODO: try different library?
-  useEffect(() => {
-    
-    const baseProps = {
+  const rangeProps = {
       min: min,
       max: max,
-      onBeforeChange: onBeforeChange,
       onChange: onChange,
-      onAfterChange: onAfterChange,
       allowCross: false,
-      handleStyle: [hstylelow, hstylehigh],
+      value: [...val],
     };
-    const vProps = {...baseProps, value: [...val]};
-    setRangeProps(vProps);
-    window.requestAnimationFrame(() => {
-      setRangeProps(baseProps)});
-
-  }, [constraints])
-
+  
   return (
   <div>
     <Range {...rangeProps} />
