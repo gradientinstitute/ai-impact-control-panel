@@ -21,6 +21,12 @@ export const constraintsState = atom({
   default: null, 
 });
 
+// the highlight status of the range sliders
+export const highlightState = atom({
+  key: 'highlight',
+  default: null,
+})
+
 // list of all the candidates
 export const allCandidatesState = selector({  
   key: 'allCandidates', 
@@ -45,6 +51,22 @@ export const allMetricsState = selector({
   },
 });
 
+// maximum possible ranges (doesnt change)
+export const maxRangesState = selector({
+  key: 'maxRanges',
+  get: ({get}) => {
+    const all = get(allMetricsState);
+    if (all === null) {
+      return null;
+    }
+    const items = _.mapValues(all, (val, _uid, _obj) => {
+      const min = Math.min(...val);
+      const max = Math.max(...val);
+      return [min, max];
+    });
+    return items;
+  },
+});
 
 function filterCandidates(candidates, bounds) {
   const items = candidates.filter( (c) => {
@@ -72,22 +94,29 @@ export const currentCandidatesState = selector({
   },
 });
 
-// maximum possible ranges (doesnt change)
-export const maxRangesState = selector({
-  key: 'maxRanges',
+
+export const currentDirectionsState = selector({
+  key: 'currentDirections',
   get: ({get}) => {
-    const all = get(allMetricsState);
-    if (all === null) {
-      return null;
-    }
-    const items = _.mapValues(all, (val, _uid, _obj) => {
-      const min = Math.min(...val);
-      const max = Math.max(...val);
-      return [min, max];
+    const curr = get(constraintsState);
+    const range = get(maxRangesState);
+    const met = get(allMetricsState);
+    const all = get(allCandidatesState);
+
+    const res = _.mapValues(met, (val, uid, _obj) => {
+      let minval = range[uid][0];
+      let maxval = range[uid][1];
+
+      let n = {...curr};
+      n[uid] = minval;
+      const low = filterCandidates(all, n).length > 0;
+      n[uid] = maxval;
+      const high = filterCandidates(all, n).length > 0;
+      return [low, high];
     });
-    return items;
   },
 });
+
 
 export function ConstraintPane({}) {
 
@@ -97,6 +126,7 @@ export function ConstraintPane({}) {
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const curr = useRecoilValue(currentCandidatesState);
   const [_payload, setPayload] = useRecoilState(payloadState);
+  const [highlights, setHighlight] = useRecoilState(highlightState);
   
   // initial loading of candidates
   useEffect(() => {
@@ -114,24 +144,49 @@ export function ConstraintPane({}) {
     }, [maxRanges]
   );
 
+  // update highlights when we get ranges
+  useEffect(() => {
+    if (maxRanges !== null) {
+      const items = _.mapValues(maxRanges, _x => {
+        return [false, false];
+      });
+      setHighlight(items);
+    }
+  });
+
+  if (curr === null) {
+    return (<div>Loading...</div>);
+  }
+
 
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
       <h1>Constraint Pane</h1>
+      <div>
+        <ConstraintStatus />
+      </div>
       <div className="mb-10">
         <MultiRangeConstraint />
       </div>
       <div className="width-1/4">
         <StartButton />
       </div>
-      <div>
-        {JSON.stringify(curr)}
-      </div>
-      <div>
-        {JSON.stringify(constraints)}
-      </div>
     </div>
   );
+}
+
+function ConstraintStatus({}) {
+  
+  const curr = useRecoilValue(currentCandidatesState);
+  const all = useRecoilValue(allCandidatesState);
+
+  return (
+  <div className="rounded-lg bg-green-700 p-4 my-auto">
+    <h2 className="text-2xl">{curr.length} of {all.length}</h2>
+    <p>candidate models remain</p>
+  </div>
+  );
+
 }
 
 function MultiRangeConstraint({}) {
@@ -183,6 +238,8 @@ function RangeConstraint({uid, min, max}) {
   const val = constraints[uid];
   const [rangeProps, setRangeProps] = useState({}); 
   const all = useRecoilValue(allCandidatesState);
+  const [highlights, setHighlights] = useRecoilState(highlightState);
+  const h = highlights[uid];
 
   function onChange(x: any) {
     let n = {...constraints};
@@ -194,26 +251,49 @@ function RangeConstraint({uid, min, max}) {
     }
     setConstraints(n)
   }
+
+  function onBeforeChange(x: any) {
+    let newh = [];
+    for (const uid in highlights) {
+      newh.push([true, true]);
+    }
+    setHighlights(newh);
+  }
+
+  function onAfterChange(x: any) {
+    const nn = _.mapValues(highlights, (_x) => {return [true, true]});
+    setHighlights(nn);
+  }
+
+  let hstylelow = {};
+  let hstylehigh = {};
+  if (h[0]) {
+    hstylelow = {backgroundColor: "black", borderColor: "red"};
+  }
+  if (h[1]) {
+    hstylehigh = {backgroundColor: "black", borderColor: "red"};
+  }
+  
   
   // Dodgy, dodgy hack
   // https://github.com/react-component/slider/issues/366
   // TODO: try different library?
   useEffect(() => {
-    setRangeProps({
-      value: [...val],
+    
+    const baseProps = {
       min: min,
       max: max,
+      onBeforeChange: onBeforeChange,
       onChange: onChange,
+      onAfterChange: onAfterChange,
       allowCross: false,
-      });
+      handleStyle: [hstylelow, hstylehigh],
+    };
+    const vProps = {...baseProps, value: [...val]};
+    setRangeProps(vProps);
     window.requestAnimationFrame(() => {
-      setRangeProps({
-        min: min,
-        max: max,
-        onChange: onChange,
-        allowCross: false,
-      });
-    });
+      setRangeProps(baseProps)});
+
   }, [constraints])
 
   return (
