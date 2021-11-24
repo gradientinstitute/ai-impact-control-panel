@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue} from 'recoil';
 import axios from 'axios';
+import { Dialog, DialogOverlay, DialogContent } from "@reach/dialog";
+import "@reach/dialog/styles.css";
 
 import {Pane, paneState, scenarioState} from './Base';
 
@@ -41,9 +43,12 @@ export function SetupPane({}) {
   return (
     <div>
       <div className="ml-auto mr-auto w-1/2">
+        <Dialog>        
+          <h1 className="my-auto text-center mb-4">Get Started</h1>
+          <StartButtons />
+        </Dialog>
         <h1 className="my-auto text-center mb-4">Select a scenario</h1>
           <Summary />
-          <StartButtons />
       </div>
     </div>
   );
