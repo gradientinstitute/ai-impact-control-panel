@@ -3,18 +3,10 @@ import Slider, { Range } from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import ReactSlider from 'react-slider'
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
-import {Pane, paneState, scenarioState, metadataState } from './Base';
+import {Pane, paneState, scenarioState, 
+        metadataState, constraintsState } from './Base';
 import axios from 'axios';
 import _ from "lodash";
-
-
-
-
-// the CURRENT state of the contraints
-export const constraintsState = atom({  
-  key: 'constraints', 
-  default: null, 
-});
 
 export const allCandidatesState = atom({  
   key: 'allCandidates', 
@@ -241,11 +233,29 @@ function RangeConstraint({uid, min, max}) {
 
 function StartButton({}) {
 
-  const [pane, setPane] = useRecoilState(paneState);
+  const [submit, setSubmit] = useState(false);
+
+  const scenario = useRecoilValue(scenarioState);
+  const constraints = useRecoilValue(constraintsState);
+  const [_pane, setPane] = useRecoilState(paneState);
+
+  useEffect(() => {
+    const fetch = async () => {
+      await axios.put<any>(scenario + "/constraints", constraints);
+      setPane(Pane.Pairwise);
+    }
+    if (submit) {
+      fetch();
+    }
+  }, [submit]
+  );
+
+
+
   
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
-        onClick={() => {setPane(Pane.Pairwise)}}>
+        onClick={() => {setSubmit(true)}}>
         <div className="p-4 text-5xl">
           Next
         </div>

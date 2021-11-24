@@ -105,6 +105,13 @@ def get_ranges(scenario):
     return jsonify(points)
 
 
+@app.route('/<scenario>/constraints', methods=['PUT'])
+def apply_constraints(scenario):
+    data = request.get_json(force=True)
+    print(data)
+    return "OK"
+
+
 @app.route('/<scenario>/choice', methods=['GET', 'PUT'])
 def get_choice(scenario):
     global eliciters
