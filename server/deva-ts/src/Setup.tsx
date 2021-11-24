@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { atom, useRecoilState, useRecoilValue} from 'recoil';
 import axios from 'axios';
 import { Dialog, DialogOverlay, DialogContent } from "@reach/dialog";
+import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@reach/tabs";
+import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 
 import {Pane, paneState, scenarioState} from './Base';
@@ -43,15 +45,48 @@ export function SetupPane({}) {
   return (
     <div>
       <div className="ml-auto mr-auto w-1/2">
-        <Dialog>        
+        <Dialog>
           <h1 className="my-auto text-center mb-4">Get Started</h1>
-          <StartButtons />
+          <Steps />
         </Dialog>
         <h1 className="my-auto text-center mb-4">Select a scenario</h1>
-          <Summary />
       </div>
     </div>
   );
+}
+
+function Steps({}) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [_pane, setPane] = useRecoilState(paneState);
+  const current = useRecoilValue(currentScenarioState);
+  const [_scenario, setScenario] = useRecoilState(scenarioState);
+
+  function handleStepsChange(i) {
+    setStepIndex(i);
+  }
+
+ return (
+   <Tabs index={stepIndex} onChange={handleStepsChange}>
+     <TabPanels>
+       <TabPanel key={0}>
+          <p>I want to elicit</p>
+          <StartButtons onChange={handleStepsChange} />
+       </TabPanel>
+       <TabPanel key={1}>
+        <Summary />
+        <button className="bg-gray-200 text-black rounded-lg"
+          onClick={() => {
+            console.log(current);
+            setScenario(current);
+            setPane(Pane.Intro);
+          }}
+          disabled={false}>
+          Next
+        </button>
+       </TabPanel>
+     </TabPanels>
+   </Tabs>
+ )
 }
 
 // Dropdown box for selecting a scenario
@@ -107,7 +142,7 @@ function Summary({}) {
 
 // select the type of elicitation to do with two buttons
 // TODO: hook up to boundary elicitation when its implemented
-function StartButtons({}) {
+function StartButtons({onChange}) {
   
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
@@ -117,8 +152,9 @@ function StartButtons({}) {
       <div className="grid grid-cols-2 gap-10 py-10">
         <button className="bg-gray-200 text-black rounded-lg" 
           onClick={() => {
-            setScenario(current);
-            setPane(Pane.Intro); 
+            // setScenario(current);
+            // // setPane(Pane.Intro);
+            onChange(1);
           }}
           disabled={true}>
           <div className="p-4 text-lg">
@@ -127,8 +163,9 @@ function StartButtons({}) {
         </button>
         <button className="bg-gray-200 text-black rounded-lg" 
           onClick={() => {
-            setScenario(current);
-            setPane(Pane.Intro); 
+            // setScenario(current);
+            // // setPane(Pane.Intro);
+            onChange(1);
           }}
           disabled={false}>
           <div className="p-4 text-lg">
