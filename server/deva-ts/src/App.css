@@ -26,3 +26,43 @@ select {
 button[disabled=disabled], button:disabled {
   color: #999999;
 }
+
+.horizontal-slider {
+  /* background: rgb(0, 0, 0); */
+  height: 50px;
+}
+
+.horizontal-slider .example-track {
+    top: 20px;
+    height: 10px;
+}
+
+.example-track.example-track-0 {
+    background: rgb(255, 0, 0); 
+}
+
+.example-track.example-track-1 {
+    background: rgb(0, 255, 0); 
+}
+
+.example-track.example-track-2 {
+    background: rgb(255, 0, 0); 
+}
+
+.horizontal-slider .example-thumb {
+    top: 1px;
+    width: 50px;
+    height: 48px;
+    line-height: 38px;
+}
+
+.example-thumb {
+    font-size: 0.9em;
+    text-align: center;
+    background-color: black;
+    color: white;
+    cursor: pointer;
+    border: 5px solid gray;
+    box-sizing: border-box;
+}
+

@@ -1,69 +1,103 @@
 import React, {useState, useEffect, useReducer, useContext} from 'react';
 import Slider, { Range } from 'rc-slider';
 import 'rc-slider/assets/index.css';
+import ReactSlider from 'react-slider'
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
-import {Pane, paneState, scenarioState, metadataState } from './Base';
+import {Pane, paneState, scenarioState, 
+        metadataState, constraintsState } from './Base';
 import axios from 'axios';
 import _ from "lodash";
-
-export const constraintsState = atom({  
-  key: 'constraints', 
-  default: null, 
-});
 
 export const allCandidatesState = atom({  
   key: 'allCandidates', 
   default: null, 
 });
 
+// maximum possible ranges (doesnt change)
 export const maxRangesState = selector({
   key: 'maxRanges',
   get: ({get}) => {
+    const all = get(allCandidatesState);
     const metadata = get(metadataState);
-    const allCandidates = get(allCandidatesState);
 
-    if (allCandidates === null) {
+    if (all === null) {
       return null;
     }
-
-    const items = _.mapValues(metadata.metrics, (_val, uid, _obj) => {
-      const vals = allCandidates.collated[uid];
-      const min = Math.min(...vals);
-      const max = Math.max(...vals);
-      return [min, max];
+    
+    const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
+      const tvals = all.map(x => x[uid]);
+      return [Math.min(...tvals), Math.max(...tvals)];
     });
-    return items;
+    return ranges;
+  },
+});
+
+function filterCandidates(candidates, bounds) {
+  const items = candidates.filter( (c) => {
+      return Object.entries(c).every(([k, v]) => {
+        const lower = v >= bounds[k][0];
+        const upper = v <= bounds[k][1];
+        return lower && upper
+      });
+    });
+  return items;
+}
+
+// filter all the candidates to just the ones
+// permissable by the currently selectede ranges
+export const currentCandidatesState = selector({
+  key: 'currentCandidates',
+  get: ({get}) => {
+  
+    const allCandidates = get(allCandidatesState);
+    const constraints = get(constraintsState);
+    if (allCandidates === null || constraints === null) {
+      return null;
+    }
+    return filterCandidates(allCandidates, constraints);
   },
 });
 
 export function ConstraintPane({}) {
 
   const scenario = useRecoilValue(scenarioState);
-  const metadata = useRecoilValue(metadataState);
-  const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
   const maxRanges = useRecoilValue(maxRangesState);
+  const curr = useRecoilValue(currentCandidatesState);
+
   const [constraints, setConstraints] = useRecoilState(constraintsState);
+  const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+
   
   // initial loading of candidates
   useEffect(() => {
     const fetch = async () => {
-      const result = await axios.get<any>(scenario + "/ranges");
-      setAllCandidates(result.data);
+      axios.get<any>(scenario + "/ranges")
+        .then( response => response.data)
+        .then( data => {
+          setAllCandidates(data);
+        });
     }
     fetch();
   }, []
   );
-      
-  // update constraints when we get ranges
+
+  // set initial value of the constraints
   useEffect(() => {
     setConstraints(maxRanges);
-    }, [maxRanges]
-  );
+  }, [maxRanges]);
+
+      
+  if (curr === null) {
+    return (<div>Loading...</div>);
+  }
 
 
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
       <h1>Constraint Pane</h1>
+      <div>
+        <ConstraintStatus />
+      </div>
       <div className="mb-10">
         <MultiRangeConstraint />
       </div>
@@ -72,6 +106,20 @@ export function ConstraintPane({}) {
       </div>
     </div>
   );
+}
+
+function ConstraintStatus({}) {
+  
+  const curr = useRecoilValue(currentCandidatesState);
+  const all = useRecoilValue(allCandidatesState);
+
+  return (
+  <div className="rounded-lg bg-green-700 p-4 my-auto">
+    <h2 className="text-2xl">{curr.length} of {all.length}</h2>
+    <p>candidate models remain</p>
+  </div>
+  );
+
 }
 
 function MultiRangeConstraint({}) {
@@ -118,40 +166,64 @@ function MultiRangeConstraint({}) {
   );
 }
 
+function RangeConstraint2({uid, min, max}) {
+  
+  const [constraints, setConstraints] = useRecoilState(constraintsState);
+  const value = constraints[uid];
+
+  const all = useRecoilValue(allCandidatesState);
+
+  function onChange(x: any, _index: any) {
+    let n = {...constraints};
+    const oldval = n[uid];
+    n[uid] = x;
+    const withNew = filterCandidates(all, n);
+    if (withNew.length == 0) {
+      n[uid] = oldval;
+    }
+    setConstraints(n)
+  }
+
+  return (
+    <div>
+      <ReactSlider
+        className="horizontal-slider"
+        min={min}
+        max={max}
+        value={value}
+        onChange={onChange}
+        defaultValue={[0, 100]}
+        pearling
+        thumbClassName="example-thumb"
+        trackClassName="example-track"
+        renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+      />
+    </div>
+  );
+}
+
 function RangeConstraint({uid, min, max}) {
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const val = constraints[uid];
-  const [rangeProps, setRangeProps] = useState({}); 
-  
+  const all = useRecoilValue(allCandidatesState);
+
   function onChange(x: any) {
-    setConstraints((old: any) => {
-      let n = {...old};
-      n[uid] = x;
-      return n;
-    });
+    let n = {...constraints};
+    n[uid] = x;
+    const withNew = filterCandidates(all, n);
+    if (withNew.length > 0) {
+      setConstraints(n)
+    }
   }
   
-  // Dodgy, dodgy hack
-  // https://github.com/react-component/slider/issues/366
-  // TODO: try different library?
-  useEffect(() => {
-    setRangeProps({
-      value: [...val],
+  const rangeProps = {
       min: min,
       max: max,
       onChange: onChange,
       allowCross: false,
-      });
-    window.requestAnimationFrame(() => {
-      setRangeProps({
-        min: min,
-        max: max,
-        onChange: onChange,
-        allowCross: false,
-      });
-    });
-  }, [val])
-
+      value: [...val],
+    };
+  
   return (
   <div>
     <Range {...rangeProps} />
@@ -161,11 +233,29 @@ function RangeConstraint({uid, min, max}) {
 
 function StartButton({}) {
 
-  const [pane, setPane] = useRecoilState(paneState);
+  const [submit, setSubmit] = useState(false);
+
+  const scenario = useRecoilValue(scenarioState);
+  const constraints = useRecoilValue(constraintsState);
+  const [_pane, setPane] = useRecoilState(paneState);
+
+  useEffect(() => {
+    const fetch = async () => {
+      await axios.put<any>(scenario + "/constraints", constraints);
+      setPane(Pane.Pairwise);
+    }
+    if (submit) {
+      fetch();
+    }
+  }, [submit]
+  );
+
+
+
   
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
-        onClick={() => {setPane(Pane.Pairwise)}}>
+        onClick={() => {setSubmit(true)}}>
         <div className="p-4 text-5xl">
           Next
         </div>
