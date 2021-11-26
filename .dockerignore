@@ -1,0 +1,8 @@
+.git
+.idea
+server/deva-ts/node_modules
+server/deva-ts/build
+assets
+data
+docs
+tests

@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    volumes:
+      - ./scenarios/:/app/scenarios
+    ports:
+      - "127.0.0.1:8666:8666"
