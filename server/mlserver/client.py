@@ -76,7 +76,8 @@ def main():
     assert len(choices) == 1
     uid = list(choices.keys())[0]
     # choices now contains 'spec':'precise'...
-    result = elicit.Candidate(uid, choices[uid]['attr'])
+    name = f"Spec: {choices[uid]['spec']} ({uid})"
+    result = elicit.Candidate(name, choices[uid]['attr'])
     print("You have chosen:")
     interface.text(result, metrics)
 

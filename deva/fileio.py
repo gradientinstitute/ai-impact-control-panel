@@ -98,6 +98,13 @@ def load_scenario(scenario, bounds, pfilter=True):
         if primary not in metrics:
             raise RuntimeError(f'{primary} is not in the scenario metrics.')
 
+    # attempt to load the baseline
+    baseline_f = os.path.join(scenario_path, "baseline.toml")
+    assert os.path.exists(baseline_f)
+    baseline = toml.load(baseline_f)
+    assert(set(baseline) == set(metrics))
+    scenario["baseline"] = baseline  # TODO: consider whether its own return
+
     return candidates, scenario
 
 

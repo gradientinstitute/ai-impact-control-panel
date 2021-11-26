@@ -2,64 +2,46 @@
 from deva import fileio
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d  # NOQA
-from deva import interface, elicit, bounds
-from matplotlib.animation import FuncAnimation
+import matplotlib.patches as mpatches
+from mpl_toolkits import mplot3d
+from deva import interface, elicit
+# from matplotlib.animation import FuncAnimation
 
-Poly = mplot3d.art3d.Poly3DCollection
+Poly3D = mplot3d.art3d.Poly3DCollection
 
 
 def main():
     np.random.seed(42)
 
-    # Research ideas:
-    # TODO: ask about 2 axes at a time only
-    # TODO: what do we communicate at the end?
-    # TODO: auto answer if query dominates or dominated...
-    # TODO: ask about the real candidates first, then refine the model?
-    # TODO: smart termination condition
-
     # Load a real scenario
-    scenario_name = "fraud"  # "simple_fraud"
+    scenario_name = "jobs"  # has 3 dimensions :)
     candidates, meta = fileio.load_scenario(
-        scenario_name, False, pfilter=False)
-    cnames = [c.spec_name for c in candidates]
-    reference = meta["reference_model"]
+        scenario_name, False, pfilter=False
+    )
     metrics = meta["metrics"]
-    assert reference in cnames
-
-    # Estimate a suitable perturbation range
-    attribs = list(candidates[0].attributes)  # establish a canonical order
-    attribs = ['fp', 'fn', 'profit']  # restrict
+    baseline = meta["baseline"]
 
     # Tabulate observed range
-    # TODO: code might need some tweaking for ordinal data
+    attribs = sorted(candidates[0].attributes)
     table = np.zeros((len(candidates), len(attribs)))
     for i, c in enumerate(candidates):
         table[i, :] = [c[a] for a in attribs]
-    ref_ix = cnames.index(reference)
-    ref = table[ref_ix]
-    ref_candidate = candidates[ref_ix]
-    ref_candidate.attributes = {a: ref_candidate[a] for a in attribs}
-    ref_candidate.name = "Baseline"
-    # ref_candidate.spec_name
 
-    # heuristic for sample scale (some notion of importance of each dimension)
-    # eg perturbation of 1 on accuracy is huge, on FP is nothing...
-    radius = 0.5 * table.std(axis=0)
+    # Create a representation of the candidate for display purposes
+    ref_candidate = elicit.Candidate("Baseline", baseline, None)
+    ref = np.array([baseline[a] for a in attribs])
+
+    # Eliciter configuration (should be specified or guessed?)
+    radius = 0.5 * table.std(axis=0)  # scale of perturbations
+    steps = 15  # how many samples
 
     # Also we need to know which direction is better?
     # -1 if lower is better, +1 if higher is better
+    sign = np.array([-1 if metrics[a]["higherIsBetter"] else 1
+                     for a in attribs])
+
+    # Rather than being interactive, compose a hidden ground truth
     dims = len(ref)
-    sign = np.ones(dims)
-    for i, a in enumerate(attribs):
-        if not metrics[a]["higherIsBetter"]:
-            sign[i] = -1
-
-    # now do some quantatative analysis... (simulate steps)
-    steps = 15  # how many samples
-
-    # Invent a hidden ground truth
     w_true = 0.1 + 0.9 * np.random.rand(dims)  # positive
     w_true *= sign / radius
     w_true /= (w_true @ w_true)**.5  # unit vector
@@ -67,9 +49,6 @@ def main():
     def oracle(q):
         return ((q - ref)@w_true > 0)
 
-    # run a sampler - needs to know that lower is better?
-    # If we use a different scale for each dimension,
-    # perhaps we can hide the complexity
     sampler = Sampler(ref, radius * sign, steps)
     choices = []
 
@@ -128,10 +107,11 @@ def main():
     rad = c.max(axis=0) - c.min(axis=0)
 
     # plot_weight_disc(w[:3], ref[:3], .8*rad[:3], 'r')
-    plot_weight_disc(w_true[:3], ref[:3], .8*rad[:3], 'b')
+    plot_weight_disc(w_true[:3], ref[:3], .8*rad[:3], 'b', label="boundary")
 
     # draw the planes as a dish?
-    ax.plot3D(*c.T[:3], 'ko-', alpha=0.5)
+    ax.plot3D(*c.T[:3], 'k-', alpha=0.5, label="Query Trajectory")
+    ax.plot3D(*c.T[:3], 'ko', alpha=0.5, label="Query Systems")
 
     def m(name):
         ren = {"fp":"false positives",
@@ -143,7 +123,8 @@ def main():
     ax.set_ylabel(m(attribs[1]))
     ax.set_zlabel(m(attribs[2]))
 
-    ax.plot3D(*ref[:3], 'o', markerfacecolor='#fff', markeredgecolor='#000', zorder=100 )
+    ax.plot3D(*ref[:3], 'o', markerfacecolor='#fff', markeredgecolor='#000',
+              zorder=100, label="Reference system")
 
     def ranger(v):
         a = v.min()
@@ -153,6 +134,16 @@ def main():
     ax.set_xlim3d(*ranger(c[:, 0]))
     ax.set_ylim3d(*ranger(c[:, 1]))
     ax.set_zlim3d(*ranger(c[:, 2]))
+    plt.legend()
+
+    # TODO: consider plotting particular systems
+    cnames = [c.spec_name for c in candidates]
+    # TODO: ask about 2 axes at a time only
+    # TODO: what do we communicate at the end?
+    # TODO: auto answer if query dominates or dominated...
+    # TODO: ask about the real candidates first, then refine the model?
+    # TODO: smart termination condition
+    # TODO: handle ordinal data
 
     # for angle in range(0, 360):
     #     ax.view_init(30, angle)
@@ -173,8 +164,7 @@ def main():
     plt.show()
 
 
-
-def plot_weight_disc(w, ref, radius, c):
+def plot_weight_disc(w, ref, radius, c, label=None):
     # If we truncated the weight vector it might not be a unit vector in 
     # this space
     w = w / (w@w)**.5
@@ -189,8 +179,14 @@ def plot_weight_disc(w, ref, radius, c):
     pts = ref + diff
     pts = pts[(pts > 0).all(axis=1)]
     ax.plot3D(*pts.T, alpha=0)
-    ax.add_collection3d(Poly([pts], color=c, alpha=0.5))
+    collection = Poly3D([pts], color=c, alpha=0.5, label="Boundary")
+    # workaround for legend bug in matplotlib3d
+    collection._facecolors2d=collection._facecolor3d
+    collection._edgecolors2d=collection._edgecolor3d
 
+    ax.add_collection3d(collection)
+
+    # collection.set_label("Acceptance Model")
 
 class Sampler:
 

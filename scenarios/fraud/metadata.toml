@@ -18,8 +18,6 @@ sweeps."""
 
 primary_metric = "revenue"  # This has to refer to a metric
 
-reference_model = "randomclassifier_random"
-
 [actions]
 allow = "allows the transaction to proceed"
 block = """prevents the transaction from occuring, and sends an sms to the

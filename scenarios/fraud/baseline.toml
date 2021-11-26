@@ -1,0 +1,7 @@
+# resembles a random choice
+fp = 5000
+fn = 300
+fp_cvar = 3.0
+revenue = 2000
+eo_disadvantage_rate = 0.1
+
