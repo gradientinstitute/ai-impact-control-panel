@@ -4,10 +4,10 @@ from deva import halfspace
 
 
 class Candidate:
-    def __init__(self, name, attributes, spec_name):
+    def __init__(self, name, attributes, spec_name=None):
         self.name = name
         self.attributes = attributes
-        self.spec_name = spec_name
+        self.spec_name = spec_name or name
 
     def __getitem__(self, key):
         return self.attributes[key]

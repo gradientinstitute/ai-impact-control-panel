@@ -156,6 +156,7 @@ def get_choice(scenario):
                     "values": m2.attributes
                     }
             }
+
     return jsonify(res)
 
 
