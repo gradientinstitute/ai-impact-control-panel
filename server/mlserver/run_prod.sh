@@ -1,2 +1,2 @@
 #!/bin/bash
-FLASK_ENV=production gunicorn -b 0.0.0.0:8666 app:app
+FLASK_ENV=production gunicorn -b 0.0.0.0:80 app:app

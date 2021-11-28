@@ -7,5 +7,11 @@ services:
       dockerfile: backend.Dockerfile
     volumes:
       - ./scenarios/:/app/scenarios
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    depends_on:
+      - backend
     ports:
-      - "127.0.0.1:8666:8666"
+      - "127.0.0.1:3000:80"
