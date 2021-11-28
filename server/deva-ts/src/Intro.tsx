@@ -22,7 +22,7 @@ export function IntroPane({}) {
 
   // initial request on load
   useEffect(() => {
-    let req = scenario + "/metadata";
+    let req = "api/" + scenario + "/metadata";
     async function fetchData() {
       const result = await axios.get<any>(req);
       setMetadata(result.data);
@@ -168,7 +168,7 @@ function Metrics({}) {
         className={SECOND_COLOUR + " grid grid-cols-1 gap-3 rounded-lg p-3"}>
         <div className="text-left grid grid-cols-5">
           <img className="col-span-2 row-span-2 h-20" 
-            src={scenario + "/images/" + data.icon} />
+            src={"api/" + scenario + "/images/" + data.icon} />
           <h3 className="col-span-3 font-bold">{data.name}</h3>
           <p className="col-span-3 italic">{data.description}</p>
         </div>
