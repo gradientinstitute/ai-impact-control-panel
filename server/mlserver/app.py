@@ -29,9 +29,9 @@ def calc_ranges(candidates, spec):
     return points, collated
 
 
-@app.route('/')
-def check_status():
-    return "Deva backend server status OK"
+# @app.route('/')
+# def check_status():
+#     return "Deva backend server status OK"
 
 
 @app.route('/scenarios')
