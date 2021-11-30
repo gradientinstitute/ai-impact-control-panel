@@ -1,12 +1,14 @@
+###################
 Oversight-prototype
-===================
+###################
 
 Prototype code for the Minderoo oversight tool project.
 
 Copyright 2021 Gradient Institute Ltd.
 
+**************************************
 What is this purpose of this software?
---------------------------------------
+**************************************
 
 Today, there are many AI systems making consequential decisions which affect our
 lives and livelihoods. Your bank runs AI systems to assess your credit risk for
@@ -35,6 +37,23 @@ compliance function.  The software keeps an audit trail of the deployment
 decisions made, which are indispensable for auditors, regulators, researchers
 and indeed affected communities.
 
+
+*******
+Running
+*******
+
+0. You'll need docker and docker-compose installed to run the app locally.
+1. Place your scenario information in the ``scenarios`` folder, which will be
+   mounted by docker compose.
+2. Optionally, see the instructions below for generating some demo scenarios.
+3. Run ``docker-compose up`` which should build and run the containers
+   required.
+4. Access ``http://localhost:3000`` in your browser for the app.
+
+
+***********
+Development
+***********
 
 Installation
 ------------
@@ -76,43 +95,14 @@ Data and Model configs
 See the example scenario for commented versions of the configs.
 
 
-Running the server
-------------------
+Running the server for development
+----------------------------------
 
-Go to the server folder. start the backend with ``server/mlserver/run.sh``
+Go to the server folder. start the backend with ``server/mlserver/run_dev.sh``
 
 To start the frontend, go to ``server/deva-ts`` and from there run ``yarn
 start``.
 
-
-Running an interactive demo
----------------------------
-
-Run ``deva-demo``,
-
-Usage: ``deva-demo [OPTIONS] SCENARIOS``
-
-Options: 
-
-``-m, --method [max|max_smooth|max_prim|rank|toy]``
-
-Where ``max`` and ``max_smooth`` are active maximum-finding algorithms.
-``max_smooth`` refers to presenting smoothly varying queries to the user.
-``max_prim`` sorts the queries based on the value of a specified primary metric
-(``primary_metric`` in the metadata). ``rank`` is an active ranking algorithm,
-and ``toy`` is a simple "follow the leader" style algorithm.
-
-``-b, --bounds``
-
-Ask about minimum performance bounds (will become its own demo/research fork in
-the future).
-
-``-f, --nofilter``                  
-
-Do not apply Pareto efficient model filter.
-
-``SCENARIO`` is the folder location of the scenario models, e.g.
-``scenarios/example``
 
 Testing
 -------

@@ -31,7 +31,7 @@ export function SetupPane({}) {
   // initial loading of candidates
   useEffect(() => {
     const fetch = async () => {
-      const result = await axios.get<any>("scenarios");
+      const result = await axios.get<any>("api/scenarios");
       setScenarios(result.data);
       setCurrent(Object.keys(result.data)[0]);
     }

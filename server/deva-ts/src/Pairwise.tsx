@@ -39,7 +39,7 @@ export function PairwisePane({}) {
   // should probably change the server interface one day
   useEffect(() => {
     const fetch = async () => {
-      const result = await axios.get<any>(scenario + "/choice");
+      const result = await axios.get<any>("api/" + scenario + "/choice");
       const d = result.data;
       const k = Object.keys(d);
       if (k.length === 1) {
@@ -56,7 +56,7 @@ export function PairwisePane({}) {
   // sending new choice
   useEffect(() => {
     const send = async () => {
-      const result = await axios.put<any>(scenario + "/choice", choice);
+      const result = await axios.put<any>("api/" + scenario + "/choice", choice);
       const d = result.data;
       const k = Object.keys(d);
       if (k.length === 1) {
