@@ -1,0 +1,23 @@
+.intro {
+  background-color: #2d2d2d;
+  color: #fff;
+}
+.intro h1 {
+  font-family: 'Source Sans Pro', sans-serif;
+  border-bottom: 1px solid #dedede;
+}
+
+.intro-content {
+  min-height: 40vh;
+}
+
+.btn-row::after{content: ''; flex: 1}
+
+.btn {
+  background-color: #203E7E;
+  transition: background-color 0.2s;
+}
+
+.btn:hover:not(:disabled) {
+  background-color: #2E4B8A;
+}
