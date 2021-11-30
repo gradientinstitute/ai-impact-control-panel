@@ -1,6 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { atom, useRecoilState, useRecoilValue} from 'recoil';
 import axios from 'axios';
+import { Dialog, DialogOverlay, DialogContent } from "@reach/dialog";
+import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@reach/tabs";
+import "@reach/tabs/styles.css";
+import "@reach/dialog/styles.css";
+import './Setup.css';
 
 import {Pane, paneState, scenarioState} from './Base';
 
@@ -39,14 +44,55 @@ export function SetupPane({}) {
   }
 
   return (
-    <div>
-      <div className="ml-auto mr-auto w-1/2">
-        <h1 className="my-auto text-center mb-4">Select a scenario</h1>
-          <Summary />
-          <StartButtons />
-      </div>
+    <div className="ml-auto mr-auto w-1/2">
+      <Dialog className="intro text-center">
+        <h1 className="my-auto font-extralight mb-4 text-3xl pb-4">Get Started</h1>
+        <Steps />
+      </Dialog>
     </div>
   );
+}
+
+// each step of intro flow
+function Steps({}) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [_pane, setPane] = useRecoilState(paneState);
+  const current = useRecoilValue(currentScenarioState);
+  const [_scenario, setScenario] = useRecoilState(scenarioState);
+
+  function handleStepsChange(i) {
+    setStepIndex(i);
+  }
+
+ return (
+   <Tabs className="intro-content flex items-stretch" index={stepIndex} onChange={handleStepsChange}>
+     <TabPanels className="self-center flex-1">
+       <TabPanel key={0}>
+          <p className="text-lg">I want to elicit</p>
+          <StartButtons onChange={handleStepsChange} />
+       </TabPanel>
+       <TabPanel key={1}>
+        <Summary />
+        <div className="flex justify-between btn-row my-4">
+        <div className="flex flex-1 align-middle text-left">
+          <button className="hover:text-gray-300 transition"
+            onClick={() => stepIndex >=0 && setStepIndex(stepIndex-1)}>
+            &#8249; Back
+          </button>
+        </div>
+        <button className="btn text-xl uppercase py-4 px-8 font-bold rounded-lg"
+          onClick={() => {
+            setScenario(current);
+            setPane(Pane.Intro);
+          }}
+          disabled={false}>
+          Start
+        </button>
+        </div>
+       </TabPanel>
+     </TabPanels>
+   </Tabs>
+ )
 }
 
 // Dropdown box for selecting a scenario
@@ -102,33 +148,25 @@ function Summary({}) {
 
 // select the type of elicitation to do with two buttons
 // TODO: hook up to boundary elicitation when its implemented
-function StartButtons({}) {
+function StartButtons({onChange}) {
   
-  const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
-  const [_scenario, setScenario] = useRecoilState(scenarioState);
 
   return (
-      <div className="grid grid-cols-2 gap-10 py-10">
-        <button className="bg-gray-200 text-black rounded-lg" 
+      <div className="grid grid-cols-2 gap-10 py-12 px-6">
+        <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
           onClick={() => {
-            setScenario(current);
-            setPane(Pane.Intro); 
+            onChange(1);
           }}
           disabled={true}>
-          <div className="p-4 text-lg">
-            Elicit Boundaries
-          </div>
+            Boundaries
         </button>
-        <button className="bg-gray-200 text-black rounded-lg" 
+        <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
           onClick={() => {
-            setScenario(current);
-            setPane(Pane.Intro); 
+            onChange(1);
           }}
           disabled={false}>
-          <div className="p-4 text-lg">
-            Elicit Deployment
-          </div>
+            Deployment
         </button>
       </div>
   );
