@@ -3,7 +3,7 @@ import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import axios from 'axios';
 
 import {Pane, metadataState, paneState, 
-        resultState, scenarioState} from './Base';
+        resultState, scenarioState, constraintsState} from './Base';
 import {Key, Model, FillBar} from './Widgets';
 
 
@@ -27,6 +27,8 @@ export function PairwisePane({}) {
   
   const metadata = useRecoilValue(metadataState);
   const scenario = useRecoilValue(scenarioState);
+  const constraints = useRecoilValue(constraintsState);
+
   const [_result, setResult] = useRecoilState(resultState);
   const choice = useRecoilValue(choiceState);
   const [candidates, setCandidates] = useRecoilState(candidatesState);

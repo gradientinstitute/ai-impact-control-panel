@@ -29,6 +29,13 @@ export const metadataState = atom({
   default: null, 
 });
 
+// the contraints selected by the user
+export const constraintsState = atom({  
+  key: 'constraints', 
+  default: null, 
+});
+
+
 // state for the result of the deployment elicitation
 export const resultState = atom({  
   key: 'result', 

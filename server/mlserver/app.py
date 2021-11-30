@@ -101,8 +101,15 @@ def get_ranges(scenario):
         abort(400)  # Not initialised
 
     candidates, spec = _scenario(scenario)
-    points, collated = calc_ranges(candidates, spec)
-    return jsonify({"points": points, "collated": collated})
+    points, _collated = calc_ranges(candidates, spec)
+    return jsonify(points)
+
+
+@app.route('/<scenario>/constraints', methods=['PUT'])
+def apply_constraints(scenario):
+    data = request.get_json(force=True)
+    print(data)
+    return "OK"
 
 
 @app.route('/<scenario>/choice', methods=['GET', 'PUT'])
