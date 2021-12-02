@@ -116,7 +116,7 @@ function ScenarioSelector({}) {
       orientation={TabsOrientation.Vertical}
       onChange={handleTabsChange}
     >
-      <TabList className="scenario-list text-left col-span-1">
+      <TabList className="scenario-list text-left col-span-1 font-bold">
       { entries.map(([name, v], i) => {
         return (
           <Tab
@@ -134,7 +134,7 @@ function ScenarioSelector({}) {
         )
       })}
     </TabList>
-      <TabPanels className="col-span-2 text-left py-3 px-6" data-active={tabIndex >= 0}>
+      <TabPanels className="col-span-2 text-left py-3 px-6" data-active={tabIndex === currentIndex && currentIndex > -1}>
         { entries.map(([name, v], i) => {
           return (
           <TabPanel key={i}>

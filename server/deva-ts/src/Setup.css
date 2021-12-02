@@ -46,15 +46,19 @@
 
 .scenario-selector [data-reach-tab][data-current='true']{
   border: none;
-  background-color: #525252;
+  background-color: #203E7E;
 }
 
 .scenario-selector [data-reach-tab-panels][data-active='true'] {
+  background-color: #203E7E;
+}
+
+.scenario-selector [data-reach-tab-panels]{
   background-color: #525252;
 }
 
 .scenario-selector [data-reach-tab][data-current='false']:hover {
   border: none;
-  background-color: #4A4A4A;
+  background-color: #525252;
   transition: background-color 0.2s;
 }
