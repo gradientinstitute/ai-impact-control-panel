@@ -85,6 +85,7 @@ function Step2({stepIndex, setStepIndex}) {
   const current = useRecoilValue(currentScenarioState);
   const [_scenario, setScenario] = useRecoilState(scenarioState);
   const canGoBack = stepIndex >= 0;
+  const buttonDisabled = current === null;
 
   return (
     <TabPanel key={1}>
@@ -104,7 +105,7 @@ function Step2({stepIndex, setStepIndex}) {
               setPane(Pane.Intro);
             }
           }}
-          disabled={current === null}>
+          disabled={buttonDisabled}>
           Start
         </button>
       </div>
