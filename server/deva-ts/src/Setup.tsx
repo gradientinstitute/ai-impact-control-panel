@@ -111,7 +111,7 @@ function Step2({stepIndex, setStepIndex}) {
   )
 }
 
-// Dropdown box for selecting a scenario
+// Select scenario from list and preview details
 function ScenarioSelector({}) {
   
   const scenarios = useRecoilValue(scenariosState);
