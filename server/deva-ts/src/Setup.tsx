@@ -84,6 +84,7 @@ function Step2({stepIndex, setStepIndex}) {
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
   const [_scenario, setScenario] = useRecoilState(scenarioState);
+  const canGoBack = stepIndex >= 0;
 
   return (
     <TabPanel key={1}>
@@ -92,7 +93,7 @@ function Step2({stepIndex, setStepIndex}) {
       <div className="flex justify-between btn-row mt-12">
         <div className="flex flex-1 align-middle text-left">
           <button className="hover:text-gray-300 transition"
-            onClick={() => stepIndex >=0 && setStepIndex(stepIndex-1)}>
+            onClick={() => canGoBack && setStepIndex(stepIndex-1)}>
             &#8249; Back
           </button>
         </div>
@@ -116,22 +117,25 @@ function ScenarioSelector({}) {
   
   const scenarios = useRecoilValue(scenariosState);
   const [current, setCurrent] = useRecoilState(currentScenarioState);
-  const entries = Object.entries(scenarios)
+  const entries = Object.entries(scenarios);
   const [tabIndex, setTabIndex] = useState(-1);
-  const [currentIndex, setCurrentIndex] = useState(-1)
-  const tabActive = tabIndex === currentIndex && currentIndex > -1
+  const [currentIndex, setCurrentIndex] = useState(-1);
+  const tabActive = tabIndex === currentIndex && currentIndex > -1;
 
   function handleTabsChange(i) {
     setTabIndex(i);
   }
 
   const tabs = entries.map(([name, v], i) => {
+    const indexOnLeave = current ? currentIndex : -1;
+    const isSelectedTab = current === name;
+
     return (
       <Tab
-        data-current = { current === name }
+        data-current = { isSelectedTab }
         key={i}
         onMouseEnter={() => setTabIndex(i)}
-        onMouseLeave={() => current ? setTabIndex(currentIndex) : setTabIndex(-1)}
+        onMouseLeave={() => setTabIndex(indexOnLeave)}
         onMouseDown={() => {
           setCurrent(name);
           setCurrentIndex(i);
@@ -143,10 +147,13 @@ function ScenarioSelector({}) {
   })
 
   const tabPanels = entries.map(([name, v], i) => {
+    const numObjectives = Object.keys(v.objectives).length;
+    const numMetrics = Object.keys(v.metrics).length;
+
     return (
       <TabPanel key={i}>
-        <span className="pr-6"><strong>Objectives:</strong> {Object.keys(v.objectives).length}</span>
-        <span><strong>Metrics:</strong> {Object.keys(v.metrics).length}</span>
+        <span className="pr-6"><strong>Objectives:</strong> {numObjectives}</span>
+        <span><strong>Metrics:</strong> {numMetrics}</span>
         <p className="pt-3">{v.operation}</p>
       </TabPanel>
     )})
@@ -159,13 +166,13 @@ function ScenarioSelector({}) {
       onChange={handleTabsChange}
     >
       <TabList className="scenario-list text-left col-span-1 font-bold">
-        { tabs }
+        {tabs}
       </TabList>
       <TabPanels
         className="col-span-2 text-left py-3 px-6"
         data-active={tabActive}
       >
-        { tabPanels }
+        {tabPanels}
       </TabPanels>
     </Tabs>
     );
