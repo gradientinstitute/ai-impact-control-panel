@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { atom, useRecoilState, useRecoilValue} from 'recoil';
 import axios from 'axios';
-import { Dialog, DialogOverlay, DialogContent } from "@reach/dialog";
-import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@reach/tabs";
+import { Dialog } from "@reach/dialog";
+import { Tabs, TabList, Tab, TabPanels, TabPanel, TabsOrientation } from "@reach/tabs";
 import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
@@ -26,20 +26,19 @@ const currentScenarioState = atom({
 export function SetupPane({}) {
 
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
-  const [current, setCurrent] = useRecoilState(currentScenarioState);
 
   // initial loading of candidates
   useEffect(() => {
     const fetch = async () => {
       const result = await axios.get<any>("scenarios");
       setScenarios(result.data);
-      setCurrent(Object.keys(result.data)[0]);
+      // setCurrent(Object.keys(result.data)[0]);
     }
     fetch();
   }, []
   );
   
-  if (current === null) {
+  if (_scenarios === []) {
     return (<p>Loading...</p>);
   }
 
@@ -73,21 +72,23 @@ function Steps({}) {
        </TabPanel>
        <TabPanel key={1}>
         <Summary />
-        <div className="flex justify-between btn-row my-4">
-        <div className="flex flex-1 align-middle text-left">
-          <button className="hover:text-gray-300 transition"
-            onClick={() => stepIndex >=0 && setStepIndex(stepIndex-1)}>
-            &#8249; Back
+        <div className="flex justify-between btn-row mt-12">
+          <div className="flex flex-1 align-middle text-left">
+            <button className="hover:text-gray-300 transition"
+              onClick={() => stepIndex >=0 && setStepIndex(stepIndex-1)}>
+              &#8249; Back
+            </button>
+          </div>
+          <button className="btn text-xl uppercase py-4 px-8 font-bold rounded-lg"
+            onClick={() => {
+              if (current) {
+                setScenario(current)
+                setPane(Pane.Intro);
+              }
+            }}
+            disabled={current === null}>
+            Start
           </button>
-        </div>
-        <button className="btn text-xl uppercase py-4 px-8 font-bold rounded-lg"
-          onClick={() => {
-            setScenario(current);
-            setPane(Pane.Intro);
-          }}
-          disabled={false}>
-          Start
-        </button>
         </div>
        </TabPanel>
      </TabPanels>
@@ -100,48 +101,60 @@ function ScenarioSelector({}) {
   
   const scenarios = useRecoilValue(scenariosState);
   const [current, setCurrent] = useRecoilState(currentScenarioState);
-  
-  const elements = Object.entries(scenarios).map(([name, v]) => {
-    return (<option key={name} value={name}>{v.name}</option>);
-  });
+  const entries = Object.entries(scenarios)
+  const [tabIndex, setTabIndex] = useState(-1);
+  const [currentIndex, setCurrentIndex] = useState(-1)
+
+  function handleTabsChange(i) {
+    setTabIndex(i);
+  }
   
   return (
-      <div className="p-4 gap-4 bg-gray-500 grid grid-cols-3" >
-        <p className="text-right col-span-1">Scenario</p>
-        <select className="col-span-2" name="scenarios" value={current} 
-          onChange={ (x) => {setCurrent(x.target.value)}}>
-          {elements}
-        </select>
-      </div>
+    <Tabs
+      className="scenario-selector grid grid-cols-3"
+      index={tabIndex}
+      orientation={TabsOrientation.Vertical}
+      onChange={handleTabsChange}
+    >
+      <TabList className="scenario-list text-left col-span-1">
+      { entries.map(([name, v], i) => {
+        return (
+          <Tab
+            data-current = { current === name }
+            key={i}
+            onMouseEnter={() => setTabIndex(i)}
+            onMouseLeave={() => current ? setTabIndex(currentIndex) : setTabIndex(-1)}
+            onMouseDown={() => {
+              setCurrent(name);
+              setCurrentIndex(i);
+            }}
+          >
+            {v.name}
+          </Tab>
+        )
+      })}
+    </TabList>
+      <TabPanels className="col-span-2 text-left py-3 px-6" data-active={tabIndex >= 0}>
+        { entries.map(([name, v], i) => {
+          return (
+          <TabPanel key={i}>
+            <span className="pr-6"><strong>Objectives:</strong> {Object.keys(v.objectives).length}</span>
+            <span><strong>Metrics:</strong> {Object.keys(v.metrics).length}</span>
+            <p className="pt-3">{v.operation}</p>
+          </TabPanel>)
+        })}
+      </TabPanels>
+    </Tabs>
     );
 }
 
 // Summary of the currently selected scenario
 function Summary({}) {
   
-  const scenarios = useRecoilValue(scenariosState);
-  const current = useRecoilValue(currentScenarioState);
-
-  const desc_string = "A system " + scenarios[current].purpose;
-  const n_obj = Object.keys(scenarios[current].objectives).length;
-  const n_met = Object.keys(scenarios[current].metrics).length;
-
   return (
-    <div className="grid grid-cols-2 rounded-lg bg-gray-600 gap-4 p-4">
-      <div className="col-span-2">
+    <div>
+      <p className="text-lg pb-6">Select a scenario</p>
         <ScenarioSelector />
-      </div>
-      <div className="col-span-2 rounded-lg bg-orange-700 py-4">
-        <h2 className="text-center">{scenarios[current].name}</h2>
-        <p className="text-center italic px-4">{desc_string}</p>
-      </div>
-      <p className="text-center py-2 rounded-lg bg-green-700">
-        {"Objectives: " + n_obj}
-      </p>
-      <p className="text-center py-2 rounded-lg bg-green-700">
-        {"Metrics: " + n_met}
-      </p>
-      <p className="col-span-2">{scenarios[current].operation}</p>
     </div>
   );
 }
@@ -149,8 +162,6 @@ function Summary({}) {
 // select the type of elicitation to do with two buttons
 // TODO: hook up to boundary elicitation when its implemented
 function StartButtons({onChange}) {
-  
-  const current = useRecoilValue(currentScenarioState);
 
   return (
       <div className="grid grid-cols-2 gap-10 py-12 px-6">
