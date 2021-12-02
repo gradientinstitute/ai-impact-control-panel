@@ -32,7 +32,6 @@ export function SetupPane({}) {
     const fetch = async () => {
       const result = await axios.get<any>("scenarios");
       setScenarios(result.data);
-      // setCurrent(Object.keys(result.data)[0]);
     }
     fetch();
   }, []
