@@ -31,6 +31,10 @@
   border: 1px solid #ffffff;
 }
 
+[data-reach-dialog-content] {
+  width: 60vw;
+}
+
 [data-reach-tabs][data-orientation="vertical"].scenario-selector {
   display: grid;
 }
@@ -41,7 +45,7 @@
   display: block;
   width: 100%;
   text-align: left;
-  padding: 1rem;
+  padding: 1.2rem;
 }
 
 .scenario-selector [data-reach-tab][data-current='true']{

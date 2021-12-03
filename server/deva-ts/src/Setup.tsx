@@ -43,7 +43,7 @@ export function SetupPane({}) {
 
   return (
     <div className="ml-auto mr-auto w-1/2">
-      <Dialog className="intro text-center">
+      <Dialog className="intro text-center" aria-label="Get Started">
         <h1 className="my-auto font-extralight mb-4 text-3xl pb-4">Get Started</h1>
         <Steps />
       </Dialog>
