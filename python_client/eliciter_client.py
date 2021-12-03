@@ -18,7 +18,7 @@ def main():
         print("Please choose from: " + ", ".join(scenarios.keys()))
         scenario = input() or "!!!"
 
-    base_meta = scenarios[scenario]
+    # base_meta = scenarios[scenario]
 
     # Then we initialise a session
     # (why is this called metadata and not init??)
@@ -35,7 +35,8 @@ def main():
     request = f'http://127.0.0.1:8666/{scenario}/choice'
     print(request)
     choices = sess.get(request).json()
-    print("Opening comparison: ", choices['left']['name'], choices['right']['name'])
+    print("Opening comparison: ", choices['left']['name'],
+          choices['right']['name'])
 
     while True:
         if len(choices) != 2:

@@ -1,10 +1,34 @@
-from flask import Flask, session, jsonify, abort, request, send_from_directory
+from flask import (Flask, session, jsonify as _jsonify,
+                   abort, request, send_from_directory)
+import json
+
 # from flask_caching import Cache
-from deva import elicit
-from deva import fileio
+from deva import elicit, bounds, fileio
+import numpy as np
+
 import random
 import string
 import os.path
+
+
+def round_floats(o):
+    if isinstance(o, float):
+        return round(o, 3)
+    elif isinstance(o, dict):
+        return {k: round_floats(v) for k, v in o.items()}
+    elif isinstance(o, (list, tuple, np.ndarray)):
+        return [round_floats(x) for x in o]
+    return o
+
+
+def jsonify(o):
+    try:
+        _jsonify(round_floats(o))
+    except:
+        import smart_embed
+        smart_embed.embed(locals(), globals())
+
+    return _jsonify(round_floats(o))
 
 
 def random_key(n):
@@ -16,11 +40,12 @@ def random_key(n):
 app = Flask(__name__)
 app.config['SECRET_KEY'] = random_key(16)
 
-# todo: find some sort of persistent cache
+# TODO: proper cache / serialisation
 eliciters = {}
 bounders = {}
 scenarios = {}
 ranges = {}
+baselines = {}
 
 
 def calc_ranges(candidates, spec):
@@ -40,7 +65,7 @@ def _scenario(name="jobs"):
     global scenarios
 
     if name not in scenarios:
-        data = fileio.load_scenario(name, False)
+        data = fileio.load_scenario(name)
 
         # Massage the metadata
         models, spec = data
@@ -66,6 +91,85 @@ def send_image(scenario, name):
     scenario_path = os.path.join(fileio.repo_root(),
                                  f'scenarios/{scenario}/images')
     return send_from_directory(scenario_path, name)
+
+
+@app.route('/<scenario>/bounds/init', methods=['PUT'])
+def init_bounds(scenario):
+    global bounders
+
+    if "BOUND_ID" in session:
+        print("Reset session")
+    else:
+        print("Creating new session key")
+        while (new_id := random_key(16)) in bounders:
+            continue
+        session["BOUND_ID"] = new_id
+        session.modified = True
+
+    ident = session["BOUND_ID"]
+
+    candidates, meta = _scenario(scenario)
+    baseline = meta["baseline"]
+    metrics = meta["metrics"]
+    attribs, table, sign = bounds.tabulate(candidates, metrics)
+    ref = [baseline[a] for a in attribs]
+    bounders[ident] = bounds.TestSampler(ref, table, sign, attribs, steps=15)
+    return ""
+
+
+@app.route('/<scenario>/bounds/choice', methods=['GET', 'PUT'])
+def get_bounds_choice(scenario):
+    global bounders
+
+    if "BOUND_ID" not in session:
+        print("Session not initialised!")
+        abort(400)  # Not initialised
+
+    sampler = bounders[session["BOUND_ID"]]
+
+    # if we received a choice, process it
+    if request.method == "PUT":
+        print("PUT METHOD")
+        data = request.get_json(force=True)
+        print("Data is:", data)
+        x = data["first"]
+        y = data["second"]
+        print(x, y)
+        options = [sampler.query.name, "Baseline"]
+        valid = (x in options) & (y in options)
+
+        # Only pass valid choices on to the eliciter
+        if (not sampler.terminated and valid):
+            sampler.observe(x == sampler.query.name)
+        else:
+            print("Ignoring input")
+
+    if sampler.terminated:
+        # TODO consider return options.
+        # For now, making it closely resemble the eliciter's returns
+        res = {
+                "hyperplane": {
+                    "origin": sampler.baseline.attributes,
+                    "normal": dict(zip(sampler.attribs, sampler.w)),
+                }
+        }
+    else:
+        # eliciter has not terminated - extract the next choice
+        assert isinstance(sampler.query, elicit.Candidate)
+        assert isinstance(sampler.baseline, elicit.Candidate)
+        res = {
+            "left": {
+                "name": sampler.query.name,
+                "values": sampler.query.attributes,
+                },
+            "right": {
+                "name": "Baseline",
+                "values": sampler.baseline.attributes,
+                }
+        }
+
+    return jsonify(res)
+
 
 
 @app.route('/<scenario>/metadata')
@@ -97,13 +201,24 @@ def init_session(scenario):
 def get_ranges(scenario):
     global ranges
 
-    if "ID" not in session:
-        print("Session not initialised!")
-        abort(400)  # Not initialised
+    # if "ID" not in session:
+    #     print("Session not initialised!")
+    #     abort(400)  # Not initialised
 
     candidates, spec = _scenario(scenario)
     points, _collated = calc_ranges(candidates, spec)
     return jsonify(points)
+
+
+@app.route('/<scenario>/baseline', methods=['GET'])
+def get_baseline(scenario):
+    global baselines
+
+    # We can just load from disk every time if we configure caching
+    if scenario not in baselines:
+        baselines[scenario] = fileio.load_baseline(scenario)
+
+    return jsonify(baselines[scenario])
 
 
 @app.route('/<scenario>/constraints', methods=['PUT'])

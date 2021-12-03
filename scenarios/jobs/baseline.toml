@@ -1,3 +1,3 @@
-precision = 30
-fnr = 30
-fnr_difference = 30
+precision = 50
+fnr = 50
+fnr_difference = 50

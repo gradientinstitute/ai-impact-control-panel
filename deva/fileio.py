@@ -55,9 +55,18 @@ def list_scenarios():
     return metadata_files
 
 
-def load_scenario(scenario, bounds, pfilter=True):
-    # Load all scenario files
+def load_baseline(scenario):
+    # attempt to load the baseline
     scenario_path = os.path.join(repo_root(), 'scenarios', scenario)
+    baseline_f = os.path.join(scenario_path, "baseline.toml")
+    assert os.path.exists(baseline_f)
+    baseline = toml.load(baseline_f)
+    return baseline
+
+
+def load_scenario(scenario_name, pfilter=True):
+    # Load all scenario files
+    scenario_path = os.path.join(repo_root(), 'scenarios', scenario_name)
     print("Scanning ", scenario_path)
     input_files = get_all_files(scenario_path)
     models = {}
@@ -98,13 +107,7 @@ def load_scenario(scenario, bounds, pfilter=True):
         if primary not in metrics:
             raise RuntimeError(f'{primary} is not in the scenario metrics.')
 
-    # attempt to load the baseline
-    baseline_f = os.path.join(scenario_path, "baseline.toml")
-    assert os.path.exists(baseline_f)
-    baseline = toml.load(baseline_f)
-    assert(set(baseline) == set(metrics))
-    scenario["baseline"] = baseline  # TODO: consider whether its own return
-
+    scenario["baseline"] = load_baseline(scenario_name)
     return candidates, scenario
 
 
