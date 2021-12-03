@@ -1,6 +1,5 @@
 from flask import (Flask, session, jsonify as _jsonify,
                    abort, request, send_from_directory)
-import json
 
 # from flask_caching import Cache
 from deva import elicit, bounds, fileio
@@ -12,6 +11,7 @@ import os.path
 
 
 def round_floats(o):
+    """Recursively round floats pre-json."""
     if isinstance(o, float):
         return round(o, 3)
     elif isinstance(o, dict):
@@ -22,12 +22,7 @@ def round_floats(o):
 
 
 def jsonify(o):
-    try:
-        _jsonify(round_floats(o))
-    except:
-        import smart_embed
-        smart_embed.embed(locals(), globals())
-
+    """Apply flask's jsonify with some float formatting."""
     return _jsonify(round_floats(o))
 
 
@@ -171,7 +166,6 @@ def get_bounds_choice(scenario):
     return jsonify(res)
 
 
-
 @app.route('/<scenario>/metadata')
 def init_session(scenario):
     global eliciters
@@ -273,31 +267,3 @@ def get_choice(scenario):
             }
 
     return jsonify(res)
-
-
-# @app.route('/bounds')
-# def initial_view():
-#     global bounders
-
-#     if "ID" in session:
-#         print("Reset stage1 session")
-#     else:
-#         print("New connection detected - assigning ID")
-#         while (new_id := random_key(16)) in eliciters:
-#             continue
-#         session["ID"] = new_id
-#         session.modified = True
-
-#     # assume that a reload means user wants a restart
-#     print("Init Stage1 session for ", session["ID"])
-#     candidates, spec = _scenario()
-#     import smart_embed
-#     smart_embed.embed(locals(), globals())
-
-#     eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
-#     eliciters[session["ID"]] = eliciter
-
-#     # send the performance and choices to the frontend
-#     assert isinstance(eliciter.query, elicit.Pair)
-#     m1, m2 = eliciter.query
-#     return jsonify({m1.name: m1.attributes, m2.name: m2.attributes})

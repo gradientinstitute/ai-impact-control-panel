@@ -9,20 +9,8 @@ from deva import elicit, fileio
 # TODO: elicit the reference point as well as gradients
 # TODO: elicit non-linear boundaries (provided client can receive them)
 
-
-def tabulate(candidates, metrics):
-    attribs = sorted(candidates[0].attributes)
-    table = np.zeros((len(candidates), len(attribs)))
-    for i, c in enumerate(candidates):
-        table[i, :] = [c[a] for a in attribs]
-
-    sign = np.array([-1 if metrics[a]["higherIsBetter"] else 1
-                     for a in attribs])
-
-    return attribs, table, sign
-
-
 class TestSampler:
+    """Example of a basic sampler that elicits a boundary hyperplane."""
 
     def __init__(self, ref, table, sign, attribs, steps):
         self.attribs = attribs
@@ -87,3 +75,15 @@ class TestSampler:
     def terminated(self):
         return self._step > self.steps
 
+
+def tabulate(candidates, metrics):
+    """Convert object candidates and higherIsBetter to arrays."""
+    attribs = sorted(candidates[0].attributes)
+    table = np.zeros((len(candidates), len(attribs)))
+    for i, c in enumerate(candidates):
+        table[i, :] = [c[a] for a in attribs]
+
+    sign = np.array([-1 if metrics[a]["higherIsBetter"] else 1
+                     for a in attribs])
+
+    return attribs, table, sign

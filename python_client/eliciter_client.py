@@ -18,11 +18,6 @@ def main():
         print("Please choose from: " + ", ".join(scenarios.keys()))
         scenario = input() or "!!!"
 
-    # base_meta = scenarios[scenario]
-
-    # Then we initialise a session
-    # (why is this called metadata and not init??)
-    # Min and max are no longer in the metadata - 
     print("Starting eliciter session")
     request = f'http://127.0.0.1:8666/{scenario}/metadata'
     print(request)

@@ -17,10 +17,8 @@ def sample_trajectory(choices, attribs):
     ax = plt.axes(projection='3d')
     c = np.array(choices)[:, :3]
 
-
     ax.plot3D(*c.T[:3], 'k-', alpha=0.5, label="Query Trajectory")
     ax.plot3D(*c.T[:3], 'ko', alpha=0.5, label="Query Systems")
-
 
     def m(name):
         ren = {
@@ -45,10 +43,7 @@ def sample_trajectory(choices, attribs):
 
 
 def weight_disc(w, ref, radius, c, label="Boundary"):
-    # If we truncated the weight vector it might not be a unit vector in 
-    # this space
-    w = w / (w@w)**.5
-
+    w = w / (w@w)**.5  # ensure unit vector
     v = w * radius
     v /= (v@v)**.5
     _, R = np.linalg.eigh(np.outer(v, v))
@@ -70,4 +65,3 @@ def weight_disc(w, ref, radius, c, label="Boundary"):
         markeredgecolor='#000', zorder=100, label="Reference system"
     )
     ax.add_collection3d(collection)
-

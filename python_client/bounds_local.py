@@ -15,7 +15,7 @@ def main():
     metrics = meta["metrics"]
 
     # Encode candidates and "higherIsBetter" as arrays
-    attribs, table, sign = bounds.tabulate(candidates, metrics)
+    attribs, table, sign = tabulate(candidates, metrics)
 
     # Load baseline for comparison
     baseline = fileio.load_baseline(scenario)

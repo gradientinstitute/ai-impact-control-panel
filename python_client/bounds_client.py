@@ -1,22 +1,9 @@
-"""Productionising bounds eliciter demo to talk to server."""
+"""Basic client to elicit bounds by talking to the server."""
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
 import plot3d
 from deva import interface, elicit
-
-
-def tabulate(candidates, metrics):
-    attribs = sorted(metrics)
-    table = np.zeros((len(candidates), len(attribs)))
-    for i, c in enumerate(candidates):
-        table[i, :] = [c[a] for a in attribs]
-
-    sign = np.array([-1 if metrics[a]["higherIsBetter"] else 1
-                     for a in attribs])
-
-    return attribs, table, sign
-
 
 
 def main():
@@ -82,15 +69,14 @@ def main():
         data = {}
 
         if label:
-            print("Choice: Oracle (ACCEPTED) candidate.\n\n")
+            print(f"Choice: Oracle (ACCEPTED) {left.name}.\n\n")
             data = {"first": left.name, "second": right.name}
         else:
-            print("Choice: Oracle (REJECTED) candidate.\n\n")
+            print(f"Choice: Oracle (REJECTED) {left.name}.\n\n")
             data = {"first": right.name, "second": left.name}
 
         # Reply to server
         choice = sess.put(request, json=data).json()
-
 
     # Terminated - decode the model
     model = choice['hyperplane']
@@ -99,15 +85,15 @@ def main():
 
     # Display text results report
     print("Experimental results ------------------")
-    print("Truth:    ", w_true)
-    print("Estimate: ", w_est)
+    print("Hidden weights:    ", w_true.round(2))
+    print("Estimated weights: ", w_est.round(2))
     accept = ((table - ref) @ w_true < 0)
     pred = ((table - ref) @ w_est < 0)
     accept_rt = accept.mean()
     acc = np.mean(accept == pred)
     print(f"True preference would accept {accept_rt:.0%} of real candidates.")
-    print(f"Candidates labeled with {acc:.0%} accuracy.")
-    print("See sampling plot")
+    print(f"Model predicted oracle with {acc:.0%} accuracy.")
+    print("<< see sampling plot for visualisation >>")
 
     # Display 3D plot  -------------------------
     plot3d.sample_trajectory(choice_log, attribs)
@@ -116,6 +102,19 @@ def main():
     plot3d.weight_disc(w_est[:3], ref[:3], rad, 'r', "estimated boundary")
     plt.legend()
     plt.show()
+
+
+def tabulate(candidates, metrics):
+    """Convert dict candidates and higherIsBetter to arrays."""
+    attribs = sorted(metrics)
+    table = np.zeros((len(candidates), len(attribs)))
+    for i, c in enumerate(candidates):
+        table[i, :] = [c[a] for a in attribs]
+
+    sign = np.array([-1 if metrics[a]["higherIsBetter"] else 1
+                     for a in attribs])
+
+    return attribs, table, sign
 
 
 if __name__ == "__main__":
