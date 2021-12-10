@@ -10,7 +10,7 @@ go into the deva-ts folder and run `yarn install`.
 
 ## Starting up
 
-1. go into the mlserver folder and run `./run.sh` (do this first)
+1. go into the mlserver folder and run `./run_dev.sh` (do this first)
 2. go into the deva-ts folder and run `yarn start` (do this second)
 
 The frontend should load in your browser.

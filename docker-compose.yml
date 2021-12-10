@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    volumes:
+      - ./scenarios/:/app/scenarios
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:3000:80"

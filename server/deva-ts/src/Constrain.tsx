@@ -71,7 +71,7 @@ export function ConstraintPane({}) {
   // initial loading of candidates
   useEffect(() => {
     const fetch = async () => {
-      axios.get<any>(scenario + "/ranges")
+      axios.get<any>("api/" + scenario + "/ranges")
         .then( response => response.data)
         .then( data => {
           setAllCandidates(data);
@@ -241,7 +241,7 @@ function StartButton({}) {
 
   useEffect(() => {
     const fetch = async () => {
-      await axios.put<any>(scenario + "/constraints", constraints);
+      await axios.put<any>("api/" + scenario + "/constraints", constraints);
       setPane(Pane.Pairwise);
     }
     if (submit) {
