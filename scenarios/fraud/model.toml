@@ -63,12 +63,6 @@ positive_class_weight = 10.0
 threshold_protected = [0.4, 0.5]
 threshold = [0.4, 0.5]
 
-#
-# Reference baseline models
-#
-
-# [randomclassifier]
-# [randomclassifier.instances.random]
 # stratify_attribute = "customer_is_female"
 
 [dummyclassifier]

@@ -48,9 +48,7 @@ positive_class_weight = [9.5, 10.0, 10.5]
 C = [0.1, 1.0] 
 
 
-#
 # Reference baseline models
-#
 
 [randomclassifier]
 [randomclassifier.instances.random]
