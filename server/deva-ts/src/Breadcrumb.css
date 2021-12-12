@@ -1,0 +1,34 @@
+ol.breadcrumb {
+    color: #fff;
+    border-bottom: 1px solid #fff;
+    text-align: left;
+    padding-top: 2rem;
+    list-style: none inside;
+    display: flex;
+    flex-direction: row;
+    counter-reset:item;
+}
+
+.breadcrumb li {
+    padding-bottom: 0.8rem;
+    counter-increment:item;
+    text-align: center;
+}
+
+.breadcrumb li[data-selected='true'] {
+    border-bottom: 3px solid #fff;
+    font-weight: bold;
+}
+
+ol.breadcrumb > li:before {
+    content: counter(item);
+    border-radius: 100%;
+    width: 24px;
+    height: 24px;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-right: 0.5rem;
+    float: left;
+}
