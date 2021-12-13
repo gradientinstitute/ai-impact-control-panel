@@ -129,8 +129,6 @@ dmypy.json
 .pyre/
 
 # data
-**/*/models
-**/*/data
 data/*.csv
 tests/tmp/
 **/*/flask_session

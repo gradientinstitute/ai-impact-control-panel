@@ -27,8 +27,6 @@ flake8 = "^3.9.2"
 ipython = "^7.26.0"
 
 [tool.poetry.scripts]
-deva-sim = "deva.scripts.sim:cli"
-deva-gen = "deva.scripts.gen:cli"
 deva-demo = "deva.scripts.demo:cli"
 
 [build-system]

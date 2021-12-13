@@ -66,33 +66,11 @@ along with venv creation and dependencies.
 
 To get into a venv, do ``poetry shell``.
 
-Generating data
----------------
-
-``deva-sim`` is the command for generating data. See the --help.
-
-It takes a toml configuration file -- see ``data/fraud.toml`` for an example.
-
-For generating data, run:
-
-``deva-sim data/fraud.toml``
-
-It will output ``data/fraud_train.csv`` and ``data/fraud_test.csv``.
-
-
-Generating Scenarios
---------------------
-
-These are fake clients, with their own candidate models trained on the data
-To generate candidate models, run, for example:
-
-``deva-gen scenarios/fraud``
-
 
 Data and Model configs
 ----------------------
 
-See the example scenario for commented versions of the configs.
+See the example scenarios for commented versions of the configs.
 
 
 Running the server for development
