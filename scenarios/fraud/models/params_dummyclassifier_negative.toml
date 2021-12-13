@@ -1,0 +1,2 @@
+strategy = "constant"
+constant = 0
