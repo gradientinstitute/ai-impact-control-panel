@@ -22,7 +22,8 @@ export function IntroPane({}) {
 
   // initial request on load
   useEffect(() => {
-    let req = "api/" + scenario + "/metadata";
+    // let req = "api/" + scenario + "/metadata";
+    let req = "api/" + scenario + "/init";
     async function fetchData() {
       const result = await axios.get<any>(req);
       setMetadata(result.data);

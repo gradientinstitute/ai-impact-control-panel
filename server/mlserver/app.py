@@ -36,7 +36,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = random_key(16)
 
 # TODO: proper cache / serialisation
-eliciters = {}
+# eliciters = {}
+# eliciters = {"toy", "activeranking", "activemax", "activemaxsmooth", "activemaxprimary"}
+eliciters = {"toy":elicit.Toy, "activeranking":elicit.ActiveRanking,
+             "activemax":elicit.ActiveMax, "activemaxsmooth": elicit.ActiveMaxSmooth,
+             "activemaxprimary": elicit.ActiveMaxPrimary}
 bounders = {}
 scenarios = {}
 ranges = {}
@@ -170,8 +174,16 @@ def get_bounds_choice(scenario):
 
     return jsonify(res)
 
+@app.route('/<scenario>/algo')
+def get_algorithm(scenario):
+    """
+      Return which algorithms are available.
+    """
+    # eliciters.keys()
+    return jsonify(list(eliciters))
 
-@app.route('/<scenario>/metadata')
+# @app.route('/<scenario>/metadata')
+@app.route('/<scenario>/init')
 def init_session(scenario):
     global eliciters
 
@@ -188,7 +200,7 @@ def init_session(scenario):
     print("Init new session for ", session["ID"])
     candidates, spec = _scenario(scenario)
     eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
-    # eliciter = elicit.ActiveMax(candidates, spec)
+    # eliciter = eliciters[input]
     eliciters[session["ID"]] = eliciter
     ranges[session["ID"]] = calc_ranges(candidates, spec)
 
