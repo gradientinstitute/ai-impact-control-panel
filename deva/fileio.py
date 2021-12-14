@@ -93,14 +93,7 @@ def load_scenario(scenario_name, pfilter=True):
         scores = {k: v for k, v in perf.items()}
         candidates.append(elicit.Candidate(name, scores, spec_name))
 
-    for u in metrics:
-        metrics[u]["max"] = max(c[u] for c in candidates)
-        metrics[u]["min"] = min(c[u] for c in candidates)
-        metrics[u]["decimals"] = int(metrics[u]["decimals"])
-        if "countable" not in metrics[u]:
-            # auto-fill optional field
-            metrics[u]["countable"] = (
-                "number" if metrics[u]["decimals"] == 0 else "amount")
+    load_all_metrics(metrics, candidates)
 
     if 'primary_metric' in scenario:
         primary = scenario['primary_metric']
@@ -108,7 +101,35 @@ def load_scenario(scenario_name, pfilter=True):
             raise RuntimeError(f'{primary} is not in the scenario metrics.')
 
     scenario["baseline"] = load_baseline(scenario_name)
+
     return candidates, scenario
+
+
+def load_all_metrics(metrics, candidates):
+    for u in metrics:
+        if "type" not in metrics[u]:
+            # set default type
+            metrics[u]["type"] = "quantitative"
+
+        if metrics[u]["type"] == "qualitative":
+            load_qualitative_metric(metrics, candidates, u)
+        elif metrics[u]["type"] == "quantitative":
+            load_quantitative_metric(metrics, candidates, u)
+
+
+def load_qualitative_metric(metrics, candidates, u):
+    metrics[u]["max"] = max(c[u] for c in candidates)
+    metrics[u]["min"] = min(c[u] for c in candidates)
+    
+
+def load_quantitative_metric(metrics, candidates, u):
+    metrics[u]["max"] = max(c[u] for c in candidates)
+    metrics[u]["min"] = min(c[u] for c in candidates)
+    metrics[u]["decimals"] = int(metrics[u]["decimals"])
+    if "countable" not in metrics[u]:
+        # auto-fill optional field
+        metrics[u]["countable"] = (
+            "number" if metrics[u]["decimals"] == 0 else "amount")
 
 
 def delete_files(folder):

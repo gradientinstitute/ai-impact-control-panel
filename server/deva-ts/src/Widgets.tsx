@@ -7,9 +7,12 @@ function sigFigs(unit: any) {
 }
 
 function Model({unit, value, name, isMirror}) {
+  const includePerformanceBar = unit.type == "qualitative" ? false : true;
+  const performanceBar = includePerformanceBar ? <Performance unit={unit} value={value} isMirror={isMirror}/> : null
+
   return (
     <div>
-    <Performance unit={unit} value={value} isMirror={isMirror}/>
+      {performanceBar}
     <ValueStatement unit={unit} name={name} 
       value={value} />
     </div>
@@ -17,18 +20,21 @@ function Model({unit, value, name, isMirror}) {
 }
 
 function Key({unit}) {
+  const includeBetterStatement = unit.type == "qualitative" ? false : true;
+
   let direction = unit.higherIsBetter === true ? "Higher" : "Lower";
+  let statement = includeBetterStatement ? <div>({direction} is better)</div> : null;
+
     return (
     <div className="my-auto">
       <div className="text-lg font-bold">
         {unit.name}
       </div>
+        {statement}
       <div className="text-xs">
         {unit.description}
       </div>
-      <div>
-        ({direction} is better)
-      </div>
+
     </div>
     );
 }
@@ -74,13 +80,32 @@ function Performance({value, unit, isMirror}) {
 }
 
 function ValueStatement({name, value, unit}) {
+  let valueStatement = null;
+  if (unit.type == "qualitative") {
+    valueStatement = ValueStatementQualitative({name, value, unit});
+  } else {
+    valueStatement = ValueStatementQuantitative({name, value, unit});
+  }
+  return valueStatement;
+}
+
+function ValueStatementQuantitative({name, value, unit}) {
   const sigfig = Number.isInteger(value) ? 0 : 2;
   return (
     <div>
       {name} {unit.action} {unit.prefix}
       {value.toFixed(sigfig)} {unit.suffix}. 
     </div>
-);
+  );
+}
+
+function ValueStatementQualitative({name, value, unit}) {
+  return (
+    <div className="text-lg">
+      {name} {unit.action} {unit.prefix}
+      {unit.options[value]} {unit.suffix}. 
+    </div>
+  );
 }
 
 function FillBar({percentage, unit, isThin, isMirror}) {

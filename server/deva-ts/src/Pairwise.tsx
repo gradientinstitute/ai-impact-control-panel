@@ -212,9 +212,7 @@ function PairwiseComparator({leftName, leftValue,
           value={leftValue} isMirror={false}/>
       </div>
       <div className="" style={{width:"20%"}}>
-        <Comparison unit={unit} 
-          leftValue={leftValue} rightValue={rightValue}
-          leftName={leftName} rightName={rightName}/>
+        {Comparison({leftValue, leftName, rightValue, rightName, unit})}
       </div>
       <div className="" style={{width:"30%"}}>
         <Model unit={unit} name={rightName}
@@ -256,7 +254,7 @@ function DeltaBar({leftValue, rightValue, unit}) {
   );
 }
 
-function ComparisonStatement({leftName, leftValue, 
+function ComparisonStatemetQuantitative({leftName, leftValue, 
   rightName, rightValue, unit}) {
   let delta = leftValue - rightValue; 
   let n1 = leftName;
@@ -265,23 +263,67 @@ function ComparisonStatement({leftName, leftValue,
     n1 = rightName;
     n2 = leftName;
     delta = delta * -1;
-  } 
+  }
   return (
     <div className="text-xl font-bold">
       {n1} {unit.action} {unit.prefix}
       {delta.toFixed(sigfig)} {unit.suffix} more than {n2}.
     </div>
-);
+  );
 }
 
-function Comparison({leftValue, leftName, rightValue, rightName, unit}) {
+function ComparisonStatementQualitative({leftName, leftValue, 
+  rightName, rightValue, unit}) {
+  
+  let n1 = leftName;
+  let n2 = rightName;
+
+  let text = null;
+
+  const isPreferable = leftValue > rightValue && unit.higherIsBetter;
+  const comparison = isPreferable ? "better than" : "worse than";
+
+  text = leftValue == rightValue ? <p> {n1} {unit.action} the same {unit.prefix} {unit.suffix} as {n2} </p> : <p> {n1} is {comparison} {n2} </p>;
+
+  return (
+    <div className="text-xl font-bold">
+      {text}
+    </div>
+  );
+}
+
+function ComparisonQuantitative({leftValue, leftName, rightValue, rightName, unit}) {
   return (
     <div>
       <DeltaBar unit={unit} leftValue={leftValue}
         rightValue={rightValue} />
-      <ComparisonStatement unit={unit} leftName={leftName}
+      <ComparisonStatemetQuantitative unit={unit} leftName={leftName}
         rightName={rightName} leftValue={leftValue} 
         rightValue={rightValue}/>
+    </div>
+  );
+}
+
+function ComparisonQualitative({leftValue, leftName, rightValue, rightName, unit}) {
+  return (
+    <div>
+        <DeltaBar unit={unit} leftValue={leftValue}
+        rightValue={rightValue} />
+      <ComparisonStatementQualitative unit={unit} leftName={leftName}
+        rightName={rightName} leftValue={leftValue} 
+        rightValue={rightValue}/>
+    </div>
+  );
+}
+
+function Comparison({leftValue, leftName, rightValue, rightName, unit}) {
+
+  const statement = unit.type == "qualitative" ?  ComparisonQualitative({leftValue, leftName, rightValue, rightName, unit}) :
+    ComparisonQuantitative({leftValue, leftName, rightValue, rightName, unit});
+
+  return (
+    <div>
+      {statement}
     </div>
   );
 }

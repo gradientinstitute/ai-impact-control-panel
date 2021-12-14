@@ -91,3 +91,16 @@ role recommendations more than average."""
     higherIsBetter = false
     decimals = 0
     countable = true
+
+[metrics.qualitative_property]
+    name = "feature use"
+    icon = "fairness.png"
+    description = """Level of private data used in the training set"""
+    captures = ["shortlist_suitable_candidates"]
+    limitations = """no actual distinguishing"""
+    prefix = ""
+    suffix = "data"
+    action = "uses"
+    higherIsBetter = false
+    type = "qualitative"
+    options = ["public", "some private", "all private"]
