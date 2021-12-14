@@ -183,8 +183,32 @@ def get_algorithm(scenario):
     return jsonify(list(eliciters))
 
 # @app.route('/<scenario>/metadata')
-@app.route('/<scenario>/init')
-def init_session(scenario):
+# @app.route('/<scenario>/init')
+# def init_session(scenario):
+#     global eliciters
+
+#     if "ID" in session:
+#         print("Reset session")
+#     else:
+#         print("New session")
+#         while (new_id := random_key(16)) in eliciters:
+#             continue
+#         session["ID"] = new_id
+#         session.modified = True
+
+#     # assume that a reload means user wants a restart
+#     print("Init new session for ", session["ID"])
+#     candidates, spec = _scenario(scenario)
+#     eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
+#     eliciters[session["ID"]] = eliciter
+#     ranges[session["ID"]] = calc_ranges(candidates, spec)
+
+#     # send the metadata for the scenario
+#     return spec
+
+
+@app.route('/<scenario>/init/<algo>')
+def init_session(scenario, algo):
     global eliciters
 
     if "ID" in session:
@@ -199,8 +223,9 @@ def init_session(scenario):
     # assume that a reload means user wants a restart
     print("Init new session for ", session["ID"])
     candidates, spec = _scenario(scenario)
-    eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
-    # eliciter = eliciters[input]
+    # TODO: user choice
+    eliciter = eliciters[algo](candidates, spec)
+    
     eliciters[session["ID"]] = eliciter
     ranges[session["ID"]] = calc_ranges(candidates, spec)
 
