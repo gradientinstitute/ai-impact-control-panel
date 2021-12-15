@@ -66,3 +66,37 @@
   background-color: #525252;
   transition: background-color 0.2s;
 }
+
+/* Algorithm Selector */
+/* [data-reach-tabs][data-orientation="vertical"].algo-selector {
+    display: grid;
+  }
+  
+  .algo-selector [data-reach-tab]{
+    background-color: #414141;
+    border: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 1.2rem;
+  }
+  
+  .algo-selector [data-reach-tab][data-current='true']{
+    border: none;
+    background-color: #203E7E;
+  }
+  
+  .algo-selector [data-reach-tab-panels][data-active='true'] {
+    background-color: #203E7E;
+  }
+  
+  .algo-selector [data-reach-tab-panels]{
+    background-color: #525252;
+  }
+  
+  .algo-selector [data-reach-tab][data-current='false']:hover {
+    border: none;
+    background-color: #525252;
+    transition: background-color 0.2s;
+  } */
+  

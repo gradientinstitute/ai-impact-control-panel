@@ -8,6 +8,7 @@ import "@reach/dialog/styles.css";
 import './Setup.css';
 
 import {Pane, paneState, scenarioState} from './Base';
+// import { algoState } from './Base';
 
 
 // the set of scenarios retrieved from the serever
@@ -21,6 +22,18 @@ const currentScenarioState = atom({
   key: 'currentScenario',
   default: null,
 });
+
+// // the set of algorithms retrieved from the serever
+// const algosState = atom({
+//     key: 'algorithms',
+//     default: [],
+//   });
+
+// // the currently selected algorithm from the selection dropdown
+// const currentAlgoState = atom({
+//     key: 'currentAlgorithm',
+//     default: null,
+//   });
 
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
@@ -51,6 +64,37 @@ export function SetupPane({}) {
   );
 }
 
+// // TODO: setAlgorithm
+// export function SetupAlgoPane({}) {
+
+//     const [_algorithms, setAlgos] = useRecoilState(algosState);
+  
+//     // initial loading of candidates
+//     useEffect(() => {
+//       const fetch = async () => {
+//         // const result = await axios.get<any>("api/scenarios");
+//         const result = await axios.get<any>("api/algorithms");
+//         setAlgos(result.data);
+//       }
+//       fetch();
+//     }, []
+//     );
+    
+//     if (_algorithms === []) {
+//       return (<p>Loading...</p>);
+//     }
+  
+//     return (
+//       <div className="ml-auto mr-auto w-1/2">
+//         <Dialog className="intro text-center" aria-label="Get Started">
+//           <h1 className="my-auto font-extralight mb-4 text-3xl pb-4">Get Started</h1>
+//           <Steps />
+//         </Dialog>
+//       </div>
+//     );
+//   }  
+
+
 // steps of intro flow
 function Steps({}) {
   const [stepIndex, setStepIndex] = useState(0);
@@ -64,6 +108,9 @@ function Steps({}) {
      <TabPanels className="self-center flex-1">
        <Step1 handleStepsChange={handleStepsChange} />
        <Step2 stepIndex={stepIndex} setStepIndex={setStepIndex}/>
+       {/* <Step2 stepIndex={stepIndex} setStepIndex={setStepIndex} onChange={handleStepsChange}/> */}
+       {/* add step3: select algorithm */}
+       {/* <Step3 stepIndex={stepIndex} setStepIndex={setStepIndex}/> */}
      </TabPanels>
    </Tabs>
  )
@@ -91,6 +138,7 @@ function Step2({stepIndex, setStepIndex}) {
     <TabPanel key={1}>
       <p className="text-lg pb-6">Select a scenario</p>
       <ScenarioSelector />
+      <AlgoSelector />
       <div className="flex justify-between btn-row mt-12">
         <div className="flex flex-1 align-middle text-left">
           <button className="hover:text-gray-300 transition"
@@ -108,6 +156,18 @@ function Step2({stepIndex, setStepIndex}) {
           disabled={buttonDisabled}>
           Start
         </button>
+        {/* Next button to the next pane -> algoSelector */}
+        {/* <button className="btn text-xl uppercase py-4 px-8 font-bold rounded-lg"
+          onClick={() => {
+            if (current) {
+              setScenario(current)
+              setPane(Pane.Intro);
+            }
+            setStepIndex(stepIndex+1)
+          }}
+          disabled={buttonDisabled}>
+          Next
+        </button> */}
       </div>
     </TabPanel>
   )
@@ -179,6 +239,112 @@ function ScenarioSelector({}) {
     );
 }
 
+// // 3rd step: select algorithm
+// function Step3({stepIndex, setStepIndex}) {
+//     const [_pane, setPane] = useRecoilState(paneState);
+//     const current = useRecoilValue(currentAlgoState);
+//     const [_algorithm, setAlgo] = useRecoilState(algoState);
+//     const canGoBack = stepIndex >= 0;
+//     const buttonDisabled = current === null;
+  
+//     return (
+//       <TabPanel key={1}>
+//         <p className="text-lg pb-6">Select a scenario</p>
+//         <AlgoSelector />
+//         <div className="flex justify-between btn-row mt-12">
+//           <div className="flex flex-1 align-middle text-left">
+//             <button className="hover:text-gray-300 transition"
+//               onClick={() => canGoBack && setStepIndex(stepIndex-1)}>
+//               &#8249; Back
+//             </button>
+//           </div>
+//           <button className="btn text-xl uppercase py-4 px-8 font-bold rounded-lg"
+//             onClick={() => {
+//               if (current) {
+//                 setAlgo(current)
+//                 setPane(Pane.Intro);
+            
+//               }
+//             }}
+//             disabled={buttonDisabled}>
+//             Start
+//           </button>
+//         </div>
+//       </TabPanel>
+//     )
+//   }
+
+
+// Select algorithm from list and preview details
+function AlgoSelector({}) {
+
+    return(<h1>Hello, world!</h1>)
+  
+    // const algos = useRecoilValue(algosState);
+    // const [current, setCurrent] = useRecoilState(currentAlgoState);
+    // const entries = Object.entries(algos);
+    // const [tabIndex, setTabIndex] = useState(-1);
+    // const [currentIndex, setCurrentIndex] = useState(-1);
+    // const tabActive = tabIndex === currentIndex && currentIndex > -1;
+  
+    // function handleTabsChange(i) {
+    //   setTabIndex(i);
+    // }
+  
+    // const tabs = entries.map(([name, v], i) => {
+    //   const indexOnLeave = current ? currentIndex : -1;
+    //   const isSelectedTab = current === name;
+  
+    //   return (
+    //     <Tab
+    //       data-current = { isSelectedTab }
+    //       key={i}
+    //       onMouseEnter={() => setTabIndex(i)}
+    //       onMouseLeave={() => setTabIndex(indexOnLeave)}
+    //       onMouseDown={() => {
+    //         setCurrent(name);
+    //         setCurrentIndex(i);
+    //       }}
+    //     >
+    //       {v.name}
+    //     </Tab>
+    //   )
+    // })
+    
+    
+    // const tabPanels = entries.map(([name, v], i) => {
+    //     const numObjectives = Object.keys(v.objectives).length;
+    //     const numMetrics = Object.keys(v.metrics).length;
+    
+    //     return (
+    //       <TabPanel key={i}>
+    //         <span className="pr-6"><strong>Objectives:</strong> {numObjectives}</span>
+    //         <span><strong>Metrics:</strong> {numMetrics}</span>
+    //         <p className="pt-3">{v.operation}</p>
+    //       </TabPanel>
+    //     )})
+      
+    //   return (
+    //     <Tabs
+    //       className="algo-selector grid grid-cols-3"
+    //       index={tabIndex}
+    //       orientation={TabsOrientation.Vertical}
+    //       onChange={handleTabsChange}
+    //     >
+    //       <TabList className="algo-list text-left col-span-1 font-bold">
+    //         {tabs}
+    //       </TabList>
+    //       <TabPanels
+    //         className="col-span-2 text-left py-3 px-6"
+    //         data-active={tabActive}
+    //       >
+    //         {tabPanels}
+    //       </TabPanels>
+    //     </Tabs>
+    //     );
+    }
+
+    
 // select the type of elicitation to do with two buttons
 // TODO: hook up to boundary elicitation when its implemented
 function StartButtons({onChange}) {
