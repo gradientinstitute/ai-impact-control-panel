@@ -162,7 +162,7 @@ function Metrics({}) {
     const uid: string = x[0];
     const data: any = x[1];
     const capt = data.captures.join(", ");
-    const summary = data.type == "qualitative" ? <QualitativeSummary data={data} /> : <UnitRange data={data} />
+    const summary = data.type === "qualitative" ? <QualitativeSummary data={data} /> : <UnitRange data={data} />
 
     return (
       <div key={uid} 
@@ -197,6 +197,7 @@ function QualitativeSummary({data}) {
   
   return (
     <div className={"rounded-lg p-3 items-center"}>
+      <p className="font-bold">Possible Values</p>
       {result}
     </div>);
 }

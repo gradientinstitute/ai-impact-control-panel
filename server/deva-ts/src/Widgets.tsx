@@ -7,7 +7,7 @@ function sigFigs(unit: any) {
 }
 
 function Model({unit, value, name, isMirror}) {
-  const includePerformanceBar = unit.type == "qualitative" ? false : true;
+  const includePerformanceBar = true; //!(unit.type === "qualitative");
   const performanceBar = includePerformanceBar ? <Performance unit={unit} value={value} isMirror={isMirror}/> : null
 
   return (
@@ -20,10 +20,9 @@ function Model({unit, value, name, isMirror}) {
 }
 
 function Key({unit}) {
-  const includeBetterStatement = unit.type == "qualitative" ? false : true;
 
   let direction = unit.higherIsBetter === true ? "Higher" : "Lower";
-  let statement = includeBetterStatement ? <div>({direction} is better)</div> : null;
+  let statement = !(unit.type === "qualitative") ? <div>({direction} is better)</div> : null;
 
     return (
     <div className="my-auto">
@@ -58,12 +57,30 @@ function Performance({value, unit, isMirror}) {
       + " " + unit.suffix;
   }
 
+  const left = !(unit.type === "qualitative")
+
+  ? (<div className="my-auto pr-2 text-right text-xs w-1/4">
+      {lv}<br />({lf} achievable)
+    </div>)
+
+  : (<div className="my-auto pr-2 text-right text-xs w-1/4">
+      {unit.options[0]}
+    </div>);
+
+const right = !(unit.type === "qualitative")
+
+  ? <div className="my-auto text-left pl-2 text-xs w-1/4">
+      {rv}<br />({rf} achievable)
+    </div>
+
+  : (<div className="my-auto text-left pl-2 text-xs w-1/4">
+      {unit.options[unit.options.length - 1]}
+  </div>);
+
   return (
     
     <div className="flex">
-      <div className="my-auto pr-2 text-right text-xs w-1/4">
-        {lv}<br />({lf} achievable)
-      </div>
+      {left}
       <div className="flex-grow py-3">
         <FillBar 
           unit={unit} 
@@ -72,21 +89,15 @@ function Performance({value, unit, isMirror}) {
           isThin={false}
         />
       </div>
-      <div className="my-auto text-left pl-2 text-xs w-1/4">
-        {rv}<br />({rf} achievable)
-      </div>
+      {right}
     </div>
   );
 }
 
 function ValueStatement({name, value, unit}) {
-  let valueStatement = null;
-  if (unit.type == "qualitative") {
-    valueStatement = ValueStatementQualitative({name, value, unit});
-  } else {
-    valueStatement = ValueStatementQuantitative({name, value, unit});
-  }
-  return valueStatement;
+  return unit.type === "qualitative" 
+    ? ValueStatementQualitative({name, value, unit}) 
+    : ValueStatementQuantitative({name, value, unit});
 }
 
 function ValueStatementQuantitative({name, value, unit}) {
@@ -100,10 +111,11 @@ function ValueStatementQuantitative({name, value, unit}) {
 }
 
 function ValueStatementQualitative({name, value, unit}) {
+  const action = unit.action != null ? unit.action : "-";
+
   return (
     <div className="text-lg">
-      {name} {unit.action} {unit.prefix}
-      {unit.options[value]} {unit.suffix}. 
+      {name} {action} {unit.options[value]}. 
     </div>
   );
 }

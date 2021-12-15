@@ -207,14 +207,14 @@ function PairwiseComparator({leftName, leftValue,
       <div className="my-auto" style={{width:"10%"}}>
         <Key unit={unit}/>
       </div>
-      <div className="" style={{width:"30%"}}>
+      <div className="my-auto" style={{width:"30%"}}>
         <Model unit={unit} name={leftName} 
           value={leftValue} isMirror={false}/>
       </div>
-      <div className="" style={{width:"20%"}}>
+      <div className="my-auto" style={{width:"20%"}}>
         {Comparison({leftValue, leftName, rightValue, rightName, unit})}
       </div>
-      <div className="" style={{width:"30%"}}>
+      <div className="my-auto" style={{width:"30%"}}>
         <Model unit={unit} name={rightName}
           value={rightValue} isMirror={false}/>
       </div>
@@ -280,10 +280,10 @@ function ComparisonStatementQualitative({leftName, leftValue,
 
   let text = null;
 
-  const isPreferable = leftValue > rightValue && unit.higherIsBetter;
-  const comparison = isPreferable ? "better than" : "worse than";
+  const isPreferable = (leftValue > rightValue && unit.higherIsBetter) || (leftValue < rightValue && !unit.higherIsBetter);
+  const comparison = isPreferable ? unit.comparison_better : unit.comparison_worse;
 
-  text = leftValue == rightValue ? <p> {n1} {unit.action} the same {unit.prefix} {unit.suffix} as {n2} </p> : <p> {n1} is {comparison} {n2} </p>;
+  text = leftValue === rightValue ? <p> {n1} {unit.comparison_equal} {n2} </p> : <p> {n1} {comparison} {n2} </p>;
 
   return (
     <div className="text-xl font-bold">
@@ -318,7 +318,7 @@ function ComparisonQualitative({leftValue, leftName, rightValue, rightName, unit
 
 function Comparison({leftValue, leftName, rightValue, rightName, unit}) {
 
-  const statement = unit.type == "qualitative" ?  ComparisonQualitative({leftValue, leftName, rightValue, rightName, unit}) :
+  const statement = unit.type === "qualitative" ?  ComparisonQualitative({leftValue, leftName, rightValue, rightName, unit}) :
     ComparisonQuantitative({leftValue, leftName, rightValue, rightName, unit});
 
   return (

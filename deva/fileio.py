@@ -120,7 +120,7 @@ def load_all_metrics(metrics, candidates):
 def load_qualitative_metric(metrics, candidates, u):
     metrics[u]["max"] = max(c[u] for c in candidates)
     metrics[u]["min"] = min(c[u] for c in candidates)
-    
+
 
 def load_quantitative_metric(metrics, candidates, u):
     metrics[u]["max"] = max(c[u] for c in candidates)

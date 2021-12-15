@@ -1,5 +1,5 @@
-import React, {useState, useEffect, useReducer, useContext} from 'react';
-import Slider, { Range } from 'rc-slider';
+import {useState, useEffect} from 'react';
+import { Range } from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import ReactSlider from 'react-slider'
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
@@ -7,7 +7,6 @@ import {Pane, paneState, scenarioState,
         metadataState, constraintsState } from './Base';
 import axios from 'axios';
 import _, { indexOf } from "lodash";
-import { updateReturn } from 'typescript';
 
 export const allCandidatesState = atom({  
   key: 'allCandidates', 
@@ -135,7 +134,7 @@ function MultiRangeConstraint({}) {
     const uid = x[0];
     const u: any = x[1];
 
-    const pane = (u.type == "qualitative") ? 
+    const pane = (u.type === "qualitative") ? 
 
       (<QualitativeConstraint x={x} 
         maxRanges={maxRanges} 
@@ -204,27 +203,40 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
   )
 
   const name = u.name;
-  const cstring = u.prefix + " (" + u.options[cmin] + " - " + u.options[cmax] + ")\n" + u.suffix;
+  const allowed = u.options
+    .filter(x => (u.options.indexOf(x) >= cmin && u.options.indexOf(x) <= cmax))
+    .map(x => (<p>{x}</p>));
 
-  // const slider = <Slider.Range min={min} max={max} defaultValue={[min, max]} marks={options} step={null}/>
+  const notAllowed = u.options
+  .filter(x => !(u.options.indexOf(x) >= cmin && u.options.indexOf(x) <= cmax))
+  .map(x => (<p>{x}</p>));
 
   return (
-    <div key={uid} className="grid grid-cols-5 gap-8 bg-gray-600 rounded-lg p-4">
-      
-      <h2 className="col-span-5 text-center">{name}</h2>
-      
-      <p className="col-span-5 text-3xl">{cstring}</p>
+    <div key={uid} className="grid grid-cols-6 gap-8 bg-gray-600 rounded-lg my-auto">
+            
+      <h2 className="col-span-6 text-center">{name}</h2>
 
-      <p className="col-span-1 text-xs text-right my-auto"></p>
-      <div className="col-span-3 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={options}/>
-        {/* {slider} */}
+      <p className="col-span-2 my-auto">{}</p>
+      <div className="col-span-1 text-center">
+      <p className="font-bold">Allowed</p>
+      <p>{allowed}</p>
       </div>
-      <p className="col-span-1 text-xs text-left my-auto"></p>
+
+      <div className="col-span-1 text-center">
+      <p className="font-bold">Not Allowed</p>
+      <p>{notAllowed}</p>
+      </div>
+      <p className="col-span-2 my-auto">{}</p>
+
+      <p className="col-span-1 my-auto">{}</p>
+      <div className="col-span-4 my-auto">
+        <RangeConstraint uid={uid} min={min} max={max} marks={options}/>
+      </div>
+      <p className="col-span-1 my-auto">{}</p>
+
     </div>
   )
 }
-
 
 function RangeConstraint2({uid, min, max}) {
   
@@ -238,7 +250,7 @@ function RangeConstraint2({uid, min, max}) {
     const oldval = n[uid];
     n[uid] = x;
     const withNew = filterCandidates(all, n);
-    if (withNew.length == 0) {
+    if (withNew.length === 0) {
       n[uid] = oldval;
     }
     setConstraints(n)
