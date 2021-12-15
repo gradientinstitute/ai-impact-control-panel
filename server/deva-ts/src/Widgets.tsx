@@ -111,11 +111,9 @@ function ValueStatementQuantitative({name, value, unit}) {
 }
 
 function ValueStatementQualitative({name, value, unit}) {
-  const action = unit.action != null ? unit.action : "-";
-
   return (
     <div className="text-lg">
-      {name} {action} {unit.options[value]}. 
+      {name} {unit.options[value]}. 
     </div>
   );
 }

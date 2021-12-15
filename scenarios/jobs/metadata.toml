@@ -102,13 +102,10 @@ role recommendations more than average."""
     limitations = """no actual distinguishing"""
     higherIsBetter = false 
     type = "qualitative"
-
-    # optional verb for statements in comparison eg. System_B uses private data
-    # default value: "-" 
-    action = "uses"
     
     # the values for the options are 0... n-1 respectively
-    options = ["public data", "some private data", "all private data"] 
+    # options should include a verb
+    options = ["only uses public data", "requires some private data", "exclusively uses private data"] 
 
     # for comparison between two systems
     comparison_better = "uses less personal data than" 
