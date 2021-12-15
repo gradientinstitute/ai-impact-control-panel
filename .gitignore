@@ -132,3 +132,5 @@ dmypy.json
 data/*.csv
 tests/tmp/
 **/*/flask_session
+
+.vscode/

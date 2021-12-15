@@ -57,6 +57,8 @@ role recommendations more than average."""
     higherIsBetter = true
     decimals = 0
     countable = true
+    type = "quantitative" # type determines how options are presented to the user
+                          # omitting type sets the default to quantitative
 
 [metrics.fnr]
     name = "Proportion of suitable candidates missed"
@@ -91,3 +93,25 @@ role recommendations more than average."""
     higherIsBetter = false
     decimals = 0
     countable = true
+
+[metrics.privacy_level]
+    name = "feature use"
+    icon = "fairness.png"
+    description = """Level of private data used in the training set"""
+    captures = ["shortlist_suitable_candidates"]
+    limitations = """no actual distinguishing"""
+    higherIsBetter = false 
+    type = "qualitative"
+
+    # optional verb for statements in comparison eg. System_B uses private data
+    # default value: "-" 
+    action = "uses"
+    
+    # the values for the options are 0... n-1 respectively
+    options = ["public data", "some private data", "all private data"] 
+
+    # for comparison between two systems
+    comparison_better = "uses less personal data than" 
+    comparison_worse = "uses more personal data than"
+    comparison_equal = "uses the same amount of personal data as"
+    options_multiselect = ["gender", "age", "postcode"]
