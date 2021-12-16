@@ -19,7 +19,7 @@ def main():
         scenario = input() or "!!!"
 
     print("Requesting Algorithm List")
-    request = f'http://127.0.0.1:8666/{scenario}/algo'
+    request = f'http://127.0.0.1:8666/algorithms'
     print(request)
     algos = sess.get(request).json()
     # print("Available algorithms:", *algos)
