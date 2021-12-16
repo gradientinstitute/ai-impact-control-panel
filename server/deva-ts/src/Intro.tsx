@@ -164,6 +164,7 @@ function Metrics({}) {
     const uid: string = x[0];
     const data: any = x[1];
     const capt = data.captures.join(", ");
+    const summary = data.type === "qualitative" ? <QualitativeSummary data={data} /> : <UnitRange data={data} />
 
     return (
       <div key={uid} 
@@ -177,7 +178,7 @@ function Metrics({}) {
         <SimpleBlock colour={THIRD_COLOUR} title={"Captures"} value={capt} />
         <SimpleBlock colour={THIRD_COLOUR} title={"Limitations"} 
           value={data.limitations} />
-        <UnitRange data={data} />
+        {summary}
       </div>
     );
   });
@@ -192,11 +193,23 @@ function Metrics({}) {
   );
 }
 
+function QualitativeSummary({data}) {
+
+  const result = data.options.map(x => (<p>{x}</p>));
+  
+  return (
+    <div className={"rounded-lg p-3 items-center"}>
+      <p className="font-bold">Possible Values</p>
+      {result}
+    </div>);
+}
+
 // show the best case & worst case of metrics from the candidates
 function UnitRange({data}) {
 
-  const sigfig = sigFigs(data);
   const h = data.higherIsBetter;
+  const sigfig = sigFigs(data);
+
   const min_str = data.prefix + data.min.toFixed(sigfig) + " " + data.suffix;
   const max_str = data.prefix + data.max.toFixed(sigfig) + " " + data.suffix;
 

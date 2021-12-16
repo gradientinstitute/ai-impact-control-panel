@@ -1,3 +1,4 @@
 precision = 40
 fnr = 10
 fnr_difference = 20
+privacy_level = 2

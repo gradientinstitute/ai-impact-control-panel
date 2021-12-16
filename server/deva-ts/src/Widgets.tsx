@@ -7,9 +7,12 @@ function sigFigs(unit: any) {
 }
 
 function Model({unit, value, name, isMirror}) {
+  const includePerformanceBar = true; //!(unit.type === "qualitative");
+  const performanceBar = includePerformanceBar ? <Performance unit={unit} value={value} isMirror={isMirror}/> : null
+
   return (
     <div>
-    <Performance unit={unit} value={value} isMirror={isMirror}/>
+      {performanceBar}
     <ValueStatement unit={unit} name={name} 
       value={value} />
     </div>
@@ -17,18 +20,20 @@ function Model({unit, value, name, isMirror}) {
 }
 
 function Key({unit}) {
+
   let direction = unit.higherIsBetter === true ? "Higher" : "Lower";
+  let statement = !(unit.type === "qualitative") ? <div>({direction} is better)</div> : null;
+
     return (
     <div className="my-auto">
       <div className="text-lg font-bold">
         {unit.name}
       </div>
+        {statement}
       <div className="text-xs">
         {unit.description}
       </div>
-      <div>
-        ({direction} is better)
-      </div>
+
     </div>
     );
 }
@@ -52,12 +57,30 @@ function Performance({value, unit, isMirror}) {
       + " " + unit.suffix;
   }
 
+  const left = !(unit.type === "qualitative")
+
+  ? (<div className="my-auto pr-2 text-right text-xs w-1/4">
+      {lv}<br />({lf} achievable)
+    </div>)
+
+  : (<div className="my-auto pr-2 text-right text-xs w-1/4">
+      {unit.options[0]}
+    </div>);
+
+const right = !(unit.type === "qualitative")
+
+  ? <div className="my-auto text-left pl-2 text-xs w-1/4">
+      {rv}<br />({rf} achievable)
+    </div>
+
+  : (<div className="my-auto text-left pl-2 text-xs w-1/4">
+      {unit.options[unit.options.length - 1]}
+  </div>);
+
   return (
     
     <div className="flex">
-      <div className="my-auto pr-2 text-right text-xs w-1/4">
-        {lv}<br />({lf} achievable)
-      </div>
+      {left}
       <div className="flex-grow py-3">
         <FillBar 
           unit={unit} 
@@ -66,21 +89,33 @@ function Performance({value, unit, isMirror}) {
           isThin={false}
         />
       </div>
-      <div className="my-auto text-left pl-2 text-xs w-1/4">
-        {rv}<br />({rf} achievable)
-      </div>
+      {right}
     </div>
   );
 }
 
 function ValueStatement({name, value, unit}) {
+  return unit.type === "qualitative" 
+    ? ValueStatementQualitative({name, value, unit}) 
+    : ValueStatementQuantitative({name, value, unit});
+}
+
+function ValueStatementQuantitative({name, value, unit}) {
   const sigfig = Number.isInteger(value) ? 0 : 2;
   return (
     <div>
       {name} {unit.action} {unit.prefix}
       {value.toFixed(sigfig)} {unit.suffix}. 
     </div>
-);
+  );
+}
+
+function ValueStatementQualitative({name, value, unit}) {
+  return (
+    <div className="text-lg">
+      {name} {unit.options[value]}. 
+    </div>
+  );
 }
 
 function FillBar({percentage, unit, isThin, isMirror}) {
