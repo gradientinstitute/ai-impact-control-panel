@@ -46,10 +46,11 @@ class Eliciter:
 
     def input(self, choice):
         raise NotImplementedError
-    
+
     def description():
         # placeholder for the description of eliciter
         raise NotImplementedError
+
 
 class Toy(Eliciter):
     '''Simple eliciter with sequential elimination.'''
@@ -155,6 +156,7 @@ class ActiveRanking(Eliciter):
     def description():
         return "ActiveRanking description"
 
+
 class ActiveMax(ActiveRanking):
 
     _active_alg = halfspace.HalfspaceMax
@@ -163,6 +165,7 @@ class ActiveMax(ActiveRanking):
     def description():
         return "ActiveMax description"
 
+
 class ActiveMaxSmooth(ActiveRanking):
 
     _active_alg = halfspace.HalfspaceMax
@@ -170,6 +173,7 @@ class ActiveMaxSmooth(ActiveRanking):
 
     def description():
         return "ActiveMaxSmooth description"
+
 
 class ActiveMaxPrimary(ActiveRanking):
 
@@ -188,3 +192,4 @@ class ActiveMaxPrimary(ActiveRanking):
 
     def description():
         return "ActiveMaxPrimary description"
+        
