@@ -2,7 +2,6 @@ import numpy as np
 from functools import partial
 from deva import halfspace
 from datetime import datetime
-from flask import jsonify
 
 
 class Candidate:
@@ -36,19 +35,20 @@ class Eliciter:
 
     log = {}
     choice_number = 0
+
     def set_log(self, scenario):
         self.log['profile']={}
-        self.log['profile']['scenario']=scenario
-        self.log['profile']['time']=datetime.now()
-        self.log['profile']['user']="test user"
-        self.log['choices']={}
+        self.log['profile']['scenario'] = scenario
+        self.log['profile']['time'] = datetime.now()
+        self.log['profile']['user'] = "test user"
+        self.log['choices'] = {}
 
-    def add_choice(self,choice):
+    def add_choice(self, choice):
         self.log['choices']['Question number '+ str(self.choice_number)]=choice
-        self.choice_number+=1
+        self.choice_number += 1
 
-    def add_result(self,result):
-        self.log['result']=result
+    def add_result(self, result):
+        self.log['result'] = result
 
     def get_log(self):
         return self.log

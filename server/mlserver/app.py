@@ -259,7 +259,7 @@ def get_choice(scenario):
                 'spec': result.spec_name
         }}
         eliciter.add_result(res)
-        data=eliciter.get_log()
+        data = eliciter.get_log()
         output_file_name = "log.toml"
         with open(output_file_name, "w") as toml_file:
             toml.dump(data, toml_file)
