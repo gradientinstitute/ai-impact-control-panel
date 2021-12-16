@@ -4,7 +4,7 @@ from flask import (Flask, session, jsonify as _jsonify,
 # from flask_caching import Cache
 from deva import elicit, bounds, fileio
 import numpy as np
-
+import toml
 import random
 import string
 import os.path
@@ -188,6 +188,7 @@ def init_session(scenario):
     print("Init new session for ", session["ID"])
     candidates, spec = _scenario(scenario)
     eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
+    eliciter.set_log(scenario)
     # eliciter = elicit.ActiveMax(candidates, spec)
     eliciters[session["ID"]] = eliciter
     ranges[session["ID"]] = calc_ranges(candidates, spec)
@@ -240,6 +241,7 @@ def get_choice(scenario):
     # if we got a choice, process it
     if request.method == "PUT":
         data = request.get_json(force=True)
+        eliciter.add_choice(data)
         x = data["first"]
         y = data["second"]
         # Only pass valid choices on to the eliciter
@@ -256,6 +258,11 @@ def get_choice(scenario):
                 'attr': result.attributes,
                 'spec': result.spec_name
         }}
+        eliciter.add_result(res)
+        data=eliciter.get_log()
+        output_file_name = "log.toml"
+        with open(output_file_name, "w") as toml_file:
+            toml.dump(data, toml_file)
     else:
         # eliciter has not terminated - extract the next choice
         assert isinstance(eliciter.query, elicit.Pair)

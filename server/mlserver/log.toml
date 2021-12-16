@@ -1,0 +1,24 @@
+[profile]
+scenario = "jobs"
+time = 2021-12-16T12:30:47.463627
+user = "test user"
+
+[choices."Question number 0"]
+first = "System_B"
+second = "System_D"
+
+[choices."Question number 1"]
+first = "System_B"
+second = "System_A"
+
+[choices."Question number 2"]
+first = "System_B"
+second = "System_C"
+
+[result.System_B]
+spec = "balanced"
+
+[result.System_B.attr]
+precision = 60
+fnr = 50
+fnr_difference = 10
