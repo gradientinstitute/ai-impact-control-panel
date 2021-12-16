@@ -2,7 +2,7 @@ from flask import (Flask, session, jsonify as _jsonify,
                    abort, request, send_from_directory)
 
 # from flask_caching import Cache
-from deva import elicit, bounds, fileio
+from deva import elicit, bounds, fileio, logger
 import numpy as np
 import toml
 import random
@@ -40,6 +40,7 @@ eliciters = {}
 bounders = {}
 scenarios = {}
 ranges = {}
+loggers = {}
 baselines = {}
 
 
@@ -188,7 +189,7 @@ def init_session(scenario):
     print("Init new session for ", session["ID"])
     candidates, spec = _scenario(scenario)
     eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
-    eliciter.set_log(scenario)
+    log = logger.Logger(scenario)
     # eliciter = elicit.ActiveMax(candidates, spec)
     eliciters[session["ID"]] = eliciter
     ranges[session["ID"]] = calc_ranges(candidates, spec)
@@ -241,7 +242,7 @@ def get_choice(scenario):
     # if we got a choice, process it
     if request.method == "PUT":
         data = request.get_json(force=True)
-        eliciter.add_choice(data)
+        log.add_choice(data)
         x = data["first"]
         y = data["second"]
         # Only pass valid choices on to the eliciter
@@ -258,8 +259,8 @@ def get_choice(scenario):
                 'attr': result.attributes,
                 'spec': result.spec_name
         }}
-        eliciter.add_result(res)
-        data = eliciter.get_log()
+        log.add_result(res)
+        data = log.get_log()
         output_file_name = "log.toml"
         with open(output_file_name, "w") as toml_file:
             toml.dump(data, toml_file)
