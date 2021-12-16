@@ -1,24 +1,34 @@
 [profile]
-scenario = "jobs"
-time = 2021-12-16T12:30:47.463627
+scenario = "fraud"
+time = 2021-12-16T13:13:26.590661
 user = "test user"
 
 [choices."Question number 0"]
 first = "System_B"
-second = "System_D"
+second = "System_E"
 
 [choices."Question number 1"]
 first = "System_B"
-second = "System_A"
+second = "System_D"
 
 [choices."Question number 2"]
+first = "System_B"
+second = "System_F"
+
+[choices."Question number 3"]
+first = "System_B"
+second = "System_A"
+
+[choices."Question number 4"]
 first = "System_B"
 second = "System_C"
 
 [result.System_B]
-spec = "balanced"
+spec = "dummyclassifier_positive"
 
 [result.System_B.attr]
-precision = 60
-fnr = 50
-fnr_difference = 10
+fp = 9411
+fn = 0
+fp_cvar = 5.396039603960396
+revenue = 0
+eo_disadvantage_rate = 0
