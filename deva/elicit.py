@@ -44,8 +44,8 @@ class Eliciter:
         self.log['choices'] = {}
 
     def add_choice(self, choice):
-        self.log['choices']['Question number ' \
-        + str(self.choice_number)] = choice
+        self.log['choices']['Question number ' +
+                            str(self.choice_number)] = choice
         self.choice_number += 1
 
     def add_result(self, result):
