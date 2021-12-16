@@ -36,16 +36,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = random_key(16)
 
 # TODO: proper cache / serialisation
-# eliciters = {}
-# eliciters = {"toy", "activeranking", "activemax", "activemaxsmooth", "activemaxprimary"}
 eliciters = {"toy":elicit.Toy, "activeranking":elicit.ActiveRanking,
              "activemax":elicit.ActiveMax, "activemaxsmooth": elicit.ActiveMaxSmooth,
              "activemaxprimary": elicit.ActiveMaxPrimary}
 
-# TODO
-eliciters_descriptions = {"toy":"toy", "activeranking":"activeranking",
-             "activemax":"activemax", "activemaxsmooth": "activemaxsmooth",
-             "activemaxprimary": "activemaxprimary"}
+eliciters_descriptions = {k: v.description() for k,v in eliciters.items()}
 
 bounders = {}
 scenarios = {}
@@ -185,33 +180,7 @@ def get_algorithm():
     """
       Return which algorithms are available.
     """
-    # eliciters.keys()
-    # return jsonify(list(eliciters))
     return jsonify(eliciters_descriptions)
-
-# @app.route('/<scenario>/metadata')
-# @app.route('/<scenario>/init')
-# def init_session(scenario):
-#     global eliciters
-
-#     if "ID" in session:
-#         print("Reset session")
-#     else:
-#         print("New session")
-#         while (new_id := random_key(16)) in eliciters:
-#             continue
-#         session["ID"] = new_id
-#         session.modified = True
-
-#     # assume that a reload means user wants a restart
-#     print("Init new session for ", session["ID"])
-#     candidates, spec = _scenario(scenario)
-#     eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
-#     eliciters[session["ID"]] = eliciter
-#     ranges[session["ID"]] = calc_ranges(candidates, spec)
-
-#     # send the metadata for the scenario
-#     return spec
 
 
 @app.route('/<scenario>/init/<algo>')

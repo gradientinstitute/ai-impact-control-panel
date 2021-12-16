@@ -41,11 +41,6 @@ export function SetupPane({}) {
     const fetch = async () => {
       const result = await axios.get<any>("api/scenarios");
       setScenarios(result.data);
-
-      // TODO: load algos
-    //   const elic = await axios.get<any>("api/scenarios/init/algo");
-      // const elic = await axios.get<any>("api/algorithms");
-      // setAlgos(elic.data);
     }
     fetch();
   }, []
@@ -53,15 +48,11 @@ export function SetupPane({}) {
 
   // use effect for algo. asyn
   useEffect(() => {
-      const fetch = async () => {
-
-
-      // TODO: load algos
-      //   const elic = await axios.get<any>("api/scenarios/init/algo");
+    const fetch = async () => {
       const elic = await axios.get<any>("api/algorithms");
       setAlgos(elic.data);
-      }
-      fetch();
+    }
+    fetch();
   }, []
   );
       
@@ -114,8 +105,7 @@ function Step1({handleStepsChange}) {
   )
 }
 
-// second step: select scenario
-// select eliciter (algorithm)
+// second step: select scenario and eliciter (algorithm)
 function Step2({stepIndex, setStepIndex}) {
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
@@ -127,6 +117,7 @@ function Step2({stepIndex, setStepIndex}) {
     <TabPanel key={1}>
       <p className="text-lg pb-6">Select a scenario</p>
       <ScenarioSelector />
+      <br></br>
       <p className="text-lg pb-6">Select an algorithm</p>
       <AlgoSelector />
       <div className="flex justify-between btn-row mt-12">
@@ -218,7 +209,7 @@ function ScenarioSelector({}) {
 }
 
 
-// TODO: Select algorithm from list and preview details
+// Select algorithm from list and preview details
 function AlgoSelector({}) {
   
   const algos = useRecoilValue(algoChoicesState);
@@ -230,7 +221,7 @@ function AlgoSelector({}) {
   
   return (
       <div className="p-4 gap-4 bg-gray-500 grid grid-cols-3" >
-        <p className="text-right col-span-1">Scenario</p>
+        <p className="text-right col-span-1">Eliciter</p>
         <select className="col-span-2" name="scenarios" value={current} 
           onChange={ (x) => {setCurrent(x.target.value)}}>
           {elements}
