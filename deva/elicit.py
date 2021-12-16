@@ -37,14 +37,14 @@ class Eliciter:
     choice_number = 0
 
     def set_log(self, scenario):
-        self.log['profile']={}
+        self.log['profile'] = {}
         self.log['profile']['scenario'] = scenario
         self.log['profile']['time'] = datetime.now()
         self.log['profile']['user'] = "test user"
         self.log['choices'] = {}
 
     def add_choice(self, choice):
-        self.log['choices']['Question number '+ str(self.choice_number)]=choice
+        self.log['choices']['Question number ' + str(self.choice_number)] = choice
         self.choice_number += 1
 
     def add_result(self, result):
