@@ -192,4 +192,3 @@ class ActiveMaxPrimary(ActiveRanking):
 
     def description():
         return "ActiveMaxPrimary description"
-        

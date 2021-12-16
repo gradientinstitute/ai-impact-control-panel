@@ -37,11 +37,11 @@ app.config['SECRET_KEY'] = random_key(16)
 
 # TODO: proper cache / serialisation
 eliciters = {"toy": elicit.Toy, "activeranking": elicit.ActiveRanking,
-             "activemax": elicit.ActiveMax, 
-             "activemaxsmooth": elicit.ActiveMaxSmooth, 
+             "activemax": elicit.ActiveMax,
+             "activemaxsmooth": elicit.ActiveMaxSmooth,
              "activemaxprimary": elicit.ActiveMaxPrimary}
 
-eliciters_descriptions = {k: v.description() for k,v in eliciters.items()}
+eliciters_descriptions = {k: v.description() for k, v in eliciters.items()}
 
 bounders = {}
 scenarios = {}
