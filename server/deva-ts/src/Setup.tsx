@@ -7,8 +7,7 @@ import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
 
-import {Pane, paneState, scenarioState} from './Base';
-// import { algoState } from './Base';
+import {Pane, paneState, scenarioState, algoState} from './Base';
 
 
 // the set of scenarios retrieved from the serever
@@ -24,15 +23,9 @@ const currentScenarioState = atom({
 });
 
 // the set of algorithms retrieved from the serever
-const algosState = atom({
-    key: 'algorithms',
+const algoChoicesState = atom({
+    key: 'algorithmChoices',
     default: [],
-  });
-
-// the currently selected algorithm from the selection dropdown
-const currentAlgoState = atom({
-    key: 'currentAlgorithm',
-    default: null,
   });
 
 // the setup pane itself (ie root component)
@@ -40,7 +33,8 @@ export function SetupPane({}) {
 
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
   // algorithms / eliciters
-  const [_algorithms, setAlgos] = useRecoilState(algosState);
+  const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
+  const [_current, setCurrent] = useRecoilState(algoState);
   
   // initial loading of candidates
   useEffect(() => {
@@ -57,7 +51,7 @@ export function SetupPane({}) {
   }, []
   );
 
-//   use effect for algo. asyn
+  // use effect for algo. asyn
   useEffect(() => {
       const fetch = async () => {
 
@@ -70,6 +64,12 @@ export function SetupPane({}) {
       fetch();
   }, []
   );
+      
+  useEffect( () => {
+    if (algorithms !== null) {
+      setCurrent(Object.keys(algorithms)[0]);
+    }
+  }, [algorithms]);
 
   if (_scenarios === []) {
     return (<p>Loading...</p>);
@@ -221,86 +221,30 @@ function ScenarioSelector({}) {
 // TODO: Select algorithm from list and preview details
 function AlgoSelector({}) {
   
-    const algos = useRecoilValue(algosState);
-    const [current, setCurrent] = useRecoilState(currentAlgoState);
+  const algos = useRecoilValue(algoChoicesState);
+  const [current, setCurrent] = useRecoilState(algoState);
 
-    return (
-      <div>
-        <h2>
-          {JSON.stringify(algos)}
-        </h2>
-        <h2>
-          {JSON.stringify(current)}
-        </h2>
+  const elements = Object.entries(algos).map(([name, d]) => {
+    return (<option key={name} value={name}>{name}</option>);
+  });
+  
+  return (
+      <div className="p-4 gap-4 bg-gray-500 grid grid-cols-3" >
+        <p className="text-right col-span-1">Scenario</p>
+        <select className="col-span-2" name="scenarios" value={current} 
+          onChange={ (x) => {setCurrent(x.target.value)}}>
+          {elements}
+        </select>
+        <div className="col-span-1">
+        </div>
+        <div className="col-span-2">
+          <p>{algos[current]}</p>
+        </div>
       </div>
-    )
+    );
 
+}
 
-
-    // const entries = Object.entries(algos);
-    // const [tabIndex, setTabIndex] = useState(-1);
-    // const [currentIndex, setCurrentIndex] = useState(-1);
-    // const tabActive = tabIndex === currentIndex && currentIndex > -1;
-  
-    // function handleTabsChange(i) {
-    //   setTabIndex(i);
-    // }
-  
-    // const tabs = entries.map(([name, v], i) => {
-    //   const indexOnLeave = current ? currentIndex : -1;
-    //   const isSelectedTab = current === name;
-  
-    //   return (
-    //     <Tab
-    //       data-current = { isSelectedTab }
-    //       key={i}
-    //       onMouseEnter={() => setTabIndex(i)}
-    //       onMouseLeave={() => setTabIndex(indexOnLeave)}
-    //       onMouseDown={() => {
-    //         setCurrent(name);
-    //         setCurrentIndex(i);
-    //       }}
-    //     >
-    //       {v.name}
-    //     </Tab>
-    //   )
-    // })
-    
-    
-    // const tabPanels = entries.map(([name, v], i) => {
-    //     const numAlgos = Object.keys(v).length;
-    
-    //     return (<h1> Hello </h1>)
-    //     // (
-    //     //   <TabPanel key={i}>
-    //     //     <span className="pr-6"><strong>Objectives:</strong> {numObjectives}</span>
-    //     //     <span><strong>Metrics:</strong> {numMetrics}</span>
-    //     //     <p className="pt-3">{v.operation}</p>
-    //     //   </TabPanel>
-    //     // )
-    //     })
-      
-    //   return (
-    //     <Tabs
-    //       className="scenario-selector grid grid-cols-3"
-    //       index={tabIndex}
-    //       orientation={TabsOrientation.Vertical}
-    //       onChange={handleTabsChange}
-    //     >
-    //       <TabList className="scenario-list text-left col-span-1 font-bold">
-    //         {tabs}
-    //       </TabList>
-    //       <TabPanels
-    //         className="col-span-2 text-left py-3 px-6"
-    //         data-active={tabActive}
-    //       >
-    //         {tabPanels}
-    //       </TabPanels>
-    //     </Tabs>
-    //     );
-    }
-
-    
 // select the type of elicitation to do with two buttons
 // TODO: hook up to boundary elicitation when its implemented
 function StartButtons({onChange}) {
