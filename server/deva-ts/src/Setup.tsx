@@ -50,13 +50,27 @@ export function SetupPane({}) {
 
       // TODO: load algos
     //   const elic = await axios.get<any>("api/scenarios/init/algo");
-      const elic = await axios.get<any>("api/scenarios");
-      setAlgos(elic.data);
+      // const elic = await axios.get<any>("api/algorithms");
+      // setAlgos(elic.data);
     }
     fetch();
   }, []
   );
-  
+
+//   use effect for algo. asyn
+  useEffect(() => {
+      const fetch = async () => {
+
+
+      // TODO: load algos
+      //   const elic = await axios.get<any>("api/scenarios/init/algo");
+      const elic = await axios.get<any>("api/algorithms");
+      setAlgos(elic.data);
+      }
+      fetch();
+  }, []
+  );
+
   if (_scenarios === []) {
     return (<p>Loading...</p>);
   }
@@ -209,66 +223,81 @@ function AlgoSelector({}) {
   
     const algos = useRecoilValue(algosState);
     const [current, setCurrent] = useRecoilState(currentAlgoState);
-    const entries = Object.entries(algos);
-    const [tabIndex, setTabIndex] = useState(-1);
-    const [currentIndex, setCurrentIndex] = useState(-1);
-    const tabActive = tabIndex === currentIndex && currentIndex > -1;
+
+    return (
+      <div>
+        <h2>
+          {JSON.stringify(algos)}
+        </h2>
+        <h2>
+          {JSON.stringify(current)}
+        </h2>
+      </div>
+    )
+
+
+
+    // const entries = Object.entries(algos);
+    // const [tabIndex, setTabIndex] = useState(-1);
+    // const [currentIndex, setCurrentIndex] = useState(-1);
+    // const tabActive = tabIndex === currentIndex && currentIndex > -1;
   
-    function handleTabsChange(i) {
-      setTabIndex(i);
-    }
+    // function handleTabsChange(i) {
+    //   setTabIndex(i);
+    // }
   
-    const tabs = entries.map(([name, v], i) => {
-      const indexOnLeave = current ? currentIndex : -1;
-      const isSelectedTab = current === name;
+    // const tabs = entries.map(([name, v], i) => {
+    //   const indexOnLeave = current ? currentIndex : -1;
+    //   const isSelectedTab = current === name;
   
-      return (
-        <Tab
-          data-current = { isSelectedTab }
-          key={i}
-          onMouseEnter={() => setTabIndex(i)}
-          onMouseLeave={() => setTabIndex(indexOnLeave)}
-          onMouseDown={() => {
-            setCurrent(name);
-            setCurrentIndex(i);
-          }}
-        >
-          {v.name}
-        </Tab>
-      )
-    })
+    //   return (
+    //     <Tab
+    //       data-current = { isSelectedTab }
+    //       key={i}
+    //       onMouseEnter={() => setTabIndex(i)}
+    //       onMouseLeave={() => setTabIndex(indexOnLeave)}
+    //       onMouseDown={() => {
+    //         setCurrent(name);
+    //         setCurrentIndex(i);
+    //       }}
+    //     >
+    //       {v.name}
+    //     </Tab>
+    //   )
+    // })
     
     
-    const tabPanels = entries.map(([name, v], i) => {
-        const numObjectives = Object.keys(v.objectives).length;
-        const numMetrics = Object.keys(v.metrics).length;
+    // const tabPanels = entries.map(([name, v], i) => {
+    //     const numAlgos = Object.keys(v).length;
     
-        return (
-          <TabPanel key={i}>
-            <span className="pr-6"><strong>Objectives:</strong> {numObjectives}</span>
-            <span><strong>Metrics:</strong> {numMetrics}</span>
-            <p className="pt-3">{v.operation}</p>
-          </TabPanel>
-        )})
+    //     return (<h1> Hello </h1>)
+    //     // (
+    //     //   <TabPanel key={i}>
+    //     //     <span className="pr-6"><strong>Objectives:</strong> {numObjectives}</span>
+    //     //     <span><strong>Metrics:</strong> {numMetrics}</span>
+    //     //     <p className="pt-3">{v.operation}</p>
+    //     //   </TabPanel>
+    //     // )
+    //     })
       
-      return (
-        <Tabs
-          className="algo-selector grid grid-cols-3"
-          index={tabIndex}
-          orientation={TabsOrientation.Vertical}
-          onChange={handleTabsChange}
-        >
-          <TabList className="algo-list text-left col-span-1 font-bold">
-            {tabs}
-          </TabList>
-          <TabPanels
-            className="col-span-2 text-left py-3 px-6"
-            data-active={tabActive}
-          >
-            {tabPanels}
-          </TabPanels>
-        </Tabs>
-        );
+    //   return (
+    //     <Tabs
+    //       className="scenario-selector grid grid-cols-3"
+    //       index={tabIndex}
+    //       orientation={TabsOrientation.Vertical}
+    //       onChange={handleTabsChange}
+    //     >
+    //       <TabList className="scenario-list text-left col-span-1 font-bold">
+    //         {tabs}
+    //       </TabList>
+    //       <TabPanels
+    //         className="col-span-2 text-left py-3 px-6"
+    //         data-active={tabActive}
+    //       >
+    //         {tabPanels}
+    //       </TabPanels>
+    //     </Tabs>
+    //     );
     }
 
     

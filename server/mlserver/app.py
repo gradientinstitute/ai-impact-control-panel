@@ -41,6 +41,12 @@ app.config['SECRET_KEY'] = random_key(16)
 eliciters = {"toy":elicit.Toy, "activeranking":elicit.ActiveRanking,
              "activemax":elicit.ActiveMax, "activemaxsmooth": elicit.ActiveMaxSmooth,
              "activemaxprimary": elicit.ActiveMaxPrimary}
+
+# TODO
+eliciters_descriptions = {"toy":"toy", "activeranking":"activeranking",
+             "activemax":"activemax", "activemaxsmooth": "activemaxsmooth",
+             "activemaxprimary": "activemaxprimary"}
+
 bounders = {}
 scenarios = {}
 ranges = {}
@@ -174,13 +180,14 @@ def get_bounds_choice(scenario):
 
     return jsonify(res)
 
-@app.route('/<scenario>/algo')
-def get_algorithm(scenario):
+@app.route('/algorithms')
+def get_algorithm():
     """
       Return which algorithms are available.
     """
     # eliciters.keys()
-    return jsonify(list(eliciters))
+    # return jsonify(list(eliciters))
+    return jsonify(eliciters_descriptions)
 
 # @app.route('/<scenario>/metadata')
 # @app.route('/<scenario>/init')
