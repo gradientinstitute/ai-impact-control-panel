@@ -175,6 +175,7 @@ def get_bounds_choice(scenario):
 @app.route('/<scenario>/metadata')
 def init_session(scenario):
     global eliciters
+    global loggers
 
     if "ID" in session:
         print("Reset session")
@@ -192,6 +193,7 @@ def init_session(scenario):
     log = logger.Logger(scenario)
     # eliciter = elicit.ActiveMax(candidates, spec)
     eliciters[session["ID"]] = eliciter
+    loggers[session["ID"]] = log
     ranges[session["ID"]] = calc_ranges(candidates, spec)
 
     # send the metadata for the scenario
@@ -232,12 +234,14 @@ def apply_constraints(scenario):
 @app.route('/<scenario>/choice', methods=['GET', 'PUT'])
 def get_choice(scenario):
     global eliciters
+    global loggers
 
     if "ID" not in session:
         print("Session not initialised!")
         abort(400)  # Not initialised
 
     eliciter = eliciters[session["ID"]]
+    log = loggers[session["ID"]]
 
     # if we got a choice, process it
     if request.method == "PUT":
@@ -261,7 +265,7 @@ def get_choice(scenario):
         }}
         log.add_result(res)
         data = log.get_log()
-        output_file_name = "log.toml"
+        output_file_name = "log of session " + str(session["ID"]) + ".toml"
         with open(output_file_name, "w") as toml_file:
             toml.dump(data, toml_file)
     else:
