@@ -7,9 +7,10 @@ class Logger:
     log = {}
     choice_number = 0
 
-    def __init__(self, scenario):
+    def __init__(self, scenario, algo):
         self.log['profile'] = {}
         self.log['profile']['scenario'] = scenario
+        self.log['profile']['algorithm'] = algo
         self.log['profile']['time'] = datetime.now()
         self.log['profile']['user'] = "test user"
         self.log['choices'] = {}

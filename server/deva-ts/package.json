@@ -26,7 +26,8 @@
     "recoil": "^0.4.1",
     "typescript": "^4.1.2",
     "web-vitals": "^1.0.1",
-    "webfontloader": "^1.6.28"
+    "webfontloader": "^1.6.28",
+    "yarn": "^1.22.17"
   },
   "scripts": {
     "start": "craco start",

@@ -36,7 +36,13 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = random_key(16)
 
 # TODO: proper cache / serialisation
-eliciters = {}
+eliciters = {"toy": elicit.Toy, "activeranking": elicit.ActiveRanking,
+             "activemax": elicit.ActiveMax,
+             "activemaxsmooth": elicit.ActiveMaxSmooth,
+             "activemaxprimary": elicit.ActiveMaxPrimary}
+
+eliciters_descriptions = {k: v.description() for k, v in eliciters.items()}
+
 bounders = {}
 scenarios = {}
 ranges = {}
@@ -172,8 +178,16 @@ def get_bounds_choice(scenario):
     return jsonify(res)
 
 
-@app.route('/<scenario>/metadata')
-def init_session(scenario):
+@app.route('/algorithms')
+def get_algorithm():
+    """
+      Return which algorithms are available.
+    """
+    return jsonify(eliciters_descriptions)
+
+
+@app.route('/<scenario>/init/<algo>')
+def init_session(scenario, algo):
     global eliciters
     global loggers
 
@@ -189,9 +203,9 @@ def init_session(scenario):
     # assume that a reload means user wants a restart
     print("Init new session for ", session["ID"])
     candidates, spec = _scenario(scenario)
-    eliciter = elicit.ActiveMaxSmooth(candidates, spec)  # TODO: user choice?
-    log = logger.Logger(scenario)
-    # eliciter = elicit.ActiveMax(candidates, spec)
+    # TODO: user choice
+    eliciter = eliciters[algo](candidates, spec)
+    log = logger.Logger(scenario, algo)
     eliciters[session["ID"]] = eliciter
     loggers[session["ID"]] = log
     ranges[session["ID"]] = calc_ranges(candidates, spec)

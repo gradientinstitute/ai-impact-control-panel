@@ -47,6 +47,10 @@ class Eliciter:
     def input(self, choice):
         raise NotImplementedError
 
+    def description():
+        # placeholder for the description of eliciter
+        raise NotImplementedError
+
 
 class Toy(Eliciter):
     '''Simple eliciter with sequential elimination.'''
@@ -83,6 +87,9 @@ class Toy(Eliciter):
             self._query = Pair(self.candidates[0], self.candidates[1])
         else:
             self._query = None
+
+    def description():
+        return "Toy description"
 
 
 # Eliciter implementations
@@ -146,17 +153,26 @@ class ActiveRanking(Eliciter):
     def terminated(self):
         return self._result is not None
 
+    def description():
+        return "ActiveRanking description"
+
 
 class ActiveMax(ActiveRanking):
 
     _active_alg = halfspace.HalfspaceMax
     _active_kw = {'query_order': halfspace.max_compar_rand}
 
+    def description():
+        return "ActiveMax description"
+
 
 class ActiveMaxSmooth(ActiveRanking):
 
     _active_alg = halfspace.HalfspaceMax
     _active_kw = {'query_order': halfspace.max_compar_smooth}
+
+    def description():
+        return "ActiveMaxSmooth description"
 
 
 class ActiveMaxPrimary(ActiveRanking):
@@ -173,3 +189,6 @@ class ActiveMaxPrimary(ActiveRanking):
         qorder = partial(halfspace.max_compar_primary, primary_index=pri_ind)
         self._active_kw = {'query_order': qorder}
         super().__init__(candidates, scenario)
+
+    def description():
+        return "ActiveMaxPrimary description"

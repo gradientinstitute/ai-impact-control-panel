@@ -18,8 +18,20 @@ def main():
         print("Please choose from: " + ", ".join(scenarios.keys()))
         scenario = input() or "!!!"
 
+    print("Requesting Algorithm List")
+    request = f'http://127.0.0.1:8666/algorithms'
+    print(request)
+    algos = sess.get(request).json()
+    # print("Available algorithms:", *algos)
+    algo = "!!!"
+
+    while algo not in algos:
+        print("Please choose from: " + ", ".join(algos))
+        algo = input() or "!!!"
+
     print("Starting eliciter session")
-    request = f'http://127.0.0.1:8666/{scenario}/metadata'
+    # request = f'http://127.0.0.1:8666/{scenario}/metadata'
+    request = f'http://127.0.0.1:8666/{scenario}/init/{algo}'
     print(request)
     meta = sess.get(request).json()
 

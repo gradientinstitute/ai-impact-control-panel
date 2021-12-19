@@ -5,6 +5,7 @@ import _ from "lodash";
 import axios from 'axios';
 
 import { Pane, paneState, metadataState, scenarioState } from './Base';
+import { algoState } from './Base';
 import {sigFigs} from './Widgets';
 
 // TODO siigh css? 
@@ -19,10 +20,15 @@ export function IntroPane({}) {
   
   const [metadata, setMetadata] = useRecoilState(metadataState);
   const scenario = useRecoilValue(scenarioState);
+  
+  const algo = useRecoilValue(algoState);
 
   // initial request on load
   useEffect(() => {
-    let req = "api/" + scenario + "/metadata";
+    // let req = "api/" + scenario + "/metadata";
+    // TODO: load algo
+    // let algo = "toy"
+    let req = "api/" + scenario + "/init/" + algo;
     async function fetchData() {
       const result = await axios.get<any>(req);
       setMetadata(result.data);
