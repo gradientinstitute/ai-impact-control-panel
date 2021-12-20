@@ -2,9 +2,9 @@ from flask import (Flask, session, jsonify as _jsonify,
                    abort, request, send_from_directory)
 
 # from flask_caching import Cache
-from deva import elicit, bounds, fileio
+from deva import elicit, bounds, fileio, logger
 import numpy as np
-
+import toml
 import random
 import string
 import os.path
@@ -47,6 +47,7 @@ eliciters_descriptions = {k: v.description() for k, v in eliciters.items()}
 bounders = {}
 scenarios = {}
 ranges = {}
+loggers = {}
 baselines = {}
 
 
@@ -189,6 +190,7 @@ def get_algorithm():
 @app.route('/<scenario>/init/<algo>')
 def init_session(scenario, algo):
     global eliciters
+    global loggers
 
     if "ID" in session:
         print("Reset session")
@@ -204,8 +206,9 @@ def init_session(scenario, algo):
     candidates, spec = _scenario(scenario)
     # TODO: user choice
     eliciter = eliciters[algo](candidates, spec)
-
+    log = logger.Logger(scenario, algo)
     eliciters[session["ID"]] = eliciter
+    loggers[session["ID"]] = log
     ranges[session["ID"]] = calc_ranges(candidates, spec)
 
     # send the metadata for the scenario
@@ -246,16 +249,19 @@ def apply_constraints(scenario):
 @app.route('/<scenario>/choice', methods=['GET', 'PUT'])
 def get_choice(scenario):
     global eliciters
+    global loggers
 
     if "ID" not in session:
         print("Session not initialised!")
         abort(400)  # Not initialised
 
     eliciter = eliciters[session["ID"]]
+    log = loggers[session["ID"]]
 
     # if we got a choice, process it
     if request.method == "PUT":
         data = request.get_json(force=True)
+        log.add_choice(data)
         x = data["first"]
         y = data["second"]
         # Only pass valid choices on to the eliciter
@@ -272,6 +278,14 @@ def get_choice(scenario):
                 'attr': result.attributes,
                 'spec': result.spec_name
         }}
+        log.add_result(res)
+        data = log.get_log()
+        if not os.path.exists('logs'):
+            os.mkdir('logs')
+        output_file_name = "logs/log of session " + str(session["ID"]) + \
+            ".toml"
+        with open(output_file_name, "w") as toml_file:
+            toml.dump(data, toml_file)
     else:
         # eliciter has not terminated - extract the next choice
         assert isinstance(eliciter.query, elicit.Pair)
