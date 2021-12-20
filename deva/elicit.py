@@ -74,7 +74,7 @@ class MyEliciter(Eliciter):
             self.chosen[self.query[0]] += 1
         if choice == self.query[1].name:
             self.chosen[self.query[1]] += 1
-            
+
         self._update()
 
     @property
@@ -96,7 +96,7 @@ class MyEliciter(Eliciter):
             self.i += 1
         else:
             self._query = None
-    
+
     def description():
         return "MyEliciter Description"
 
