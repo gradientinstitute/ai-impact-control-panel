@@ -6,6 +6,9 @@ def readout(x, info, suffix=False, sigfig=2):
     # prep a number for text display
     fmt = f"{{:.{sigfig-1}f}}"
 
+    if info["type"] == "qualitative":
+        return fmt.format(x)
+
     if x > 1e6:
         s = fmt.format(x/1e6) + "M"
     elif x > 1e3:

@@ -1,0 +1,34 @@
+[profile]
+scenario = "fraud"
+time = 2021-12-17T21:23:36.434594
+user = "test user"
+
+[choices."Question number 0"]
+first = "System_D"
+second = "System_F"
+
+[choices."Question number 1"]
+first = "System_D"
+second = "System_E"
+
+[choices."Question number 2"]
+first = "System_D"
+second = "System_A"
+
+[choices."Question number 3"]
+first = "System_D"
+second = "System_C"
+
+[choices."Question number 4"]
+first = "System_D"
+second = "System_B"
+
+[result.System_D]
+spec = "dummyclassifier_positive"
+
+[result.System_D.attr]
+fp = 9411
+fn = 0
+fp_cvar = 5.396039603960396
+revenue = 0
+eo_disadvantage_rate = 0
