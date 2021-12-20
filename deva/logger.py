@@ -3,7 +3,6 @@ from datetime import datetime
 
 class Logger:
     ''' Class for logging options'''
-    
     log = {}
     choice_number = 0
 
