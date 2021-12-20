@@ -13,10 +13,17 @@ export const allCandidatesState = atom({
   default: null, 
 });
 
-export const blockedState = atom({
-  key: 'uniqueKey', // TODO
+const blockedScrollbarState = atom({
+  key: 'blockedScrollbarState',
   default: null,
 })
+
+enum blockingStates {
+  'default',
+  'atLimit',
+  'blocked',
+  'blocking',
+}
 
 // maximum possible ranges (doesnt change)
 export const maxRangesState = selector({
@@ -71,7 +78,7 @@ export function ConstraintPane({}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
-
+  const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(blockedScrollbarState);
   
   // initial loading of candidates
   useEffect(() => {
@@ -91,6 +98,10 @@ export function ConstraintPane({}) {
     setConstraints(maxRanges)
   }, [maxRanges]);
 
+  // set initial value of the constraints
+  useEffect(() => {
+    setBlockedScrollbar(blockingStates.default)
+  }, []);
       
   if (curr === null) {
     return (<div>Loading...</div>);
@@ -246,7 +257,14 @@ function RangeConstraint({uid, min, max, marks, higherIsBetter}) {
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const val = higherIsBetter ? constraints[uid][0] : constraints[uid][1];
   const all = useRecoilValue(allCandidatesState);
-  // const colours = useRecoilValue(); // TODO
+  const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(blockedScrollbarState);
+
+  enum HandleColours {
+    'white',  // default
+    'gray',   // atLimit
+    'orange', // blocked
+    'red',    // blocking
+  }
 
   function onChange(x: any) {
     let n = {...constraints}
@@ -254,23 +272,23 @@ function RangeConstraint({uid, min, max, marks, higherIsBetter}) {
     n[uid] = higherIsBetter ? [x, n[uid][1]] : [n[uid][0], x];
     const withNew = filterCandidates(all, n);
     if (withNew.length > 0) {
-      setConstraints(n)
+      setConstraints(n);
+      setBlockedScrollbar(blockedScrollbar);
     }
   }
   
   let rangeProps = {
-      min: min,
-      max: max,
-      onChange: onChange,
-      allowCross: false,
-      value: val,
-      step: 1,
-      handleStyle: {backgroundColor: "gray"},
-      trackStyle: higherIsBetter ? {backgroundColor: "green"} : {backgroundColor: "red"},
-      railStyle: higherIsBetter ? {backgroundColor: "red"} : {backgroundColor: "green"},
-      // ...Style : state associated with recoil
-    };
-  
+    min: min,
+    max: max,
+    onChange: onChange,
+    allowCross: false,
+    value: val,
+    step: 1,
+    handleStyle: {backgroundColor: HandleColours[blockedScrollbar]},
+    trackStyle: higherIsBetter ? {backgroundColor: "green"} : {backgroundColor: "red"},
+    railStyle: higherIsBetter ? {backgroundColor: "red"} : {backgroundColor: "green"},
+  };
+
   if (marks !== null) {
     rangeProps["marks"] = marks;
     rangeProps["step"] = null;
