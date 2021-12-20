@@ -39,7 +39,8 @@ app.config['SECRET_KEY'] = random_key(16)
 eliciters = {"toy": elicit.Toy, "activeranking": elicit.ActiveRanking,
              "activemax": elicit.ActiveMax,
              "activemaxsmooth": elicit.ActiveMaxSmooth,
-             "activemaxprimary": elicit.ActiveMaxPrimary}
+             "activemaxprimary": elicit.ActiveMaxPrimary,
+             "myeliciter": elicit.MyEliciter}
 
 eliciters_descriptions = {k: v.description() for k, v in eliciters.items()}
 
