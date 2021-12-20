@@ -7,7 +7,7 @@ import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
 
-import {Pane, paneState, scenarioState} from './Base';
+import {Pane, paneState, scenarioState, algoState} from './Base';
 
 
 // the set of scenarios retrieved from the serever
@@ -22,11 +22,20 @@ const currentScenarioState = atom({
   default: null,
 });
 
+// the set of algorithms retrieved from the serever
+const algoChoicesState = atom({
+    key: 'algorithmChoices',
+    default: [],
+  });
+
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
 
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
-
+  // algorithms / eliciters
+  const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
+  const [_current, setCurrent] = useRecoilState(algoState);
+  
   // initial loading of candidates
   useEffect(() => {
     const fetch = async () => {
@@ -36,7 +45,23 @@ export function SetupPane({}) {
     fetch();
   }, []
   );
-  
+
+  // use effect for algo. asyn
+  useEffect(() => {
+    const fetch = async () => {
+      const elic = await axios.get<any>("api/algorithms");
+      setAlgos(elic.data);
+    }
+    fetch();
+  }, []
+  );
+      
+  useEffect( () => {
+    if (algorithms !== null) {
+      setCurrent(Object.keys(algorithms)[0]);
+    }
+  }, [algorithms]);
+
   if (_scenarios === []) {
     return (<p>Loading...</p>);
   }
@@ -50,6 +75,7 @@ export function SetupPane({}) {
     </div>
   );
 }
+
 
 // steps of intro flow
 function Steps({}) {
@@ -79,7 +105,7 @@ function Step1({handleStepsChange}) {
   )
 }
 
-// second step: select scenario
+// second step: select scenario and eliciter (algorithm)
 function Step2({stepIndex, setStepIndex}) {
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
@@ -91,6 +117,9 @@ function Step2({stepIndex, setStepIndex}) {
     <TabPanel key={1}>
       <p className="text-lg pb-6">Select a scenario</p>
       <ScenarioSelector />
+      <br></br>
+      <p className="text-lg pb-6">Select an algorithm</p>
+      <AlgoSelector />
       <div className="flex justify-between btn-row mt-12">
         <div className="flex flex-1 align-middle text-left">
           <button className="hover:text-gray-300 transition"
@@ -177,6 +206,34 @@ function ScenarioSelector({}) {
       </TabPanels>
     </Tabs>
     );
+}
+
+
+// Select algorithm from list and preview details
+function AlgoSelector({}) {
+  
+  const algos = useRecoilValue(algoChoicesState);
+  const [current, setCurrent] = useRecoilState(algoState);
+
+  const elements = Object.entries(algos).map(([name, d]) => {
+    return (<option key={name} value={name}>{name}</option>);
+  });
+  
+  return (
+      <div className="p-4 gap-4 bg-gray-500 grid grid-cols-3" >
+        <p className="text-right col-span-1">Eliciter</p>
+        <select className="col-span-2" name="scenarios" value={current} 
+          onChange={ (x) => {setCurrent(x.target.value)}}>
+          {elements}
+        </select>
+        <div className="col-span-1">
+        </div>
+        <div className="col-span-2">
+          <p>{algos[current]}</p>
+        </div>
+      </div>
+    );
+
 }
 
 // select the type of elicitation to do with two buttons

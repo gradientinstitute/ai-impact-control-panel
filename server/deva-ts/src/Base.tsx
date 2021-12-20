@@ -23,7 +23,14 @@ export const scenarioState = atom({
   default: null, 
 });
 
+// state for which algorithm has been chosen by the user
+export const algoState = atom({  
+    key: 'algorithm', 
+    default: null, 
+  });
+
 // state for the metadata for the chosen scenario
+// for the scenario & algo
 export const metadataState = atom({  
   key: 'metadata', 
   default: null, 
