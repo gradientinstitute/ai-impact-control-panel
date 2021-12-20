@@ -4,6 +4,7 @@ from deva import halfspace
 
 from itertools import combinations
 
+
 class Candidate:
     def __init__(self, name, attributes, spec_name=None):
         self.name = name
@@ -60,11 +61,11 @@ class MyEliciter(Eliciter):
         assert candidates, "No candidate models"
         Eliciter.__init__(self)
         self.candidates = list(candidates)  # copy references
-
-        self.chosen = dict.fromkeys(self.candidates, 0) # save the number of time each candidate is chosen
-
-        self.i = 0 # increasing index
-        self.comparisons = list(combinations(self.candidates, 2)) # all the possible query pairs
+        # save the number of time each candidate is chosen
+        self.chosen = dict.fromkeys(self.candidates, 0)
+        self.i = 0  # increasing index
+        # all the possible query pairs
+        self.comparisons = list(combinations(self.candidates, 2))
 
         self._update()
 
@@ -92,7 +93,8 @@ class MyEliciter(Eliciter):
 
     def _update(self):
         if len(self.comparisons) >= 1 and self.i < len(self.comparisons):
-            self._query = Pair(self.comparisons[self.i][0], self.comparisons[self.i][1])
+            queries = self.comparisons[self.i]
+            self._query = Pair(queries[0], queries[1])
             self.i += 1
         else:
             self._query = None
