@@ -54,7 +54,7 @@ class Eliciter:
         raise NotImplementedError
 
 
-class MyEliciter(Eliciter):
+class VotingEliciter(Eliciter):
     '''Simple eliciter that chooses the most selected candidate'''
 
     def __init__(self, candidates, scenario):
@@ -85,7 +85,7 @@ class MyEliciter(Eliciter):
     @property
     def result(self):
         assert self.i == len(self.comparisons), "Not terminated"
-        return max(self.candidates, key=lambda x: self.chosen[x])
+        return max(self.candidates, key=self.chosen.get)
 
     @property
     def query(self):
@@ -100,7 +100,7 @@ class MyEliciter(Eliciter):
             self._query = None
 
     def description():
-        return "MyEliciter Description"
+        return "VotingEliciter Description"
 
 
 class Toy(Eliciter):

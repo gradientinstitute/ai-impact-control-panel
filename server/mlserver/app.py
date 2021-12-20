@@ -40,7 +40,7 @@ eliciters = {"Toy": elicit.Toy, "ActiveRanking": elicit.ActiveRanking,
              "ActiveMax": elicit.ActiveMax,
              "ActiveMaxSmooth": elicit.ActiveMaxSmooth,
              "ActiveMaxPrimary": elicit.ActiveMaxPrimary,
-             "MyEliciter": elicit.MyEliciter}
+             "VotingEliciter": elicit.VotingEliciter}
 
 eliciters_descriptions = {k: v.description() for k, v in eliciters.items()}
 
