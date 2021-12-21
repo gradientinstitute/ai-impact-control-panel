@@ -3,6 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# clutter
+server/mlserver/logs/
+server/mlserver/node_modules/
+server/mlserver/yarn.lock
+
 # C extensions
 *.so
 

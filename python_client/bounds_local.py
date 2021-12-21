@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plot3d
 from deva import interface, elicit, bounds
+from bounds_client import tabulate
 
 
 def main():
@@ -16,6 +17,11 @@ def main():
 
     # Encode candidates and "higherIsBetter" as arrays
     attribs, table, sign = tabulate(candidates, metrics)
+
+    # We can only plot in 3 dimensions... drop the later ones
+    attribs = attribs[:3]
+    table = table[:, :3]
+    sign = sign[:3]
 
     # Load baseline for comparison
     baseline = fileio.load_baseline(scenario)
