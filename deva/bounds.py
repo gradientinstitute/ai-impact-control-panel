@@ -24,7 +24,7 @@ class BoundsEliciter:
         raise NotImplementedError
 
 
-class TestSampler:
+class TestSampler(BoundsEliciter):
     """Example of a basic sampler that elicits a boundary hyperplane."""
 
     def __init__(self, ref, table, sign, attribs, steps):
