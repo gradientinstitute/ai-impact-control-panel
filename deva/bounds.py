@@ -9,6 +9,21 @@ from deva import elicit, fileio
 # TODO: elicit the reference point as well as gradients
 # TODO: elicit non-linear boundaries (provided client can receive them)
 
+class BoundsEliciter:
+    '''Base class for bounds elicitation'''
+
+    # Just a promise that inheriting classes will have these members
+    def observe(self, label):
+        raise NotImplementedError
+
+    def guess(self, q):
+        raise NotImplementedError
+
+    @property
+    def terminated(self):
+        raise NotImplementedError
+
+
 class TestSampler:
     """Example of a basic sampler that elicits a boundary hyperplane."""
 
