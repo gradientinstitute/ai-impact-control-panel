@@ -1,7 +1,6 @@
 import {useState, useEffect} from 'react';
-import Slider, {Range} from 'rc-slider';
+import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import ReactSlider from 'react-slider'
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import {Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
@@ -15,14 +14,14 @@ export const allCandidatesState = atom({
 
 enum blockingStates {
   'default',
-  'atLimit',
   'blocked',
+  'bounced',
   'blocking',
 }
 
 const blockedScrollbarState = atom({
   key: 'blockedScrollbarState',
-  default: null, //blockingStates.default,
+  default: null,
 });
 
 const scrollbarsState = selector({
@@ -61,6 +60,21 @@ export const maxRangesState = selector({
   },
 });
 
+// higher is better map (doesnt change)
+export const higherIsBetterState = selector({
+  key: 'higherIsBetter',
+  get: ({get}) => {
+    const metadata = get(metadataState);
+    let higherIsBetterMap = new Map();
+    Object.entries(metadata.metrics).map((x) => {
+      const uid = x[0];
+      const u: any = x[1];
+      higherIsBetterMap.set(uid, u.higherIsBetter);
+    });
+    return higherIsBetterMap;
+  }
+})
+
 function filterCandidates(candidates, bounds) {
   const items = candidates.filter( (c) => {
       return Object.entries(c).every(([k, v]) => {
@@ -86,6 +100,29 @@ export const currentCandidatesState = selector({
     return filterCandidates(allCandidates, constraints);
   },
 });
+
+// Returns the most optimal values for each metric given possible candidates
+export const bestValuesState = selector({
+  key: 'optimalMetricValues',
+  get: ({get}) => {
+    const currentCandidates = get(currentCandidatesState);
+    const higherIsBetterMap = get(higherIsBetterState);
+    let currOptimal = new Map();
+    currentCandidates.forEach((candidate) => {
+      Object.entries(candidate).forEach(([key, value]) => {
+        const val = value as number;
+        const defaultValue = higherIsBetterMap.get(key) ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
+        const storedValue = currOptimal.get(key) || defaultValue;
+        const lowerValue = val < storedValue ? val : storedValue;
+        const higherValue = val > storedValue ? val : storedValue;
+        const optimalValue = higherIsBetterMap.get(key) ? higherValue : lowerValue;
+        currOptimal.set(key, optimalValue);
+      })
+    })
+    return currOptimal;
+  }
+})
+
 
 export function ConstraintPane({}) {
 
@@ -215,7 +252,7 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid}) {
 
       <p className="col-span-1 text-xs text-right my-auto">{min_string}</p>
       <div className="col-span-3 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={null} higherIsBetter={u.higherIsBetter}/>
+        <RangeConstraint uid={uid} min={min} max={max} marks={null}/>
       </div>
       <p className="col-span-1 text-xs text-left my-auto">{max_string}</p>
     </div>
@@ -263,7 +300,7 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
 
       <p className="col-span-2 my-auto">{}</p>
       <div className="col-span-6 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={options} higherIsBetter={u.higherIsBetter}/>
+        <RangeConstraint uid={uid} min={min} max={max} marks={options}/>
       </div>
       <p className="col-span-2 my-auto">{}</p>
 
@@ -271,42 +308,76 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
   )
 }
 
-function RangeConstraint({uid, min, max, marks, higherIsBetter}) {
-  const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const val = higherIsBetter ? constraints[uid][0] : constraints[uid][1];
-  const all = useRecoilValue(allCandidatesState);
+// Toggles whether metrics are blocked or not given their current candidates
+function setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid) {
+  Object.entries(n).forEach(([key, value]) => {      
+    const atThreshold = higherIsBetterMap.get(key) 
+      ? activeOptimal.get(key) == value[0]
+      : activeOptimal.get(key) == value[1];
+    m[key] = atThreshold ? blockingStates.blocked : blockingStates.default;
+    m[key] = (key == uid && atThreshold) ? blockingStates.bounced : m[key]; 
+  });
+}
+
+// Toggles suggestions for metrics to change to unblock currently blocked metric
+function setBlockingMetrics(n, m, higherIsBetterMap, activeOptimal) {
+
+}
+
+function RangeConstraint({uid, min, max, marks}) {
   const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(blockedScrollbarState);
+  const [constraints, setConstraints] = useRecoilState(constraintsState);
+  const all = useRecoilValue(allCandidatesState);
+  const curr = useRecoilValue(currentCandidatesState); 
+  const activeOptimal = useRecoilValue(bestValuesState);
+  const higherIsBetterMap = useRecoilValue(higherIsBetterState);
+
+  const higherIsBetter = higherIsBetterMap.get(uid);
+  const val = higherIsBetter ? constraints[uid][0] : constraints[uid][1];
 
   enum HandleColours {
     'white',  // default
-    'gray',   // atLimit
-    'orange', // blocked
+    'gray',   // blocked
+    'orange', // bounced
     'red',    // blocking
   }
 
-  function onChange(x: any) {
-    let n = {...constraints}
-    let m = {...blockedScrollbar}
+  function onChange(newVal: any) {
+    let n = {...constraints};
+    let m = {...blockedScrollbar};
 
-    n[uid] = higherIsBetter ? [x, n[uid][1]] : [n[uid][0], x];
+    n[uid] = higherIsBetter ? [newVal, n[uid][1]] : [n[uid][0], newVal];
     const withNew = filterCandidates(all, n);
+
     if (withNew.length > 0) {
       setConstraints(n);
-      m[uid] = blockingStates.default
-      setBlockedScrollbar(m);
-    } else {
-      m[uid] = blockingStates.blocked
-      setBlockedScrollbar(m);
     }
+
+    changeScrollbarColours();
+    setBlockedScrollbar(m);
+  } 
+
+  function onAfterChange() {
+    changeScrollbarColours();
   }
-  
+
+  function changeScrollbarColours() {
+    let n = {...constraints}
+    let m = {...blockedScrollbar};
+
+    setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid);
+    setBlockingMetrics(n, m, higherIsBetterMap, activeOptimal);
+
+    setBlockedScrollbar(m);
+  }
+
   let rangeProps = {
     min: min,
     max: max,
     onChange: onChange,
+    onAfterChange: onAfterChange,
     allowCross: false,
     value: val,
-    step: 1,
     handleStyle: {backgroundColor: HandleColours[blockedScrollbar[uid]]},
     trackStyle: higherIsBetter ? {backgroundColor: "green"} : {backgroundColor: "red"},
     railStyle: higherIsBetter ? {backgroundColor: "red"} : {backgroundColor: "green"},
@@ -323,78 +394,6 @@ function RangeConstraint({uid, min, max, marks, higherIsBetter}) {
   </div>
   );
 }
-
-/*
-
-function RangeConstraint2({uid, min, max, marks}) {
-  
-  const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const value = constraints[uid];
-
-  const all = useRecoilValue(allCandidatesState);
-
-  function onChange(x: any, _index: any) {
-    let n = {...constraints};
-    const oldval = n[uid];
-    n[uid] = x;
-    const withNew = filterCandidates(all, n);
-    if (withNew.length === 0) {
-      n[uid] = oldval;
-    }
-    setConstraints(n)
-  }
-
-  return (
-    <div>
-      <ReactSlider
-        className="horizontal-slider"
-        min={min}
-        max={max}
-        value={value}
-        onChange={onChange}
-        defaultValue={[0, 100]}
-        pearling
-        thumbClassName="example-thumb"
-        trackClassName="example-track"
-        renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
-      />
-    </div>
-  );
-}
-
-function RangeConstraint3({uid, min, max, marks}) {
-  const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const val = constraints[uid];
-  const all = useRecoilValue(allCandidatesState);
-
-  function onChange(x: any) {
-    let n = {...constraints};
-    n[uid] = x;
-    const withNew = filterCandidates(all, n);
-    if (withNew.length > 0) {
-      setConstraints(n)
-    }
-  }
-  
-  let rangeProps = {
-      min: min,
-      max: max,
-      onChange: onChange,
-      allowCross: false,
-      value: [...val]
-    };
-  
-  if (marks !== null) {
-    rangeProps["marks"] = marks;
-  }
-  
-  return (
-  <div>
-    <Range {...rangeProps} />
-  </div>
-  );
-}
-*/
 
 
 function StartButton({}) {
@@ -418,7 +417,7 @@ function StartButton({}) {
 
 
 
-  
+
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
         onClick={() => {setSubmit(true)}}>
