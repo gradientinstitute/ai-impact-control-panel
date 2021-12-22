@@ -2,6 +2,8 @@ import numpy as np
 from functools import partial
 from deva import halfspace
 
+from itertools import combinations
+
 
 class Candidate:
     def __init__(self, name, attributes, spec_name=None):
@@ -50,6 +52,55 @@ class Eliciter:
     def description():
         # placeholder for the description of eliciter
         raise NotImplementedError
+
+
+class VotingEliciter(Eliciter):
+    '''Simple eliciter that chooses the most selected candidate'''
+
+    def __init__(self, candidates, scenario):
+        assert candidates, "No candidate models"
+        Eliciter.__init__(self)
+        self.candidates = list(candidates)  # copy references
+        # save the number of time each candidate is chosen
+        self.chosen = dict.fromkeys(self.candidates, 0)
+        self.i = 0  # increasing index
+        # all the possible query pairs
+        self.comparisons = list(combinations(self.candidates, 2))
+
+        self._update()
+
+    def input(self, choice):
+        assert self._query and choice in self._query, "Response mismatch."
+        if choice == self.query[0].name:
+            self.chosen[self.query[0]] += 1
+        if choice == self.query[1].name:
+            self.chosen[self.query[1]] += 1
+
+        self._update()
+
+    @property
+    def terminated(self):
+        return self.i == len(self.comparisons)
+
+    @property
+    def result(self):
+        assert self.i == len(self.comparisons), "Not terminated"
+        return max(self.candidates, key=self.chosen.get)
+
+    @property
+    def query(self):
+        return self._query
+
+    def _update(self):
+        if len(self.comparisons) >= 1 and self.i < len(self.comparisons):
+            queries = self.comparisons[self.i]
+            self._query = Pair(queries[0], queries[1])
+            self.i += 1
+        else:
+            self._query = None
+
+    def description():
+        return "VotingEliciter Description"
 
 
 class Toy(Eliciter):

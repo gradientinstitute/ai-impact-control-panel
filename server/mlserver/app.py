@@ -36,10 +36,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = random_key(16)
 
 # TODO: proper cache / serialisation
-eliciters = {"toy": elicit.Toy, "activeranking": elicit.ActiveRanking,
-             "activemax": elicit.ActiveMax,
-             "activemaxsmooth": elicit.ActiveMaxSmooth,
-             "activemaxprimary": elicit.ActiveMaxPrimary}
+eliciters = {"Toy": elicit.Toy, "ActiveRanking": elicit.ActiveRanking,
+             "ActiveMax": elicit.ActiveMax,
+             "ActiveMaxSmooth": elicit.ActiveMaxSmooth,
+             "ActiveMaxPrimary": elicit.ActiveMaxPrimary,
+             "VotingEliciter": elicit.VotingEliciter}
 
 eliciters_descriptions = {k: v.description() for k, v in eliciters.items()}
 
