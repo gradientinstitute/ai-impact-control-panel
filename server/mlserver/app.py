@@ -101,6 +101,13 @@ def send_image(scenario, name):
     return send_from_directory(scenario_path, name)
 
 
+@app.route('/log/<path:name>')
+def send_log(name):
+    print("trying to get log")
+    scenario_path = 'logs'
+    return send_from_directory(scenario_path, name)
+
+
 @app.route('/<scenario>/bounds/init', methods=['PUT'])
 def init_bounds(scenario):
     global bounders
@@ -210,6 +217,8 @@ def init_session(scenario, algo, name):
     eliciters[session["ID"]] = eliciter
     loggers[session["ID"]] = log
     ranges[session["ID"]] = calc_ranges(candidates, spec)
+    spec['ID'] = session["ID"]
+    print(spec)
 
     # send the metadata for the scenario
     return spec
