@@ -93,6 +93,7 @@ def main():
     result = elicit.Candidate(name, choices[uid]['attr'])
     print("You have chosen:")
     interface.text(result, metrics)
+    print("The log has been saved in the 'log' folder under 'mlserver'")
 
 
 if __name__ == "__main__":
