@@ -186,8 +186,8 @@ def get_algorithm():
     return jsonify(eliciters_descriptions)
 
 
-@app.route('/<scenario>/init/<algo>')
-def init_session(scenario, algo):
+@app.route('/<scenario>/init/<algo>/<name>')
+def init_session(scenario, algo, name):
     global eliciters
     global loggers
 
@@ -205,7 +205,7 @@ def init_session(scenario, algo):
     candidates, spec = _scenario(scenario)
     # TODO: user choice
     eliciter = eliciters[algo](candidates, spec)
-    log = logger.Logger(scenario, algo)
+    log = logger.Logger(scenario, algo, name)
     eliciters[session["ID"]] = eliciter
     loggers[session["ID"]] = log
     ranges[session["ID"]] = calc_ranges(candidates, spec)

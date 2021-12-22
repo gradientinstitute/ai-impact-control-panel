@@ -6,12 +6,12 @@ class Logger:
     log = {}
     choice_number = 0
 
-    def __init__(self, scenario, algo):
+    def __init__(self, scenario, algo, name):
         self.log['profile'] = {}
         self.log['profile']['scenario'] = scenario
         self.log['profile']['algorithm'] = algo
         self.log['profile']['time'] = datetime.now()
-        self.log['profile']['user'] = "test user"
+        self.log['profile']['user'] = name
         self.log['choices'] = {}
 
     def add_choice(self, choice):
