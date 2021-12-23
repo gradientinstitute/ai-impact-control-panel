@@ -1,7 +1,6 @@
 import {useState, useEffect} from 'react';
-import { Range } from 'rc-slider';
+import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import ReactSlider from 'react-slider'
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import {Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
@@ -12,6 +11,35 @@ export const allCandidatesState = atom({
   key: 'allCandidates', 
   default: null, 
 });
+
+enum blockingStates {
+  'default',
+  'blocked',
+  'bounced',
+  'blocking',
+}
+
+const blockedScrollbarState = atom({
+  key: 'blockedScrollbarState',
+  default: null,
+});
+
+const scrollbarsState = selector({
+  key: 'scrollbarsState',
+  get: ({get}) => {
+    const all = get(allCandidatesState);
+    const metadata = get(metadataState);
+
+    if (all === null) {
+      return null;
+    }
+    
+    const ranges = _.mapValues(metadata.metrics, (_obj) => {
+      return blockingStates.default;
+    });
+    return ranges;
+  },
+})
 
 // maximum possible ranges (doesnt change)
 export const maxRangesState = selector({
@@ -31,6 +59,21 @@ export const maxRangesState = selector({
     return ranges;
   },
 });
+
+// higher is better map (doesnt change)
+export const higherIsBetterState = selector({
+  key: 'higherIsBetter',
+  get: ({get}) => {
+    const metadata = get(metadataState);
+    let higherIsBetterMap = new Map();
+    Object.entries(metadata.metrics).map((x) => {
+      const uid = x[0];
+      const u: any = x[1];
+      higherIsBetterMap.set(uid, u.higherIsBetter);
+    });
+    return higherIsBetterMap;
+  }
+})
 
 function filterCandidates(candidates, bounds) {
   const items = candidates.filter( (c) => {
@@ -58,15 +101,39 @@ export const currentCandidatesState = selector({
   },
 });
 
+// Returns the most optimal values for each metric given possible candidates
+export const bestValuesState = selector({
+  key: 'optimalMetricValues',
+  get: ({get}) => {
+    const currentCandidates = get(currentCandidatesState);
+    const higherIsBetterMap = get(higherIsBetterState);
+    let currOptimal = new Map();
+    currentCandidates.forEach((candidate) => {
+      Object.entries(candidate).forEach(([key, value]) => {
+        const val = value as number;
+        const defaultValue = higherIsBetterMap.get(key) ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
+        const storedValue = currOptimal.get(key) || defaultValue;
+        const lowerValue = val < storedValue ? val : storedValue;
+        const higherValue = val > storedValue ? val : storedValue;
+        const optimalValue = higherIsBetterMap.get(key) ? higherValue : lowerValue;
+        currOptimal.set(key, optimalValue);
+      })
+    })
+    return currOptimal;
+  }
+})
+
+
 export function ConstraintPane({}) {
 
   const scenario = useRecoilValue(scenarioState);
   const maxRanges = useRecoilValue(maxRangesState);
   const curr = useRecoilValue(currentCandidatesState);
+  const scrollbars = useRecoilValue(scrollbarsState);
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
-
+  const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(blockedScrollbarState);
   
   // initial loading of candidates
   useEffect(() => {
@@ -83,10 +150,14 @@ export function ConstraintPane({}) {
 
   // set initial value of the constraints
   useEffect(() => {
-    setConstraints(maxRanges);
+    setConstraints(maxRanges)
   }, [maxRanges]);
 
-      
+  // set initial value of the constraints
+  useEffect(() => {
+    setBlockedScrollbar(scrollbars)
+  }, [scrollbars]);
+
   if (curr === null) {
     return (<div>Loading...</div>);
   }
@@ -166,18 +237,17 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid}) {
   const vals = maxRanges[uid];
   const min = vals[0];
   const max = vals[1];
-  const cmin = constraints[uid][0];
-  const cmax = constraints[uid][1];
-  const cstring = u.prefix + " (" + cmin + " - " + cmax + ")\n" + u.suffix;
   const min_string = u.prefix + " " + min + " " + u.suffix;
   const max_string = u.prefix + " " + max + " " + u.suffix;
   const name = u.name;
+  const cmin = constraints[uid][0];
+  const cmax = constraints[uid][1];
+  const cstring = u.prefix + " (" + cmin + " - " + cmax + ")\n" + u.suffix;
 
   return (
     <div key={uid} className="grid grid-cols-5 gap-8 bg-gray-600 rounded-lg p-4">
       
       <h2 className="col-span-5 text-center">{name}</h2>
-      
       <p className="col-span-5 text-3xl">{cstring}</p>
 
       <p className="col-span-1 text-xs text-right my-auto">{min_string}</p>
@@ -212,100 +282,119 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
   .map(x => (<p>{x}</p>));
 
   return (
-    <div key={uid} className="grid grid-cols-6 gap-8 bg-gray-600 rounded-lg my-auto">
+    <div key={uid} className="grid grid-cols-10 gap-8 bg-gray-600 rounded-lg p-4">
             
-      <h2 className="col-span-6 text-center">{name}</h2>
+      <h2 className="col-span-10 text-center">{name}</h2>
 
-      <p className="col-span-2 my-auto">{}</p>
-      <div className="col-span-1 text-center">
+      <p className="col-span-3 my-auto">{}</p>
+      <div className="col-span-2 text-center">
       <p className="font-bold">Allowed</p>
       <p>{allowed}</p>
       </div>
 
-      <div className="col-span-1 text-center">
+      <div className="col-span-2 text-center">
       <p className="font-bold">Not Allowed</p>
       <p>{notAllowed}</p>
       </div>
-      <p className="col-span-2 my-auto">{}</p>
+      <p className="col-span-3 my-auto">{}</p>
 
-      <p className="col-span-1 my-auto">{}</p>
-      <div className="col-span-4 my-auto">
+      <p className="col-span-2 my-auto">{}</p>
+      <div className="col-span-6 my-auto">
         <RangeConstraint uid={uid} min={min} max={max} marks={options}/>
       </div>
-      <p className="col-span-1 my-auto">{}</p>
+      <p className="col-span-2 my-auto">{}</p>
 
     </div>
   )
 }
 
-function RangeConstraint2({uid, min, max}) {
-  
-  const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const value = constraints[uid];
+// Toggles whether metrics are blocked or not given their current candidates
+function setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid) {
+  Object.entries(n).forEach(([key, value]) => {      
+    const atThreshold = higherIsBetterMap.get(key) 
+      ? activeOptimal.get(key) == value[0]
+      : activeOptimal.get(key) == value[1];
+    m[key] = atThreshold ? blockingStates.blocked : blockingStates.default;
+    m[key] = (key == uid && atThreshold) ? blockingStates.bounced : m[key]; 
+  });
+}
 
-  const all = useRecoilValue(allCandidatesState);
+// Toggles suggestions for metrics to change to unblock currently blocked metric
+function setBlockingMetrics(n, m, higherIsBetterMap, activeOptimal) {
 
-  function onChange(x: any, _index: any) {
-    let n = {...constraints};
-    const oldval = n[uid];
-    n[uid] = x;
-    const withNew = filterCandidates(all, n);
-    if (withNew.length === 0) {
-      n[uid] = oldval;
-    }
-    setConstraints(n)
-  }
-
-  return (
-    <div>
-      <ReactSlider
-        className="horizontal-slider"
-        min={min}
-        max={max}
-        value={value}
-        onChange={onChange}
-        defaultValue={[0, 100]}
-        pearling
-        thumbClassName="example-thumb"
-        trackClassName="example-track"
-        renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
-      />
-    </div>
-  );
 }
 
 function RangeConstraint({uid, min, max, marks}) {
+  const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(blockedScrollbarState);
   const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const val = constraints[uid];
   const all = useRecoilValue(allCandidatesState);
+  const curr = useRecoilValue(currentCandidatesState); 
+  const activeOptimal = useRecoilValue(bestValuesState);
+  const higherIsBetterMap = useRecoilValue(higherIsBetterState);
 
-  function onChange(x: any) {
-    let n = {...constraints};
-    n[uid] = x;
-    const withNew = filterCandidates(all, n);
-    if (withNew.length > 0) {
-      setConstraints(n)
-    }
+  const higherIsBetter = higherIsBetterMap.get(uid);
+  const val = higherIsBetter ? constraints[uid][0] : constraints[uid][1];
+
+  enum HandleColours {
+    'white',  // default
+    'gray',   // blocked
+    'orange', // bounced
+    'red',    // blocking
   }
-  
+
+  function onChange(newVal: any) {
+    let n = {...constraints};
+    let m = {...blockedScrollbar};
+
+    n[uid] = higherIsBetter ? [newVal, n[uid][1]] : [n[uid][0], newVal];
+    const withNew = filterCandidates(all, n);
+
+    if (withNew.length > 0) {
+      setConstraints(n);
+    }
+
+    changeScrollbarColours();
+    setBlockedScrollbar(m);
+  } 
+
+  function onAfterChange() {
+    changeScrollbarColours();
+  }
+
+  function changeScrollbarColours() {
+    let n = {...constraints}
+    let m = {...blockedScrollbar};
+
+    setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid);
+    setBlockingMetrics(n, m, higherIsBetterMap, activeOptimal);
+
+    setBlockedScrollbar(m);
+  }
+
   let rangeProps = {
-      min: min,
-      max: max,
-      onChange: onChange,
-      allowCross: false,
-      value: [...val],
-    };
-  
+    min: min,
+    max: max,
+    onChange: onChange,
+    onAfterChange: onAfterChange,
+    allowCross: false,
+    value: val,
+    handleStyle: {backgroundColor: HandleColours[blockedScrollbar[uid]]},
+    trackStyle: higherIsBetter ? {backgroundColor: "green"} : {backgroundColor: "red"},
+    railStyle: higherIsBetter ? {backgroundColor: "red"} : {backgroundColor: "green"},
+  };
+
   if (marks !== null) {
     rangeProps["marks"] = marks;
+    rangeProps["step"] = null;
   }
-  
+
   return (
   <div>
-    <Range {...rangeProps} />
+    <Slider {...rangeProps} />
   </div>
   );
 }
+
 
 function StartButton({}) {
 
@@ -328,7 +417,7 @@ function StartButton({}) {
 
 
 
-  
+
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
         onClick={() => {setSubmit(true)}}>
@@ -338,4 +427,3 @@ function StartButton({}) {
       </button>
   );
 }
-
