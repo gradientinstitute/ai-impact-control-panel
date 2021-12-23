@@ -58,7 +58,33 @@ def main():
             choice["right"]["name"],
             choice["right"]["values"],
         )
-        interface.text(elicit.Pair(left, right), metrics)
+
+        # fchoice = elicit.Pair(left, right)
+
+        # interface.text(elicit.Pair(left, right), metrics)
+
+        # # Answered by the user (via client)
+        # name_options = [choice["left"]["name"], choice["right"]["name"]]
+
+        # i = None
+        # print(f'(Answer {name_options[0]} or {name_options[1]})')
+        # while i not in name_options:
+        #     i = input()
+        #     if len(i) == 1:
+        #         # allow shorthand
+        #         i = "System_" + i
+        # if i == name_options[0]:
+        #     j = name_options[1]
+        # else:
+        #     j = name_options[0]
+
+        # print("Submitting: ", end="")
+        # request = f'http://127.0.0.1:8666/{scenario}/bounds/choice'
+        # rdata = {"first": i, "second": j}
+
+        # print(request, rdata)
+        # choices = sess.put(request, json=rdata).json()
+
 
         # Answer automatically
         q = np.array([left.attributes[a] for a in attribs])

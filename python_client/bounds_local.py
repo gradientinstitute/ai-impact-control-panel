@@ -1,4 +1,5 @@
 """Productionising LDA.py"""
+from numpy.random.mtrand import choice
 from deva import fileio
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,6 +27,7 @@ def main():
     # Load baseline for comparison
     baseline = fileio.load_baseline(scenario)
     ref = np.array([baseline[a] for a in attribs])
+    ref = ref[:3]
 
     # Create a hidden "ground truth" oracle function
     dims = len(ref)
@@ -36,7 +38,9 @@ def main():
         return ((q - ref) @ w_true < 0)
 
     # Test whether the sampler can elicit this oracle's preference
-    sampler = bounds.TestSampler(ref, table, sign, attribs, steps=15)
+    # sampler = bounds.TestSampler(ref, table, sign, attribs, steps=15)
+
+    sampler = bounds.DummyEliciter(ref, table, sign, attribs, steps=15)
     choices = []  # logged for plotting
 
     # For display purposes
@@ -47,10 +51,21 @@ def main():
         # Display the choice between this and the reference
         interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
 
-        # Answer automatically
-        choices.append(sampler.choice)
-        label = oracle(sampler.choice)
+        # Answer based on user's input
+        if input() == "Baseline" or "Base":
+            # None
+            choices.append(ref)
+            label = oracle(sampler.ref)
+        else:
+            choices.append(sampler.choice)
+            label = oracle(sampler.choice)
+        
         sampler.observe(label)
+
+        # Answer automatically
+        # choices.append(sampler.choice)
+        # label = oracle(sampler.choice)
+        # sampler.observe(label)
 
         if label:
             print("Choice: Oracle (ACCEPTED) candidate.\n\n")
