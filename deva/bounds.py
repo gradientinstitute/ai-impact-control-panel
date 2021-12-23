@@ -73,26 +73,19 @@ class DummyEliciter(BoundsEliciter):
         diff = np.array(self.X, dtype=float) - self.ref[None, :]
         dcov = np.cov(diff.T)
         dmean = diff.mean(axis=0)
-        w = np.linalg.solve(dcov, dmean)
-        w /= (w@w)**.5  # normalise
-        self.w = w
+        # TODO keep record of all the points and labels
+        # w = np.linalg.solve(dcov, dmean)
+        # w /= (w@w)**.5  # normalise
+        # self.w = w
 
         dims = len(self.ref)
 
-        # TODO: random choice
-        # rand_candidate = random.choice(self.candidates)
-        # if len(self.candidates) > 1:
-        #     self._query = elicit.Pair("baseline", rand_candidate)
-        # else:
-        #     self._query = None
-
-        # TODO random candidate choice ,choice = query
-        
+        # random candidate choice
         choice = np.zeros(dims, float) - 1
         while (choice < 0).any():
             diff = np.random.randn(len(self.ref)) * self.radius
-            diff -= w * (diff @ w) / (w @ w)  # make perpendicular
-            diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
+            # diff -= w * (diff @ w) / (w @ w)  # make perpendicular
+            # diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
             choice = self.ref + diff
 
         self.choice = choice  # candidate
@@ -105,16 +98,12 @@ class DummyEliciter(BoundsEliciter):
         # return
 
     def guess(self, q):
-        return ((q - self.ref) @ self.w < 0)
+        return True
+        # return ((q - self.ref) @ self.w < 0)
 
     @property
     def terminated(self):
         return self._step > self.steps
-
-    # @property
-    # def result(self):
-    #     assert self._step > self.steps, "Not terminated."
-    #     return  # TODO
 
 
 class TestSampler(BoundsEliciter):
