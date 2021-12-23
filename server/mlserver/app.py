@@ -3,6 +3,7 @@ from flask import (Flask, session, jsonify as _jsonify,
 
 # from flask_caching import Cache
 from deva import elicit, bounds, fileio, logger
+from fpdf import FPDF
 import numpy as np
 import toml
 import random
@@ -218,8 +219,6 @@ def init_session(scenario, algo, name):
     loggers[session["ID"]] = log
     ranges[session["ID"]] = calc_ranges(candidates, spec)
     spec['ID'] = session["ID"]
-    print(spec)
-
     # send the metadata for the scenario
     return spec
 
@@ -295,6 +294,18 @@ def get_choice(scenario):
             ".toml"
         with open(output_file_name, "w") as toml_file:
             toml.dump(data, toml_file)
+        pdf = FPDF()
+        # Add a page
+        pdf.add_page()
+        # set style and size of font
+        # that you want in the pdf
+        pdf.set_font("Arial", size=15)
+        f = open(output_file_name, "r")
+        for lines in f:
+            pdf.cell(200, 10, txt=lines, ln=1, align='C')
+        pdf.output("logs/log of session " + str(session["ID"]) +
+                   ".pdf")
+
     else:
         # eliciter has not terminated - extract the next choice
         assert isinstance(eliciter.query, elicit.Pair)
