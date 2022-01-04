@@ -29,6 +29,12 @@ export const algoState = atom({
     default: null, 
   });
 
+// state for name entered by the user
+export const nameState = atom({  
+  key: 'name', 
+  default: null, 
+});
+
 // state for the metadata for the chosen scenario
 // for the scenario & algo
 export const metadataState = atom({  

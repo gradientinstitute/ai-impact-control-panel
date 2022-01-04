@@ -7,9 +7,14 @@ def main():
     # make a persistent session
     sess = requests.Session()
 
+    name = "!!!"
+    print("Please enter your name")
+    name = input() or "!!!"
+
     print("Requesting Scenario List")
     request = 'http://127.0.0.1:8666/scenarios'
     print(request)
+
     scenarios = sess.get(request).json()
 
     scenario = "!!!"
@@ -19,7 +24,7 @@ def main():
         scenario = input() or "!!!"
 
     print("Requesting Algorithm List")
-    request = f'http://127.0.0.1:8666/algorithms'
+    request = 'http://127.0.0.1:8666/algorithms'
     print(request)
     algos = sess.get(request).json()
     # print("Available algorithms:", *algos)
@@ -31,7 +36,7 @@ def main():
 
     print("Starting eliciter session")
     # request = f'http://127.0.0.1:8666/{scenario}/metadata'
-    request = f'http://127.0.0.1:8666/{scenario}/init/{algo}'
+    request = f'http://127.0.0.1:8666/{scenario}/init/{algo}/{name}'
     print(request)
     meta = sess.get(request).json()
 
@@ -88,6 +93,7 @@ def main():
     result = elicit.Candidate(name, choices[uid]['attr'])
     print("You have chosen:")
     interface.text(result, metrics)
+    print("The log has been saved in the 'log' folder under 'mlserver'")
 
 
 if __name__ == "__main__":

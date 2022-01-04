@@ -42,6 +42,11 @@ export function ResultPane({}) {
         See <b>metrics_{spec}.toml</b> and <b>params_{spec}.toml</b> for more
         details of {name}.
       </p>
+      <p>
+        Click to download the <a href={"api/log/log of session " + metadata.ID + ".toml"} download><b>toml
+        log file</b></a> or the <a href={"api/log/log of session " + metadata.ID + ".pdf"} download><b>pdf
+        log file</b></a> generated for the session.
+      </p>
       <StartOver />
     </div>
   );
