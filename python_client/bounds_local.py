@@ -46,7 +46,7 @@ def main():
     # For display purposes
     ref_candidate = elicit.Candidate("Baseline", baseline, None)
 
-    print("Do you prefer answer automatically? Y/N")
+    print("Do you prefer to answer automatically? Y/N")
     yes = ["Y", "y", "yes"]
     answer = input() in yes
     base = ["Baseline", "Base", "baseline", "base"]
