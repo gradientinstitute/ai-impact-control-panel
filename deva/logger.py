@@ -16,7 +16,7 @@ class Logger:
 
     def add_choice(self, choice):
         self.log['choices']['Question number ' +
-                            str(self.choice_number)] = choice
+                            str(self.choice_number + 1)] = choice
         self.choice_number += 1
 
     def add_result(self, result):
