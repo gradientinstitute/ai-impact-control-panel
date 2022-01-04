@@ -38,9 +38,9 @@ def main():
         return ((q - ref) @ w_true < 0)
 
     # Test whether the sampler can elicit this oracle's preference
-    sampler = bounds.TestSampler(ref, table, sign, attribs, steps=15)
+    # sampler = bounds.TestSampler(ref, table, sign, attribs, steps=15)
 
-    # sampler = bounds.DummyEliciter(ref, table, sign, attribs, steps=15)
+    sampler = bounds.DummyEliciter(ref, table, sign, attribs, steps=15)
     choices = []  # logged for plotting
 
     # For display purposes
@@ -61,7 +61,7 @@ def main():
             sampler.observe(label)
         else:
             # Answer based on user's input
-            label = input() != "Baseline" or "Base"
+            label = input() != "Baseline" or "Base" or "base" or "baseline"
             sampler.observe(label)
 
         if label:
@@ -73,7 +73,7 @@ def main():
     print("Experimental results ------------------")
     print("Truth:    ", w_true)
     # with weight
-    # print("Estimate: ", sampler.w)
+    print("Estimate: ", sampler.w)
     accept = oracle(table)
     accept_rt = accept.mean()
     pred = sampler.guess(table)

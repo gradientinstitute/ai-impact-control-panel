@@ -1,5 +1,8 @@
+from re import X
 import numpy as np
 from deva import elicit, fileio
+
+from sklearn.linear_model import LogisticRegression
 
 import random
 
@@ -30,11 +33,6 @@ class DummyEliciter(BoundsEliciter):
     """Dummy Eliciter that selects random candidates"""
 
     def __init__(self, ref, table, sign, attribs, steps):
-        # assert candidates, "No candidate models"
-        # BoundsEliciter.__init__(self)
-        # self.candidates = list(candidates)
-        # candidates
-
         self.attribs = attribs
         radius = 0.5 * table.std(axis=0)  # scale of perturbations
         ref = np.asarray(ref, dtype=float)  # sometimes autocasts to long int
@@ -73,19 +71,15 @@ class DummyEliciter(BoundsEliciter):
         diff = np.array(self.X, dtype=float) - self.ref[None, :]
         dcov = np.cov(diff.T)
         dmean = diff.mean(axis=0)
-        # TODO keep record of all the points and labels
-        # w = np.linalg.solve(dcov, dmean)
-        # w /= (w@w)**.5  # normalise
-        # self.w = w
-
+        w = np.linalg.solve(dcov, dmean)
+        self.w = w
+        
         dims = len(self.ref)
 
         # random candidate choice
         choice = np.zeros(dims, float) - 1
         while (choice < 0).any():
             diff = np.random.randn(len(self.ref)) * self.radius
-            # diff -= w * (diff @ w) / (w @ w)  # make perpendicular
-            # diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
             choice = self.ref + diff
 
         self.choice = choice  # candidate
@@ -98,8 +92,7 @@ class DummyEliciter(BoundsEliciter):
         # return
 
     def guess(self, q):
-        return True
-        # return ((q - self.ref) @ self.w < 0)
+        return ((q - self.ref) @ self.w < 0)
 
     @property
     def terminated(self):
