@@ -89,7 +89,7 @@ class DummyEliciter(BoundsEliciter):
             dict(zip(self.attribs, choice))
         )
         self._step += 1
-        # return
+        return
 
     def guess(self, q):
         return ((q - self.ref) @ self.w < 0)

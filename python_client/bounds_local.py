@@ -47,7 +47,9 @@ def main():
     ref_candidate = elicit.Candidate("Baseline", baseline, None)
 
     print("Do you prefer answer automatically? Y/N")
-    answer = (input() == "Y" or "y" or "yes")
+    yes = ["Y", "y", "yes"]
+    answer = input() in yes
+    base = ["Baseline", "Base", "baseline", "base"]
 
     while not sampler.terminated:
 
@@ -61,7 +63,7 @@ def main():
             sampler.observe(label)
         else:
             # Answer based on user's input
-            label = input() != "Baseline" or "Base" or "base" or "baseline"
+            label = input() not in base
             sampler.observe(label)
 
         if label:
