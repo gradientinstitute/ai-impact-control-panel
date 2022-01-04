@@ -7,7 +7,7 @@ import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
 
-import {Pane, paneState, scenarioState, algoState} from './Base';
+import {Pane, paneState, scenarioState, algoState, nameState} from './Base';
 
 
 // the set of scenarios retrieved from the serever
@@ -110,11 +110,16 @@ function Step2({stepIndex, setStepIndex}) {
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
   const [_scenario, setScenario] = useRecoilState(scenarioState);
+  const [_name, setName] = useRecoilState(nameState);
   const canGoBack = stepIndex >= 0;
   const buttonDisabled = current === null;
 
   return (
     <TabPanel key={1}>
+      <p className="text-lg pb-6">Enter your name</p>
+      <input type="text" name="name" value={_name} onChange={ (x) => {setName(x.target.value)}}/>
+      <br></br>
+      <br></br>
       <p className="text-lg pb-6">Select a scenario</p>
       <ScenarioSelector />
       <br></br>

@@ -3,6 +3,7 @@ from flask import (Flask, session, jsonify as _jsonify,
 
 # from flask_caching import Cache
 from deva import elicit, bounds, fileio, logger
+from fpdf import FPDF
 import numpy as np
 import toml
 import random
@@ -101,6 +102,13 @@ def send_image(scenario, name):
     return send_from_directory(scenario_path, name)
 
 
+@app.route('/log/<path:name>')
+def send_log(name):
+    print("trying to get log")
+    scenario_path = 'logs'
+    return send_from_directory(scenario_path, name)
+
+
 @app.route('/<scenario>/bounds/init', methods=['PUT'])
 def init_bounds(scenario):
     global bounders
@@ -187,8 +195,8 @@ def get_algorithm():
     return jsonify(eliciters_descriptions)
 
 
-@app.route('/<scenario>/init/<algo>')
-def init_session(scenario, algo):
+@app.route('/<scenario>/init/<algo>/<name>')
+def init_session(scenario, algo, name):
     global eliciters
     global loggers
 
@@ -206,11 +214,11 @@ def init_session(scenario, algo):
     candidates, spec = _scenario(scenario)
     # TODO: user choice
     eliciter = eliciters[algo](candidates, spec)
-    log = logger.Logger(scenario, algo)
+    log = logger.Logger(scenario, algo, name)
     eliciters[session["ID"]] = eliciter
     loggers[session["ID"]] = log
     ranges[session["ID"]] = calc_ranges(candidates, spec)
-
+    spec['ID'] = session["ID"]
     # send the metadata for the scenario
     return spec
 
@@ -286,6 +294,18 @@ def get_choice(scenario):
             ".toml"
         with open(output_file_name, "w") as toml_file:
             toml.dump(data, toml_file)
+        pdf = FPDF()
+        # Add a page
+        pdf.add_page()
+        # set style and size of font
+        # that you want in the pdf
+        pdf.set_font("Arial", size=15)
+        f = open(output_file_name, "r")
+        for lines in f:
+            pdf.cell(200, 10, txt=lines, ln=1, align='C')
+        pdf.output("logs/log of session " + str(session["ID"]) +
+                   ".pdf")
+
     else:
         # eliciter has not terminated - extract the next choice
         assert isinstance(eliciter.query, elicit.Pair)
