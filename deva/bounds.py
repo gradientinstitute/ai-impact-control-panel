@@ -2,10 +2,6 @@ from re import X
 import numpy as np
 from deva import elicit, fileio
 
-from sklearn.linear_model import LogisticRegression
-
-import random
-
 
 # Things to try:
 # TODO: limit query perturbations to 2 dimensions

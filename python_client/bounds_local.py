@@ -39,8 +39,8 @@ def main():
 
     # Test whether the sampler can elicit this oracle's preference
     # sampler = bounds.TestSampler(ref, table, sign, attribs, steps=15)
-
     sampler = bounds.DummyEliciter(ref, table, sign, attribs, steps=15)
+
     choices = []  # logged for plotting
 
     # For display purposes
