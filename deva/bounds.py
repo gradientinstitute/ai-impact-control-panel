@@ -1,6 +1,9 @@
 import numpy as np
 from deva import elicit, fileio
 
+from sklearn.linear_model import LogisticRegression
+import matplotlib.pyplot as plt
+
 
 # Things to try:
 # TODO: limit query perturbations to 2 dimensions
@@ -22,6 +25,130 @@ class BoundsEliciter:
     @property
     def terminated(self):
         raise NotImplementedError
+
+
+class LinearActive(BoundsEliciter):
+    """Eliciter using Logistics Regression"""
+
+    def __init__(self, ref, table, sign, attribs, steps):
+        self.attribs = attribs
+        radius = 0.5 * table.std(axis=0)  # scale of perturbations
+        ref = np.asarray(ref, dtype=float)  # sometimes autocasts to long int
+        radius = np.asarray(radius, dtype=float) * np.asarray(sign)
+
+        # NOTE: "higherisbetter" is encoded in sign of radius
+        self.ref = ref
+        self.radius = radius
+        dims = len(ref)
+        self._step = 0
+        self.steps = steps
+        self.lr = LogisticRegression() # Create a logistic regression instance
+
+        # Initialise
+        X = [ref+radius]
+        y = [1]
+        for d in range(dims):
+            v = ref + 0
+            # these labels are virtual / allowed to go negative
+            v[d] += radius[d]  # adding radius makes it better
+            X.append(v)
+            y.append(1)
+        self.X = X
+        self.y = y
+
+        self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
+
+        self._update()     
+
+    # input
+    def observe(self, label):
+        # if ref+a is a no, ref-a is a yes
+        if label:
+            self.X.append(2.*self.ref-self.choice)
+            self.y.append(1)
+        else:
+            self.X.append(self.choice)
+            self.y.append(0)
+        # self.y.append(label)
+
+        print(self.X, self.y)
+
+        # LogR
+        # y = # labels
+        if 0 in self.y:
+            self.lr.fit(self.X, self.y)
+        # labels = lr.predict(self.X)
+        # accuracy = lr.score(self.X, self.y)
+
+        # # Plot the decision boundary. For that, we will assign a color to each
+        # # point in the mesh [x_min, x_max]x[y_min, y_max].
+        # x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
+        # y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
+        # h = 0.02  # step size in the mesh
+        # xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+        # Z = self.lr.predict(np.c_[xx.ravel(), yy.ravel()])
+
+        # # Put the result into a color plot
+        # Z = Z.reshape(xx.shape)
+        # plt.figure(1, figsize=(4, 3))
+        # plt.pcolormesh(xx, yy, Z, cmap=plt.cm.Paired)
+
+        # # Plot also the training points
+        # plt.scatter(X[:, 0], X[:, 1], c=y, edgecolors="k", cmap=plt.cm.Paired)
+        # plt.xlabel("Sepal length")
+        # plt.ylabel("Sepal width")
+
+        # plt.xlim(xx.min(), xx.max())
+        # plt.ylim(yy.min(), yy.max())
+        # plt.xticks(())
+        # plt.yticks(())
+
+        # plt.show()
+
+
+        self._update()
+
+    def _update(self):
+        # linear discriminant analysis gives a decision plane normal
+        diff = np.array(self.X, dtype=float) - self.ref[None, :]
+        dcov = np.cov(diff.T)
+        dmean = diff.mean(axis=0)
+        # TODO keep record of all the points and labels
+        w = np.linalg.solve(dcov, dmean)
+        w /= (w@w)**.5  # normalise
+        self.w = w
+
+        dims = len(self.ref)
+
+        # if there is no logreg model, do random choice
+        if 0 in self.y:
+            choice = np.zeros(dims, float) - 1
+            while (choice < 0).any():
+                diff = np.random.randn(len(self.ref)) * self.radius
+                diff -= w * (diff @ w) / (w @ w)  # make perpendicular
+                diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
+                choice = self.ref + diff
+        # TODO narrow the error (uncertainty) based on logreg
+        else:
+            pass
+
+        self.choice = choice  # candidate
+
+        self.query = elicit.Candidate(
+            fileio.autoname(self._step),
+            dict(zip(self.attribs, choice))
+        )
+        self._step += 1
+        # return
+
+        # lr.decision_function(X)
+
+    def guess(self, q):
+        return ((q - self.ref) @ self.w < 0)
+
+    @property
+    def terminated(self):
+        return self._step > self.steps
 
 
 class LinearRandom(BoundsEliciter):
