@@ -26,7 +26,7 @@ class BoundsEliciter:
 
 class LinearRandom(BoundsEliciter):
     """
-    LinearRandom Eliciter that selects random candidates 
+    LinearRandom Eliciter that selects random candidates
     and asks whether the user prefer candidate to baseline or not.
     The bound generated separates the candidates being accepted and
     those being rejected.
@@ -39,9 +39,11 @@ class LinearRandom(BoundsEliciter):
             ref: array
                 an array representing the reference system (1 * m metrics)
             table: array
-                a 2d array storing all the candidates (n candidates * m metrics)
+                a 2d array storing all the candidates
+                (n candidates * m metrics)
             sign: int
-                helps to always minimise/maximise the values in different metrics
+                helps to always minimise/maximise the values
+                in different metrics
             attribs: array
                 metrics for each candidate
             steps: int
