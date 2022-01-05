@@ -6,45 +6,15 @@ import {Pane, paneState, scenarioState,
         metadataState, constraintsState } from './Base';
 import axios from 'axios';
 import _, { indexOf, last } from "lodash";
+import {roundValue, rvOperations} from './Widgets';
+import {getMetricImportance, lastBouncedState, scrollbarHandleState, 
+        setBlockedMetrics, setBlockingMetrics, scrollbarsState, 
+        bestValuesState} from './ConstrainScrollbar';
 
 export const allCandidatesState = atom({  
   key: 'allCandidates', 
   default: null, 
 });
-
-enum blockingStates {
-  'default',
-  'blocked',
-  'bounced',
-  'blocking',
-}
-
-const lastBouncedState = atom({
-  key: 'lastBounced',
-  default: null,
-});
-
-const blockedScrollbarState = atom({
-  key: 'blockedScrollbarState',
-  default: null,
-});
-
-const scrollbarsState = selector({
-  key: 'scrollbarsState',
-  get: ({get}) => {
-    const all = get(allCandidatesState);
-    const metadata = get(metadataState);
-
-    if (all === null) {
-      return null;
-    }
-    
-    const ranges = _.mapValues(metadata.metrics, (_obj) => {
-      return blockingStates.default;
-    });
-    return ranges;
-  },
-})
 
 // maximum possible ranges (doesnt change)
 export const maxRangesState = selector({
@@ -58,8 +28,11 @@ export const maxRangesState = selector({
     }
     
     const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
+      const decimals = 'decimals' in val ? val.decimals : 0; 
       const tvals = all.map(x => x[uid]);
-      return [Math.min(...tvals), Math.max(...tvals)];
+      const min = roundValue(rvOperations.floor, Math.min(...tvals), decimals); 
+      const max = roundValue(rvOperations.ceil, Math.max(...tvals), decimals); 
+      return [min, max];
     });
     return ranges;
   },
@@ -92,11 +65,10 @@ function filterCandidates(candidates, bounds) {
 }
 
 // filter all the candidates to just the ones
-// permissable by the currently selectede ranges
+// permissable by the currently selected ranges
 export const currentCandidatesState = selector({
   key: 'currentCandidates',
   get: ({get}) => {
-  
     const allCandidates = get(allCandidatesState);
     const constraints = get(constraintsState);
     if (allCandidates === null || constraints === null) {
@@ -105,28 +77,6 @@ export const currentCandidatesState = selector({
     return filterCandidates(allCandidates, constraints);
   },
 });
-
-// Returns the most optimal values for each metric given possible candidates
-export const bestValuesState = selector({
-  key: 'optimalMetricValues',
-  get: ({get}) => {
-    const currentCandidates = get(currentCandidatesState);
-    const higherIsBetterMap = get(higherIsBetterState);
-    let currOptimal = new Map();
-    currentCandidates.forEach((candidate) => {
-      Object.entries(candidate).forEach(([key, value]) => {
-        const val = value as number;
-        const defaultValue = higherIsBetterMap.get(key) ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
-        const storedValue = (typeof currOptimal.get(key) != 'undefined') ? currOptimal.get(key) : defaultValue;
-        const lowerValue = val < storedValue ? val : storedValue;
-        const higherValue = val > storedValue ? val : storedValue;
-        const optimalValue = higherIsBetterMap.get(key) ? higherValue : lowerValue;
-        currOptimal.set(key, optimalValue);
-      })
-    })
-    return currOptimal;
-  }
-})
 
 export function ConstraintPane({}) {
 
@@ -137,7 +87,7 @@ export function ConstraintPane({}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
-  const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(blockedScrollbarState);
+  const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(scrollbarHandleState);
 
   // initial loading of candidates
   useEffect(() => {
@@ -247,6 +197,7 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid}) {
   const cmin = constraints[uid][0];
   const cmax = constraints[uid][1];
   const cstring = u.prefix + " (" + cmin + " - " + cmax + ")\n" + u.suffix;
+  const decimals = 'decimals' in u ? u.decimals : null; 
 
   return (
     <div key={uid} className="grid grid-cols-5 gap-8 bg-gray-600 rounded-lg p-4">
@@ -256,7 +207,7 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid}) {
 
       <p className="col-span-1 text-xs text-right my-auto">{min_string}</p>
       <div className="col-span-3 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={null}/>
+        <RangeConstraint uid={uid} min={min} max={max} marks={null} decimals={decimals}/>
       </div>
       <p className="col-span-1 text-xs text-left my-auto">{max_string}</p>
     </div>
@@ -304,7 +255,7 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
 
       <p className="col-span-2 my-auto">{}</p>
       <div className="col-span-6 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={options}/>
+        <RangeConstraint uid={uid} min={min} max={max} marks={options} decimals={null}/>
       </div>
       <p className="col-span-2 my-auto">{}</p>
 
@@ -312,122 +263,25 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
   )
 }
 
-// Toggles whether metrics are blocked or not given their current candidates
-function setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, bounced,
-  lastBounced, setLastBounced) {
-
-    // check the current metric
-    if (bounced) {
-      lastBounced = uid;
-    } else if (bounced == uid) {
-      lastBounced = null;
-    }
-
-    // check if another change has resolved the most recent bounce
-    if (lastBounced != null) {
-      
-      const bounds = Object.values(Object.fromEntries(Object.entries(n)
-        .filter(([key]) => key.match(lastBounced))))[0];
-      
-      const optimal = higherIsBetterMap.get(lastBounced) 
-        ? activeOptimal.get(lastBounced) == bounds[0]
-        : activeOptimal.get(lastBounced) == bounds[1];
-
-      if (!(optimal)) {
-        lastBounced = null;
-        setLastBounced(lastBounced);
-      }
-    }
-
-    // mark as blocked
-    Object.entries(n).forEach(([metric, bounds]) => {
-
-      const optimal = higherIsBetterMap.get(metric) 
-        ? activeOptimal.get(metric) == bounds[0]
-        : activeOptimal.get(metric) == bounds[1];
-  
-      m[metric] = blockingStates.default;
-      m[metric] = optimal ? blockingStates.blocked : m[metric];
-      m[metric] = lastBounced == metric ? blockingStates.bounced : m[metric];
-      // m[metric] = blocking
-    })
-
-    return lastBounced;
+function getSliderStep(max, min, decimals) {
+  let stepPrecision = Number((0.1 ** decimals).toFixed(decimals));
+  return decimals == null ? 1 : stepPrecision;
 }
 
-// SOURCE: https://supunkavinda.blog/js-euclidean-distance
-// todo: check this
-function eucDistance(a, b) {
-    return a
-    .map((x, i) => Math.abs(x-b[i])**2) // square the difference
-    .reduce((sum, now) => sum + now) // sum
-    ** (1/2);
-}
+function RangeConstraint({uid, min, max, marks, decimals}) {
 
-  // filter for all where the threshold for the last bounced is less than intended
-function getPossibleCandidates(all, higherIsBetterMap, activeOptimal, uid) {
-  let possibleCandidates = new Array();
-  Object.values(all).forEach((candidate) => {
-    const isBetter = higherIsBetterMap.get(uid) 
-      ? candidate[uid] > activeOptimal.get(uid) 
-      : candidate[uid] < activeOptimal.get(uid);
-    if (isBetter) {
-      possibleCandidates.push(Object.values(candidate));
-    }
-  });
-  return possibleCandidates;
-}
-
-// Returns the least invasive candidate - this heuristic can be modified
-// TODO: scale the metrics by dividing by standard deviation
-// TODO: suggest tied "best" candidates
-function getBestUnblockingCandidates(possibleCandidates, currPosition) {
-  const currentPositionVector = Object.values(currPosition);
-  let bestCandidate = {'targetCandidate': null, 'eucDistance': Number.MAX_SAFE_INTEGER};
-  possibleCandidates.forEach(possibleCandidateVector => {
-    const dist = eucDistance(possibleCandidateVector, currentPositionVector);
-    if (dist < bestCandidate.eucDistance) {
-      bestCandidate.targetCandidate = possibleCandidateVector;
-      bestCandidate.eucDistance = dist;
-    }
-  });
-  return bestCandidate;
-}
-
-// Toggles suggestions for metrics to change to unblock currently blocked metric
-function setBlockingMetrics(n, m, uid, higherIsBetterMap, activeOptimal, all, lastBounced) {
-
-  if (uid != lastBounced) return;
-
-  const possibleCandidates = getPossibleCandidates(all, higherIsBetterMap, activeOptimal, uid);
-  const currPosition = filterCandidates(all, n)[0];
-  const bestCandidate = getBestUnblockingCandidates(possibleCandidates, currPosition);
-
-  if (bestCandidate.targetCandidate == null) return;
-  
-  // make suggestions for metrics to unblock
-  Object.entries(currPosition).forEach(([key, val], i) => {
-    const canBeRelaxed = higherIsBetterMap.get(key) 
-      ? val > bestCandidate.targetCandidate[i]
-      : val < bestCandidate.targetCandidate[i];
-    
-    // mark as blocking
-    m[key] = canBeRelaxed ? blockingStates.blocking : m[key];
-  });
-}
-
-function RangeConstraint({uid, min, max, marks}) {
-  const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(blockedScrollbarState);
+  const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(scrollbarHandleState);
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const [lastBounced, setLastBounced] = useRecoilState(lastBouncedState);
 
   const all = useRecoilValue(allCandidatesState);
   const activeOptimal = useRecoilValue(bestValuesState);
+  const metricImportance = useRecoilValue(getMetricImportance);
 
   const higherIsBetterMap = useRecoilValue(higherIsBetterState);
   const higherIsBetter = higherIsBetterMap.get(uid);
   const val = higherIsBetter ? constraints[uid][0] : constraints[uid][1];
-
+  
   let bounced = null;
 
   enum HandleColours {
@@ -441,20 +295,21 @@ function RangeConstraint({uid, min, max, marks}) {
     let n = {...constraints};
     let m = {...blockedScrollbar};
 
+    // set the bounds of the scrollbar
     n[uid] = higherIsBetter ? [newVal, n[uid][1]] : [n[uid][0], newVal];
     const withNew = filterCandidates(all, n);
 
     if (withNew.length > 0) {
       setConstraints(n);
     } else {
+      bounced = uid;
       setLastBounced(uid);
     }
 
-    console.log(lastBounced)
-
+    // change scrollbar handle colours
     changeScrollbarColours();
     setBlockedScrollbar(m);
-  } 
+  }
 
   function onAfterChange() {
     changeScrollbarColours();
@@ -463,9 +318,9 @@ function RangeConstraint({uid, min, max, marks}) {
   function changeScrollbarColours() {
     let n = {...constraints}
     let m = {...blockedScrollbar};
-
-    const b = setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, bounced, lastBounced, setLastBounced);
-    setBlockingMetrics(n, m, uid, higherIsBetterMap, activeOptimal, all, b);
+    const b = setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, 
+      bounced, lastBounced, setLastBounced, decimals);
+    setBlockingMetrics(n, m, uid, higherIsBetterMap, activeOptimal, all, b, metricImportance);
     setBlockedScrollbar(m);
   }
 
@@ -476,7 +331,7 @@ function RangeConstraint({uid, min, max, marks}) {
     onAfterChange: onAfterChange,
     allowCross: false,
     value: val,
-    // TODO: step: 10th of the range from minimum or maximum
+    step: getSliderStep(max, min, decimals),
     handleStyle: {backgroundColor: HandleColours[blockedScrollbar[uid]]},
     trackStyle: higherIsBetter ? {backgroundColor: "green"} : {backgroundColor: "red"},
     railStyle: higherIsBetter ? {backgroundColor: "red"} : {backgroundColor: "green"},
