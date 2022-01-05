@@ -39,7 +39,7 @@ def main():
 
     # Test whether the sampler can elicit this oracle's preference
     # sampler = bounds.TestSampler(ref, table, sign, attribs, steps=15)
-    sampler = bounds.DummyEliciter(ref, table, sign, attribs, steps=15)
+    sampler = bounds.LinearRandom(ref, table, sign, attribs, steps=15)
 
     choices = []  # logged for plotting
 
@@ -47,7 +47,7 @@ def main():
     ref_candidate = elicit.Candidate("Baseline", baseline, None)
 
     print("Do you prefer to answer automatically? Y/N")
-    yes = ["Y", "y", "yes"]
+    yes = ["Y", "Yes", "y", "yes"]
     answer = input() in yes
     base = ["Baseline", "Base", "baseline", "base"]
 
@@ -74,7 +74,6 @@ def main():
     # Display text results report
     print("Experimental results ------------------")
     print("Truth:    ", w_true)
-    # with weight
     print("Estimate: ", sampler.w)
     accept = oracle(table)
     accept_rt = accept.mean()

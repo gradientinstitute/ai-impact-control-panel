@@ -24,10 +24,30 @@ class BoundsEliciter:
         raise NotImplementedError
 
 
-class DummyEliciter(BoundsEliciter):
-    """Dummy Eliciter that selects random candidates"""
+class LinearRandom(BoundsEliciter):
+    """
+    LinearRandom Eliciter that selects random candidates 
+    and asks whether the user prefer candidate to baseline or not.
+    The bound generated separates the candidates being accepted and
+    those being rejected.
+    """
 
     def __init__(self, ref, table, sign, attribs, steps):
+        """
+        Parameters
+        ----------
+            ref: array
+                an array representing the reference system (1 * m metrics)
+            table: array
+                a 2d array storing all the candidates (n candidates * m metrics)
+            sign: int
+                helps to always minimise/maximise the values in different metrics
+            attribs: array
+                metrics for each candidate
+            steps: int
+                decides when to terminate
+        """
+
         self.attribs = attribs
         radius = 0.5 * table.std(axis=0)  # scale of perturbations
         ref = np.asarray(ref, dtype=float)  # sometimes autocasts to long int
