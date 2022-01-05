@@ -1,4 +1,3 @@
-from re import X
 import numpy as np
 from deva import elicit, fileio
 
@@ -69,7 +68,7 @@ class DummyEliciter(BoundsEliciter):
         dmean = diff.mean(axis=0)
         w = np.linalg.solve(dcov, dmean)
         self.w = w
-        
+
         dims = len(self.ref)
 
         # random candidate choice
