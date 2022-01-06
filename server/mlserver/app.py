@@ -90,6 +90,7 @@ def _scenario(name="jobs"):
             m.name = m.name.replace(" ", "_")
 
         scenarios[name] = (models, spec)
+        print(spec)
 
     return scenarios[name]
 
