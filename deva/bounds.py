@@ -2,7 +2,6 @@ import numpy as np
 from deva import elicit, fileio
 
 from sklearn.linear_model import LogisticRegression
-# import matplotlib.pyplot as plt
 
 
 # Things to try:
@@ -35,6 +34,23 @@ class LinearActive(BoundsEliciter):
     """
 
     def __init__(self, ref, table, sign, attribs, steps):
+        """
+        Parameters
+        ----------
+            ref: array
+                an array representing the reference system (1 * m metrics)
+            table: array
+                a 2d array storing all the candidates
+                (n candidates * m metrics)
+            sign: int
+                helps to always minimise/maximise the values
+                in different metrics
+            attribs: array
+                metrics for each candidate
+            steps: int
+                decides when to terminate
+        """
+
         self.attribs = attribs
         radius = 0.5 * table.std(axis=0)  # scale of perturbations
         ref = np.asarray(ref, dtype=float)  # sometimes autocasts to long int
@@ -103,16 +119,10 @@ class LinearActive(BoundsEliciter):
         # logistic regressor
         if 0 in self.y:  # If a logistic regression model exists
             test_X = [random_choice() for i in range(1000)]
-            probabilities = self.lr.predict_proba(test_X)
 
             # finding the least confident candidate
-            min_value = 1
-            min_index = 0
-            for x in range(len(probabilities)):
-                value = abs(probabilities[x][0] - probabilities[x][1])
-                if value < min_value:
-                    min_value = value
-                    min_index = x
+            probabilities = self.lr.predict_proba(test_X)[:, 1]
+            min_index = np.argmin(abs(probabilities - 0.5))
 
             self.choice = test_X[min_index]
 
