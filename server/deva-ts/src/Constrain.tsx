@@ -334,9 +334,9 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
     allowCross: false,
     value: val,
     step: getSliderStep(max, min, decimals),
-    handleStyle: {backgroundColor: HandleColours[blockedScrollbar[uid]]},
-    trackStyle: higherIsBetter ? {backgroundColor: "green"} : {backgroundColor: "red"},
-    railStyle: higherIsBetter ? {backgroundColor: "red"} : {backgroundColor: "green"},
+    handleStyle: {backgroundColor: HandleColours[blockedScrollbar[uid]], height: 17, width: 17, borderColor: HandleColours[blockedScrollbar[uid]]},
+    trackStyle: higherIsBetter ? {backgroundColor: "gray"} : {backgroundColor: "lightblue"},
+    railStyle: higherIsBetter ? {backgroundColor: "lightblue"} : {backgroundColor: "gray"},
   };
 
   if (marks !== null) {

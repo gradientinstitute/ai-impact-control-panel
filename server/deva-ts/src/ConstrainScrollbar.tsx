@@ -84,15 +84,17 @@ export const getMetricImportance = selector({
 export function setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, bounced,
   lastBounced, setLastBounced, decimals) {
 
+  let resolvedLastBounce = false;
+
   // check the current metric
   if (bounced) {
     lastBounced = uid;
   } else if (bounced == uid) {
     lastBounced = null;
+    resolvedLastBounce = true;
   }
 
   // check if another change has resolved the most recent bounce
-  let resolvedLastBounce = false;
   if (lastBounced != null) {
     
     const bounds = Object.values(Object.fromEntries(Object.entries(n)
