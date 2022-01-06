@@ -29,7 +29,11 @@ class BoundsEliciter:
 
 
 class LinearActive(BoundsEliciter):
-    """Eliciter using Logistics Regression"""
+    """
+    Eliciter using Logistics Regression
+    which helps to generate the candidate in the query closer
+    to the boundary in order to narrow the error.
+    """
 
     def __init__(self, ref, table, sign, attribs, steps):
         self.attribs = attribs
@@ -70,14 +74,9 @@ class LinearActive(BoundsEliciter):
             self.X.append(self.choice)
         self.y.append(label)
 
-        # print(self.X, self.y)
-
-        # LogR
-        # y = # labels
-        if 0 in self.y:
+        # If there is more than one class
+        if 0 in self.y: 
             self.lr.fit(self.X, self.y)
-        # labels = lr.predict(self.X)
-        # accuracy = lr.score(self.X, self.y)
 
         self._update()
 
@@ -86,14 +85,13 @@ class LinearActive(BoundsEliciter):
         diff = np.array(self.X, dtype=float) - self.ref[None, :]
         dcov = np.cov(diff.T)
         dmean = diff.mean(axis=0)
-        # TODO keep record of all the points and labels
         w = np.linalg.solve(dcov, dmean)
         w /= (w@w)**.5  # normalise
         self.w = w
 
         dims = len(self.ref)
 
-        # Helper function: make random choice
+        # Helper function: make random candidate
         def random_choice():
             choice = np.zeros(dims, float) - 1
             while (choice < 0).any():
@@ -104,11 +102,9 @@ class LinearActive(BoundsEliciter):
             return choice
 
         # logistic regressor
-        if 0 in self.y:
+        if 0 in self.y: # If a logistic regression model exists
             test_X = [random_choice() for i in range(1000)]
-            # print(test_X)
             probabilities = self.lr.predict_proba(test_X)
-            # print(probabilities)
             
             # finding the least confident candidate
             min_value = 1
@@ -120,9 +116,6 @@ class LinearActive(BoundsEliciter):
                     min_index = x
             
             self.choice = test_X[min_index]
-
-            print(probabilities[min_index][0],probabilities[min_index][1])
-            print(self.choice)
 
         # if there is no logreg model, do random choice
         else:     
