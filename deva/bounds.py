@@ -1,8 +1,9 @@
+import random
 import numpy as np
 from deva import elicit, fileio
 
 from sklearn.linear_model import LogisticRegression
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 # Things to try:
@@ -58,20 +59,18 @@ class LinearActive(BoundsEliciter):
 
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
-        self._update()     
+        self._update()
 
     # input
     def observe(self, label):
         # if ref+a is a no, ref-a is a yes
         if label:
             self.X.append(2.*self.ref-self.choice)
-            self.y.append(1)
         else:
             self.X.append(self.choice)
-            self.y.append(0)
-        # self.y.append(label)
+        self.y.append(label)
 
-        print(self.X, self.y)
+        # print(self.X, self.y)
 
         # LogR
         # y = # labels
@@ -79,32 +78,6 @@ class LinearActive(BoundsEliciter):
             self.lr.fit(self.X, self.y)
         # labels = lr.predict(self.X)
         # accuracy = lr.score(self.X, self.y)
-
-        # # Plot the decision boundary. For that, we will assign a color to each
-        # # point in the mesh [x_min, x_max]x[y_min, y_max].
-        # x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
-        # y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
-        # h = 0.02  # step size in the mesh
-        # xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-        # Z = self.lr.predict(np.c_[xx.ravel(), yy.ravel()])
-
-        # # Put the result into a color plot
-        # Z = Z.reshape(xx.shape)
-        # plt.figure(1, figsize=(4, 3))
-        # plt.pcolormesh(xx, yy, Z, cmap=plt.cm.Paired)
-
-        # # Plot also the training points
-        # plt.scatter(X[:, 0], X[:, 1], c=y, edgecolors="k", cmap=plt.cm.Paired)
-        # plt.xlabel("Sepal length")
-        # plt.ylabel("Sepal width")
-
-        # plt.xlim(xx.min(), xx.max())
-        # plt.ylim(yy.min(), yy.max())
-        # plt.xticks(())
-        # plt.yticks(())
-
-        # plt.show()
-
 
         self._update()
 
@@ -120,28 +93,47 @@ class LinearActive(BoundsEliciter):
 
         dims = len(self.ref)
 
-        # if there is no logreg model, do random choice
-        if 0 in self.y:
+        # Helper function: make random choice
+        def random_choice():
             choice = np.zeros(dims, float) - 1
             while (choice < 0).any():
                 diff = np.random.randn(len(self.ref)) * self.radius
                 diff -= w * (diff @ w) / (w @ w)  # make perpendicular
                 diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
                 choice = self.ref + diff
-        # TODO narrow the error (uncertainty) based on logreg
-        else:
-            pass
+            return choice
 
-        self.choice = choice  # candidate
+        # logistic regressor
+        if 0 in self.y:
+            test_X = [random_choice() for i in range(1000)]
+            # print(test_X)
+            probabilities = self.lr.predict_proba(test_X)
+            # print(probabilities)
+            
+            # finding the least confident candidate
+            min_value = 1
+            min_index = 0
+            for x in range(len(probabilities)):
+                value = abs(probabilities[x][0] - probabilities[x][1])
+                if value < min_value:
+                    min_value = value
+                    min_index = x
+            
+            self.choice = test_X[min_index]
+
+            print(probabilities[min_index][0],probabilities[min_index][1])
+            print(self.choice)
+
+        # if there is no logreg model, do random choice
+        else:     
+            self.choice = random_choice()
 
         self.query = elicit.Candidate(
             fileio.autoname(self._step),
-            dict(zip(self.attribs, choice))
+            dict(zip(self.attribs, self.choice))
         )
         self._step += 1
-        # return
-
-        # lr.decision_function(X)
+        return
 
     def guess(self, q):
         return ((q - self.ref) @ self.w < 0)

@@ -39,7 +39,8 @@ def main():
 
     # Test whether the sampler can elicit this oracle's preference
     # sampler = bounds.TestSampler(ref, table, sign, attribs, steps=15)
-    sampler = bounds.LinearRandom(ref, table, sign, attribs, steps=15)
+    # sampler = bounds.LinearRandom(ref, table, sign, attribs, steps=15)
+    sampler = bounds.LinearActive(ref, table, sign, attribs, steps=15)
 
     choices = []  # logged for plotting
 
