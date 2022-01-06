@@ -264,8 +264,10 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
 }
 
 function getSliderStep(max, min, decimals) {
-  let stepPrecision = Number((0.1 ** decimals).toFixed(decimals));
-  return decimals == null ? 1 : stepPrecision;
+  if (decimals == null) { 
+    return 1;
+  }
+  return Number((0.1 ** decimals).toFixed(decimals));
 }
 
 function RangeConstraint({uid, min, max, marks, decimals}) {
