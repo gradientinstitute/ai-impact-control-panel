@@ -19,6 +19,7 @@ requests = "^2.26.0"
 Flask-Session = "^0.4.0"
 redis = "^3.5.3"
 gunicorn = "^20.1.0"
+fpdf = "^1.7.2"
 
 [tool.poetry.dev-dependencies]
 sphinx = "^4.2.0"
