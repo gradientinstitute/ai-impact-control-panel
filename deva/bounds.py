@@ -1,4 +1,3 @@
-import random
 import numpy as np
 from deva import elicit, fileio
 
@@ -47,7 +46,7 @@ class LinearActive(BoundsEliciter):
         dims = len(ref)
         self._step = 0
         self.steps = steps
-        self.lr = LogisticRegression() # Create a logistic regression instance
+        self.lr = LogisticRegression()  # Create a logistic regression instance
 
         # Initialise
         X = [ref+radius]
@@ -75,7 +74,7 @@ class LinearActive(BoundsEliciter):
         self.y.append(label)
 
         # If there is more than one class
-        if 0 in self.y: 
+        if 0 in self.y:
             self.lr.fit(self.X, self.y)
 
         self._update()
@@ -102,10 +101,10 @@ class LinearActive(BoundsEliciter):
             return choice
 
         # logistic regressor
-        if 0 in self.y: # If a logistic regression model exists
+        if 0 in self.y:  # If a logistic regression model exists
             test_X = [random_choice() for i in range(1000)]
             probabilities = self.lr.predict_proba(test_X)
-            
+
             # finding the least confident candidate
             min_value = 1
             min_index = 0
@@ -114,11 +113,11 @@ class LinearActive(BoundsEliciter):
                 if value < min_value:
                     min_value = value
                     min_index = x
-            
+
             self.choice = test_X[min_index]
 
         # if there is no logreg model, do random choice
-        else:     
+        else:
             self.choice = random_choice()
 
         self.query = elicit.Candidate(
