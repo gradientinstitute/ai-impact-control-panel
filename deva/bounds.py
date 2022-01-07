@@ -116,11 +116,8 @@ class LinearActive(BoundsEliciter):
         w /= (w@w)**.5  # normalise
         self.w = w
 
-        print(w)
-
         w_diff = abs(self.w - self.old_w)
         self.sum_diff_w = sum(w_diff)
-        print(self.sum_diff_w)
 
         if self.steps > 0:
             self.old_w = self.w.copy()
@@ -174,20 +171,6 @@ class LinearActive(BoundsEliciter):
         return (self._step > self.steps or 
                 (self.sum_diff_w <= 0.1 and self._converge >= self.n_steps_converge))
 
-        # print(self.new_sum_w, self.sum_w)
-        # TODO 1. accuracy
-        # if 0 in self.y:
-        #     return self.lr.score(self.X, self.y) >= 0.5
-
-        # TODO 2. variance (keep track of previous model)
-
-        # TODO 3. sum(w0,..,wn) <= epsilon
-        # return self.sum_w <= 0.1
-        # return self.new_sum_w - self.sum_w <= (self.epsilon)**2
-
-        # # steps 
-        # return self._step > self.steps
-
 
 class LinearRandom(BoundsEliciter):
     """
@@ -227,8 +210,6 @@ class LinearRandom(BoundsEliciter):
         self._step = 0
         self.steps = steps
 
-        self.old_w = 0
-
         # Initialise
         X = [ref+radius]
         for d in range(dims):
@@ -257,15 +238,6 @@ class LinearRandom(BoundsEliciter):
         dmean = diff.mean(axis=0)
         w = np.linalg.solve(dcov, dmean)
         self.w = w
-
-        print(w)
-
-        w_diff = abs(self.w - self.old_w)
-        self.sum_diff_w = sum(w_diff)
-        print(self.sum_diff_w)
-
-        if self.steps > 0:
-            self.old_w = self.w.copy()
 
         dims = len(self.ref)
 
