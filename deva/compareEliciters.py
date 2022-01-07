@@ -7,6 +7,7 @@ from deva.elicit import Candidate, Toy, VotingEliciter, ActiveRanking, \
 def input_gen(num=1000, attr=5):
     '''Generate n random systems on the Pareto front'''
     # input number of systems generate
+    # ref: https://en.wikipedia.org/wiki/N-sphere#Spherical_coordinates
     systems = []
     while num > 0:
         system = []
