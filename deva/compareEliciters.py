@@ -72,7 +72,7 @@ def test_eliciters(eliciter_list, num, attr):
             else:
                 test_target.input(m2)
         result = test_target.result
-        mean_error = np.linalg.norm(systems[0] - np.mean(systems))
+        mean_error = np.mean(np.linalg.norm(systems[0] - systems))
         error = {}
         error['distance'] = np.linalg.norm(systems[0] - systems[result.name])
         error['question_count'] = question_count
