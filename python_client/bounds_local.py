@@ -79,17 +79,26 @@ def main():
             print("Choice: Oracle (REJECTED) candidate.\n\n")
 
     errors = [abs(true_weights[i] - est_weights[i]) for i in range(len(true_weights))]
-    # print(errors)
+
+    # Display 'error' plots
     w0 = list(np.array(errors)[:,0])
     w1 = list(np.array(errors)[:,1])
     w2 = list(np.array(errors)[:,2])
-    
-    # plots for errors
-    # plot0 = plt.plot(w0)
-    # plt.ylabel('error')
-    # plt.xlabel('steps')
-    # plot1 = plt.plot(w1)
-    # plot2 = plt.plot(w2)
+
+    plot0 = plt.figure(0)
+    plt.plot(w0)
+    plt.ylabel('error')
+    plt.xlabel('steps')
+
+    plot1 = plt.figure(1)
+    plt.plot(w1)
+    plt.ylabel('error')
+    plt.xlabel('steps')
+
+    plot2 = plt.figure(2)
+    plt.plot(w2)
+    plt.ylabel('error')
+    plt.xlabel('steps')
 
     # Display text results report
     print("Experimental results ------------------")
@@ -104,6 +113,7 @@ def main():
     print("See sampling plot")
 
     # Display 3D plot  -------------------------
+    plot3 = plt.figure(3)
     plot3d.sample_trajectory(choices, attribs)
     rad = plot3d.radius(choices)[:3]
     plot3d.weight_disc(w_true[:3], ref[:3], rad, 'b', "true boundary")
