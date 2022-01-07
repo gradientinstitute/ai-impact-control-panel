@@ -1,4 +1,3 @@
-from os import PRIO_PGRP
 import numpy as np
 from deva import elicit, fileio
 
@@ -34,7 +33,8 @@ class LinearActive(BoundsEliciter):
     to the boundary in order to narrow the error.
     """
 
-    def __init__(self, ref, table, sign, attribs, steps, epsilon, n_steps_converge):
+    def __init__(self, ref, table, sign, attribs,
+                 steps, epsilon, n_steps_converge):
         """
         Parameters
         ----------
@@ -69,11 +69,11 @@ class LinearActive(BoundsEliciter):
         self._step = 0
         self.steps = steps
         self.epsilon = epsilon
-        self._converge = 0  # the number of steps when the model starts to be stable
+        self._converge = 0  # No. of steps when the model starts to be stable
         self.n_steps_converge = n_steps_converge
 
         self.old_w = 0
-        
+
         self.lr = LogisticRegression()  # Create a logistic regression instance
 
         # Initialise
@@ -154,7 +154,7 @@ class LinearActive(BoundsEliciter):
         )
         self._step += 1
 
-        # count the number of steps when the model becomes stable 
+        # count the number of steps when the model becomes stable
         if self.sum_diff_w <= self.epsilon:
             self._converge += 1
         else:
@@ -168,8 +168,9 @@ class LinearActive(BoundsEliciter):
     @property
     def terminated(self):
         # either the steps reach the limit or the model converges
-        return (self._step > self.steps or 
-                (self.sum_diff_w <= 0.1 and self._converge >= self.n_steps_converge))
+        return (self._step > self.steps or
+                (self.sum_diff_w <= 0.1 and
+                 self._converge >= self.n_steps_converge))
 
 
 class LinearRandom(BoundsEliciter):
