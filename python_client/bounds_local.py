@@ -40,7 +40,7 @@ def main():
     # Test whether the sampler can elicit this oracle's preference
     # sampler = bounds.TestSampler(ref, table, sign, attribs, steps=15)
     # sampler = bounds.LinearRandom(ref, table, sign, attribs, steps=15)
-    sampler = bounds.LinearActive(ref, table, sign, attribs, steps=15)
+    sampler = bounds.LinearActive(ref, table, sign, attribs, steps=100, epsilon=0.1, n_steps_converge=5)
 
     choices = []  # logged for plotting
 
@@ -89,6 +89,9 @@ def main():
     rad = plot3d.radius(choices)[:3]
     plot3d.weight_disc(w_true[:3], ref[:3], rad, 'b', "true boundary")
     plot3d.weight_disc(sampler.w[:3], ref[:3], rad, 'r', "estimated boundary")
+    # TODO visualisation
+    # plot the error (diff of w_true and w) / the angel changes 
+    # compare two different approach
     plt.legend()
     plt.show()
 

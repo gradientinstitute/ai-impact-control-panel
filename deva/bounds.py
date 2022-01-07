@@ -1,3 +1,4 @@
+from os import PRIO_PGRP
 import numpy as np
 from deva import elicit, fileio
 
@@ -33,7 +34,7 @@ class LinearActive(BoundsEliciter):
     to the boundary in order to narrow the error.
     """
 
-    def __init__(self, ref, table, sign, attribs, steps):
+    def __init__(self, ref, table, sign, attribs, steps, epsilon, n_steps_converge):
         """
         Parameters
         ----------
@@ -49,6 +50,11 @@ class LinearActive(BoundsEliciter):
                 metrics for each candidate
             steps: int
                 decides when to terminate
+            epsilon: float
+                the difference of the current weight and the weight
+                from the previous step to determine when to terminate
+            n_steps_converge: int
+                the number of steps that shows the model converges
         """
 
         self.attribs = attribs
@@ -62,6 +68,12 @@ class LinearActive(BoundsEliciter):
         dims = len(ref)
         self._step = 0
         self.steps = steps
+        self.epsilon = epsilon
+        self._converge = 0  # the number of steps when the model starts to be stable
+        self.n_steps_converge = n_steps_converge
+
+        self.old_w = 0
+        
         self.lr = LogisticRegression()  # Create a logistic regression instance
 
         # Initialise
@@ -104,6 +116,15 @@ class LinearActive(BoundsEliciter):
         w /= (w@w)**.5  # normalise
         self.w = w
 
+        print(w)
+
+        w_diff = abs(self.w - self.old_w)
+        self.sum_diff_w = sum(w_diff)
+        print(self.sum_diff_w)
+
+        if self.steps > 0:
+            self.old_w = self.w.copy()
+
         dims = len(self.ref)
 
         # Helper function: make random candidate
@@ -135,6 +156,13 @@ class LinearActive(BoundsEliciter):
             dict(zip(self.attribs, self.choice))
         )
         self._step += 1
+
+        # count the number of steps when the model becomes stable 
+        if self.sum_diff_w <= self.epsilon:
+            self._converge += 1
+        else:
+            self._converge = 0
+
         return
 
     def guess(self, q):
@@ -142,7 +170,23 @@ class LinearActive(BoundsEliciter):
 
     @property
     def terminated(self):
-        return self._step > self.steps
+        # either the steps reach the limit or the model converges
+        return (self._step > self.steps or 
+                (self.sum_diff_w <= 0.1 and self._converge >= self.n_steps_converge))
+
+        # print(self.new_sum_w, self.sum_w)
+        # TODO 1. accuracy
+        # if 0 in self.y:
+        #     return self.lr.score(self.X, self.y) >= 0.5
+
+        # TODO 2. variance (keep track of previous model)
+
+        # TODO 3. sum(w0,..,wn) <= epsilon
+        # return self.sum_w <= 0.1
+        # return self.new_sum_w - self.sum_w <= (self.epsilon)**2
+
+        # # steps 
+        # return self._step > self.steps
 
 
 class LinearRandom(BoundsEliciter):
@@ -183,6 +227,8 @@ class LinearRandom(BoundsEliciter):
         self._step = 0
         self.steps = steps
 
+        self.old_w = 0
+
         # Initialise
         X = [ref+radius]
         for d in range(dims):
@@ -211,6 +257,15 @@ class LinearRandom(BoundsEliciter):
         dmean = diff.mean(axis=0)
         w = np.linalg.solve(dcov, dmean)
         self.w = w
+
+        print(w)
+
+        w_diff = abs(self.w - self.old_w)
+        self.sum_diff_w = sum(w_diff)
+        print(self.sum_diff_w)
+
+        if self.steps > 0:
+            self.old_w = self.w.copy()
 
         dims = len(self.ref)
 
