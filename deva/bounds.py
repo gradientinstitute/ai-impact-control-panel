@@ -33,7 +33,8 @@ class LinearActive(BoundsEliciter):
     to the boundary in order to narrow the error.
     """
 
-    def __init__(self, ref, table, sign, attribs, steps):
+    def __init__(self, ref, table, sign, attribs,
+                 steps, epsilon, n_steps_converge):
         """
         Parameters
         ----------
@@ -49,6 +50,11 @@ class LinearActive(BoundsEliciter):
                 metrics for each candidate
             steps: int
                 decides when to terminate
+            epsilon: float
+                the difference of the current weight and the weight
+                from the previous step to determine when to terminate
+            n_steps_converge: int
+                the number of steps that shows the model converges
         """
 
         self.attribs = attribs
@@ -62,6 +68,12 @@ class LinearActive(BoundsEliciter):
         dims = len(ref)
         self._step = 0
         self.steps = steps
+        self.epsilon = epsilon
+        self._converge = 0  # No. of steps when the model starts to be stable
+        self.n_steps_converge = n_steps_converge
+
+        self.old_w = 0
+
         self.lr = LogisticRegression()  # Create a logistic regression instance
 
         # Initialise
@@ -104,6 +116,12 @@ class LinearActive(BoundsEliciter):
         w /= (w@w)**.5  # normalise
         self.w = w
 
+        w_diff = abs(self.w - self.old_w)
+        self.sum_diff_w = sum(w_diff)
+
+        if self.steps > 0:
+            self.old_w = self.w.copy()
+
         dims = len(self.ref)
 
         # Helper function: make random candidate
@@ -135,6 +153,13 @@ class LinearActive(BoundsEliciter):
             dict(zip(self.attribs, self.choice))
         )
         self._step += 1
+
+        # count the number of steps when the model becomes stable
+        if self.sum_diff_w <= self.epsilon:
+            self._converge += 1
+        else:
+            self._converge = 0
+
         return
 
     def guess(self, q):
@@ -142,7 +167,10 @@ class LinearActive(BoundsEliciter):
 
     @property
     def terminated(self):
-        return self._step > self.steps
+        # either the steps reach the limit or the model converges
+        return (self._step > self.steps or
+                (self.sum_diff_w <= 0.1 and
+                 self._converge >= self.n_steps_converge))
 
 
 class LinearRandom(BoundsEliciter):
