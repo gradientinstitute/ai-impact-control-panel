@@ -4,15 +4,18 @@ from deva.elicit import Candidate, Toy, VotingEliciter, ActiveRanking, \
                          ActiveMaxPrimary, ActiveMaxSmooth, ActiveMax
 
 
-def input_gen(num=1000, attr=5):
-    '''Generate n random systems on the Pareto front'''
+def system_gen(num=1000, attr=5):
+    '''Generate n random systems on the Pareto front
+    by sampling from the surface of a hypersphere.
+    num is the number of systems we would like to generate,
+    attr is the number of dimensions each system has.'''
     # input number of systems generate
     # ref: https://en.wikipedia.org/wiki/N-sphere#Spherical_coordinates
     systems = []
     while num > 0:
         system = []
         acc = 1
-        angles = np.random.uniform(0, 1.5707963, attr)
+        angles = np.random.uniform(0, np.pi/2, attr)
         for x in range(attr):
             system.append(acc*np.cos(angles[x]))
             acc *= np.sin(angles[x])
@@ -23,9 +26,11 @@ def input_gen(num=1000, attr=5):
 
 def favourite_gen(num=1000, attr=5):
     '''Generate the favourite system at random,
-    then sort the systems according to their distance to the favourite one'''
+    then sort the systems according to their distance to the favourite one.
+    num is the number of systems we would like to generate,
+    attr is the number of dimensions each system has'''
     favourite_index = np.random.randint(0, num, 1)[0]
-    systems = input_gen(num, attr)
+    systems = system_gen(num, attr)
     favourite_coor = systems[favourite_index]
     systems.sort(key=lambda system: np.linalg.norm(system
                  - favourite_coor))  # sort by the distance
@@ -35,7 +40,9 @@ def favourite_gen(num=1000, attr=5):
 def test_eliciters(eliciter_list, num, attr):
     '''Feed the generated system to eliciters,
     store the number of questions used to find the answer,
-    as well as the distance between the answer found and the ground truth.'''
+    as well as the distance between the answer found and the ground truth.
+    num is the number of systems we would like to generate,
+    attr is the number of dimensions each system has'''
     candidates = []
     systems = favourite_gen(num, attr)
     attributes = []
@@ -65,24 +72,28 @@ def test_eliciters(eliciter_list, num, attr):
             else:
                 test_target.input(m2)
         result = test_target.result
+        mean_error = np.linalg.norm(systems[0] - np.mean(systems))
         error = {}
         error['distance'] = np.linalg.norm(systems[0] - systems[result.name])
         error['question_count'] = question_count
         res[str(eliciter)] = error
-    return [num, attr, res]
+    return [num, attr, mean_error, res]
 
 
 def print_result(result):
     '''Print the result with explainations'''
-    num, attr, res = result
+    num, attr, mean_error, res = result
     print_str = f'The eliciters are tested using {num} systems,' \
-        f' each of the systems has {attr} attributes. \n'
+        f' each of the systems has {attr} attributes. \n'\
+        'The errors were calculated by the Euclidean distance between the'\
+        ' result and the ground truth, the expected error of a random'\
+        f' guess would be {mean_error:.3}.\n'
     for key in res.keys():
         name = key.split('.')[-1].split("'")[0]
         question_count = res[key]['question_count']
         distance = res[key]['distance']
         print_str += f'\nEliciter: {name}\nNum Questions: {question_count}\n'\
-            f'Error: {distance}\n'
+            f'Error: {distance:.3}\n'
     print(print_str)
 
 
