@@ -42,7 +42,10 @@ def main():
     # sampler = bounds.LinearRandom(ref, table, sign, attribs, steps=15)
     sampler = bounds.LinearActive(ref, table, sign, attribs, steps=100, epsilon=0.1, n_steps_converge=5)
 
-    choices = []  # logged for plotting
+    # logged for plotting
+    choices = []
+    est_weights = []
+    true_weights = []
 
     # For display purposes
     ref_candidate = elicit.Candidate("Baseline", baseline, None)
@@ -58,6 +61,9 @@ def main():
         interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
         choices.append(sampler.choice)
 
+        true_weights.append(w_true)
+        est_weights.append(sampler.w)
+
         if answer:
             # Answer automatically
             label = oracle(sampler.choice)
@@ -71,6 +77,19 @@ def main():
             print("Choice: Oracle (ACCEPTED) candidate.\n\n")
         else:
             print("Choice: Oracle (REJECTED) candidate.\n\n")
+
+    errors = [abs(true_weights[i] - est_weights[i]) for i in range(len(true_weights))]
+    # print(errors)
+    w0 = list(np.array(errors)[:,0])
+    w1 = list(np.array(errors)[:,1])
+    w2 = list(np.array(errors)[:,2])
+    
+    # plots for errors
+    # plot0 = plt.plot(w0)
+    # plt.ylabel('error')
+    # plt.xlabel('steps')
+    # plot1 = plt.plot(w1)
+    # plot2 = plt.plot(w2)
 
     # Display text results report
     print("Experimental results ------------------")
@@ -91,7 +110,7 @@ def main():
     plot3d.weight_disc(sampler.w[:3], ref[:3], rad, 'r', "estimated boundary")
     # TODO visualisation
     # plot the error (diff of w_true and w) / the angel changes 
-    # compare two different approach
+    # compare two different approaches (LinearActive and LinearRandom)
     plt.legend()
     plt.show()
 
