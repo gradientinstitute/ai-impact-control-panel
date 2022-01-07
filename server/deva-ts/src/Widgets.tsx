@@ -6,8 +6,24 @@ function sigFigs(unit: any) {
     return 2;
 }
 
+// ceil or floor numbers to the number of decimal places specified
+function roundValue(operation, number, decimals) {
+  let num = number;
+  if (operation == rvOperations.ceil) {
+    num = Math.ceil(num * (10 ** decimals) / (10 ** decimals));
+  } else if (operation == rvOperations.floor) {
+    num = Math.floor(num * (10 ** decimals) / (10 ** decimals));
+  }
+  return num;
+}
+
+enum rvOperations {
+  'ceil',
+  'floor'
+}
+
 function Model({unit, value, name, isMirror}) {
-  const includePerformanceBar = true; //!(unit.type === "qualitative");
+  const includePerformanceBar = true;
   const performanceBar = includePerformanceBar ? <Performance unit={unit} value={value} isMirror={isMirror}/> : null
 
   return (
@@ -141,4 +157,4 @@ function FillBar({percentage, unit, isThin, isMirror}) {
   );
 }
 
-export {Key, Model, FillBar, sigFigs};
+export {Key, Model, FillBar, sigFigs, roundValue, rvOperations};
