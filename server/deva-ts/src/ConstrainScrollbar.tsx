@@ -18,6 +18,12 @@ export const lastBouncedState = atom({
   default: null,
 });
 
+export const targetsState = atom({
+  key: 'targets',
+  default: null,
+});
+
+
 export const scrollbarHandleState = atom({
   key: 'scrollbarHandleState',
   default: null,
@@ -30,13 +36,13 @@ export const scrollbarsState = selector({
       const metadata = get(metadataState);
       
       if (all === null) {
-      return null;
+        return null;
       }
       
-      const ranges = _.mapValues(metadata.metrics, (_obj) => {
-      return blockingStates.default;
+      const states = _.mapValues(metadata.metrics, (_obj) => {
+        return blockingStates.default;
       });
-      return ranges;
+      return states;
   },
 })
 
@@ -80,18 +86,23 @@ export const getMetricImportance = selector({
   }
 })
 
-// Toggles whether metrics are blocked or not given their current candidates
-export function setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, bounced,
-  lastBounced, setLastBounced, decimals) {
+export function getSliderStep(max, min, decimals) {
+  if (decimals == null) { 
+    return 1;
+  }
+  return Number((0.1 ** decimals).toFixed(decimals));
+}
 
-  let resolvedLastBounce = false;
+// Toggles whether metrics are blocked or not given their current candidates
+export function setBlockedMetrics(n, m, uid, higherIsBetterMap, activeOptimal, 
+  bounced, lastBounced, setLastBounced, decimals, setTargets) {
 
   // check the current metric
   if (bounced) {
-    lastBounced = uid;
-  } else if (bounced == uid) {
-    lastBounced = null;
-    resolvedLastBounce = true;
+    setLastBounced(uid);
+  } else if (bounced === uid) {
+    setLastBounced(null);
+    setTargets(null);
   }
 
   // check if another change has resolved the most recent bounce
@@ -106,7 +117,7 @@ export function setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, b
     if (!(optimal)) {
       lastBounced = null;
       setLastBounced(lastBounced);
-      resolvedLastBounce = true;
+      setTargets(null);
     }
   }
 
@@ -115,11 +126,15 @@ export function setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, b
 
     const optimal = isOptimal(higherIsBetterMap, activeOptimal, metric, 
       decimals, bounds);
-    
-    const stillBlocking = (!resolvedLastBounce) && (m[metric] == blockingStates.blocking)
+      
+    const stillBlocking = (lastBounced !== uid && lastBounced != null) 
+      && (m[metric] === blockingStates.blocking);
+
     m[metric] = stillBlocking ? m[metric] : blockingStates.default; 
     m[metric] = optimal && !stillBlocking ? blockingStates.blocked : m[metric];
-    m[metric] = lastBounced == metric ? blockingStates.bounced : m[metric];
+    m[metric] = lastBounced === metric ? blockingStates.bounced : m[metric];
+
+    // TODO: make active optimal update on change 
   })
 
   return lastBounced;
@@ -128,8 +143,8 @@ export function setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, b
 // Determines if a metric is at its optimal position 
 function isOptimal(higherIsBetterMap, activeOptimal, uid, decimals, bounds) {
   return higherIsBetterMap.get(uid) 
-    ? roundValue(rvOperations.floor,activeOptimal.get(uid), decimals) <= bounds[0]
-    : roundValue(rvOperations.ceil,activeOptimal.get(uid), decimals) >= bounds[1]
+    ? roundValue(rvOperations.floor, activeOptimal.get(uid), decimals) <= bounds[0]
+    : roundValue(rvOperations.ceil, activeOptimal.get(uid), decimals) >= bounds[1]
 }
 
 // euclidean distance with scaled features for making scrollbar suggestions
@@ -142,7 +157,7 @@ function weightedEucDistance(a, b, weight) {
 
 // filter for all states where the constraint can be made better
 function getPossibleCandidates(all, higherIsBetterMap, activeOptimal, uid) {
-  let possibleCandidates = new Array();
+  let possibleCandidates = [];
   Object.values(all).forEach((candidate) => {
     const isBetter = higherIsBetterMap.get(uid) 
       ? candidate[uid] > activeOptimal.get(uid) 
@@ -159,10 +174,10 @@ function getPossibleCandidates(all, higherIsBetterMap, activeOptimal, uid) {
 function getBestUnblockingCandidates(possibleCandidates, currPosition, metricImportance) {
   const currentPositionVector = Array.from(currPosition.values());
   
-  let bestCandidates = new Object({
+  let bestCandidates = {
     'eucDistance': Number.MAX_SAFE_INTEGER, 
-    'targetCandidates': new Array()
-  });
+    'targetCandidates': []
+  };
   
   /* The algorithm calculates the euclidean distance between 
     - the vector of the current constraints set by the user and 
@@ -175,11 +190,11 @@ function getBestUnblockingCandidates(possibleCandidates, currPosition, metricImp
     const dist = weightedEucDistance(possibleCandidateVector, 
       currentPositionVector, metricImportance);
     if (dist < bestCandidates['eucDistance']) {
-      bestCandidates = new Object({
+      bestCandidates = {
         'eucDistance': dist, 
         'targetCandidates': new Array(possibleCandidateVector)
-      });
-    } else if (dist == bestCandidates['eucDistance']) {
+      };
+    } else if (dist === bestCandidates['eucDistance']) {
       bestCandidates['targetCandidates'].push(possibleCandidateVector);
     }
   });
@@ -187,34 +202,40 @@ function getBestUnblockingCandidates(possibleCandidates, currPosition, metricImp
 }
 
 // Toggles suggestions to loosen constraints on metrics that are blocking
-// the last bounce from improving 
+// the last bounce from improving and returns an array with the optimal
+// positions to move the blocking metrics to
 export function setBlockingMetrics(n, m, uid, higherIsBetterMap, activeOptimal, 
-  all, lastBounced, metricImportance) {
+  all, lastBounced, metricImportance, setTargets) {
 
-  if (uid != lastBounced) return;
+  if (uid !== lastBounced) return;
 
   const possibleCandidates = getPossibleCandidates(all, higherIsBetterMap, 
     activeOptimal, uid);
 
   const currPosition = new Map();
-  Object.entries(n).map(([key, val]) => {
+  Object.entries(n).forEach(([key, val]) => {
     currPosition.set(key, higherIsBetterMap.get(key) ? val[0] : val[1]);
   });
   
   const bestCandidates = getBestUnblockingCandidates(possibleCandidates, 
     currPosition, metricImportance);
 
-  if (bestCandidates['targetCandidates'] == new Array()) return;
+  if (bestCandidates['targetCandidates'] === []) return;
   
-  // make suggestions for metrics to unblock  
-  Object.entries(Object.fromEntries(currPosition)).forEach(([key, val], i) => {
+  // make suggestions for metrics to unblock
+  let t = {}
+  Array.from(currPosition).forEach(([key, val], i) => {
+    let metricTarget = [];
     bestCandidates['targetCandidates'].forEach(candidate => {
       const canBeRelaxed = higherIsBetterMap.get(key)
         ? val > candidate[i]
         : val < candidate[i]
-
       m[key] = canBeRelaxed ? blockingStates.blocking : m[key];
-
+      metricTarget.push(canBeRelaxed ? candidate[i] : null);
     });
+    t[key] = metricTarget;
   });
+
+  setTargets(t);
+  return t;
 }
