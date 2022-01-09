@@ -9,7 +9,7 @@ import _ from "lodash";
 import {roundValue, rvOperations} from './Widgets';
 import {getMetricImportance, lastBouncedState, scrollbarHandleState, 
         setBlockedMetrics, setBlockingMetrics, scrollbarsState, 
-        bestValuesState, getSliderStep, targetsState} from './ConstrainScrollbar';
+        bestValuesState, getSliderStep, targetsState, getRounded} from './ConstrainScrollbar';
 
 export const allCandidatesState = atom({  
   key: 'allCandidates', 
@@ -272,15 +272,13 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
 
   const all = useRecoilValue(allCandidatesState);
   const metricImportance = useRecoilValue(getMetricImportance);
-  const activeOptimal = useRecoilValue(bestValuesState);
 
   const higherIsBetterMap = useRecoilValue(higherIsBetterState);
   const higherIsBetter = higherIsBetterMap.get(uid);
   const val = higherIsBetter ? constraints[uid][0] : constraints[uid][1];
   
-  const activeOptimalRounded = higherIsBetterMap.get(uid) 
-    ? roundValue(rvOperations.floor, activeOptimal.get(uid), decimals) 
-    : roundValue(rvOperations.ceil, activeOptimal.get(uid), decimals) 
+  const activeOptimal = useRecoilValue(bestValuesState);
+  const activeOptimalVal = getRounded(higherIsBetterMap, uid, activeOptimal.get(uid), decimals)
 
   let bounced = null;
 
@@ -302,7 +300,7 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
     if (!(withNew.length > 0)) {
       bounced = uid;
       setLastBounced(uid);
-      n[uid] = higherIsBetter ? [activeOptimalRounded, n[uid][1]] : [n[uid][0], activeOptimalRounded]; 
+      n[uid] = higherIsBetter ? [activeOptimalVal, n[uid][1]] : [n[uid][0], activeOptimalVal]; 
     }
 
     setConstraints(n);
@@ -310,21 +308,20 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
   }
 
   function onAfterChange() {
-    // console.log("after change");
     changeScrollbarColours();
   }
 
   function changeScrollbarColours() {
     let n = {...constraints};
     let m = {...blockedScrollbar};
-    // console.log("before", m);
+
+    // update the states of the scrollbar
     const updatedLastBounce = setBlockedMetrics(n, m, uid, higherIsBetterMap, 
       activeOptimal, bounced, lastBounced, setLastBounced, decimals, setTargets);
 
     setBlockingMetrics(n, m, uid, higherIsBetterMap, activeOptimal, all, 
-      updatedLastBounce, metricImportance, setTargets);
+      updatedLastBounce, metricImportance, setTargets, decimals);
     
-    // console.log("after", m);
     setBlockedScrollbar(m);
   }
 
@@ -335,7 +332,7 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
     onAfterChange: onAfterChange,
     allowCross: false,
     value: val,
-    step: getSliderStep(max, min, decimals),
+    step: getSliderStep(decimals),
     handleStyle: {backgroundColor: HandleColours[blockedScrollbar[uid]], 
       height: 17, width: 17, borderColor: HandleColours[blockedScrollbar[uid]]},
     trackStyle: higherIsBetter ? {backgroundColor: "gray"} : {backgroundColor: "lightblue"},
@@ -347,7 +344,11 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
     rangeProps["step"] = null;
   }
 
-  const _target = targets == null ? [null] : targets[uid];
+  // get values that would unblocking the last bounced metric and display it as text 
+  let _target = [null] 
+  if (targets != null) {
+    _target = targets[uid].map(x => getRounded(higherIsBetterMap, uid, x, decimals));
+  }
 
   return (
   <div>

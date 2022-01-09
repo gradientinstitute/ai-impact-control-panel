@@ -1,6 +1,6 @@
 import 'rc-slider/assets/index.css';
-import { atom, selector } from 'recoil';
-import { metadataState } from './Base';
+import { atom, selector, useRecoilValue } from 'recoil';
+import { constraintsState, metadataState } from './Base';
 import _ from "lodash";
 import { std } from 'mathjs';
 import { roundValue, rvOperations } from './Widgets';
@@ -13,11 +13,13 @@ enum blockingStates {
   'blocking',
 }
 
+// the metric that was last bounced or null if none bounced
 export const lastBouncedState = atom({
   key: 'lastBounced',
   default: null,
 });
 
+// mapping from metric to the values required to unblock the last bounced
 export const targetsState = atom({
   key: 'targets',
   default: null,
@@ -29,6 +31,8 @@ export const scrollbarHandleState = atom({
   default: null,
 });
 
+// mapping from metric to the state of its handle 
+// i.e. default, blocked, blocking, bounced  
 export const scrollbarsState = selector({
   key: 'scrollbarsState',
   get: ({get}) => {
@@ -86,11 +90,19 @@ export const getMetricImportance = selector({
   }
 })
 
-export function getSliderStep(max, min, decimals) {
+// Heuristic for determining the precision of steps on the Slider 
+export function getSliderStep(decimals) {
   if (decimals == null) { 
     return 1;
   }
   return Number((0.1 ** decimals).toFixed(decimals));
+}
+
+// Helper function which ceils/floors numbers to the specified decimal places
+export function getRounded(higherIsBetterMap, uid, val, decimals) {
+  return higherIsBetterMap.get(uid) 
+    ? roundValue(rvOperations.floor, val, decimals) 
+    : roundValue(rvOperations.ceil, val, decimals);
 }
 
 // Toggles whether metrics are blocked or not given their current candidates
@@ -140,14 +152,14 @@ export function setBlockedMetrics(n, m, uid, higherIsBetterMap, activeOptimal,
   return lastBounced;
 }
 
-// Determines if a metric is at its optimal position 
+// Determines if a metric is at its optimal position / threshold
 function isOptimal(higherIsBetterMap, activeOptimal, uid, decimals, bounds) {
   return higherIsBetterMap.get(uid) 
     ? roundValue(rvOperations.floor, activeOptimal.get(uid), decimals) <= bounds[0]
     : roundValue(rvOperations.ceil, activeOptimal.get(uid), decimals) >= bounds[1]
 }
 
-// euclidean distance with scaled features for making scrollbar suggestions
+// Euclidean distance with scaled features for making scrollbar suggestions
 function weightedEucDistance(a, b, weight) {
   return a
     .map((x, i) => Math.abs(weight[i] * (x-b[i]))**2)
@@ -155,7 +167,7 @@ function weightedEucDistance(a, b, weight) {
     ** (1/2);
 }
 
-// filter for all states where the constraint can be made better
+// Filter for all states where the constraint can be made better
 function getPossibleCandidates(all, higherIsBetterMap, activeOptimal, uid) {
   let possibleCandidates = [];
   Object.values(all).forEach((candidate) => {
@@ -205,7 +217,7 @@ function getBestUnblockingCandidates(possibleCandidates, currPosition, metricImp
 // the last bounce from improving and returns an array with the optimal
 // positions to move the blocking metrics to
 export function setBlockingMetrics(n, m, uid, higherIsBetterMap, activeOptimal, 
-  all, lastBounced, metricImportance, setTargets) {
+  all, lastBounced, metricImportance, setTargets, decimals) {
 
   if (uid !== lastBounced) return;
 
