@@ -10,9 +10,9 @@ function sigFigs(unit: any) {
 function roundValue(operation, number, decimals) {
   let num = number;
   if (operation == rvOperations.ceil) {
-    num = Math.ceil(num * (10 ** decimals) / (10 ** decimals));
+    num = Math.ceil(num * (10 ** decimals)) / (10 ** decimals);
   } else if (operation == rvOperations.floor) {
-    num = Math.floor(num * (10 ** decimals) / (10 ** decimals));
+    num = Math.floor(num * (10 ** decimals)) / (10 ** decimals);
   }
   return num;
 }
