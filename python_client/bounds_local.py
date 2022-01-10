@@ -46,7 +46,6 @@ def main():
         sampler = sample
 
         # logged for plotting
-        # choices = []
         est_weights = []
         true_weights = []
 
@@ -111,8 +110,6 @@ def main():
     # compare two different approaches (LinearActive and LinearRandom)
     sampler = lg_sampler
 
-    # x = [i for i in range(len(choices))]
-
     # Display 'error' plots
     w0 = list(np.array(lg_eliciter)[:,0])
     w1 = list(np.array(lg_eliciter)[:,1])
@@ -124,35 +121,25 @@ def main():
 
     plot0 = plt.figure(0)
     plt.plot(w0, label = 'LinearActive')
-    plt.text(0.08, 0.2, 'LinearActive')
     plt.plot(r0, label = 'LinearRandom')
-    plt.text(0.9, 0.2, 'LinearRandom')
     plt.ylabel('error')
     plt.xlabel('steps')
+    plt.legend()
 
     plot1 = plt.figure(1)
     plt.plot(w1, label = 'LinearActive')
     plt.plot(r1, label = 'LinearRandom')
     plt.ylabel('error')
     plt.xlabel('steps')
+    plt.legend()
 
     plot2 = plt.figure(2)
     plt.plot(w2, label = 'LinearActive')
     plt.plot(r2, label = 'LinearRandom')
     plt.ylabel('error')
     plt.xlabel('steps')
+    plt.legend()
 
-    # Display text results report
-    # LinearActive only
-    # print("Experimental results ------------------")
-    # print("Truth:    ", w_true)
-    # print("Estimate: ", sampler.w)
-    # accept = oracle(table)
-    # accept_rt = accept.mean()
-    # pred = sampler.guess(table)
-    # acc = np.mean(accept == pred)
-    # print(f"True preference would accept {accept_rt:.0%} of real candidates.")
-    # print(f"Candidates labeled with {acc:.0%} accuracy.")
     print("See sampling plot")
 
     # Display 3D plot  -------------------------
