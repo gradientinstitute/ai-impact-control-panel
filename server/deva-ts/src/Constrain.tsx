@@ -6,10 +6,10 @@ import {Pane, paneState, scenarioState,
         metadataState, constraintsState } from './Base';
 import axios from 'axios';
 import _ from "lodash";
-import {roundValue, rvOperations} from './Widgets';
+import {roundValue, rvOperations, FillBar} from './Widgets';
 import {getMetricImportance, lastBouncedState, scrollbarHandleState, 
         setBlockedMetrics, setBlockingMetrics, scrollbarsState, 
-        bestValuesState, getSliderStep, targetsState, getRounded} from './ConstrainScrollbar';
+        bestValuesState, getSliderStep, targetsState, getRounded, blockingStates} from './ConstrainScrollbar';
 
 export const allCandidatesState = atom({  
   key: 'allCandidates', 
@@ -238,7 +238,7 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
 
   return (
     <div key={uid} className="grid grid-cols-10 gap-8 bg-gray-600 rounded-lg p-4">
-            
+
       <h2 className="col-span-10 text-center">{name}</h2>
 
       <p className="col-span-3 my-auto">{}</p>
@@ -344,20 +344,42 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
     rangeProps["step"] = null;
   }
 
-  // get values that would unblocking the last bounced metric and display it as text 
-  let _target = [null] 
-  if (targets != null) {
-    _target = targets[uid].map(x => getRounded(higherIsBetterMap, uid, x, decimals));
-  }
+  const percentage = getTargetPercentage(higherIsBetterMap, uid, targets, min, max, decimals);
+  const blockingState = {...blockedScrollbar}[uid];
 
   return (
   <div>
+    <BlockingTargetBar percentage={percentage} blockingState={blockingState}/>
     <Slider {...rangeProps} />
-    <p>target value: {JSON.stringify(_target)}</p>
   </div>
   );
 }
 
+function getTargetPercentage(higherIsBetterMap, uid, targets, min, max, decimals) {
+  let target = null;
+  let percentage = higherIsBetterMap.get(uid) ? 100 : 0;
+  if (targets != null && targets[uid] != null) {
+    target = targets[uid].map(x => getRounded(higherIsBetterMap, uid, x, decimals));
+    percentage = higherIsBetterMap.get(uid) 
+      ? ((Math.max(...target) - min) / (max - min)) * 100
+      : ((Math.min(...target) - min) / (max - min)) * 100;
+  }
+  return percentage;
+}
+
+function BlockingTargetBar({percentage, blockingState}) {
+
+  let colour = "border-gray-500";
+  colour = blockingState == blockingStates.blocking ? "border-red-500" : colour;
+  colour = blockingState == blockingStates.bounced ? "border-orange-500" : colour;
+
+  return (
+    <div className="w-full flex">
+      <div className={"h-6 min-h-full bg-gray-500 border-r-4 " + colour} style={{width:percentage + "%"}}></div>
+      <div className={"h-6 min-h-full bg-gray-500"} style={{width:(100-percentage) + "%"}}> </div>
+    </div>
+  );
+}
 
 function StartButton({}) {
 
