@@ -1,5 +1,5 @@
 import numpy as np
-
+import click
 from deva.elicit import Candidate, Toy, VotingEliciter, ActiveRanking, \
                          ActiveMaxPrimary, ActiveMaxSmooth, ActiveMax
 
@@ -43,6 +43,17 @@ def test_eliciters(eliciter_list, num, attr):
     as well as the distance between the answer found and the ground truth.
     num is the number of systems we would like to generate,
     attr is the number of dimensions each system has'''
+    # transfer from string to function
+    e_list = []
+    eliciters_map = {"TOY": Toy, "ACTIVERANKING": ActiveRanking,
+                     "ACTIVEMAX": ActiveMax,
+                     "ACTIVEMAXSMOOTH": ActiveMaxSmooth,
+                     "ACTIVEMAXPRIMARY": ActiveMaxPrimary,
+                     "VOTINGELICITER": VotingEliciter}
+    for e in eliciter_list:
+        e = e.upper()
+        e_list.append(eliciters_map[e])
+    # start prep for testing
     candidates = []
     systems = favourite_gen(num, attr)
     attributes = []
@@ -60,7 +71,7 @@ def test_eliciters(eliciter_list, num, attr):
     for index, system in enumerate(systems):
         candidates.append(Candidate(index, dict(zip(attributes, system))))
     # use the generated candidates to test eliciters
-    for eliciter in eliciter_list:
+    for eliciter in e_list:
         question_count = 0
         test_target = eliciter(candidates, scenario)
         while not test_target.terminated:
@@ -97,8 +108,24 @@ def print_result(result):
     print(print_str)
 
 
+@click.command()
+@click.option('-e', '--eliciters', default=["Toy", "VotingEliciter",
+                                            "ActiveRanking",
+                                            "ActiveMaxSmooth",
+                                            "ActiveMaxPrimary", "ActiveMax"],
+              multiple=True,
+              help='the eliciters you want to compare in a list')
+@click.option('-n', '--number', default=50,
+              help='the number of cadidate to be generated')
+@click.option('-d', '--dimension', default=3,
+              help='dimensions each candidate has.')
+def compareEliciters(eliciters, number, dimension):
+    print_result(test_eliciters(eliciters, number, dimension))
+
+
 if __name__ == "__main__":
-    # sample usage
-    print_result(test_eliciters([Toy, VotingEliciter, ActiveRanking,
-                                ActiveMaxSmooth,
-                                ActiveMaxPrimary, ActiveMax], 50, 3))
+    compareEliciters()
+    # # sample usage
+    # print_result(test_eliciters([Toy, VotingEliciter, ActiveRanking,
+    #                             ActiveMaxSmooth,
+    #                             ActiveMaxPrimary, ActiveMax], 50, 3))
