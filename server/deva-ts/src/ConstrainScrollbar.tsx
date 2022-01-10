@@ -245,7 +245,8 @@ export function setBlockingMetrics(n, m, uid, higherIsBetterMap, activeOptimal,
       m[key] = canBeRelaxed ? blockingStates.blocking : m[key];
       metricTarget.push(canBeRelaxed ? candidate[i] : null);
     });
-    t[key] = metricTarget;
+    const containsTargets = metricTarget.filter(x => x != null).length > 0;
+    t[key] = containsTargets ? metricTarget : null;
   });
 
   setTargets(t);
