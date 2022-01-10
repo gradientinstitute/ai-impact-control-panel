@@ -38,8 +38,7 @@ def main():
         return ((q - ref) @ w_true < 0)
 
     # Test whether the sampler can elicit this oracle's preference
-    # sampler = bounds.PlaneSampler(ref, table, sign, attribs, steps=15)  # TODO
-
+    pl_sampler = bounds.PlaneSampler(ref, table, sign, attribs, steps=50)
     rand_sampler = bounds.LinearRandom(ref, table, sign, attribs, steps=50)
     lg_sampler = bounds.LinearActive(ref, table, sign, attribs, steps=50, epsilon=0.05, n_steps_converge=5)
 
@@ -96,39 +95,42 @@ def main():
         return errors
 
     # logged for plotting
-    print("You are using LinearRandom Eliciter")
+    print("You are using PlaneSampler Eliciter\n")
+    choices = []
+    plane_eliciter = run_bounds_eliciter(pl_sampler)
+
+    print("You are using LinearRandom Eliciter\n")
     choices = []
     rand_eliciter = run_bounds_eliciter(rand_sampler)
 
-    # logged for plotting
-    print("\n")
     print("You are using LinearActive Eliciter")
     choices = []
     lg_eliciter = run_bounds_eliciter(lg_sampler)
 
     # ----------- visualisation --------------
-    # plot the error (diff of w_true and w) / the angel changes
-    # TODO: compare three eliciters
-    # compare two different approaches (LinearActive and LinearRandom)
-    sampler = lg_sampler
-
+    # compare three eliciters
     w = np.array(np.sum(lg_eliciter, axis=1))
     r = np.array(np.sum(rand_eliciter, axis=1))
+    p = np.array(np.sum(plane_eliciter, axis=1))
 
     # normalise to unit vector
     w_hat = list(w /(w@w)**.5)
     r_hat = list(r /(r@r)**.5)
+    p_hat = list(p /(p@p)**.5)
 
     # plot for error rate comparison
     plot1 = plt.figure(1)
     plt.plot(w_hat, label = 'LinearActive')
     plt.plot(r_hat, label = 'LinearRandom')
+    plt.plot(p_hat, label = 'PlaneSampler')
     plt.ylabel('error rate')
     plt.xlabel('steps')
     plt.suptitle('Eliciters Comparisons')
     plt.legend()
 
     print("See sampling plot")
+
+    sampler = lg_sampler
 
     # Display 3D plot  -------------------------
     plot2 = plt.figure(2)
