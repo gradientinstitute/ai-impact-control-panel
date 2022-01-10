@@ -41,7 +41,7 @@ def main():
     # sampler = bounds.PlaneSampler(ref, table, sign, attribs, steps=15)  # TODO
 
     rand_sampler = bounds.LinearRandom(ref, table, sign, attribs, steps=50)
-    lg_sampler = bounds.LinearActive(ref, table, sign, attribs, steps=50, epsilon=0.1, n_steps_converge=5)
+    lg_sampler = bounds.LinearActive(ref, table, sign, attribs, steps=50, epsilon=0.05, n_steps_converge=5)
 
     def run_bounds_eliciter(sample):
         sampler = sample
@@ -104,7 +104,7 @@ def main():
     print("\n")
     print("You are using LinearActive Eliciter")
     choices = []
-    lg_eliciter = np.array(run_bounds_eliciter(lg_sampler))
+    lg_eliciter = run_bounds_eliciter(lg_sampler)
 
     # ----------- visualisation --------------
     # plot the error (diff of w_true and w) / the angel changes
@@ -112,75 +112,21 @@ def main():
     # compare two different approaches (LinearActive and LinearRandom)
     sampler = lg_sampler
 
-    # normalise to unit vector
-    lg_hat = np.array([lg_eliciter[i] /(lg_eliciter[i]@lg_eliciter[i])**.5 for i in range(len(lg_eliciter))])
-    w = np.sum(lg_hat, axis=1)
+    w = np.array(np.sum(lg_eliciter, axis=1))
+    r = np.array(np.sum(rand_eliciter, axis=1))
 
-    rand_hat = np.array([rand_eliciter[i] /(rand_eliciter[i]@rand_eliciter[i])**.5 for i in range(len(rand_eliciter))])
-    r = np.sum(rand_hat, axis=1)
+    # normalise to unit vector
+    w_hat = list(w /(w@w)**.5)
+    r_hat = list(r /(r@r)**.5)
 
     # plot for error rate comparison
     plot1 = plt.figure(1)
-    plt.plot(w, label = 'LinearActive')
-    plt.plot(r, label = 'LinearRandom')
+    plt.plot(w_hat, label = 'LinearActive')
+    plt.plot(r_hat, label = 'LinearRandom')
     plt.ylabel('error rate')
     plt.xlabel('steps')
     plt.suptitle('Eliciters Comparisons')
     plt.legend()
-
-
-    # Display 'error' plots
-    # w0 = list(np.array(lg_eliciter)[:,0])
-    # w1 = list(np.array(lg_eliciter)[:,1])
-    # w2 = list(np.array(lg_eliciter)[:,2])
-    # w = []
-
-    # normalise to unit vector
-    # print(w0,w1,w2)
-    # w.append(w0)
-    # w.append(w1)
-    # w.append(w2)    
-    # print(w)
-    
-    # w = np.add(w0_hat, w1_hat, w2_hat)
-
-    # r0 = list(np.array(rand_eliciter)[:,0])
-    # r1 = list(np.array(rand_eliciter)[:,1])
-    # r2 = list(np.array(rand_eliciter)[:,2])
-
-    # r = np.add(r0_hat, r1_hat, r2_hat)
-
-    # # plot for error rate comparison
-    # plot0 = plt.figure(0)
-    # plt.plot(w, label = 'LinearActive')
-    # plt.plot(r, label = 'LinearRandom')
-    # plt.ylabel('error rate')
-    # plt.xlabel('steps')
-    # plt.legend()
-
-
-    # TODO: name the plots and y-axis
-
-    # plot0 = plt.figure(0)
-    # plt.plot(w0, label = 'LinearActive')
-    # plt.plot(r0, label = 'LinearRandom')
-    # plt.ylabel('error rate')
-    # plt.xlabel('steps')
-    # plt.legend()
-
-    # plot1 = plt.figure(1)
-    # plt.plot(w1, label = 'LinearActive')
-    # plt.plot(r1, label = 'LinearRandom')
-    # plt.ylabel('error rate')
-    # plt.xlabel('steps')
-    # plt.legend()
-
-    # plot2 = plt.figure(2)
-    # plt.plot(w2, label = 'LinearActive')
-    # plt.plot(r2, label = 'LinearRandom')
-    # plt.ylabel('error rate')
-    # plt.xlabel('steps')
-    # plt.legend()
 
     print("See sampling plot")
 
