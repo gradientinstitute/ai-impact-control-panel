@@ -1,5 +1,5 @@
 """Productionising LDA.py"""
-from numpy.random.mtrand import choice
+from numpy.random.mtrand import choice, sample
 from deva import fileio
 import numpy as np
 import matplotlib.pyplot as plt
@@ -39,77 +39,120 @@ def main():
 
     # Test whether the sampler can elicit this oracle's preference
     # sampler = bounds.TestSampler(ref, table, sign, attribs, steps=15)
-    # sampler = bounds.LinearRandom(ref, table, sign, attribs, steps=15)
-    sampler = bounds.LinearActive(ref, table, sign, attribs, steps=100, epsilon=0.1, n_steps_converge=5)
+    rand_sampler = bounds.LinearRandom(ref, table, sign, attribs, steps=15)
+    lg_sampler = bounds.LinearActive(ref, table, sign, attribs, steps=100, epsilon=0.1, n_steps_converge=5)
+
+    def run_bounds_eliciter(sample):
+        sampler = sample
+
+        # logged for plotting
+        # choices = []
+        est_weights = []
+        true_weights = []
+
+        # For display purposes
+        ref_candidate = elicit.Candidate("Baseline", baseline, None)
+
+        print("Do you prefer to answer automatically? Y/N")
+        yes = ["Y", "Yes", "y", "yes"]
+        answer = input() in yes
+        base = ["Baseline", "Base", "baseline", "base"]
+
+        while not sampler.terminated:
+
+            # Display the choice between this and the reference
+            interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
+            choices.append(sampler.choice)
+
+            true_weights.append(w_true)
+            est_weights.append(sampler.w)
+
+            if answer:
+                # Answer automatically
+                label = oracle(sampler.choice)
+                sampler.observe(label)
+            else:
+                # Answer based on user's input
+                label = input() not in base
+                sampler.observe(label)
+
+            if label:
+                print("Choice: Oracle (ACCEPTED) candidate.\n\n")
+            else:
+                print("Choice: Oracle (REJECTED) candidate.\n\n")
+
+        # Display text results report
+        print("Experimental results ------------------")
+        print("Truth:    ", w_true)
+        print("Estimate: ", sampler.w)
+        accept = oracle(table)
+        accept_rt = accept.mean()
+        pred = sampler.guess(table)
+        acc = np.mean(accept == pred)
+        print(f"True preference would accept {accept_rt:.0%} of real candidates.")
+        print(f"Candidates labeled with {acc:.0%} accuracy.")
+
+        errors = [abs(true_weights[i] - est_weights[i]) for i in range(len(true_weights))]
+        return errors
 
     # logged for plotting
+    print("You are using LinearRandom Eliciter")
     choices = []
-    est_weights = []
-    true_weights = []
+    rand_eliciter = run_bounds_eliciter(rand_sampler)
 
-    # For display purposes
-    ref_candidate = elicit.Candidate("Baseline", baseline, None)
+    # logged for plotting
+    print("\n")
+    print("You are using LinearActive Eliciter")
+    choices = []
+    lg_eliciter = run_bounds_eliciter(lg_sampler)
 
-    print("Do you prefer to answer automatically? Y/N")
-    yes = ["Y", "Yes", "y", "yes"]
-    answer = input() in yes
-    base = ["Baseline", "Base", "baseline", "base"]
+    # ----------- visualisation --------------
+    # plot the error (diff of w_true and w) / the angel changes 
+    # compare two different approaches (LinearActive and LinearRandom)
+    sampler = lg_sampler
 
-    while not sampler.terminated:
-
-        # Display the choice between this and the reference
-        interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
-        choices.append(sampler.choice)
-
-        true_weights.append(w_true)
-        est_weights.append(sampler.w)
-
-        if answer:
-            # Answer automatically
-            label = oracle(sampler.choice)
-            sampler.observe(label)
-        else:
-            # Answer based on user's input
-            label = input() not in base
-            sampler.observe(label)
-
-        if label:
-            print("Choice: Oracle (ACCEPTED) candidate.\n\n")
-        else:
-            print("Choice: Oracle (REJECTED) candidate.\n\n")
-
-    errors = [abs(true_weights[i] - est_weights[i]) for i in range(len(true_weights))]
+    # x = [i for i in range(len(choices))]
 
     # Display 'error' plots
-    w0 = list(np.array(errors)[:,0])
-    w1 = list(np.array(errors)[:,1])
-    w2 = list(np.array(errors)[:,2])
+    w0 = list(np.array(lg_eliciter)[:,0])
+    w1 = list(np.array(lg_eliciter)[:,1])
+    w2 = list(np.array(lg_eliciter)[:,2])
+
+    r0 = list(np.array(rand_eliciter)[:,0])
+    r1 = list(np.array(rand_eliciter)[:,1])
+    r2 = list(np.array(rand_eliciter)[:,2])
 
     plot0 = plt.figure(0)
-    plt.plot(w0)
+    plt.plot(w0, label = 'LinearActive')
+    plt.text(0.08, 0.2, 'LinearActive')
+    plt.plot(r0, label = 'LinearRandom')
+    plt.text(0.9, 0.2, 'LinearRandom')
     plt.ylabel('error')
     plt.xlabel('steps')
 
     plot1 = plt.figure(1)
-    plt.plot(w1)
+    plt.plot(w1, label = 'LinearActive')
+    plt.plot(r1, label = 'LinearRandom')
     plt.ylabel('error')
     plt.xlabel('steps')
 
     plot2 = plt.figure(2)
-    plt.plot(w2)
+    plt.plot(w2, label = 'LinearActive')
+    plt.plot(r2, label = 'LinearRandom')
     plt.ylabel('error')
     plt.xlabel('steps')
 
     # Display text results report
-    print("Experimental results ------------------")
-    print("Truth:    ", w_true)
-    print("Estimate: ", sampler.w)
-    accept = oracle(table)
-    accept_rt = accept.mean()
-    pred = sampler.guess(table)
-    acc = np.mean(accept == pred)
-    print(f"True preference would accept {accept_rt:.0%} of real candidates.")
-    print(f"Candidates labeled with {acc:.0%} accuracy.")
+    # LinearActive only
+    # print("Experimental results ------------------")
+    # print("Truth:    ", w_true)
+    # print("Estimate: ", sampler.w)
+    # accept = oracle(table)
+    # accept_rt = accept.mean()
+    # pred = sampler.guess(table)
+    # acc = np.mean(accept == pred)
+    # print(f"True preference would accept {accept_rt:.0%} of real candidates.")
+    # print(f"Candidates labeled with {acc:.0%} accuracy.")
     print("See sampling plot")
 
     # Display 3D plot  -------------------------
@@ -118,9 +161,6 @@ def main():
     rad = plot3d.radius(choices)[:3]
     plot3d.weight_disc(w_true[:3], ref[:3], rad, 'b', "true boundary")
     plot3d.weight_disc(sampler.w[:3], ref[:3], rad, 'r', "estimated boundary")
-    # TODO visualisation
-    # plot the error (diff of w_true and w) / the angel changes 
-    # compare two different approaches (LinearActive and LinearRandom)
     plt.legend()
     plt.show()
 
