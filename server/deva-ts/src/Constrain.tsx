@@ -200,7 +200,7 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid}) {
   const decimals = 'decimals' in u ? u.decimals : null; 
 
   return (
-    <div key={uid} className="grid grid-cols-5 gap-8 bg-gray-600 rounded-lg p-4">
+    <div key={uid} className="grid grid-cols-5 gap-8 bg-gray-700 rounded-lg p-4">
       
       <h2 className="col-span-5 text-center">{name}</h2>
       <p className="col-span-5 text-3xl">{cstring}</p>
@@ -237,7 +237,7 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
   .map(x => (<p>{x}</p>));
 
   return (
-    <div key={uid} className="grid grid-cols-10 gap-8 bg-gray-600 rounded-lg p-4">
+    <div key={uid} className="grid grid-cols-10 gap-8 bg-gray-700 rounded-lg p-4">
 
       <h2 className="col-span-10 text-center">{name}</h2>
 
@@ -351,7 +351,26 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
   <div>
     <BlockingTargetBar percentage={percentage} blockingState={blockingState}/>
     <Slider {...rangeProps} />
+    <OptimalDirection higherIsBetter={higherIsBetter}/>
   </div>
+  );
+}
+
+function OptimalDirection({higherIsBetter}) {
+  const leftColour = higherIsBetter ? "text-red-500" : "text-green-500";
+  const rightColour = higherIsBetter ? "text-green-500" : "text-red-500";
+  const leftText = higherIsBetter ? "least optimal" : "most optimal";
+  const rightText = higherIsBetter ? "most optimal" : "least optimal";
+
+  return (
+    <div className="grid grid-cols-4">
+      <div className={"col-span-2 text-left text-s " + leftColour}>
+       <p><i>← {leftText}</i></p>
+      </div>
+      <div className={"col-span-2 text-right text-s " + rightColour}>
+        <p><i>{rightText} →</i></p>
+      </div>
+    </div>
   );
 }
 
@@ -369,17 +388,18 @@ function getTargetPercentage(higherIsBetterMap, uid, targets, min, max, decimals
 
 function BlockingTargetBar({percentage, blockingState}) {
 
-  let colour = "border-gray-500";
+  let colour = "border-gray-600";
   colour = blockingState == blockingStates.blocking ? "border-red-500" : colour;
-  colour = blockingState == blockingStates.bounced ? "border-orange-500" : colour;
+  colour = blockingState == blockingStates.bounced ? "border-yellow-500" : colour;
 
   return (
     <div className="w-full flex">
-      <div className={"h-6 min-h-full bg-gray-500 border-r-4 " + colour} style={{width:percentage + "%"}}></div>
-      <div className={"h-6 min-h-full bg-gray-500"} style={{width:(100-percentage) + "%"}}> </div>
+      <div className={"h-6 min-h-full border-r-4 bg-gray-600 " + colour} style={{width:percentage + "%"}}></div>
+      <div className={"h-6 min-h-full bg-gray-600"} style={{width:(100-percentage) + "%"}}> </div>
     </div>
   );
 }
+
 
 function StartButton({}) {
 
