@@ -269,7 +269,7 @@ class LinearRandom(BoundsEliciter):
         return self._step > self.steps
 
 
-class TestSampler(BoundsEliciter):
+class PlaneSampler(BoundsEliciter):
     """Example of a basic sampler that elicits a boundary hyperplane."""
 
     def __init__(self, ref, table, sign, attribs, steps):
