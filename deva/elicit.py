@@ -162,9 +162,11 @@ class ActiveRanking(Eliciter):
         for c in candidates:
             data.append([c[a] for a in attribs])
 
-        metrics = scenario['metrics']
-        signs = [1 if metrics[a]['higherIsBetter'] else -1 for a in attribs]
-        data = np.array(data) * np.array(signs)
+        # metrics = scenario['metrics']
+        # already pre-applied, we can assume lower is always better
+        # signs = [-1 if metrics[a].get('higherIsBetter', True)
+        #          else 1 for a in attribs]
+        # data = np.array(data) * np.array(signs)
 
         self.active = self._active_alg(
             data,

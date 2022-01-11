@@ -110,10 +110,11 @@ def tabulate(candidates, metrics):
     for i, c in enumerate(candidates):
         table[i, :] = [c[a] for a in attribs]
 
-    sign = np.array([-1 if metrics[a]["higherIsBetter"] else 1
-                     for a in attribs])
+    return attribs, table
+    # sign = np.array([1 if metrics[a].get("higherIsBetter", True) else -1
+    #                  for a in attribs])
 
-    return attribs, table, sign
+    # return attribs, table*sign, sign
 
 
 if __name__ == "__main__":

@@ -333,13 +333,13 @@ class PlaneSampler(BoundsEliciter):
 
 
 def tabulate(candidates, metrics):
-    """Convert object candidates and higherIsBetter to arrays."""
+    """Convert object candidates and lowerIsBetter to arrays."""
     attribs = sorted(candidates[0].attributes)
     table = np.zeros((len(candidates), len(attribs)))
     for i, c in enumerate(candidates):
         table[i, :] = [c[a] for a in attribs]
 
-    sign = np.array([-1 if metrics[a]["higherIsBetter"] else 1
+    sign = np.array([1 if metrics[a].get("lowerIsBetter", True) else -1
                      for a in attribs])
 
-    return attribs, table, sign
+    return attribs, table*sign, sign

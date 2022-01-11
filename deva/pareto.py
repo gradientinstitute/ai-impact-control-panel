@@ -1,38 +1,35 @@
 import numpy as np
 
 
-def remove_non_pareto(models, metadata):
-    """Removes all models that are strictly worse than another model."""
-    # Check if model is bested by another in every metric
-    print("\nRemove models not on the pareto front")
-    non_pareto = []
-    for i, m in enumerate(models):
-        for r in models:
-            if m == r:  # If comparing the model with itself, skip check.
-                continue
-            # Check which metrics the model is worse at
-            worse = np.zeros(len(models[r])).astype(bool)
-            for j, met in enumerate(models[m].keys()):
-                higher_better = metadata['metrics'][met]['higherIsBetter']
+def remove_non_pareto(models):
+    """Reduces the set of models down to the efficient set."""
+    n = len(models)
+    dominated = np.zeros(n, dtype=bool)
 
-                diff = models[m][met] - models[r][met]
+    names, scores = zip(*models.items())
+    # count = 0
 
-                if higher_better and (diff <= 0):
-                    worse[j] = True
-                elif not higher_better and (diff >= 0):
-                    worse[j] = True
+    for i, m in enumerate(scores):
+        for j, n in enumerate(scores):
 
-            # If all are worse, model is not on the pareto front.
-            if np.all(worse):
-                non_pareto.append(m)
+            # various optimisations to reduce the number of comparisons
+            if dominated[i]:
                 break
+            if dominated[j] | (i==j):
+                continue
 
-    # Delete all models that aren't on the pareto front
-    for m in non_pareto:
-        del models[m]
+            dominated[i] |= (all(m[a] >= n[a] for a in m) &
+                             any(m[a] > n[a] for a in m))
+            # count += 1
 
-    # Print the number of models deleted
-    s = "" if len(non_pareto) == 1 else "s"
-    print("Deleted {} model{}.".format(len(non_pareto), s))
+    # print(f"Comparisons: {count/len(names)**2:.0%}")
+    efficient = models.copy()
+    for name, dom in zip(names, dominated):
+        if dom:
+            del efficient[name]
 
-    return models
+    d = sum(dominated)
+    s = "" if d == 1 else "s"
+    print("Deleted {} pareto inefficient model{}.".format(d, s))
+
+    return efficient

@@ -75,18 +75,23 @@ def load_scenario(scenario_name, pfilter=True):
         models[name] = toml.load(fname)
 
     scenario = toml.load(os.path.join(scenario_path, "metadata.toml"))
-
     assert len(models) > 0, "There are no candidate models."
+
+    # Apply lowerIsBetter
+    metrics = scenario["metrics"]
+    flip = [m for m in metrics if not metrics[m].get('lowerIsBetter', True)]
+    for val in models.values():
+        for f in flip:
+            val[f] = -val[f]
 
     # Filter efficient set
     if pfilter:
-        models = remove_non_pareto(models, scenario)
+        models = remove_non_pareto(models)
 
-    assert len(models) > 0, "There are no candidate models after filtering."
+    assert len(models) > 0, "There are no efficient models."
 
     # Convert the TOML-loaded dictionaries into candidate objects.
     candidates = []
-    metrics = scenario["metrics"]
 
     for spec_name, perf in models.items():
         name = autoname(len(candidates))
@@ -102,10 +107,6 @@ def load_scenario(scenario_name, pfilter=True):
 
     scenario["baseline"] = load_baseline(scenario_name)
 
-    # Apply higherIsBetter
-    flip = [m for m in metrics if not metrics[m].get('lowerIsBetter', True)]
-    import smart_embed
-    smart_embed.embed(locals(), globals())
 
     return candidates, scenario
 
@@ -130,11 +131,11 @@ def load_qualitative_metric(metrics, candidates, u):
 def load_quantitative_metric(metrics, candidates, u):
     metrics[u]["max"] = max(c[u] for c in candidates)
     metrics[u]["min"] = min(c[u] for c in candidates)
-    metrics[u]["decimals"] = int(metrics[u]["decimals"])
+    metrics[u]["display-decimals"] = int(metrics[u]["display-decimals"])
     if "countable" not in metrics[u]:
         # auto-fill optional field
         metrics[u]["countable"] = (
-            "number" if metrics[u]["decimals"] == 0 else "amount")
+            "number" if metrics[u]["display-decimals"] == 0 else "amount")
 
 
 def delete_files(folder):

@@ -104,7 +104,7 @@ def init_bounds(scenario):
     metrics = meta["metrics"]
     attribs, table, sign = bounds.tabulate(candidates, metrics)
     ref = [baseline[a] for a in attribs]
-    bounders[ident] = bounds.TestSampler(ref, table, sign, attribs, steps=15)
+    bounders[ident] = bounds.PlaneSampler(ref, table, sign, attribs, steps=30)
     return ""
 
 
