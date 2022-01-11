@@ -115,12 +115,15 @@ def print_result(result):
                                             "ActiveMaxSmooth",
                                             "ActiveMaxPrimary", "ActiveMax"],
               multiple=True,
-              help='the eliciters you want to compare in a list,\
-                 choose two or more from ')
+              help='The eliciters you want to compare,\
+                    choose from "Toy", "VotingEliciter",\
+                    "ActiveRanking", "ActiveMaxSmooth",\
+                    "ActiveMaxPrimary", "ActiveMax".\
+                     Sample usage: -e Toy -e ActiveMax')
 @click.option('-n', '--number', default=50,
-              help='the number of cadidate to be generated')
+              help='The number of cadidate to be generated')
 @click.option('-d', '--dimension', default=3,
-              help='dimensions each candidate has.')
+              help='Dimensions each candidate has.')
 def compareEliciters(eliciters, number, dimension):
     print_result(test_eliciters(eliciters, number, dimension))
 
