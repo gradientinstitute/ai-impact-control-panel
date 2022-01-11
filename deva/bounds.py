@@ -168,13 +168,9 @@ class LinearActive(BoundsEliciter):
     @property
     def terminated(self):
         # either the steps reach the limit or the model converges
-        if self._step > self.steps:
-            print("Teminated: max steps are reached")
-            return self._step > self.steps
-        else:
-            print("Terminated: model converges")
-            return (self.sum_diff_w <= 0.1 and
-                    self._converge >= self.n_steps_converge)
+        return (self._step > self.steps or
+                (self.sum_diff_w <= self.epsilon and
+                 self._converge >= self.n_steps_converge))
 
 
 class LinearRandom(BoundsEliciter):
