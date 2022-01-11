@@ -141,7 +141,7 @@ def compare_weights(w_true, est_w):
     true_hat = np.array(w_true / (w_true @ w_true)**.5)
     est_hat = np.array([est_w[i] / (est_w[i] @ est_w[i])**.5
                         for i in range(len(est_w))])
-    errors = list(np.abs(np.array(true_hat) - np.array(est_hat)))
+    errors = np.abs(np.array(true_hat) - np.array(est_hat))
     error_sum = np.sum(errors, axis=1)
     return error_sum
 
