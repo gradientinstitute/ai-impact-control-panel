@@ -14,25 +14,29 @@ enum blockingStates {
 }
 
 // the metric that was last bounced or null if none bounced
+// string of metric name
 export const lastBouncedState = atom({
   key: 'lastBounced',
   default: null,
 });
 
-// mapping from metric to the values required to unblock the last bounced
-export const targetsState = atom({
-  key: 'targets',
-  default: null,
-});
-
-
+// Stores the current 'state' of each scrollbar with the blocking status
+// {metric1: <value from blockingStates enum>, metric2: etc.}
 export const scrollbarHandleState = atom({
   key: 'scrollbarHandleState',
   default: null,
 });
 
-// mapping from metric to the state of its handle 
-// i.e. default, blocked, blocking, bounced  
+// mapping from metric to the values required to unblock the last bounced
+// {metric1: [value1, value2, value3, ...] metric2: etc }
+export const targetsState = atom({
+  key: 'targets',
+  default: null,
+});
+
+// // mapping from metric to the state of its handle 
+// // i.e. default, blocked, blocking, bounced  
+// TODO re-ithkn this, it's acting as a (possibly wrong) default
 export const scrollbarsState = selector({
   key: 'scrollbarsState',
   get: ({get}) => {
@@ -51,6 +55,7 @@ export const scrollbarsState = selector({
 })
 
 // Returns the most optimal values for each metric given possible candidates
+// {metric1: <most desirable value in current candidate set>, etc.}
 export const bestValuesState = selector({
   key: 'optimalMetricValues',
   get: ({get}) => {
