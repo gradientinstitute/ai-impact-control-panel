@@ -37,6 +37,7 @@ def main():
         return ((q - ref) @ w_true < 0)
 
     # Test whether the sampler can elicit this oracle's preference
+
     plane_sampler = bounds.PlaneSampler(ref, table, sign, attribs, steps=50)
     linear_random = bounds.LinearRandom(ref, table, sign, attribs, steps=50)
     linear_active = bounds.LinearActive(ref, table, sign, attribs, steps=50,
@@ -54,16 +55,13 @@ def main():
     for eliciter in eliciters:
         samp_name = eli_names[eliciter]
         print(f'You are using {samp_name} Eliciter\n')
-        (sample_choices, true_w, est_w) = run_bounds_eliciter(eliciter, metrics, table, baseline, w_true, oracle)
+        run_samp = run_bounds_eliciter(eliciter, metrics, table,
+                                       baseline, w_true, oracle)
+        (sample_choices, true_w, est_w) = run_samp
         eli_choices[samp_name] = sample_choices
 
         w = compare_weights(true_w, est_w)
         plt.plot(w, label=f'{samp_name}')
-
-        # w_sum = np.array(np.sum(w_sample, axis=1))
-        # w_hat = list(w_sum / (w_sum@w_sum)**.5)
-        # print(w_hat)
-        # plt.plot(w_hat, label=f'{samp_name}')
 
     plt.ylabel('error rate')
     plt.xlabel('steps')
@@ -87,66 +85,66 @@ def main():
 
 
 def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle):
-        sampler = sample
+    sampler = sample
 
-        # logged for plotting
-        est_weights = []
-        true_weights = []
-        choices = []
+    # logged for plotting
+    est_weights = []
+    true_weights = []
+    choices = []
 
-        # For display purposes
-        ref_candidate = elicit.Candidate("Baseline", baseline, None)
+    # For display purposes
+    ref_candidate = elicit.Candidate("Baseline", baseline, None)
 
-        print("Do you prefer to answer automatically? Y/N")
-        # matching user inputs
-        yes = ["y", "yes"]
-        answer = input().lower() in yes
-        base = ["baseline", "base"]
+    print("Do you prefer to answer automatically? Y/N")
+    # matching user inputs
+    yes = ["y", "yes"]
+    answer = input().lower() in yes
+    base = ["baseline", "base"]
 
-        while not sampler.terminated:
+    while not sampler.terminated:
 
-            # Display the choice between this and the reference
-            interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
-            choices.append(sampler.choice)
+        # Display the choice between this and the reference
+        interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
+        choices.append(sampler.choice)
 
-            true_weights.append(w_true)
-            est_weights.append(sampler.w)
+        true_weights.append(w_true)
+        est_weights.append(sampler.w)
 
-            if answer:
-                # Answer automatically
-                label = oracle(sampler.choice)
-                sampler.observe(label)
-            else:
-                # Answer based on user's input
-                label = input().lower() not in base
-                sampler.observe(label)
+        if answer:
+            # Answer automatically
+            label = oracle(sampler.choice)
+            sampler.observe(label)
+        else:
+            # Answer based on user's input
+            label = input().lower() not in base
+            sampler.observe(label)
 
-            if label:
-                print("Choice: Oracle (ACCEPTED) candidate.\n\n")
-            else:
-                print("Choice: Oracle (REJECTED) candidate.\n\n")
+        if label:
+            print("Choice: Oracle (ACCEPTED) candidate.\n\n")
+        else:
+            print("Choice: Oracle (REJECTED) candidate.\n\n")
 
-        # Display text results report
-        print("Experimental results ------------------")
-        print("Truth:    ", w_true)
-        print("Estimate: ", sampler.w)
-        accept = oracle(table)
-        accept_rt = accept.mean()
-        pred = sampler.guess(table)
-        acc = np.mean(accept == pred)
-        print(f"True preference would accept {accept_rt:.0%} of real candidates.")
-        print(f"Candidates labeled with {acc:.0%} accuracy.")
+    # Display text results report
+    print("Experimental results ------------------")
+    print("Truth:    ", w_true)
+    print("Estimate: ", sampler.w)
+    accept = oracle(table)
+    accept_rt = accept.mean()
+    pred = sampler.guess(table)
+    acc = np.mean(accept == pred)
+    print(f"True preference would accept {accept_rt:.0%}\
+            of real candidates.")
+    print(f"Candidates labeled with {acc:.0%} accuracy.")
 
-        return (choices, np.array(true_weights), np.array(est_weights))
-        # # normalise
-        # errors = np.abs(np.array(true_weights) - np.array(est_weights))
-        # return (errors)
+    return (choices, np.array(true_weights), np.array(est_weights))
+
 
 def compare_weights(true_w, est_w):
     # normalise to unit vector
-    true_hat = np.array([true_w[i] /(true_w[i]@true_w[i])**.5 for i in range(len(true_w))])
-    # true_hat = np.array(true_w / (true_w @ true_w)**.5)
-    est_hat = np.array([est_w[i] /(est_w[i]@est_w[i])**.5 for i in range(len(est_w))])
+    true_hat = np.array([true_w[i] / (true_w[i] @ true_w[i])**.5
+                         for i in range(len(true_w))])
+    est_hat = np.array([est_w[i] / (est_w[i] @ est_w[i])**.5
+                        for i in range(len(est_w))])
     errors = list(np.abs(np.array(true_hat) - np.array(est_hat)))
     error_sum = np.sum(errors, axis=1)
     return error_sum
