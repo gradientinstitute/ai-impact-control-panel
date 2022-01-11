@@ -1,5 +1,4 @@
 """Productionising LDA.py"""
-from numpy.random.mtrand import choice
 from deva import fileio
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,19 +37,67 @@ def main():
         return ((q - ref) @ w_true < 0)
 
     # Test whether the sampler can elicit this oracle's preference
-    # sampler = bounds.TestSampler(ref, table, sign, attribs, steps=15)
-    # sampler = bounds.LinearRandom(ref, table, sign, attribs, steps=15)
-    sampler = bounds.LinearActive(ref, table, sign, attribs, steps=100, epsilon=0.1, n_steps_converge=5)
 
-    choices = []  # logged for plotting
+    plane_sampler = bounds.PlaneSampler(ref, table, sign, attribs, steps=50)
+    linear_random = bounds.LinearRandom(ref, table, sign, attribs, steps=50)
+    linear_active = bounds.LinearActive(ref, table, sign, attribs, steps=50,
+                                        epsilon=0.05, n_steps_converge=5)
+
+    # ----------- visualisation --------------
+    # compare three eliciters
+    plt.figure(1)
+
+    eliciters = [plane_sampler, linear_random, linear_active]
+    eli_names = {plane_sampler: "PlaneSampler", linear_random: "LinearRandom",
+                 linear_active: "LinearActive"}
+    eli_choices = {}  # a dictionary storing the choices for each eliciter
+
+    for eliciter in eliciters:
+        samp_name = eli_names[eliciter]
+        print(f'You are using {samp_name} Eliciter\n')
+        (sample_choices, est_w) = run_bounds_eliciter(eliciter, metrics, table,
+                                                      baseline, w_true, oracle)
+        eli_choices[samp_name] = sample_choices
+
+        w = compare_weights(w_true, est_w)
+        plt.plot(w, label=f'{samp_name}')
+
+    plt.ylabel('error rate')
+    plt.xlabel('steps')
+    plt.suptitle('Eliciters Comparison')
+    plt.legend()
+
+    print("See sampling plot")
+
+    # only shows the 3D plot for LinearActive Eliciter
+    sampler = linear_active
+    choices = eli_choices["LinearActive"]
+
+    # Display 3D plot  -------------------------
+    plt.figure(2)
+    plot3d.sample_trajectory(choices, attribs)
+    rad = plot3d.radius(choices)[:3]
+    plot3d.weight_disc(w_true[:3], ref[:3], rad, 'b', "true boundary")
+    plot3d.weight_disc(sampler.w[:3], ref[:3], rad, 'r', "estimated boundary")
+    plt.legend()
+    plt.show()
+
+
+def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle):
+    sampler = sample
+
+    # logged for plotting
+    est_weights = []
+    choices = []
 
     # For display purposes
     ref_candidate = elicit.Candidate("Baseline", baseline, None)
 
     print("Do you prefer to answer automatically? Y/N")
-    yes = ["Y", "Yes", "y", "yes"]
-    answer = input() in yes
-    base = ["Baseline", "Base", "baseline", "base"]
+    # matching user inputs
+    yes = ["y", "yes"]
+    answer = input().lower() in yes
+    base = ["baseline", "base"]
 
     while not sampler.terminated:
 
@@ -58,13 +105,15 @@ def main():
         interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
         choices.append(sampler.choice)
 
+        est_weights.append(sampler.w)
+
         if answer:
             # Answer automatically
             label = oracle(sampler.choice)
             sampler.observe(label)
         else:
             # Answer based on user's input
-            label = input() not in base
+            label = input().lower() not in base
             sampler.observe(label)
 
         if label:
@@ -80,20 +129,21 @@ def main():
     accept_rt = accept.mean()
     pred = sampler.guess(table)
     acc = np.mean(accept == pred)
-    print(f"True preference would accept {accept_rt:.0%} of real candidates.")
+    print(f"True preference would accept {accept_rt:.0%}\
+            of real candidates.")
     print(f"Candidates labeled with {acc:.0%} accuracy.")
-    print("See sampling plot")
 
-    # Display 3D plot  -------------------------
-    plot3d.sample_trajectory(choices, attribs)
-    rad = plot3d.radius(choices)[:3]
-    plot3d.weight_disc(w_true[:3], ref[:3], rad, 'b', "true boundary")
-    plot3d.weight_disc(sampler.w[:3], ref[:3], rad, 'r', "estimated boundary")
-    # TODO visualisation
-    # plot the error (diff of w_true and w) / the angel changes 
-    # compare two different approach
-    plt.legend()
-    plt.show()
+    return (choices, np.array(est_weights))
+
+
+def compare_weights(w_true, est_w):
+    # normalise to unit vector
+    true_hat = np.array(w_true / (w_true @ w_true)**.5)
+    est_hat = np.array([est_w[i] / (est_w[i] @ est_w[i])**.5
+                        for i in range(len(est_w))])
+    errors = np.abs(np.array(true_hat) - np.array(est_hat))
+    error_sum = np.sum(errors, axis=1)
+    return error_sum
 
 
 if __name__ == "__main__":

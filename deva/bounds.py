@@ -169,7 +169,7 @@ class LinearActive(BoundsEliciter):
     def terminated(self):
         # either the steps reach the limit or the model converges
         return (self._step > self.steps or
-                (self.sum_diff_w <= 0.1 and
+                (self.sum_diff_w <= self.epsilon and
                  self._converge >= self.n_steps_converge))
 
 
@@ -265,7 +265,7 @@ class LinearRandom(BoundsEliciter):
         return self._step > self.steps
 
 
-class TestSampler(BoundsEliciter):
+class PlaneSampler(BoundsEliciter):
     """Example of a basic sampler that elicits a boundary hyperplane."""
 
     def __init__(self, ref, table, sign, attribs, steps):
