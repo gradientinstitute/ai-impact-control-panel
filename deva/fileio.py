@@ -102,6 +102,11 @@ def load_scenario(scenario_name, pfilter=True):
 
     scenario["baseline"] = load_baseline(scenario_name)
 
+    # Apply higherIsBetter
+    flip = [m for m in metrics if not metrics[m].get('lowerIsBetter', True)]
+    import smart_embed
+    smart_embed.embed(locals(), globals())
+
     return candidates, scenario
 
 

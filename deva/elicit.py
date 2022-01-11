@@ -243,3 +243,14 @@ class ActiveMaxPrimary(ActiveRanking):
 
     def description():
         return "ActiveMaxPrimary description"
+
+
+# export a list of eliciters
+eliciters = {
+    "Toy": Toy,
+    "ActiveRanking": ActiveRanking,
+    "ActiveMax": ActiveMax,
+    "ActiveMaxSmooth": ActiveMaxSmooth,
+    "ActiveMaxPrimary": ActiveMaxPrimary,
+    "VotingEliciter": VotingEliciter,
+}
