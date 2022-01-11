@@ -17,6 +17,9 @@ class Candidate:
     def __repr__(self):
         return f"Candidate({self.name})"
 
+    def get_attr(self):
+        return self.attributes.values()
+
 
 class Pair(tuple):
     def __new__(self, a: Candidate, b: Candidate):
