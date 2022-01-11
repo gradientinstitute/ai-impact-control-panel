@@ -6,7 +6,7 @@ import { std } from 'mathjs';
 import { roundValue, rvOperations } from './Widgets';
 import { allCandidatesState, currentCandidatesState, higherIsBetterState } from './Constrain';
 
-enum blockingStates {
+export enum blockingStates {
   'default',
   'blocked',
   'bounced',

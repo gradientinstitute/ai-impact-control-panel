@@ -7,7 +7,7 @@ import {Pane, paneState, scenarioState,
 import axios from 'axios';
 import _ from "lodash";
 import {roundValue, rvOperations} from './Widgets';
-import {getMetricImportance, lastBouncedState, scrollbarHandleState, 
+import {blockingStates, getMetricImportance, lastBouncedState, scrollbarHandleState, 
         setBlockedMetrics, setBlockingMetrics, scrollbarsState, 
         bestValuesState, getSliderStep, targetsState, getRounded} from './ConstrainScrollbar';
 
@@ -261,7 +261,7 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
   .map(x => (<p>{x}</p>));
 
   return (
-    <div key={uid} className="grid grid-cols-10 gap-8 bg-gray-600 rounded-lg p-4">
+    <div key={uid} className="grid grid-cols-10 gap-8 bg-gray-600 rounded-lg p-4 pb-10">
             
       <h2 className="col-span-10 text-center">{name}</h2>
 
@@ -391,21 +391,22 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
 
   const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(scrollbarHandleState);
   const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const [lastBounced, setLastBounced] = useRecoilState(lastBouncedState);
-  const [targets, setTargets] = useRecoilState(targetsState);
+  // const [lastBounced, setLastBounced] = useRecoilState(lastBouncedState);
+  // const [targets, setTargets] = useRecoilState(targetsState);
 
   const all = useRecoilValue(allCandidatesState);
-  const metricImportance = useRecoilValue(getMetricImportance);
+  const maxRanges = useRecoilValue(maxRangesState);
+  // const metricImportance = useRecoilValue(getMetricImportance);
 
   const higherIsBetterMap = useRecoilValue(higherIsBetterState);
   const higherIsBetter = higherIsBetterMap.get(uid);
   const val = higherIsBetter ? constraints[uid][0] : constraints[uid][1];
   
   // most desirable value in current candidate set
-  const activeOptimal = useRecoilValue(bestValuesState);
-  const activeOptimalVal = getRounded(higherIsBetterMap, uid, activeOptimal.get(uid), decimals)
+  // const activeOptimal = useRecoilValue(bestValuesState);
+  // const activeOptimalVal = getRounded(higherIsBetterMap, uid, activeOptimal.get(uid), decimals)
 
-  let bounced = null;
+  // let bounced = null;
 
   enum HandleColours {
     'white',  // default
@@ -418,13 +419,34 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
 
     // copy constraints into a new object
     let n = {...constraints};
+
+    // colour test
+    const [rmin, rmax] = maxRanges[uid];
+    const valfrac = (newVal - rmin) / (rmax - rmin);
+    let m = {...blockedScrollbar};
+    if (valfrac < 0.25) {
+      m[uid] = blockingStates.default;
+    }
+    else if (valfrac < 0.5) {
+      m[uid] = blockingStates.blocking;
+    }
+    else if (valfrac < 0.75) {
+      m[uid] = blockingStates.bounced;
+    } else {
+      m[uid] = blockingStates.blocked;
+    }
+    setBlockedScrollbar(m);
+    
     
     // set the bounds of the scrollbar
     n[uid] = higherIsBetter ? [newVal, n[uid][1]] : [n[uid][0], newVal];
-    const withNew = filterCandidates(all, n);
-    if (withNew.length > 0) {
-      setConstraints(n);
-    }
+    setConstraints(n);
+
+    // check how many candidates are left
+    // const withNew = filterCandidates(all, n);
+    // if (withNew.length > 0) {
+    //   setConstraints(n);
+    // }
     // changeScrollbarColours();
   }
 
@@ -448,8 +470,8 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
   
   const handleStyle = {
     backgroundColor: HandleColours[blockedScrollbar[uid]], 
-    height: 17, 
-    width: 17, 
+    height: 30, 
+    width: 30, 
     borderColor: HandleColours[blockedScrollbar[uid]]
   };
 
