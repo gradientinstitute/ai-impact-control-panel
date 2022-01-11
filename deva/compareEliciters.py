@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pylab as plt
+# import matplotlib.pylab as plt
 import click
 from deva.elicit import Candidate, Toy, VotingEliciter, ActiveRanking, \
                          ActiveMaxPrimary, ActiveMaxSmooth, ActiveMax
@@ -74,17 +74,9 @@ def test_eliciters(eliciter_list, num, attr):
     # use the generated candidates to test eliciters
     for eliciter in e_list:
         question_count = 0
-        error_record = []
         test_target = eliciter(candidates, scenario)
         while not test_target.terminated:
             question_count += 1
-            # calculate the error between remaining candidate in the eliciter
-            # and the ground truth
-            candidate_list = []
-            for c in test_target.candidates:
-                candidate_list.append(np.array(list(c.get_attr())))
-            error_record.append(np.linalg.norm(systems[0] -
-                                np.mean(candidate_list)))
             m1, m2 = test_target.query
             if int(m1.name) < int(m2.name):
                 # choose the better option, smaller the better
@@ -96,9 +88,6 @@ def test_eliciters(eliciter_list, num, attr):
         error = {}
         error['distance'] = np.linalg.norm(systems[0] - systems[result.name])
         error['question_count'] = question_count
-        error_record.append(error['distance'])
-        plt.plot(error_record, range(1, len(error_record)+1))
-        plt.savefig('plot.jpg')
         res[str(eliciter)] = error
     return [num, attr, mean_error, res]
 
