@@ -3,7 +3,7 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 import plot3d
-from deva import interface, elicit
+from deva import elicit
 
 
 def main():
