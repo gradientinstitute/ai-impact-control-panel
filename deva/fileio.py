@@ -111,7 +111,6 @@ def load_scenario(scenario_name, pfilter=True):
         if primary not in metrics:
             raise RuntimeError(f'{primary} is not in the scenario metrics.')
 
-
     return candidates, scenario
 
 
@@ -130,6 +129,8 @@ def load_all_metrics(metrics, candidates):
 def load_qualitative_metric(metrics, candidates, u):
     metrics[u]["max"] = max(c[u] for c in candidates)
     metrics[u]["min"] = min(c[u] for c in candidates)
+    if "lowerIsBetter" not in metrics[u]:
+        metrics[u]["lowerIsBetter"] = True
 
 
 def load_quantitative_metric(metrics, candidates, u):
@@ -140,6 +141,8 @@ def load_quantitative_metric(metrics, candidates, u):
         # auto-fill optional field
         metrics[u]["countable"] = (
             "number" if metrics[u]["display-decimals"] == 0 else "amount")
+    if "lowerIsBetter" not in metrics[u]:
+        metrics[u]["lowerIsBetter"] = True
 
 
 def delete_files(folder):
