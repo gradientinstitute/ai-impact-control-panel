@@ -38,21 +38,6 @@ export const maxRangesState = selector({
   },
 });
 
-// higher is better map (doesnt change)
-export const higherIsBetterState = selector({
-  key: 'higherIsBetter',
-  get: ({get}) => {
-    const metadata = get(metadataState);
-    let higherIsBetterMap = new Map();
-    Object.entries(metadata.metrics).map((x) => {
-      const uid = x[0];
-      const u: any = x[1];
-      higherIsBetterMap.set(uid, u.higherIsBetter);
-    });
-    return higherIsBetterMap;
-  }
-})
-
 function filterCandidates(candidates, bounds) {
   const items = candidates.filter( (c) => {
       return Object.entries(c).every(([k, v]) => {
@@ -158,18 +143,21 @@ function MultiRangeConstraint({}) {
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
     const u: any = x[1];
+    const lowerIsBetter = u.lowerIsBetter == false ? false : true;
 
     const pane = (u.type === "qualitative") ? 
 
       (<QualitativeConstraint x={x} 
         maxRanges={maxRanges} 
         constraints={constraints}
-        uid={uid}/>) :
+        uid={uid}
+        lowerIsBetter={lowerIsBetter}/>) :
 
       (<QuantitativeConstraint x={x}
         maxRanges={maxRanges}
         constraints={constraints}
-        uid={uid}/>)
+        uid={uid}
+        lowerIsBetter={lowerIsBetter}/>)
 
     return (
       <div >
@@ -185,18 +173,19 @@ function MultiRangeConstraint({}) {
   );
 }
 
-function QuantitativeConstraint({x, maxRanges, constraints, uid}) {
+function QuantitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) {
   // TODO: remember how to specify these types in destructuring args
   const u: any = x[1];
   const vals = maxRanges[uid];
+  const sign = lowerIsBetter ? 1 : -1;
   const min = vals[0];
   const max = vals[1];
-  const min_string = u.prefix + " " + min + " " + u.suffix;
-  const max_string = u.prefix + " " + max + " " + u.suffix;
+  const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + " " + u.suffix;
+  const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + " " + u.suffix;
   const name = u.name;
-  const cmin = constraints[uid][0];
-  const cmax = constraints[uid][1];
-  const cstring = u.prefix + " (" + cmin + " - " + cmax + ")\n" + u.suffix;
+  const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
+  const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
+  const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
   const decimals = 'decimals' in u ? u.decimals : null; 
 
   return (
@@ -207,14 +196,14 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid}) {
 
       <p className="col-span-1 text-xs text-right my-auto">{min_string}</p>
       <div className="col-span-3 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={null} decimals={decimals}/>
+        <RangeConstraint uid={uid} min={min} max={max} marks={null} decimals={decimals} lowerIsBetter={lowerIsBetter}/>
       </div>
       <p className="col-span-1 text-xs text-left my-auto">{max_string}</p>
     </div>
   )
 }
 
-function QualitativeConstraint({x, maxRanges, constraints, uid}) {
+function QualitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) {
   const u: any = x[1];
 
   const min = 0;
@@ -255,7 +244,7 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
 
       <p className="col-span-2 my-auto">{}</p>
       <div className="col-span-6 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={options} decimals={null}/>
+        <RangeConstraint uid={uid} min={min} max={max} marks={options} decimals={null} lowerIsBetter={lowerIsBetter}/>
       </div>
       <p className="col-span-2 my-auto">{}</p>
 
@@ -270,7 +259,7 @@ function getSliderStep(max, min, decimals) {
   return Number((0.1 ** decimals).toFixed(decimals));
 }
 
-function RangeConstraint({uid, min, max, marks, decimals}) {
+function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(scrollbarHandleState);
   const [constraints, setConstraints] = useRecoilState(constraintsState);
@@ -280,9 +269,9 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
   const activeOptimal = useRecoilValue(bestValuesState);
   const metricImportance = useRecoilValue(getMetricImportance);
 
-  const higherIsBetterMap = useRecoilValue(higherIsBetterState);
-  const higherIsBetter = higherIsBetterMap.get(uid);
-  const val = higherIsBetter ? constraints[uid][0] : constraints[uid][1];
+  // const higherIsBetterMap = useRecoilValue(higherIsBetterState);
+  // const higherIsBetter = higherIsBetterMap.get(uid);
+  const val = constraints[uid][1];
   
   let bounced = null;
 
@@ -298,9 +287,9 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
     let m = {...blockedScrollbar};
 
     // set the bounds of the scrollbar
-    n[uid] = higherIsBetter ? [newVal, n[uid][1]] : [n[uid][0], newVal];
+    n[uid] =  [n[uid][0], newVal] 
     const withNew = filterCandidates(all, n);
-
+    
     if (withNew.length > 0) {
       setConstraints(n);
     } else {
@@ -320,10 +309,10 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
   function changeScrollbarColours() {
     let n = {...constraints}
     let m = {...blockedScrollbar};
-    const b = setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, 
-      bounced, lastBounced, setLastBounced, decimals);
-    setBlockingMetrics(n, m, uid, higherIsBetterMap, activeOptimal, all, b, metricImportance);
-    setBlockedScrollbar(m);
+    // const b = setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, 
+    //   bounced, lastBounced, setLastBounced, decimals);
+    // setBlockingMetrics(n, m, uid, higherIsBetterMap, activeOptimal, all, b, metricImportance);
+    // setBlockedScrollbar(m);
   }
 
   let rangeProps = {
@@ -335,8 +324,9 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
     value: val,
     step: getSliderStep(max, min, decimals),
     handleStyle: {backgroundColor: HandleColours[blockedScrollbar[uid]], height: 17, width: 17, borderColor: HandleColours[blockedScrollbar[uid]]},
-    trackStyle: higherIsBetter ? {backgroundColor: "gray"} : {backgroundColor: "lightblue"},
-    railStyle: higherIsBetter ? {backgroundColor: "lightblue"} : {backgroundColor: "gray"},
+    trackStyle: {backgroundColor: "lightblue"},
+    railStyle: {backgroundColor: "gray"},
+    reverse: !lowerIsBetter,
   };
 
   if (marks !== null) {

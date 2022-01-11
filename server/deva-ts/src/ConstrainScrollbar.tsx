@@ -4,7 +4,7 @@ import { metadataState } from './Base';
 import _ from "lodash";
 import { std } from 'mathjs';
 import { roundValue, rvOperations } from './Widgets';
-import { allCandidatesState, currentCandidatesState, higherIsBetterState } from './Constrain';
+import { allCandidatesState, currentCandidatesState } from './Constrain';
 
 enum blockingStates {
   'default',
@@ -40,28 +40,28 @@ export const scrollbarsState = selector({
   },
 })
 
-// Returns the most optimal values for each metric given possible candidates
+// // Returns the most optimal values for each metric given possible candidates
 export const bestValuesState = selector({
   key: 'optimalMetricValues',
   get: ({get}) => {
-    const currentCandidates = get(currentCandidatesState);
-    const higherIsBetterMap = get(higherIsBetterState);
+//     const currentCandidates = get(currentCandidatesState);
+//     const higherIsBetterMap = get(higherIsBetterState);
     let currOptimal = new Map();
-    currentCandidates.forEach((candidate) => {
-      Object.entries(candidate).forEach(([key, value]) => {
-        const val = value as number;
-        const defaultValue = higherIsBetterMap.get(key) 
-          ? Number.MIN_SAFE_INTEGER 
-          : Number.MAX_SAFE_INTEGER;
-        const storedValue = (typeof currOptimal.get(key) != 'undefined') 
-          ? currOptimal.get(key) 
-          : defaultValue;
-        const lowerValue = val < storedValue ? val : storedValue;
-        const higherValue = val > storedValue ? val : storedValue;
-        const optimalValue = higherIsBetterMap.get(key) ? higherValue : lowerValue;
-        currOptimal.set(key, optimalValue);
-      })
-    })
+//     currentCandidates.forEach((candidate) => {
+//       Object.entries(candidate).forEach(([key, value]) => {
+//         const val = value as number;
+//         const defaultValue = higherIsBetterMap.get(key) 
+//           ? Number.MIN_SAFE_INTEGER 
+//           : Number.MAX_SAFE_INTEGER;
+//         const storedValue = (typeof currOptimal.get(key) != 'undefined') 
+//           ? currOptimal.get(key) 
+//           : defaultValue;
+//         const lowerValue = val < storedValue ? val : storedValue;
+//         const higherValue = val > storedValue ? val : storedValue;
+//         const optimalValue = higherIsBetterMap.get(key) ? higherValue : lowerValue;
+//         currOptimal.set(key, optimalValue);
+//       })
+    // })
     return currOptimal;
   }
 })
