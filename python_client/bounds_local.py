@@ -55,17 +55,16 @@ def main():
     for eliciter in eliciters:
         samp_name = eli_names[eliciter]
         print(f'You are using {samp_name} Eliciter\n')
-        run_samp = run_bounds_eliciter(eliciter, metrics, table,
-                                       baseline, w_true, oracle)
-        (sample_choices, true_w, est_w) = run_samp
+        (sample_choices, est_w) = run_bounds_eliciter(eliciter, metrics, table,
+                                                      baseline, w_true, oracle)
         eli_choices[samp_name] = sample_choices
 
-        w = compare_weights(true_w, est_w)
+        w = compare_weights(w_true, est_w)
         plt.plot(w, label=f'{samp_name}')
 
     plt.ylabel('error rate')
     plt.xlabel('steps')
-    plt.suptitle('Eliciters Comparisons')
+    plt.suptitle('Eliciters Comparison')
     plt.legend()
 
     print("See sampling plot")
@@ -89,7 +88,6 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle):
 
     # logged for plotting
     est_weights = []
-    true_weights = []
     choices = []
 
     # For display purposes
@@ -107,7 +105,6 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle):
         interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
         choices.append(sampler.choice)
 
-        true_weights.append(w_true)
         est_weights.append(sampler.w)
 
         if answer:
@@ -136,13 +133,12 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle):
             of real candidates.")
     print(f"Candidates labeled with {acc:.0%} accuracy.")
 
-    return (choices, np.array(true_weights), np.array(est_weights))
+    return (choices, np.array(est_weights))
 
 
-def compare_weights(true_w, est_w):
+def compare_weights(w_true, est_w):
     # normalise to unit vector
-    true_hat = np.array([true_w[i] / (true_w[i] @ true_w[i])**.5
-                         for i in range(len(true_w))])
+    true_hat = np.array(w_true / (w_true @ w_true)**.5)
     est_hat = np.array([est_w[i] / (est_w[i] @ est_w[i])**.5
                         for i in range(len(est_w))])
     errors = list(np.abs(np.array(true_hat) - np.array(est_hat)))
