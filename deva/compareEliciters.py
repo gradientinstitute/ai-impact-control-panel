@@ -1,7 +1,7 @@
 import numpy as np
 # import matplotlib.pylab as plt
 import click
-from deva import elicit 
+from deva import elicit
 
 eliciters_map = {"TOY": elicit.Toy, "ACTIVERANKING":  elicit.ActiveRanking,
                  "ACTIVEMAX":  elicit.ActiveMax,
