@@ -5,7 +5,7 @@ import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import {Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
 import axios from 'axios';
-import _ from "lodash";
+import _, { isNaN } from "lodash";
 import {roundValue, rvOperations, FillBar} from './Widgets';
 import {getMetricImportance, lastBouncedState, scrollbarHandleState, 
         setBlockedMetrics, setBlockingMetrics, scrollbarsState, 
@@ -377,8 +377,11 @@ function OptimalDirection({higherIsBetter}) {
 function getTargetPercentage(higherIsBetterMap, uid, targets, min, max, decimals) {
   let target = null;
   let percentage = higherIsBetterMap.get(uid) ? 100 : 0;
+
   if (targets != null && targets[uid] != null) {
-    target = targets[uid].map(x => getRounded(higherIsBetterMap, uid, x, decimals));
+    target = targets[uid]
+      .map(x => getRounded(higherIsBetterMap, uid, x, decimals))
+      .filter(x => x != null);
     percentage = higherIsBetterMap.get(uid) 
       ? ((Math.max(...target) - min) / (max - min)) * 100
       : ((Math.min(...target) - min) / (max - min)) * 100;
