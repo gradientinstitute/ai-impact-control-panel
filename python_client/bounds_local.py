@@ -77,8 +77,10 @@ def main():
 
     plot3d.sample_trajectory(choices * sign, attribs)
     rad = plot3d.radius(choices)[:3]
-    plot3d.weight_disc(w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
-    plot3d.weight_disc(sampler.w[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
+    plot3d.weight_disc(
+        w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
+    plot3d.weight_disc(
+        sampler.w[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
     plt.legend()
     plt.show()
 

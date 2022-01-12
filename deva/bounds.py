@@ -122,7 +122,7 @@ class LinearActive(BoundsEliciter):
         if self.steps > 0:
             self.old_w = self.w.copy()
 
-        dims = len(self.ref)
+        # dims = len(self.ref)
 
         # Helper function: make random candidate
         def random_choice():
@@ -237,7 +237,7 @@ class LinearRandom(BoundsEliciter):
         w = np.linalg.solve(dcov, dmean)
         self.w = w
 
-        dims = len(self.ref)
+        # dims = len(self.ref)
 
         while True:
             diff = np.random.randn(len(self.ref)) * self.radius
