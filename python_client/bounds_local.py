@@ -48,27 +48,36 @@ def main():
 
     # ----------- visualisation --------------
     # compare three eliciters
-    plt.figure(1)
+    # plt.figure(1)
 
     eliciters = [plane_sampler, linear_random, linear_active]
     eli_names = {plane_sampler: "PlaneSampler", linear_random: "LinearRandom",
                  linear_active: "LinearActive"}
     eli_choices = {}  # a dictionary storing the choices for each eliciter
-    eli_score = {}  # a dictionary storing the 'log loss' for each eliciter
+    eli_scores = {}  # a dictionary storing the 'log loss' for each eliciter
 
     for eliciter in eliciters:
         samp_name = eli_names[eliciter]
         print(f'You are using {samp_name} Eliciter\n')
-        (sample_choices, est_w) = run_bounds_eliciter(eliciter, metrics, table,
-                                                      baseline, w_true, oracle)
+        outputs = run_bounds_eliciter(eliciter, metrics, table, baseline,
+                                      w_true, oracle, ref, n_samples=100)
+        (sample_choices, est_w, scores) = outputs
         eli_choices[samp_name] = sample_choices
-        score = evaluation(sample_choices, ref, 100, oracle)
-        eli_score[samp_name] = score
+        # score = evaluation(sample_choices, ref, 100, oracle)
+        eli_scores[samp_name] = scores
+        # plt.subplot(131)
+        # plt.plot(scores[0], scores[1])
+        plt.figure(0)
+        plt.plot(np.array(scores)[:, 0], np.array(scores)[:, 1],
+                 label=f'{samp_name}')
+        plt.ylabel('log loss')
+        plt.xlabel('steps')
+        plt.suptitle('Eliciters Comparison')
 
         w = compare_weights(w_true, est_w)
+        # plt.subplot(132)
+        plt.figure(1)
         plt.plot(w, label=f'{samp_name}')
-
-    print(eli_score)
 
     plt.ylabel('error rate')
     plt.xlabel('steps')
@@ -91,12 +100,15 @@ def main():
     plt.show()
 
 
-def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle):
+def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
+                        ref, n_samples):
     sampler = sample
 
     # logged for plotting
     est_weights = []
     choices = []
+    scores = []  # log_loss for every 10 steps
+    step = 0
 
     # For display purposes
     ref_candidate = elicit.Candidate("Baseline", baseline, None)
@@ -108,6 +120,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle):
     base = ["baseline", "base"]
 
     while not sampler.terminated:
+        step += 1
 
         # Display the choice between this and the reference
         interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
@@ -129,6 +142,10 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle):
         else:
             print("Choice: Oracle (REJECTED) candidate.\n\n")
 
+        if step % 10 == 0:
+            score = evaluation(choices, ref, n_samples, oracle)
+            scores.append((step, score))
+
     # Display text results report
     print("Experimental results ------------------")
     print("Truth:    ", w_true)
@@ -141,7 +158,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle):
             of real candidates.")
     print(f"Candidates labeled with {acc:.0%} accuracy.")
 
-    return (choices, np.array(est_weights))
+    return (choices, np.array(est_weights), scores)
 
 
 def compare_weights(w_true, est_w):
