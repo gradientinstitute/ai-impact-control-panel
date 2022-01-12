@@ -12,10 +12,11 @@ def remove_non_pareto(models):
     for i, m in enumerate(scores):
         for j, n in enumerate(scores):
 
-            # various optimisations to reduce the number of comparisons
+            # optional checks to reduce the number of comparisons
             if dominated[i]:
                 break
-            if dominated[j] | (i==j):
+
+            if dominated[j] | (i == j):
                 continue
 
             dominated[i] |= (all(m[a] >= n[a] for a in m) &

@@ -21,6 +21,11 @@ class BoundsEliciter:
     def guess(self, q):
         raise NotImplementedError
 
+    def check_valid(self, q):
+        """Determine whether a query is valid."""
+        # could be something like (choice < 0).any():
+        return True  # placeholder
+
     @property
     def terminated(self):
         raise NotImplementedError
@@ -33,7 +38,7 @@ class LinearActive(BoundsEliciter):
     to the boundary in order to narrow the error.
     """
 
-    def __init__(self, ref, table, sign, attribs,
+    def __init__(self, ref, table, attribs,
                  steps, epsilon, n_steps_converge):
         """
         Parameters
@@ -43,9 +48,6 @@ class LinearActive(BoundsEliciter):
             table: array
                 a 2d array storing all the candidates
                 (n candidates * m metrics)
-            sign: int
-                helps to always minimise/maximise the values
-                in different metrics
             attribs: array
                 metrics for each candidate
             steps: int
@@ -56,13 +58,11 @@ class LinearActive(BoundsEliciter):
             n_steps_converge: int
                 the number of steps that shows the model converges
         """
-
         self.attribs = attribs
         radius = 0.5 * table.std(axis=0)  # scale of perturbations
         ref = np.asarray(ref, dtype=float)  # sometimes autocasts to long int
-        radius = np.asarray(radius, dtype=float) * np.asarray(sign)
+        radius = np.asarray(radius, dtype=float)
 
-        # NOTE: "higherisbetter" is encoded in sign of radius
         self.ref = ref
         self.radius = radius
         dims = len(ref)
@@ -77,7 +77,7 @@ class LinearActive(BoundsEliciter):
         self.lr = LogisticRegression()  # Create a logistic regression instance
 
         # Initialise
-        X = [ref+radius]
+        X = [ref + radius]
         y = [1]
         for d in range(dims):
             v = ref + 0
@@ -126,12 +126,13 @@ class LinearActive(BoundsEliciter):
 
         # Helper function: make random candidate
         def random_choice():
-            choice = np.zeros(dims, float) - 1
-            while (choice < 0).any():
+            while True:
                 diff = np.random.randn(len(self.ref)) * self.radius
                 diff -= w * (diff @ w) / (w @ w)  # make perpendicular
                 diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
                 choice = self.ref + diff
+                if self.check_valid(choice):
+                    break
             return choice
 
         # logistic regressor
@@ -181,7 +182,7 @@ class LinearRandom(BoundsEliciter):
     those being rejected.
     """
 
-    def __init__(self, ref, table, sign, attribs, steps):
+    def __init__(self, ref, table, attribs, steps):
         """
         Parameters
         ----------
@@ -190,9 +191,6 @@ class LinearRandom(BoundsEliciter):
             table: array
                 a 2d array storing all the candidates
                 (n candidates * m metrics)
-            sign: int
-                helps to always minimise/maximise the values
-                in different metrics
             attribs: array
                 metrics for each candidate
             steps: int
@@ -202,9 +200,8 @@ class LinearRandom(BoundsEliciter):
         self.attribs = attribs
         radius = 0.5 * table.std(axis=0)  # scale of perturbations
         ref = np.asarray(ref, dtype=float)  # sometimes autocasts to long int
-        radius = np.asarray(radius, dtype=float) * np.asarray(sign)
+        radius = np.asarray(radius, dtype=float)
 
-        # NOTE: "higherisbetter" is encoded in sign of radius
         self.ref = ref
         self.radius = radius
         dims = len(ref)
@@ -242,11 +239,11 @@ class LinearRandom(BoundsEliciter):
 
         dims = len(self.ref)
 
-        # random candidate choice
-        choice = np.zeros(dims, float) - 1
-        while (choice < 0).any():
+        while True:
             diff = np.random.randn(len(self.ref)) * self.radius
             choice = self.ref + diff
+            if self.check_valid(choice):
+                break
 
         self.choice = choice  # candidate
 
@@ -268,13 +265,12 @@ class LinearRandom(BoundsEliciter):
 class PlaneSampler(BoundsEliciter):
     """Example of a basic sampler that elicits a boundary hyperplane."""
 
-    def __init__(self, ref, table, sign, attribs, steps):
+    def __init__(self, ref, table, attribs, steps):
         self.attribs = attribs
         radius = 0.5 * table.std(axis=0)  # scale of perturbations
         ref = np.asarray(ref, dtype=float)  # sometimes autocasts to long int
-        radius = np.asarray(radius, dtype=float) * np.asarray(sign)
+        radius = np.asarray(radius, dtype=float)
 
-        # NOTE: "higherisbetter" is encoded in sign of radius
         self.ref = ref
         self.radius = radius
         dims = len(ref)
@@ -311,11 +307,14 @@ class PlaneSampler(BoundsEliciter):
 
         dims = len(self.ref)
         choice = np.zeros(dims, float) - 1
-        while (choice < 0).any():
+        while True:
             diff = np.random.randn(len(self.ref)) * self.radius
             diff -= w * (diff @ w) / (w @ w)  # make perpendicular
             diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
             choice = self.ref + diff
+            if self.check_valid(choice):
+                break
+
         self.choice = choice
         self.query = elicit.Candidate(
             fileio.autoname(self._step),
@@ -333,13 +332,10 @@ class PlaneSampler(BoundsEliciter):
 
 
 def tabulate(candidates, metrics):
-    """Convert object candidates and lowerIsBetter to arrays."""
+    """Convert candidates to a table of attributes."""
     attribs = sorted(candidates[0].attributes)
     table = np.zeros((len(candidates), len(attribs)))
     for i, c in enumerate(candidates):
         table[i, :] = [c[a] for a in attribs]
 
-    sign = np.array([1 if metrics[a].get("lowerIsBetter", True) else -1
-                     for a in attribs])
-
-    return attribs, table*sign, sign
+    return attribs, table

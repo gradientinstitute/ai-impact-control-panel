@@ -55,7 +55,7 @@ def list_scenarios():
     return metadata_files
 
 
-def load_baseline(scenario):
+def _load_baseline(scenario):
     # attempt to load the baseline
     scenario_path = os.path.join(repo_root(), 'scenarios', scenario)
     baseline_f = os.path.join(scenario_path, "baseline.toml")
@@ -77,12 +77,18 @@ def load_scenario(scenario_name, pfilter=True):
     scenario = toml.load(os.path.join(scenario_path, "metadata.toml"))
     assert len(models) > 0, "There are no candidate models."
 
+    baseline = _load_baseline(scenario_name)
+
     # Apply lowerIsBetter
     metrics = scenario["metrics"]
     flip = [m for m in metrics if not metrics[m].get('lowerIsBetter', True)]
-    for val in models.values():
-        for f in flip:
+    for f in flip:
+        for val in models.values():
             val[f] = -val[f]
+
+        baseline[f] = -baseline[f]
+
+    scenario["baseline"] = baseline
 
     # Filter efficient set
     if pfilter:
@@ -104,8 +110,6 @@ def load_scenario(scenario_name, pfilter=True):
         primary = scenario['primary_metric']
         if primary not in metrics:
             raise RuntimeError(f'{primary} is not in the scenario metrics.')
-
-    scenario["baseline"] = load_baseline(scenario_name)
 
 
     return candidates, scenario

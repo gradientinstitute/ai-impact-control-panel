@@ -3,7 +3,7 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 import plot3d
-from deva import elicit
+from deva import elicit, interface
 
 
 def main():
@@ -20,16 +20,17 @@ def main():
         scenario = input() or "!!!"
 
     # Extract the metadata from the list for display purposes
-    metrics = scenarios[scenario]["metrics"]
+    meta = scenarios[scenario]
+    metrics = meta["metrics"]
     attribs = sorted(metrics)  # canonical order for plotting
 
     # Create a hidden "ground truth" oracle function
     request = f'http://127.0.0.1:8666/{scenario}/ranges'
     print(request)
     candidates = sess.get(request).json()
-    attribs, table, sign = tabulate(candidates, metrics)
+    attribs, table = tabulate(candidates, metrics)
     w_true = 0.1 + 0.9 * np.random.rand(len(attribs))
-    w_true *= sign / (w_true @ w_true)**.5  # signed unit vector
+    w_true /= (w_true @ w_true)**.5  # signed unit vector
 
     # Create a bounds session
     print("Starting eliciter session")
@@ -58,6 +59,8 @@ def main():
             choice["right"]["name"],
             choice["right"]["values"],
         )
+
+        interface.text(elicit.Pair(left, right), metrics)
 
         # Answer automatically
         q = np.array([left.attributes[a] for a in attribs])
@@ -95,26 +98,27 @@ def main():
     print("<< see sampling plot for visualisation >>")
 
     # Display 3D plot  -------------------------
-    plot3d.sample_trajectory(choice_log, attribs)
+    # because this is display, we need to flip choices
+    sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
+                    for a in attribs])
+
+    plot3d.sample_trajectory(choice_log * sign, attribs)
     rad = plot3d.radius(choice_log)[:3]
-    plot3d.weight_disc(w_true[:3], ref[:3], rad, 'b', "true boundary")
-    plot3d.weight_disc(w_est[:3], ref[:3], rad, 'r', "estimated boundary")
+    plot3d.weight_disc(w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
+    plot3d.weight_disc(w_est[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
     plt.legend()
     plt.show()
 
 
 def tabulate(candidates, metrics):
-    """Convert dict candidates and higherIsBetter to arrays."""
+    """Convert dict candidates to arrays."""
     attribs = sorted(metrics)
     table = np.zeros((len(candidates), len(attribs)))
+
     for i, c in enumerate(candidates):
         table[i, :] = [c[a] for a in attribs]
 
     return attribs, table
-    # sign = np.array([1 if metrics[a].get("higherIsBetter", True) else -1
-    #                  for a in attribs])
-
-    # return attribs, table*sign, sign
 
 
 if __name__ == "__main__":

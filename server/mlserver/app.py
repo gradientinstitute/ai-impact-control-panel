@@ -1,10 +1,9 @@
-from flask import (Flask, session, 
+from flask import (Flask, session,
                    abort, request, send_from_directory)
 
 # from flask_caching import Cache
 from deva import elicit, bounds, fileio, logger
 from fpdf import FPDF
-import numpy as np
 import toml
 import os.path
 import util
@@ -102,9 +101,9 @@ def init_bounds(scenario):
     candidates, meta = _scenario(scenario)
     baseline = meta["baseline"]
     metrics = meta["metrics"]
-    attribs, table, sign = bounds.tabulate(candidates, metrics)
+    attribs, table = bounds.tabulate(candidates, metrics)
     ref = [baseline[a] for a in attribs]
-    bounders[ident] = bounds.PlaneSampler(ref, table, sign, attribs, steps=30)
+    bounders[ident] = bounds.PlaneSampler(ref, table, attribs, steps=30)
     return ""
 
 

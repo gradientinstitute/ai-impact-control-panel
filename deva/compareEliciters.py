@@ -52,11 +52,6 @@ def test_eliciters(eliciter_list, num, attr):
     scenario = {}
     scenario['primary_metric'] = "x1"
     scenario['metrics'] = {}
-    # eliciters can now assume lower is better
-    # make every attributes higher the better
-    # for a in attributes:
-    #     scenario['metrics'][a] = {}
-    #     scenario['metrics'][a]['higherIsBetter'] = True
 
     res = {}  # key: eliciter, value: error
     for index, system in enumerate(systems):
