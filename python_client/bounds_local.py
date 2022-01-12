@@ -159,8 +159,8 @@ def evaluation(choices, ref, n_samples, oracle):
 
     train_X = choices
     train_y = [oracle(x) for x in train_X]
-    lr.fit(train_X,train_y)
-    
+    lr.fit(train_X, train_y)
+
     # generate random testing data
     test_X = random_choice(ref, n_samples)
     test_y = [oracle(x) for x in test_X]  # y_true
@@ -172,8 +172,8 @@ def evaluation(choices, ref, n_samples, oracle):
 
 
 def random_choice(ref, n_samples):
-    rand = np.random.random_sample((n_samples,len(ref)))
-    sign = np.random.choice([-1,1])
+    rand = np.random.random_sample((n_samples, len(ref)))
+    sign = np.random.choice([-1, 1])
     choice = sign * rand + ref
 
     return choice
