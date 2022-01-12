@@ -269,8 +269,6 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   const activeOptimal = useRecoilValue(bestValuesState);
   const metricImportance = useRecoilValue(getMetricImportance);
 
-  // const higherIsBetterMap = useRecoilValue(higherIsBetterState);
-  // const higherIsBetter = higherIsBetterMap.get(uid);
   const val = constraints[uid][1];
   
   let bounced = null;
@@ -309,10 +307,10 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   function changeScrollbarColours() {
     let n = {...constraints}
     let m = {...blockedScrollbar};
-    // const b = setBlockedMetrics(n, m, higherIsBetterMap, activeOptimal, uid, 
-    //   bounced, lastBounced, setLastBounced, decimals);
-    // setBlockingMetrics(n, m, uid, higherIsBetterMap, activeOptimal, all, b, metricImportance);
-    // setBlockedScrollbar(m);
+    const b = setBlockedMetrics(n, m, activeOptimal, uid, bounced, lastBounced, 
+      setLastBounced, decimals);
+    setBlockingMetrics(n, m, uid, activeOptimal, all, b, metricImportance);
+    setBlockedScrollbar(m);
   }
 
   let rangeProps = {
