@@ -50,7 +50,7 @@ description = "Ensure that candidates shortlisted are suitable."
     decimals = 0
     countable = true
 
-[metrics."Ymax"]
+[metrics.Ymax]
     name = "Correctly shortlisted candidates"
     icon = "shortlist.png"
     captures = ["shortlist_suitable_candidates"]
@@ -64,22 +64,23 @@ description = "Ensure that candidates shortlisted are suitable."
     suffix = "candidates per 100 suitable"
     action = "recommend{s}"
     higherIsBetter = true
-    decimals = 0
+    decimals = 2
     countable = true
 
 [metrics.Zmin]
-    name = "Inequality of missing out"
+    name = "feature use"
     icon = "fairness.png"
-    description = """Difference in proportion of women missing out on
-    being recommended roles they are suited to compared to the average."""
-    captures = ["dont_disadvantage_women"]
-    limitations = """Sensitive to bias against interviewing women in historical
-    data."""
-    more = "more"
-    less = "fewer"
-    prefix = ""
-    suffix = "fewer suitable women than the average per 100 candidates"
-    action = "recommends"
-    higherIsBetter = false
-    decimals = 0
-    countable = true
+    description = """Level of private data used in the training set"""
+    captures = ["shortlist_suitable_candidates"]
+    limitations = """no actual distinguishing"""
+    higherIsBetter = false 
+    type = "qualitative"
+    
+    # the values for the options are 0... n-1 respectively
+    # options should include a verb
+    options = ["great", "good", "okay", "meh", "ohno"] 
+
+    # for comparison between two systems
+    comparison_better = "uses less personal data than" 
+    comparison_worse = "uses more personal data than"
+    comparison_equal = "uses the same amount of personal data as"
