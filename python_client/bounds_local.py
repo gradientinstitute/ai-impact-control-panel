@@ -63,16 +63,15 @@ def main():
                                       w_true, oracle, ref, n_samples=100)
         (sample_choices, est_w, scores) = outputs
         eli_choices[samp_name] = sample_choices
-        # score = evaluation(sample_choices, ref, 100, oracle)
         eli_scores[samp_name] = scores
-        # plt.subplot(131)
-        # plt.plot(scores[0], scores[1])
+
         plt.figure(0)
         plt.plot(np.array(scores)[:, 0], np.array(scores)[:, 1],
                  label=f'{samp_name}')
         plt.ylabel('log loss')
         plt.xlabel('steps')
         plt.suptitle('Eliciters Comparison')
+        plt.legend()
 
         w = compare_weights(w_true, est_w)
         # plt.subplot(132)
@@ -189,7 +188,7 @@ def evaluation(choices, ref, n_samples, oracle):
 
 
 def random_choice(ref, n_samples):
-    rand = np.random.random_sample((n_samples, len(ref)))
+    rand = np.random.random_sample((n_samples, len(ref))) * 5
     sign = np.random.choice([-1, 1])
     choice = sign * rand + ref
 
