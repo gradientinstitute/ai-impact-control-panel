@@ -28,7 +28,7 @@ export const maxRangesState = selector({
     }
     
     const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
-      const decimals = 'decimals' in val ? val.decimals : 0; 
+      const decimals = val.display_decimals != null ? val.display_decimals : 0; 
       const tvals = all.map(x => x[uid]);
       const min = roundValue(rvOperations.floor, Math.min(...tvals), decimals); 
       const max = roundValue(rvOperations.ceil, Math.max(...tvals), decimals); 
@@ -186,7 +186,7 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter})
   const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
   const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
   const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
-  const decimals = 'decimals' in u ? u.decimals : null; 
+  const decimals = u.display_decimals;
 
   return (
     <div key={uid} className="grid grid-cols-5 gap-8 bg-gray-600 rounded-lg p-4">

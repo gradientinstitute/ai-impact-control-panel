@@ -60,7 +60,7 @@ description = "Ensure system doesnt make disproportionate errors on women"
     prefix = ""
     suffix = "trans / month"
     action = "overlook{s}"
-    display-decimals = 0
+    display_decimals = 0
 
 [metrics.fp]
     name = "Falsly flagged fraud (FP)"
@@ -74,7 +74,7 @@ description = "Ensure system doesnt make disproportionate errors on women"
     prefix = ""
     suffix = "trans / month"
     action = "falsely flag{s}"
-    display-decimals = 0
+    display_decimals = 0
 
 [metrics.fp_cvar]
     name = "Concentration of falsely flagged fraud (FP CVaR)"
@@ -90,7 +90,7 @@ description = "Ensure system doesnt make disproportionate errors on women"
     suffix = "trans / month"
     action = "burden{s} the worst-off individuals with"
     countable = "number"
-    display-decimals = 1
+    display_decimals = 1
 
 [metrics.revenue]
     name = "Net revenue protected"
@@ -105,7 +105,7 @@ description = "Ensure system doesnt make disproportionate errors on women"
     suffix = ""
     action = "make{s}"
     lowerIsBetter = false
-    display-decimals = 2
+    display_decimals = 2
 
 [metrics.eo_disadvantage_rate]
     name = "Inequality of Fraud Prevention"
@@ -119,4 +119,4 @@ description = "Ensure system doesnt make disproportionate errors on women"
     prefix = ""
     suffix = "proportionally worse at flagging fraud for women"
     action = "is"
-    display-decimals = 2
+    display_decimals = 2

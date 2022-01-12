@@ -129,6 +129,7 @@ def load_all_metrics(metrics, candidates):
 def load_qualitative_metric(metrics, candidates, u):
     metrics[u]["max"] = max(c[u] for c in candidates)
     metrics[u]["min"] = min(c[u] for c in candidates)
+    metrics[u]["display_decimals"] = None
     if "lowerIsBetter" not in metrics[u]:
         metrics[u]["lowerIsBetter"] = True
 
@@ -136,11 +137,11 @@ def load_qualitative_metric(metrics, candidates, u):
 def load_quantitative_metric(metrics, candidates, u):
     metrics[u]["max"] = max(c[u] for c in candidates)
     metrics[u]["min"] = min(c[u] for c in candidates)
-    metrics[u]["display-decimals"] = int(metrics[u]["display-decimals"])
+    metrics[u]["display_decimals"] = int(metrics[u]["display_decimals"])
     if "countable" not in metrics[u]:
         # auto-fill optional field
         metrics[u]["countable"] = (
-            "number" if metrics[u]["display-decimals"] == 0 else "amount")
+            "number" if metrics[u]["display_decimals"] == 0 else "amount")
     if "lowerIsBetter" not in metrics[u]:
         metrics[u]["lowerIsBetter"] = True
 
