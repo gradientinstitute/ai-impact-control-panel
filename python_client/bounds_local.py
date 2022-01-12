@@ -157,45 +157,24 @@ def compare_weights(w_true, est_w):
 def evaluation(choices, ref, n_samples, oracle):
     lr = LogisticRegression()
 
-    # choice = np.zeros(len(ref), float) - 1
-    # while (choice < 0).any():
-    #     diff = np.random.randn(len(ref)) * radius
-    #     diff -= w * (diff @ w) / (w @ w) # w? est_w[0]? w_true?
-    #     choice = ref + diff
-
     train_X = choices
     train_y = [oracle(x) for x in train_X]
-    # train_y = [int(oracle(x)) for x in train_X]
-    # print(train_y)
-    # lr = LogisticRegression.fit(train_X, train_y)
     lr.fit(train_X,train_y)
     
-    # generate random test data
-    # test_X = np.random.random_sample((len(ref),)) * n_samples 
-    # test_X = np.random.random_sample((n_samples,len(ref)))
+    # generate random testing data
     test_X = random_choice(ref, n_samples)
-    print(test_X)
     test_y = [oracle(x) for x in test_X]  # y_true
-    # lr.fit(test_X, test_y)
     probabilities = lr.predict_proba(test_X)  # y_pred
 
     loss = log_loss(test_y, probabilities)
 
-    return loss
+    return loss  # lower is better
 
 
 def random_choice(ref, n_samples):
     rand = np.random.random_sample((n_samples,len(ref)))
-    signs = [-1, 1]
-    sign = np.random.choice(signs)
+    sign = np.random.choice([-1,1])
     choice = sign * rand + ref
-
-    # choice = np.zeros(len(ref), float) - 1
-
-    # while (choice < 0).any():
-    #     diff = np.random.randn(len(ref)) * radius
-    #     diff -= w * (diff @ w) / (w @ w) # w? est_w[i]? w_true?
-    #     choice = ref + diff
 
     return choice
 
