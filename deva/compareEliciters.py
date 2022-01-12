@@ -1,5 +1,5 @@
 import numpy as np
-# import matplotlib.pylab as plt
+import matplotlib.pylab as plt
 import click
 from deva import elicit
 
@@ -120,8 +120,32 @@ def print_result(result):
               help='The number of cadidate to be generated')
 @click.option('-d', '--dimension', default=3,
               help='Dimensions each candidate has.')
-def compareEliciters(eliciters, number, dimension):
-    print_result(test_eliciters(eliciters, number, dimension))
+@click.option('-r', '--runs', default=10,
+              help='The number of runs to average out outliers.')
+def compareEliciters(eliciters, number, dimension, runs):
+    result = [0, 0, 0, {}]
+    for x in range(runs):
+        num, attr, mean_error, res = test_eliciters(eliciters,
+                                                    number, dimension)
+        result[0] = num
+        result[1] = attr
+        result[2] += mean_error
+        for eliciter in res.keys():
+            if eliciter not in result[3].keys():
+                result[3][eliciter] = {'distance': 0, 'question_count': 0}
+            result[3][eliciter]['distance'] += res[eliciter]['distance']
+            result[3][eliciter]['question_count'] +=\
+                res[eliciter]['question_count']
+    result[2] /= runs
+    for eliciter in res.keys():
+        for key in result[3][eliciter]:
+            result[3][eliciter][key] /= runs
+    print_result(result)
+    for eliciter in res.keys():
+        plt.plot(number, result[3][eliciter]['question_count'], marker='o',
+                 label=eliciter)
+    plt.legend()
+    plt.savefig('plot.jpg')
 
 
 if __name__ == "__main__":
