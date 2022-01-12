@@ -6,6 +6,9 @@ import plot3d
 from deva import interface, elicit, bounds
 from bounds_client import tabulate
 
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import log_loss
+
 
 def main():
     np.random.seed(42)
@@ -51,6 +54,7 @@ def main():
     eli_names = {plane_sampler: "PlaneSampler", linear_random: "LinearRandom",
                  linear_active: "LinearActive"}
     eli_choices = {}  # a dictionary storing the choices for each eliciter
+    eli_score = {}  # a dictionary storing the 'log loss' for each eliciter
 
     for eliciter in eliciters:
         samp_name = eli_names[eliciter]
@@ -58,9 +62,13 @@ def main():
         (sample_choices, est_w) = run_bounds_eliciter(eliciter, metrics, table,
                                                       baseline, w_true, oracle)
         eli_choices[samp_name] = sample_choices
+        score = evaluation(sample_choices, ref, 100, oracle)
+        eli_score[samp_name] = score
 
         w = compare_weights(w_true, est_w)
         plt.plot(w, label=f'{samp_name}')
+
+    print(eli_score)
 
     plt.ylabel('error rate')
     plt.xlabel('steps')
@@ -144,6 +152,52 @@ def compare_weights(w_true, est_w):
     errors = np.abs(np.array(true_hat) - np.array(est_hat))
     error_sum = np.sum(errors, axis=1)
     return error_sum
+
+
+def evaluation(choices, ref, n_samples, oracle):
+    lr = LogisticRegression()
+
+    # choice = np.zeros(len(ref), float) - 1
+    # while (choice < 0).any():
+    #     diff = np.random.randn(len(ref)) * radius
+    #     diff -= w * (diff @ w) / (w @ w) # w? est_w[0]? w_true?
+    #     choice = ref + diff
+
+    train_X = choices
+    train_y = [oracle(x) for x in train_X]
+    # train_y = [int(oracle(x)) for x in train_X]
+    # print(train_y)
+    # lr = LogisticRegression.fit(train_X, train_y)
+    lr.fit(train_X,train_y)
+    
+    # generate random test data
+    # test_X = np.random.random_sample((len(ref),)) * n_samples 
+    # test_X = np.random.random_sample((n_samples,len(ref)))
+    test_X = random_choice(ref, n_samples)
+    print(test_X)
+    test_y = [oracle(x) for x in test_X]  # y_true
+    # lr.fit(test_X, test_y)
+    probabilities = lr.predict_proba(test_X)  # y_pred
+
+    loss = log_loss(test_y, probabilities)
+
+    return loss
+
+
+def random_choice(ref, n_samples):
+    rand = np.random.random_sample((n_samples,len(ref)))
+    signs = [-1, 1]
+    sign = np.random.choice(signs)
+    choice = sign * rand + ref
+
+    # choice = np.zeros(len(ref), float) - 1
+
+    # while (choice < 0).any():
+    #     diff = np.random.randn(len(ref)) * radius
+    #     diff -= w * (diff @ w) / (w @ w) # w? est_w[i]? w_true?
+    #     choice = ref + diff
+
+    return choice
 
 
 if __name__ == "__main__":
