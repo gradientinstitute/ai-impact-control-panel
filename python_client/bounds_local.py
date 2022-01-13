@@ -65,14 +65,14 @@ def main():
 
             if n_iter == 0:
                 eli_scores[samp_name] = scores
-            elif n_iter == max_iter-1:
-                eli_choices[samp_name] = sample_choices
-                eli_errors[samp_name] = compare_weights(w_true, est_w)
             else:
                 pre_scores = eli_scores[samp_name]
                 last_index = min(len(pre_scores), len(scores))
                 eli_scores[samp_name] = np.add(pre_scores[:last_index],
                                                scores[:last_index])
+            if n_iter == max_iter-1:
+                eli_choices[samp_name] = sample_choices
+                eli_errors[samp_name] = compare_weights(w_true, est_w)
         n_iter += 1
 
     # ----------- visualisation --------------
