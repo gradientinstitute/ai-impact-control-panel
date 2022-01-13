@@ -1,7 +1,10 @@
 import numpy as np
 import matplotlib.pylab as plt
 import click
+from matplotlib.patches import Rectangle
+from matplotlib.lines import Line2D
 from deva import elicit
+from collections import namedtuple
 
 eliciters_map = {"TOY": elicit.Toy, "ACTIVERANKING":  elicit.ActiveRanking,
                  "ACTIVEMAX":  elicit.ActiveMax,
@@ -110,6 +113,113 @@ def print_result(result):
     print(print_str)
 
 
+def boxplot_2d(x, y, ax, whis=1.5):
+    xlimits = [np.percentile(x, q) for q in (25, 50, 75)]
+    ylimits = [np.percentile(y, q) for q in (25, 50, 75)]
+
+    # the box
+    box = Rectangle(
+        (xlimits[0], ylimits[0]),
+        (xlimits[2]-xlimits[0]),
+        (ylimits[2]-ylimits[0]),
+        ec='k',
+        zorder=0
+    )
+    ax.add_patch(box)
+
+    # the x median
+    vline = Line2D(
+        [xlimits[1], xlimits[1]], [ylimits[0], ylimits[2]],
+        color='k',
+        zorder=1
+    )
+    ax.add_line(vline)
+
+    # the y median
+    hline = Line2D(
+        [xlimits[0], xlimits[2]], [ylimits[1], ylimits[1]],
+        color='k',
+        zorder=1
+    )
+    ax.add_line(hline)
+
+    # the central point
+    ax.plot([xlimits[1]], [ylimits[1]], color='k', marker='o')
+
+    # the x-whisker
+    iqr = xlimits[2]-xlimits[0]
+
+    # left
+    left = np.min(x[x > xlimits[0]-whis*iqr])
+    whisker_line = Line2D(
+        [left, xlimits[0]], [ylimits[1], ylimits[1]],
+        color='k',
+        zorder=1
+    )
+    ax.add_line(whisker_line)
+    whisker_bar = Line2D(
+        [left, left], [ylimits[0], ylimits[2]],
+        color='k',
+        zorder=1
+    )
+    ax.add_line(whisker_bar)
+
+    # right
+    right = np.max(x[x < xlimits[2]+whis*iqr])
+    whisker_line = Line2D(
+        [right, xlimits[2]], [ylimits[1], ylimits[1]],
+        color='k',
+        zorder=1
+    )
+    ax.add_line(whisker_line)
+    whisker_bar = Line2D(
+        [right, right], [ylimits[0], ylimits[2]],
+        color='k',
+        zorder=1
+    )
+    ax.add_line(whisker_bar)
+
+    # the y-whisker
+    iqr = ylimits[2]-ylimits[0]
+
+    # bottom
+    bottom = np.min(y[y > ylimits[0]-whis*iqr])
+    whisker_line = Line2D(
+        [xlimits[1], xlimits[1]], [bottom, ylimits[0]],
+        color='k',
+        zorder=1
+    )
+    ax.add_line(whisker_line)
+    whisker_bar = Line2D(
+        [xlimits[0], xlimits[2]], [bottom, bottom],
+        color='k',
+        zorder=1
+    )
+    ax.add_line(whisker_bar)
+
+    # top
+    top = np.max(y[y < ylimits[2]+whis*iqr])
+    whisker_line = Line2D(
+        [xlimits[1], xlimits[1]], [top, ylimits[2]],
+        color='k',
+        zorder=1
+    )
+    ax.add_line(whisker_line)
+    whisker_bar = Line2D(
+        [xlimits[0], xlimits[2]], [top, top],
+        color='k',
+        zorder=1
+    )
+    ax.add_line(whisker_bar)
+
+    # outliers
+    mask = (x < left) | (x > right) | (y < bottom) | (y > top)
+    ax.scatter(
+        x[mask], y[mask],
+        facecolors='none', edgecolors='k'
+    )
+
+
 @click.command()
 @click.option('-e', '--eliciters', default=eliciters_map.keys(),
               multiple=True,
@@ -123,27 +233,37 @@ def print_result(result):
 @click.option('-r', '--runs', default=10,
               help='The number of runs to average out outliers.')
 def compareEliciters(eliciters, number, dimension, runs):
-    result = [0, 0, 0, {}]
+    Result = namedtuple('Result',
+                        'numberCandidate numberAttributes meanError errorLog')
+    result = Result(number, dimension, [], {})
+    varLog = {}
     for x in range(runs):
         num, attr, mean_error, res = test_eliciters(eliciters,
                                                     number, dimension)
-        result[0] = num
-        result[1] = attr
-        result[2] += mean_error
+        result.meanError.append(mean_error)
         for eliciter in res.keys():
-            if eliciter not in result[3].keys():
-                result[3][eliciter] = {'distance': 0, 'question_count': 0}
-            result[3][eliciter]['distance'] += res[eliciter]['distance']
-            result[3][eliciter]['question_count'] +=\
-                res[eliciter]['question_count']
-    result[2] /= runs
+            if eliciter not in varLog.keys():
+                varLog[eliciter] = {'distance': [],
+                                    'question_count': []}
+            varLog[eliciter]['distance'].append(res[eliciter]['distance'])
+            varLog[eliciter]['question_count'].append(
+                res[eliciter]['question_count'])
     for eliciter in res.keys():
+        result.errorLog[eliciter] = {'distance': 0,
+                                     'question_count': 0}
         for key in result[3][eliciter]:
-            result[3][eliciter][key] /= runs
+            result.errorLog[eliciter][key] = np.mean(varLog[eliciter][key])
+    result = result._replace(meanError=np.mean(result.meanError))
     print_result(result)
     for eliciter in res.keys():
-        plt.plot(number, result[3][eliciter]['question_count'], marker='o',
+        plt.plot(result[3][eliciter]['question_count'],
+                 result[3][eliciter]['distance'], marker='x',
                  label=eliciter)
+    plt.plot(0, result[2], marker='x', label='Random guess eliciter')
+    plt.title(f'Eliciter comparison. Number of cadidates={number},'
+              f'number of attributes={dimension}')
+    plt.xlabel('Number of questions')
+    plt.ylabel('Error')
     plt.legend()
     plt.savefig('plot.jpg')
 
