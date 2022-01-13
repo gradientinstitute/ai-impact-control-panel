@@ -29,7 +29,7 @@ description = "Ensure that candidates shortlisted are suitable."
     prefix = ""
     suffix = "fewer suitable women than the average per 100 candidates"
     action = "recommends"
-    display-decimals = 0
+    display_decimals = 0
     countable = true
 
 [metrics.Xmin]
@@ -45,7 +45,7 @@ description = "Ensure that candidates shortlisted are suitable."
     prefix = ""
     suffix = "candidates per 100 suitable"
     action = "missed"
-    display-decimals = 0
+    display_decimals = 0
     countable = true
 
 [metrics."Ymax"]
@@ -62,7 +62,7 @@ description = "Ensure that candidates shortlisted are suitable."
     suffix = "candidates per 100 suitable"
     action = "recommend{s}"
     lowerIsBetter = false
-    display-decimals = 0
+    display_decimals = 0
     countable = true
 
 [metrics.Zmin]
@@ -78,5 +78,5 @@ description = "Ensure that candidates shortlisted are suitable."
     prefix = ""
     suffix = "fewer suitable women than the average per 100 candidates"
     action = "recommends"
-    display-decimals = 0
+    display_decimals = 0
     countable = true
