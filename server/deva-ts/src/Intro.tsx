@@ -211,15 +211,17 @@ function QualitativeSummary({data}) {
 // show the best case & worst case of metrics from the candidates
 function UnitRange({data}) {
 
-  const h = data.higherIsBetter;
+  const l = data.lowerIsBetter;
   const sigfig = sigFigs(data);
 
-  const min_str = data.prefix + data.min.toFixed(sigfig) + " " + data.suffix;
-  const max_str = data.prefix + data.max.toFixed(sigfig) + " " + data.suffix;
+  const min_val = data.lowerIsBetter ? data.min.toFixed(sigfig) : data.max.toFixed(sigfig) * -1;
+  const min_str = data.prefix + min_val + " " + data.suffix;
+  const max_val = data.lowerIsBetter ? data.max.toFixed(sigfig) : data.min.toFixed(sigfig) * -1;
+  const max_str = data.prefix + max_val + " " + data.suffix;
 
-  const best_str = h ? max_str : min_str;
-  const worst_str = h ? min_str : max_str;
-  const change_str = h ? "Increases" : "Decreases";
+  const best_str = l ? min_str : max_str ;
+  const worst_str = l ? max_str : min_str;
+  const change_str = l ? "Decreases" : "Increases";
 
   return (
   <div className={"grid grid-cols-3 rounded-lg p-3 items-center"}>

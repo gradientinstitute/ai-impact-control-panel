@@ -1,53 +1,27 @@
-from flask import (Flask, session, jsonify as _jsonify,
+from flask import (Flask, session,
                    abort, request, send_from_directory)
 
 # from flask_caching import Cache
 from deva import elicit, bounds, fileio, logger
 from fpdf import FPDF
-import numpy as np
 import toml
-import random
-import string
 import os.path
+import util
 
-
-def round_floats(o):
-    """Recursively round floats pre-json."""
-    if isinstance(o, float):
-        return round(o, 3)
-    elif isinstance(o, dict):
-        return {k: round_floats(v) for k, v in o.items()}
-    elif isinstance(o, (list, tuple, np.ndarray)):
-        return [round_floats(x) for x in o]
-    return o
-
-
-def jsonify(o):
-    """Apply flask's jsonify with some float formatting."""
-    return _jsonify(round_floats(o))
-
-
-def random_key(n):
-    """Make a random string of n characters."""
-    return ''.join(random.choice(string.ascii_letters) for i in range(n))
-
+jsonify = util.jsonify
 
 # Set up the flask app
 app = Flask(__name__)
-app.config['SECRET_KEY'] = random_key(16)
+app.config['SECRET_KEY'] = util.random_key(16)
 
 # TODO: proper cache / serialisation
-eliciters = {"Toy": elicit.Toy, "ActiveRanking": elicit.ActiveRanking,
-             "ActiveMax": elicit.ActiveMax,
-             "ActiveMaxSmooth": elicit.ActiveMaxSmooth,
-             "ActiveMaxPrimary": elicit.ActiveMaxPrimary,
-             "VotingEliciter": elicit.VotingEliciter}
+eliciters_descriptions = {k: v.description()
+                          for k, v in elicit.eliciters.items()}
 
-eliciters_descriptions = {k: v.description() for k, v in eliciters.items()}
-
+eliciters = {}
 bounders = {}
 scenarios = {}
-ranges = {}
+# ranges = {}
 loggers = {}
 baselines = {}
 
@@ -56,6 +30,9 @@ def calc_ranges(candidates, spec):
     keys = spec['metrics'].keys()
     points = [c.attributes for c in candidates]
     collated = {k: [p[k] for p in points] for k in keys}
+    print("points:\n", points)
+    print("collated:\n", collated)
+
     return points, collated
 
 
@@ -117,19 +94,16 @@ def init_bounds(scenario):
         print("Reset session")
     else:
         print("Creating new session key")
-        while (new_id := random_key(16)) in bounders:
-            continue
-        session["BOUND_ID"] = new_id
+        session["BOUND_ID"] = util.random_key(16, bounders)
         session.modified = True
 
     ident = session["BOUND_ID"]
-
     candidates, meta = _scenario(scenario)
     baseline = meta["baseline"]
     metrics = meta["metrics"]
-    attribs, table, sign = bounds.tabulate(candidates, metrics)
+    attribs, table = bounds.tabulate(candidates, metrics)
     ref = [baseline[a] for a in attribs]
-    bounders[ident] = bounds.TestSampler(ref, table, sign, attribs, steps=15)
+    bounders[ident] = bounds.PlaneSampler(ref, table, attribs, steps=30)
     return ""
 
 
@@ -204,20 +178,17 @@ def init_session(scenario, algo, name):
         print("Reset session")
     else:
         print("New session")
-        while (new_id := random_key(16)) in eliciters:
-            continue
-        session["ID"] = new_id
+        session["ID"] = util.random_key(16, eliciters)
         session.modified = True
 
     # assume that a reload means user wants a restart
     print("Init new session for ", session["ID"])
     candidates, spec = _scenario(scenario)
-    # TODO: user choice
-    eliciter = eliciters[algo](candidates, spec)
+    eliciter = elicit.eliciters[algo](candidates, spec)
     log = logger.Logger(scenario, algo, name)
     eliciters[session["ID"]] = eliciter
     loggers[session["ID"]] = log
-    ranges[session["ID"]] = calc_ranges(candidates, spec)
+    # ranges[session["ID"]] = calc_ranges(candidates, spec)
     spec['ID'] = session["ID"]
     # send the metadata for the scenario
     return spec
@@ -272,6 +243,7 @@ def get_choice(scenario):
         log.add_choice(data)
         x = data["first"]
         y = data["second"]
+
         # Only pass valid choices on to the eliciter
         if not eliciter.terminated:
             choice = eliciter.query

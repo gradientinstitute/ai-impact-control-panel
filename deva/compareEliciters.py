@@ -1,7 +1,13 @@
 import numpy as np
+# import matplotlib.pylab as plt
+import click
+from deva import elicit
 
-from deva.elicit import Candidate, Toy, VotingEliciter, ActiveRanking, \
-                         ActiveMaxPrimary, ActiveMaxSmooth, ActiveMax
+eliciters_map = {"TOY": elicit.Toy, "ACTIVERANKING":  elicit.ActiveRanking,
+                 "ACTIVEMAX":  elicit.ActiveMax,
+                 "ACTIVEMAXSMOOTH":  elicit.ActiveMaxSmooth,
+                 "ACTIVEMAXPRIMARY":  elicit.ActiveMaxPrimary,
+                 "VOTINGELICITER":  elicit.VotingEliciter}
 
 
 def system_gen(num=1000, attr=5):
@@ -43,6 +49,12 @@ def test_eliciters(eliciter_list, num, attr):
     as well as the distance between the answer found and the ground truth.
     num is the number of systems we would like to generate,
     attr is the number of dimensions each system has'''
+    # transfer from string to function
+    e_list = []
+    for e in eliciter_list:
+        e = e.upper()
+        e_list.append(eliciters_map[e])
+    # start prep for testing
     candidates = []
     systems = favourite_gen(num, attr)
     attributes = []
@@ -52,15 +64,13 @@ def test_eliciters(eliciter_list, num, attr):
     scenario = {}
     scenario['primary_metric'] = "x1"
     scenario['metrics'] = {}
-    # make every attributes higher the better
-    for a in attributes:
-        scenario['metrics'][a] = {}
-        scenario['metrics'][a]['higherIsBetter'] = True
+
     res = {}  # key: eliciter, value: error
     for index, system in enumerate(systems):
-        candidates.append(Candidate(index, dict(zip(attributes, system))))
+        candidates.append(elicit.Candidate(index,
+                                           dict(zip(attributes, system))))
     # use the generated candidates to test eliciters
-    for eliciter in eliciter_list:
+    for eliciter in e_list:
         question_count = 0
         test_target = eliciter(candidates, scenario)
         while not test_target.terminated:
@@ -97,8 +107,23 @@ def print_result(result):
     print(print_str)
 
 
+@click.command()
+@click.option('-e', '--eliciters', default=eliciters_map.keys(),
+              multiple=True,
+              help=f'The eliciters you want to compare,\
+                    choose from {list(eliciters_map.keys())}.\n\
+                     Sample usage: -e Toy -e ActiveMax')
+@click.option('-n', '--number', default=50,
+              help='The number of cadidate to be generated')
+@click.option('-d', '--dimension', default=3,
+              help='Dimensions each candidate has.')
+def compareEliciters(eliciters, number, dimension):
+    print_result(test_eliciters(eliciters, number, dimension))
+
+
 if __name__ == "__main__":
-    # sample usage
-    print_result(test_eliciters([Toy, VotingEliciter, ActiveRanking,
-                                ActiveMaxSmooth,
-                                ActiveMaxPrimary, ActiveMax], 50, 3))
+    compareEliciters()
+    # # sample usage
+    # print_result(test_eliciters([Toy, VotingEliciter, ActiveRanking,
+    #                             ActiveMaxSmooth,
+    #                             ActiveMaxPrimary, ActiveMax], 50, 3))
