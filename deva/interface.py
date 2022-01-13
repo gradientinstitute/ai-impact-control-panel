@@ -18,8 +18,8 @@ def readout(x, info, suffix=False, sigfig=2):
     elif x > 1e3:
         s = fmt.format(x/1e3) + "K"
     else:
-        fmt = f"{{:.{info['display-decimals']}f}}"
-        s = fmt.format(x)  # use natrual display
+        fmt = f"{{:.{info['displayDecimals']}f}}"
+        s = fmt.format(x)  # use natural display
 
     s = info["prefix"] + s
 
