@@ -10,7 +10,7 @@ import {Pane, paneState, scenarioState,
 
 import { maxRangesState, currentCandidatesState, allCandidatesState,
   currentSelectionState, isBlockedState, scrollbarHandleState, filterCandidates,
-  getSliderStep, } from './ConstrainScrollbar';
+  getSliderStep, bestValuesState, } from './ConstrainScrollbar';
 
 enum HandleColours {
   'white',  // default
@@ -220,6 +220,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   const [currentSelection, setCurrentSelection] = useRecoilState(currentSelectionState);
 
   const all = useRecoilValue(allCandidatesState);
+  const thresholdValues = useRecoilValue(bestValuesState);
   const val = constraints[uid][1];
 
   const isBlocked = useRecoilValue(isBlockedState);
@@ -240,9 +241,16 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
     
-    if (withNew.length > 0) {
-      setConstraints(n);
+    if (withNew.length ==  0) {
+      // if the constraints exceeds the threshold value 
+      // set to the threshold value
+      const step = getSliderStep(decimals);
+      const numSteps = Math.ceil(thresholdValues.get(uid) / step); 
+      newVal = (step * numSteps).toFixed(decimals);
+      n[uid]  = [n[uid][0], newVal];
     }
+
+    setConstraints(n);
   }
 
   const blockedScrollbar : any = useRecoilValue(scrollbarHandleState);
