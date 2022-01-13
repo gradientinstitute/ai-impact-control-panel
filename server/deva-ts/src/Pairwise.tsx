@@ -4,7 +4,7 @@ import axios from 'axios';
 
 import {Pane, metadataState, paneState, 
         resultState, scenarioState, constraintsState} from './Base';
-import {Key, Model, FillBar} from './Widgets';
+import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
 
 // TODO significant figures should be in the metadata config
@@ -80,7 +80,6 @@ export function PairwisePane({}) {
   }
 
   function comparisons() {
-    console.log(candidates);
     let result = []; 
     for (const [uid, u] of Object.entries(metadata.metrics)) {
       result.push(
@@ -198,6 +197,12 @@ function FlagImportant({}) {
 function PairwiseComparator({leftName, leftValue, 
   rightName, rightValue, unit}) {
 
+  if (!unit.lowerIsBetter) {
+    unit = adjustUnitRange(unit);
+    leftValue *= -1;
+    rightValue *= -1;  
+  }
+
   return (
     
     <div className="w-auto flex space-x-16">
@@ -280,7 +285,7 @@ function ComparisonStatementQualitative({leftName, leftValue,
 
   let text = null;
 
-  const isPreferable = (leftValue > rightValue && unit.higherIsBetter) || (leftValue < rightValue && !unit.higherIsBetter);
+  const isPreferable = (leftValue > rightValue && !unit.lowerIsBetter) || (leftValue < rightValue && unit.lowerIsBetter);
   const comparison = isPreferable ? unit.comparison_better : unit.comparison_worse;
 
   text = leftValue === rightValue ? <p> {n1} {unit.comparison_equal} {n2} </p> : <p> {n1} {comparison} {n2} </p>;

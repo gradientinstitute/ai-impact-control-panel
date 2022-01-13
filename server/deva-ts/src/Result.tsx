@@ -1,6 +1,6 @@
 import { useRecoilValue } from 'recoil';
 
-import {Key, Model} from './Widgets';
+import {Key, Model, adjustUnitRange} from './Widgets';
 import {metadataState, resultState} from './Base';
 
 // main pane
@@ -15,13 +15,20 @@ export function ResultPane({}) {
 
   function comparisons() {
     let result = []; 
-    for (const [uid, u] of Object.entries(metadata.metrics)) {
+    for (let [uid, u] of Object.entries(metadata.metrics)) {
+
+      let value = attr[uid];
+      if (!u['lowerIsBetter']) {
+        u = adjustUnitRange(u);
+        value *= -1;
+      }
+    
       result.push(
       <div className="bg-gray-700 rounded-lg p-3">
         <ResultOnMetric
           key={uid}
           unit={u} 
-          value={attr[uid]} 
+          value={value} 
         />
       </div>
       );

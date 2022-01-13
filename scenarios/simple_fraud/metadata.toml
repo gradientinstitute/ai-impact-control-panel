@@ -52,8 +52,8 @@ description = "Minimise harm of repeated fraud to those most affected by it."
     prefix = "$"
     suffix = ""
     action = "make{s}"
-    higherIsBetter = true
-    decimals = 2
+    lowerIsBetter = false
+    display-decimals = 2
 
 [metrics.fn_cvar]
     name = "False Negative CVaR 10%"
@@ -67,5 +67,4 @@ description = "Minimise harm of repeated fraud to those most affected by it."
     suffix = "trans / month"
     action = "burden{s} the worst-off individuals with"
     countable = "number"
-    higherIsBetter = false
-    decimals = 1
+    display-decimals = 1

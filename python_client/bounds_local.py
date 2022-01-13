@@ -14,33 +14,30 @@ def main():
     scenario = "jobs"
     candidates, meta = fileio.load_scenario(scenario)
     metrics = meta["metrics"]
+    attribs, table = tabulate(candidates, metrics)
 
-    # Encode candidates and "higherIsBetter" as arrays
-    attribs, table, sign = tabulate(candidates, metrics)
-
-    # We can only plot in 3 dimensions... drop the later ones
+    # [Optionally] truncate for testing
     attribs = attribs[:3]
     table = table[:, :3]
-    sign = sign[:3]
 
     # Load baseline for comparison
-    baseline = fileio.load_baseline(scenario)
+    baseline = meta["baseline"]
     ref = np.array([baseline[a] for a in attribs])
     ref = ref[:3]
 
     # Create a hidden "ground truth" oracle function
     dims = len(ref)
     w_true = 0.1 + 0.9 * np.random.rand(dims)  # positive
-    w_true *= sign / (w_true @ w_true)**.5  # signed unit vector
+    w_true /= (w_true @ w_true)**.5  # signed unit vector
 
     def oracle(q):
         return ((q - ref) @ w_true < 0)
 
     # Test whether the sampler can elicit this oracle's preference
 
-    plane_sampler = bounds.PlaneSampler(ref, table, sign, attribs, steps=50)
-    linear_random = bounds.LinearRandom(ref, table, sign, attribs, steps=50)
-    linear_active = bounds.LinearActive(ref, table, sign, attribs, steps=50,
+    plane_sampler = bounds.PlaneSampler(ref, table, attribs, steps=50)
+    linear_random = bounds.LinearRandom(ref, table, attribs, steps=50)
+    linear_active = bounds.LinearActive(ref, table, attribs, steps=50,
                                         epsilon=0.05, n_steps_converge=5)
 
     # ----------- visualisation --------------
@@ -75,10 +72,15 @@ def main():
 
     # Display 3D plot  -------------------------
     plt.figure(2)
-    plot3d.sample_trajectory(choices, attribs)
+    sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
+                    for a in attribs])
+
+    plot3d.sample_trajectory(choices * sign, attribs)
     rad = plot3d.radius(choices)[:3]
-    plot3d.weight_disc(w_true[:3], ref[:3], rad, 'b', "true boundary")
-    plot3d.weight_disc(sampler.w[:3], ref[:3], rad, 'r', "estimated boundary")
+    plot3d.weight_disc(
+        w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
+    plot3d.weight_disc(
+        sampler.w[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
     plt.legend()
     plt.show()
 

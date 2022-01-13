@@ -1,8 +1,8 @@
-import numpy as np
-from functools import partial
-from deva import halfspace
-
+"""Preference eliciter module."""
 from itertools import combinations
+from functools import partial
+import numpy as np
+from deva import halfspace
 
 
 class Candidate:
@@ -22,9 +22,9 @@ class Candidate:
 
 
 class Pair(tuple):
-    def __new__(self, a: Candidate, b: Candidate):
+    def __new__(cls, a: Candidate, b: Candidate):
         assert isinstance(a, Candidate) and isinstance(b, Candidate)
-        return tuple.__new__(self, (a, b))
+        return tuple.__new__(cls, (a, b))
 
     def __contains__(self, x):
         return ((x == self[0].name) or (x == self[1].name)
@@ -52,6 +52,7 @@ class Eliciter:
     def input(self, choice):
         raise NotImplementedError
 
+    @staticmethod
     def description():
         # placeholder for the description of eliciter
         raise NotImplementedError
@@ -102,6 +103,7 @@ class VotingEliciter(Eliciter):
         else:
             self._query = None
 
+    @staticmethod
     def description():
         return "VotingEliciter Description"
 
@@ -142,6 +144,7 @@ class Toy(Eliciter):
         else:
             self._query = None
 
+    @staticmethod
     def description():
         return "Toy description"
 
@@ -164,11 +167,10 @@ class ActiveRanking(Eliciter):
         data = []
         for c in candidates:
             data.append([c[a] for a in attribs])
+        data = np.array(data)
 
-        metrics = scenario['metrics']
-        signs = [1 if metrics[a]['higherIsBetter'] else -1 for a in attribs]
-        data = np.array(data) * np.array(signs)
-
+        # metrics = scenario['metrics']
+        # already pre-applied, we can assume lower is always better
         self.active = self._active_alg(
             data,
             yield_indices=True,
@@ -207,6 +209,7 @@ class ActiveRanking(Eliciter):
     def terminated(self):
         return self._result is not None
 
+    @staticmethod
     def description():
         return "ActiveRanking description"
 
@@ -216,6 +219,7 @@ class ActiveMax(ActiveRanking):
     _active_alg = halfspace.HalfspaceMax
     _active_kw = {'query_order': halfspace.max_compar_rand}
 
+    @staticmethod
     def description():
         return "ActiveMax description"
 
@@ -225,6 +229,7 @@ class ActiveMaxSmooth(ActiveRanking):
     _active_alg = halfspace.HalfspaceMax
     _active_kw = {'query_order': halfspace.max_compar_smooth}
 
+    @staticmethod
     def description():
         return "ActiveMaxSmooth description"
 
@@ -244,5 +249,17 @@ class ActiveMaxPrimary(ActiveRanking):
         self._active_kw = {'query_order': qorder}
         super().__init__(candidates, scenario)
 
+    @staticmethod
     def description():
         return "ActiveMaxPrimary description"
+
+
+# export a list of eliciters
+eliciters = {
+    "Toy": Toy,
+    "ActiveRanking": ActiveRanking,
+    "ActiveMax": ActiveMax,
+    "ActiveMaxSmooth": ActiveMaxSmooth,
+    "ActiveMaxPrimary": ActiveMaxPrimary,
+    "VotingEliciter": VotingEliciter,
+}
