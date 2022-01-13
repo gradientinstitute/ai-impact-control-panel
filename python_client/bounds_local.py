@@ -55,8 +55,6 @@ def main():
     eli_choices = {}  # a dictionary storing the choices for each eliciter
     eli_scores = {}  # a dictionary storing the 'log loss' for each eliciter
 
-    eli_score = {}
-
     plt.figure(0)
 
     for eliciter in eliciters:
@@ -69,11 +67,7 @@ def main():
 
         eli_scores[samp_name] = scores
 
-        score = evaluation(sample_choices, ref, 100, oracle)
-        eli_score[samp_name] = score
-
         w = compare_weights(w_true, est_w)
-        # plt.figure(0)
         plt.plot(w, label=f'{samp_name}')
 
     plt.ylabel('error rate')
@@ -178,21 +172,25 @@ def compare_weights(w_true, est_w):
     return error_sum
 
 
-def evaluation(choices, ref, n_samples, oracle):
+def evaluation(choices, ref, n_samples, oracle, tests_per_steps=50):
     lr = LogisticRegression()
 
     train_X = choices
     train_y = [oracle(x) for x in train_X]
     lr.fit(train_X, train_y)
 
+    loss = 0
+
     # generate random testing data
-    test_X = random_choice(ref, n_samples)
-    test_y = [oracle(x) for x in test_X]  # y_true
-    probabilities = lr.predict_proba(test_X)  # y_pred
+    for _ in range(tests_per_steps):
+        test_X = random_choice(ref, n_samples)
+        test_y = [oracle(x) for x in test_X]  # y_true
+        probabilities = lr.predict_proba(test_X)  # y_pred
+        loss += log_loss(test_y, probabilities)
+    
+    avg_loss = loss / tests_per_steps
 
-    loss = log_loss(test_y, probabilities)
-
-    return loss  # lower is better
+    return avg_loss  # lower is better
 
 
 def random_choice(ref, n_samples):
