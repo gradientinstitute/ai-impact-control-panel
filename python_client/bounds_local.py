@@ -107,7 +107,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
     # logged for plotting
     est_weights = []
     choices = []
-    scores = []  # log_loss for every 10 steps
+    scores = []  # log_loss for each step
     step = 0
 
     # For display purposes
@@ -143,9 +143,8 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
             print("Choice: Oracle (REJECTED) candidate.\n\n")
 
         if step >= 10:
-            if step % 1 == 0:
-                score = evaluation(choices, ref, n_samples, oracle)
-                scores.append((step, score))
+            score = evaluation(choices, ref, n_samples, oracle)
+            scores.append((step, score))
 
     # Display text results report
     print("Experimental results ------------------")
@@ -181,13 +180,14 @@ def evaluation(choices, ref, n_samples, oracle, tests_per_steps=50):
 
     loss = 0
 
-    # generate random testing data
+    # averaging the log_loss over multiple tests per steps
     for _ in range(tests_per_steps):
+        # generate random testing data
         test_X = random_choice(ref, n_samples)
         test_y = [oracle(x) for x in test_X]  # y_true
         probabilities = lr.predict_proba(test_X)  # y_pred
         loss += log_loss(test_y, probabilities)
-    
+
     avg_loss = loss / tests_per_steps
 
     return avg_loss  # lower is better
