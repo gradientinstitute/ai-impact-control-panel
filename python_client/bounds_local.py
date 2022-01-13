@@ -12,6 +12,8 @@ from sklearn.metrics import log_loss
 
 def main():
     np.random.seed(42)
+    # n_iter = 5
+    # for _ in range(n_iter):
 
     # Load candidates and metadata
     scenario = "jobs"
@@ -31,54 +33,90 @@ def main():
     ref = np.array([baseline[a] for a in attribs])
     ref = ref[:3]
 
-    # Create a hidden "ground truth" oracle function
-    dims = len(ref)
-    w_true = 0.1 + 0.9 * np.random.rand(dims)  # positive
-    w_true *= sign / (w_true @ w_true)**.5  # signed unit vector
-
-    def oracle(q):
-        return ((q - ref) @ w_true < 0)
-
-    # Test whether the sampler can elicit this oracle's preference
-
-    plane_sampler = bounds.PlaneSampler(ref, table, sign, attribs, steps=50)
-    linear_random = bounds.LinearRandom(ref, table, sign, attribs, steps=50)
-    linear_active = bounds.LinearActive(ref, table, sign, attribs, steps=50,
-                                        epsilon=0.05, n_steps_converge=5)
-
-    # ----------- visualisation --------------
-    # compare three eliciters
-
-    eliciters = [plane_sampler, linear_random, linear_active]
-    eli_names = {plane_sampler: "PlaneSampler", linear_random: "LinearRandom",
-                 linear_active: "LinearActive"}
+    # TODO
     eli_choices = {}  # a dictionary storing the choices for each eliciter
     eli_scores = {}  # a dictionary storing the 'log loss' for each eliciter
 
-    plt.figure(0)
+    # n_iter = 5
+    # for _ in range(n_iter):
+    n_iter = 0
+    while n_iter < 5:
+            # Test whether the sampler can elicit this oracle's preference
+        plane_sampler = bounds.PlaneSampler(ref, table, sign, attribs, steps=50)
+        linear_random = bounds.LinearRandom(ref, table, sign, attribs, steps=50)
+        linear_active = bounds.LinearActive(ref, table, sign, attribs, steps=50,
+                                            epsilon=0.05, n_steps_converge=5)
 
-    for eliciter in eliciters:
-        samp_name = eli_names[eliciter]
-        print(f'You are using {samp_name} Eliciter\n')
-        outputs = run_bounds_eliciter(eliciter, metrics, table, baseline,
-                                      w_true, oracle, ref, n_samples=100)
-        (sample_choices, est_w, scores) = outputs
-        eli_choices[samp_name] = sample_choices
+        eliciters = [plane_sampler, linear_random, linear_active]
+        eli_names = {plane_sampler: "PlaneSampler", linear_random: "LinearRandom",
+                    linear_active: "LinearActive"}
 
-        eli_scores[samp_name] = scores
+        # Create a hidden "ground truth" oracle function
+        dims = len(ref)
+        w_true = 0.1 + 0.9 * np.random.rand(dims)  # positive
+        w_true *= sign / (w_true @ w_true)**.5  # signed unit vector
 
-        w = compare_weights(w_true, est_w)
-        plt.plot(w, label=f'{samp_name}')
+        def oracle(q):
+            return ((q - ref) @ w_true < 0)
 
-    plt.ylabel('error rate')
-    plt.xlabel('steps')
-    plt.suptitle('Eliciters Comparison')
-    plt.legend()
+        # # Test whether the sampler can elicit this oracle's preference
+
+        # plane_sampler = bounds.PlaneSampler(ref, table, sign, attribs, steps=50)
+        # linear_random = bounds.LinearRandom(ref, table, sign, attribs, steps=50)
+        # linear_active = bounds.LinearActive(ref, table, sign, attribs, steps=50,
+        #                                     epsilon=0.05, n_steps_converge=5)
+
+        # # ----------- visualisation --------------
+        # # compare three eliciters
+
+        # eliciters = [plane_sampler, linear_random, linear_active]
+        # eli_names = {plane_sampler: "PlaneSampler", linear_random: "LinearRandom",
+        #             linear_active: "LinearActive"}
+        # eli_choices = {}  # a dictionary storing the choices for each eliciter
+        # eli_scores = {}  # a dictionary storing the 'log loss' for each eliciter
+
+        # plt.figure(0)
+
+
+        for eliciter in eliciters:
+            samp_name = eli_names[eliciter]
+            print(f'You are using {samp_name} Eliciter\n')
+            outputs = run_bounds_eliciter(eliciter, metrics, table, baseline,
+                                        w_true, oracle, ref, n_samples=100)
+            # (sample_choices, est_w, scores) = outputs
+            (sample_choices, _, scores) = outputs
+            eli_choices[samp_name] = sample_choices
+
+            if n_iter == 0:
+                eli_scores[samp_name] = scores
+            else:
+                pre_scores = eli_scores[samp_name]
+                last_index = min(len(pre_scores),len(scores))
+                eli_scores[samp_name] = np.add(pre_scores[:last_index], scores[:last_index])
+        
+        n_iter += 1
+    
+    for e in eli_scores:
+        eli_scores[e] /= n_iter
+
+
+            # w = compare_weights(w_true, est_w)
+
+        # plt.plot(w, label=f'{samp_name}')
+
+    # plt.ylabel('error rate')
+    # plt.xlabel('steps')
+    # plt.suptitle('Eliciters Comparison')
+    # plt.legend()
+
+
+    # ----------- visualisation --------------
+    # compare three eliciters
+    # print(eli_scores)
 
     plt.figure(1)
     for k in eli_scores:
-        plt.plot(np.array(eli_scores[k])[:, 0], np.array(eli_scores[k])[:, 1],
-                 label=f'{k}')
+        plt.plot(np.array(eli_scores[k]), label=f'{k}')
     plt.ylabel('log loss')
     plt.xlabel('steps')
     plt.suptitle('Eliciters Comparison')
@@ -87,16 +125,16 @@ def main():
     print("See sampling plot")
 
     # only shows the 3D plot for LinearActive Eliciter
-    sampler = linear_active
-    choices = eli_choices["LinearActive"]
+    # sampler = linear_active
+    # choices = eli_choices["LinearActive"]
 
-    # Display 3D plot  -------------------------
-    plt.figure(2)
-    plot3d.sample_trajectory(choices, attribs)
-    rad = plot3d.radius(choices)[:3]
-    plot3d.weight_disc(w_true[:3], ref[:3], rad, 'b', "true boundary")
-    plot3d.weight_disc(sampler.w[:3], ref[:3], rad, 'r', "estimated boundary")
-    plt.legend()
+    # # Display 3D plot  -------------------------
+    # plt.figure(2)
+    # plot3d.sample_trajectory(choices, attribs)
+    # rad = plot3d.radius(choices)[:3]
+    # plot3d.weight_disc(w_true[:3], ref[:3], rad, 'b', "true boundary")
+    # plot3d.weight_disc(sampler.w[:3], ref[:3], rad, 'r', "estimated boundary")
+    # plt.legend()
     plt.show()
 
 
@@ -115,8 +153,9 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
 
     print("Do you prefer to answer automatically? y/N")
     # matching user inputs
-    yes = ["y", "yes"]
-    answer = input().lower() in yes
+    # yes = ["y", "yes"]
+    # answer = input().lower() in yes
+    answer = True
     base = ["baseline", "base"]
 
     while not sampler.terminated:
@@ -144,7 +183,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
 
         if step >= 10:
             score = evaluation(choices, ref, n_samples, oracle)
-            scores.append((step, score))
+            scores.append(score)
 
     # Display text results report
     print("Experimental results ------------------")
@@ -178,19 +217,20 @@ def evaluation(choices, ref, n_samples, oracle, tests_per_steps=50):
     train_y = [oracle(x) for x in train_X]
     lr.fit(train_X, train_y)
 
-    loss = 0
+    # loss = 0
 
     # averaging the log_loss over multiple tests per steps
-    for _ in range(tests_per_steps):
-        # generate random testing data
-        test_X = random_choice(ref, n_samples)
-        test_y = [oracle(x) for x in test_X]  # y_true
-        probabilities = lr.predict_proba(test_X)  # y_pred
-        loss += log_loss(test_y, probabilities)
+    # for _ in range(tests_per_steps):
 
-    avg_loss = loss / tests_per_steps
+    # generate random testing data
+    test_X = random_choice(ref, n_samples)
+    test_y = [oracle(x) for x in test_X]  # y_true
+    probabilities = lr.predict_proba(test_X)  # y_pred
+    loss = log_loss(test_y, probabilities, labels=[True, False])
 
-    return avg_loss  # lower is better
+    # avg_loss = loss / tests_per_steps
+
+    return loss  # lower is better
 
 
 def random_choice(ref, n_samples):
