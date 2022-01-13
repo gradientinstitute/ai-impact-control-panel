@@ -48,13 +48,16 @@ def main():
 
     # ----------- visualisation --------------
     # compare three eliciters
-    # plt.figure(1)
 
     eliciters = [plane_sampler, linear_random, linear_active]
     eli_names = {plane_sampler: "PlaneSampler", linear_random: "LinearRandom",
                  linear_active: "LinearActive"}
     eli_choices = {}  # a dictionary storing the choices for each eliciter
     eli_scores = {}  # a dictionary storing the 'log loss' for each eliciter
+
+    eli_score = {}
+
+    plt.figure(0)
 
     for eliciter in eliciters:
         samp_name = eli_names[eliciter]
@@ -63,22 +66,26 @@ def main():
                                       w_true, oracle, ref, n_samples=100)
         (sample_choices, est_w, scores) = outputs
         eli_choices[samp_name] = sample_choices
+
         eli_scores[samp_name] = scores
 
-        plt.figure(0)
-        plt.plot(np.array(scores)[:, 0], np.array(scores)[:, 1],
-                 label=f'{samp_name}')
-        plt.ylabel('log loss')
-        plt.xlabel('steps')
-        plt.suptitle('Eliciters Comparison')
-        plt.legend()
+        score = evaluation(sample_choices, ref, 100, oracle)
+        eli_score[samp_name] = score
 
         w = compare_weights(w_true, est_w)
-        # plt.subplot(132)
-        plt.figure(1)
+        # plt.figure(0)
         plt.plot(w, label=f'{samp_name}')
 
     plt.ylabel('error rate')
+    plt.xlabel('steps')
+    plt.suptitle('Eliciters Comparison')
+    plt.legend()
+
+    plt.figure(1)
+    for k in eli_scores:
+        plt.plot(np.array(eli_scores[k])[:, 0], np.array(eli_scores[k])[:, 1],
+                 label=f'{k}')
+    plt.ylabel('log loss')
     plt.xlabel('steps')
     plt.suptitle('Eliciters Comparison')
     plt.legend()
@@ -112,7 +119,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
     # For display purposes
     ref_candidate = elicit.Candidate("Baseline", baseline, None)
 
-    print("Do you prefer to answer automatically? Y/N")
+    print("Do you prefer to answer automatically? y/N")
     # matching user inputs
     yes = ["y", "yes"]
     answer = input().lower() in yes
@@ -141,9 +148,10 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
         else:
             print("Choice: Oracle (REJECTED) candidate.\n\n")
 
-        if step % 10 == 0:
-            score = evaluation(choices, ref, n_samples, oracle)
-            scores.append((step, score))
+        if step >= 10:
+            if step % 1 == 0:
+                score = evaluation(choices, ref, n_samples, oracle)
+                scores.append((step, score))
 
     # Display text results report
     print("Experimental results ------------------")
@@ -188,7 +196,7 @@ def evaluation(choices, ref, n_samples, oracle):
 
 
 def random_choice(ref, n_samples):
-    rand = np.random.random_sample((n_samples, len(ref))) * 5
+    rand = np.random.random_sample((n_samples, len(ref))) * 10
     sign = np.random.choice([-1, 1])
     choice = sign * rand + ref
 
