@@ -19,6 +19,16 @@ function roundValue(operation, number, decimals) {
   return number;
 }
 
+// adjust the min and max values for higher is better
+export function adjustUnitRange(unit) {
+  let adjustedUnit = {}
+  Object.assign(adjustedUnit, unit);
+
+  adjustedUnit['min'] = unit['max'] * -1;
+  adjustedUnit['max'] = unit['min'] * -1;
+  return adjustedUnit;
+}
+
 enum rvOperations {
   'ceil',
   'floor'
@@ -39,7 +49,7 @@ function Model({unit, value, name, isMirror}) {
 
 function Key({unit}) {
 
-  let direction = unit.higherIsBetter === true ? "Higher" : "Lower";
+  let direction = unit.lowerIsBetter === true ? "Lower" : "Higher";
   let statement = !(unit.type === "qualitative") ? <div>({direction} is better)</div> : null;
 
     return (
@@ -143,8 +153,8 @@ function FillBar({percentage, unit, isThin, isMirror}) {
   let border = isMirror === true ? 
     "border-r-" + lwidth: "border-l-" + lwidth;
   let outer = "py-3 border-black " + border;
-  let color = unit.higherIsBetter === true ? 
-    "bg-green-700" : "bg-red-800";
+  let color = unit.lowerIsBetter === true ? 
+    "bg-red-800" : "bg-green-700";
 
   return (
     <div className={outer}>

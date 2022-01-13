@@ -55,7 +55,7 @@ def list_scenarios():
     return metadata_files
 
 
-def load_baseline(scenario):
+def _load_baseline(scenario):
     # attempt to load the baseline
     scenario_path = os.path.join(repo_root(), 'scenarios', scenario)
     baseline_f = os.path.join(scenario_path, "baseline.toml")
@@ -75,18 +75,29 @@ def load_scenario(scenario_name, pfilter=True):
         models[name] = toml.load(fname)
 
     scenario = toml.load(os.path.join(scenario_path, "metadata.toml"))
-
     assert len(models) > 0, "There are no candidate models."
+
+    baseline = _load_baseline(scenario_name)
+
+    # Apply lowerIsBetter
+    metrics = scenario["metrics"]
+    flip = [m for m in metrics if not metrics[m].get('lowerIsBetter', True)]
+    for f in flip:
+        for val in models.values():
+            val[f] = -val[f]
+
+        baseline[f] = -baseline[f]
+
+    scenario["baseline"] = baseline
 
     # Filter efficient set
     if pfilter:
-        models = remove_non_pareto(models, scenario)
+        models = remove_non_pareto(models)
 
-    assert len(models) > 0, "There are no candidate models after filtering."
+    assert len(models) > 0, "There are no efficient models."
 
     # Convert the TOML-loaded dictionaries into candidate objects.
     candidates = []
-    metrics = scenario["metrics"]
 
     for spec_name, perf in models.items():
         name = autoname(len(candidates))
@@ -99,8 +110,6 @@ def load_scenario(scenario_name, pfilter=True):
         primary = scenario['primary_metric']
         if primary not in metrics:
             raise RuntimeError(f'{primary} is not in the scenario metrics.')
-
-    scenario["baseline"] = load_baseline(scenario_name)
 
     return candidates, scenario
 
@@ -120,16 +129,21 @@ def load_all_metrics(metrics, candidates):
 def load_qualitative_metric(metrics, candidates, u):
     metrics[u]["max"] = max(c[u] for c in candidates)
     metrics[u]["min"] = min(c[u] for c in candidates)
+    metrics[u]["displayDecimals"] = None
+    if "lowerIsBetter" not in metrics[u]:
+        metrics[u]["lowerIsBetter"] = True
 
 
 def load_quantitative_metric(metrics, candidates, u):
     metrics[u]["max"] = max(c[u] for c in candidates)
     metrics[u]["min"] = min(c[u] for c in candidates)
-    metrics[u]["decimals"] = int(metrics[u]["decimals"])
+    metrics[u]["displayDecimals"] = int(metrics[u]["displayDecimals"])
     if "countable" not in metrics[u]:
         # auto-fill optional field
         metrics[u]["countable"] = (
-            "number" if metrics[u]["decimals"] == 0 else "amount")
+            "number" if metrics[u]["displayDecimals"] == 0 else "amount")
+    if "lowerIsBetter" not in metrics[u]:
+        metrics[u]["lowerIsBetter"] = True
 
 
 def delete_files(folder):

@@ -9,8 +9,7 @@ import {Pane, paneState, scenarioState,
         metadataState, constraintsState } from './Base';
 
 import { maxRangesState, currentCandidatesState, allCandidatesState,
-  currentSelectionState, higherIsBetterState, isBlockedState,
-  bestUnblockingCandidatesState, scrollbarHandleState, filterCandidates,
+  currentSelectionState, isBlockedState, scrollbarHandleState, filterCandidates,
   getSliderStep, } from './ConstrainScrollbar';
 
 enum HandleColours {
@@ -100,18 +99,21 @@ function MultiRangeConstraint({}) {
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
     const u: any = x[1];
+    const lowerIsBetter = u.lowerIsBetter == false ? false : true;
 
     const pane = (u.type === "qualitative") ? 
 
       (<QualitativeConstraint x={x} 
         maxRanges={maxRanges} 
         constraints={constraints}
-        uid={uid}/>) :
+        uid={uid}
+        lowerIsBetter={lowerIsBetter}/>) :
 
       (<QuantitativeConstraint x={x}
         maxRanges={maxRanges}
         constraints={constraints}
-        uid={uid}/>)
+        uid={uid}
+        lowerIsBetter={lowerIsBetter}/>)
 
     return (
       <div >
@@ -127,21 +129,22 @@ function MultiRangeConstraint({}) {
   );
 }
 
-function QuantitativeConstraint({x, maxRanges, constraints, uid}) {
+function QuantitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) {
   // TODO: remember how to specify these types in destructuring args
   const u: any = x[1];
   const vals = maxRanges[uid];
+  const sign = lowerIsBetter ? 1 : -1;
   const min = vals[0];
   const max = vals[1];
-  const min_string = u.prefix + " " + min + " " + u.suffix;
-  const max_string = u.prefix + " " + max + " " + u.suffix;
+  const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + " " + u.suffix;
+  const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + " " + u.suffix;
   const name = u.name;
-  const cmin = constraints[uid][0];
-  const cmax = constraints[uid][1];
-  const cstring = u.prefix + " (" + cmin + " - " + cmax + ")\n" + u.suffix;
-  const decimals = 'decimals' in u ? u.decimals : null; 
   const currentSelection = useRecoilValue(currentSelectionState);
   const bgcolor = currentSelection === uid ? 'bg-yellow-800' : 'bg-gray-700';
+  const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
+  const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
+  const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
+  const decimals = u.displayDecimals;
 
   return (
     <div key={uid} 
@@ -152,14 +155,14 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid}) {
 
       <p className="col-span-1 text-xs text-right my-auto">{min_string}</p>
       <div className="col-span-3 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={null} decimals={decimals}/>
+        <RangeConstraint uid={uid} min={min} max={max} marks={null} decimals={decimals} lowerIsBetter={lowerIsBetter}/>
       </div>
       <p className="col-span-1 text-xs text-left my-auto">{max_string}</p>
     </div>
   )
 }
 
-function QualitativeConstraint({x, maxRanges, constraints, uid}) {
+function QualitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) {
   const u: any = x[1];
 
   const min = 0;
@@ -203,7 +206,7 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
 
       <p className="col-span-2 my-auto">{}</p>
       <div className="col-span-6 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={options} decimals={null}/>
+        <RangeConstraint uid={uid} min={min} max={max} marks={options} decimals={null} lowerIsBetter={lowerIsBetter}/>
       </div>
       <p className="col-span-2 my-auto">{}</p>
 
@@ -211,41 +214,39 @@ function QualitativeConstraint({x, maxRanges, constraints, uid}) {
   )
 }
 
-function RangeConstraint({uid, min, max, marks, decimals}) {
+function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const [currentSelection, setCurrentSelection] = useRecoilState(currentSelectionState);
 
   const all = useRecoilValue(allCandidatesState);
-
-  const higherIsBetterMap = useRecoilValue(higherIsBetterState);
-  const higherIsBetter = higherIsBetterMap[uid];
-  const val = higherIsBetter ? constraints[uid][0] : constraints[uid][1];
+  const val = constraints[uid][1];
 
   const isBlocked = useRecoilValue(isBlockedState);
   const blockString = (currentSelection === uid) && (isBlocked) ? "BLOCKED" : "";
-
-  const bestCandidates = useRecoilValue(bestUnblockingCandidatesState);
   
   function onBeforeChange() {
     setCurrentSelection(uid);
-  }
+  };
 
   function onChange(newVal: any) {
 
     // copy constraints into a new object
     let n = {...constraints};
+
     // set the bounds of the scrollbar
-    n[uid] = higherIsBetter ? [newVal, n[uid][1]] : [n[uid][0], newVal];
+    n[uid] =  [n[uid][0], newVal] 
 
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
+    
     if (withNew.length > 0) {
       setConstraints(n);
     }
   }
-  
+
   const blockedScrollbar : any = useRecoilValue(scrollbarHandleState);
+  
   const handleStyle = {
     backgroundColor: HandleColours[blockedScrollbar[uid]], 
     height: 20, 
@@ -263,8 +264,9 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
     value: val,
     step: getSliderStep(decimals),
     handleStyle: handleStyle, 
-    trackStyle: higherIsBetter ? {backgroundColor: "gray"} : {backgroundColor: "lightblue"},
-    railStyle: higherIsBetter ? {backgroundColor: "lightblue"} : {backgroundColor: "gray"},
+    trackStyle: {backgroundColor: "lightblue"},
+    railStyle: {backgroundColor: "gray"},
+    reverse: !lowerIsBetter,
   };
   
   // for qualitative metrics
@@ -281,16 +283,16 @@ function RangeConstraint({uid, min, max, marks, decimals}) {
     {/* <BlockingTargetBar percentage={percentage} blockingState={blockingState}/> */}
     <p>{"Blocked status: " + blockString}</p>
     <Slider {...rangeProps} />
-    <OptimalDirection higherIsBetter={higherIsBetter}/>
+    <OptimalDirection lowerIsBetter={lowerIsBetter}/>
   </div>
   );
 }
 
-function OptimalDirection({higherIsBetter}) {
-  const leftColour = higherIsBetter ? "text-red-500" : "text-green-500";
-  const rightColour = higherIsBetter ? "text-green-500" : "text-red-500";
-  const leftText = higherIsBetter ? "least optimal" : "most optimal";
-  const rightText = higherIsBetter ? "most optimal" : "least optimal";
+function OptimalDirection({lowerIsBetter}) {
+  const leftColour= lowerIsBetter ? "text-green-500" : "text-red-500";
+  const rightColour = lowerIsBetter ? "text-red-500" : "text-green-500";
+  const leftText = lowerIsBetter ? "most optimal" : "least optimal";
+  const rightText = lowerIsBetter ? "least optimal" : "most optimal";
 
   return (
     <div className="grid grid-cols-4">

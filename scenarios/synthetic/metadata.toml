@@ -29,8 +29,7 @@ description = "Ensure that candidates shortlisted are suitable."
     prefix = ""
     suffix = "fewer suitable women than the average per 100 candidates"
     action = "recommends"
-    higherIsBetter = false
-    decimals = 0
+    displayDecimals = 0
     countable = true
 
 [metrics.Xmin]
@@ -46,8 +45,7 @@ description = "Ensure that candidates shortlisted are suitable."
     prefix = ""
     suffix = "candidates per 100 suitable"
     action = "missed"
-    higherIsBetter = false
-    decimals = 0
+    displayDecimals = 0
     countable = true
 
 [metrics.Ymax]
@@ -63,8 +61,8 @@ description = "Ensure that candidates shortlisted are suitable."
     prefix = ""
     suffix = "candidates per 100 suitable"
     action = "recommend{s}"
-    higherIsBetter = true
-    decimals = 2
+    lowerIsBetter = false
+    displayDecimals = 2
     countable = true
 
 [metrics.Zmin]
@@ -73,7 +71,7 @@ description = "Ensure that candidates shortlisted are suitable."
     description = """Level of private data used in the training set"""
     captures = ["shortlist_suitable_candidates"]
     limitations = """no actual distinguishing"""
-    higherIsBetter = false 
+    lowerIsBetter = true 
     type = "qualitative"
     
     # the values for the options are 0... n-1 respectively
