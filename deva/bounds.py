@@ -30,8 +30,8 @@ class BoundsEliciter:
     def terminated(self):
         raise NotImplementedError
 
-# TODO: Add prob.
 
+# TODO: Add prob.
 class LinearActive(BoundsEliciter):
     """
     Eliciter using Logistics Regression
@@ -103,7 +103,7 @@ class LinearActive(BoundsEliciter):
         self.y.append(label)
 
         # If there is more than one class
-        if 0 in self.y:
+        if 0 in self.y and 1 in self.y:
             self.lr.fit(self.X, self.y)
 
         self._update()
@@ -135,7 +135,7 @@ class LinearActive(BoundsEliciter):
             return choice
 
         # logistic regressor
-        if 0 in self.y:  # If a logistic regression model exists
+        if 0 in self.y and 1 in self.y:  # If logistic regression model exists
             test_X = [random_choice() for _ in range(1000)]
 
             # finding the least confident candidate
@@ -236,8 +236,6 @@ class LinearRandom(BoundsEliciter):
         # TODO: make logistic regressor
         w = np.linalg.solve(dcov, dmean)
         self.w = w
-
-        # dims = len(self.ref)
 
         while True:
             diff = np.random.randn(len(self.ref)) * self.radius
