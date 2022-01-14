@@ -266,6 +266,27 @@ def compareEliciters(eliciters, number, dimension, runs):
     plt.ylabel('Error')
     plt.legend()
     plt.savefig('plot.jpg')
+    # # box plot
+    # fig, ax = plt.subplots()
+    # for eliciter in res.keys():
+    #     x = varLog[eliciter]['distance']
+    #     y = varLog[eliciter]['question_count']
+    #     if (len(set(x)) != 1) & (len(set(y)) != 1):
+    #         boxplot_2d(np.array(x), np.array(y), ax=ax, whis=1)
+    #     else:
+    #         ax.plot(x[0], y[0], label=eliciter)
+    # plt.savefig('test.jpg')
+    # scatter cloud
+    plt.figure()
+    for eliciter in res.keys():
+        x = varLog[eliciter]['distance']
+        y = varLog[eliciter]['question_count']
+        plt.scatter(x, y, marker='o', alpha=0.2, label=eliciter)
+    plt.title('Scatter cloud plot')
+    plt.ylabel('Number of questions')
+    plt.xlabel('Error')
+    plt.legend()
+    plt.savefig('scatterCloud.jpg')
 
 
 if __name__ == "__main__":
