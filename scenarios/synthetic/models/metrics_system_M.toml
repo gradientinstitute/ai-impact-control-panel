@@ -1,4 +1,4 @@
 Wmin = 3.0
 Xmin = 1.0
-Ymax = 3.0
-Zmin = 4.0
+Ymax = 0.333
+Zmin = 4

@@ -1,4 +1,4 @@
-precision = 50
-fnr = 50
-fnr_difference = 50
-privacy_level = 0
+Wmin = 0
+Xmin = 0
+Ymax = 0
+Zmin = 0

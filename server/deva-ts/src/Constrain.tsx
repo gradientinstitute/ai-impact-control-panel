@@ -1,78 +1,39 @@
 import {useState, useEffect} from 'react';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
+import axios from 'axios';
+import _ from "lodash";
+
+import { useRecoilState, useRecoilValue } from 'recoil';
 import {Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
-import axios from 'axios';
-import _, { indexOf, last } from "lodash";
-import {roundValue, rvOperations} from './Widgets';
-import {getMetricImportance, lastBouncedState, scrollbarHandleState, 
-        setBlockedMetrics, setBlockingMetrics, scrollbarsState, 
-        bestValuesState} from './ConstrainScrollbar';
 
-export const allCandidatesState = atom({  
-  key: 'allCandidates', 
-  default: null, 
-});
+import { maxRangesState, currentCandidatesState, allCandidatesState,
+  currentSelectionState, isBlockedState, scrollbarHandleState, filterCandidates,
+  getSliderStep, } from './ConstrainScrollbar';
 
-// maximum possible ranges (doesnt change)
-export const maxRangesState = selector({
-  key: 'maxRanges',
-  get: ({get}) => {
-    const all = get(allCandidatesState);
-    const metadata = get(metadataState);
-
-    if (all === null) {
-      return null;
-    }
-    
-    const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
-      const decimals = val.displayDecimals != null ? val.displayDecimals : 0; 
-      const tvals = all.map(x => x[uid]);
-      const min = roundValue(rvOperations.floor, Math.min(...tvals), decimals); 
-      const max = roundValue(rvOperations.ceil, Math.max(...tvals), decimals); 
-      return [min, max];
-    });
-    return ranges;
-  },
-});
-
-function filterCandidates(candidates, bounds) {
-  const items = candidates.filter( (c) => {
-      return Object.entries(c).every(([k, v]) => {
-        const lower = v >= bounds[k][0];
-        const upper = v <= bounds[k][1];
-        return lower && upper
-      });
-    });
-  return items;
+enum HandleColours {
+  'white',  // default
+  'gray',   // blocked
+  'orange', // bounced
+  'red',    // blocking
 }
-
-// filter all the candidates to just the ones
-// permissable by the currently selected ranges
-export const currentCandidatesState = selector({
-  key: 'currentCandidates',
-  get: ({get}) => {
-    const allCandidates = get(allCandidatesState);
-    const constraints = get(constraintsState);
-    if (allCandidates === null || constraints === null) {
-      return null;
-    }
-    return filterCandidates(allCandidates, constraints);
-  },
-});
 
 export function ConstraintPane({}) {
 
+  // name of current scenorio for url purposes e.g. "ezyfraud"
   const scenario = useRecoilValue(scenarioState);
+  // largest possible ranges for specifying the scrollbar extents
   const maxRanges = useRecoilValue(maxRangesState);
-  const curr = useRecoilValue(currentCandidatesState);
-  const scrollbars = useRecoilValue(scrollbarsState);
+  // list of currently permissible candidates based on current constraints
+  const currentCandidates = useRecoilValue(currentCandidatesState);
+  // the actual/current contraints as defined by the position of scrollbars
 
-  const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
-  const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(scrollbarHandleState);
+  // current constraints done by metric
+  const [_costraints, setConstraints] = useRecoilState(constraintsState);
+
+  // all candidates sent to us by the server
+  const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
 
   // initial loading of candidates
   useEffect(() => {
@@ -92,12 +53,7 @@ export function ConstraintPane({}) {
     setConstraints(maxRanges)
   }, [maxRanges]);
 
-  // set initial value of the constraints
-  useEffect(() => {
-    setBlockedScrollbar(scrollbars)
-  }, [scrollbars]);
-
-  if (curr === null) {
+  if (currentCandidates === null) {
     return (<div>Loading...</div>);
   }
 
@@ -183,13 +139,16 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter})
   const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + " " + u.suffix;
   const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + " " + u.suffix;
   const name = u.name;
+  const currentSelection = useRecoilValue(currentSelectionState);
+  const bgcolor = currentSelection === uid ? 'bg-yellow-800' : 'bg-gray-700';
   const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
   const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
   const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
   const decimals = u.displayDecimals;
 
   return (
-    <div key={uid} className="grid grid-cols-5 gap-8 bg-gray-600 rounded-lg p-4">
+    <div key={uid} 
+    className={"grid grid-cols-5 gap-8 " + bgcolor + " rounded-lg p-4"}>
       
       <h2 className="col-span-5 text-center">{name}</h2>
       <p className="col-span-5 text-3xl">{cstring}</p>
@@ -211,6 +170,8 @@ function QualitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) 
 
   const cmin = constraints[uid][0];
   const cmax = constraints[uid][1];
+  const currentSelection = useRecoilValue(currentSelectionState);
+  const bgcolor = currentSelection === uid ? 'bg-yellow-800' : 'bg-gray-700';
 
   const options = Object.fromEntries(
     u.options.map(x => [u.options.indexOf(x), x])
@@ -226,7 +187,8 @@ function QualitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) 
   .map(x => (<p>{x}</p>));
 
   return (
-    <div key={uid} className="grid grid-cols-10 gap-8 bg-gray-600 rounded-lg p-4">
+    <div key={uid} 
+    className={"grid grid-cols-10 gap-8 " + bgcolor + " rounded-lg p-4 pb-10"}>
             
       <h2 className="col-span-10 text-center">{name}</h2>
 
@@ -252,92 +214,126 @@ function QualitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) 
   )
 }
 
-function getSliderStep(max, min, decimals) {
-  if (decimals == null) { 
-    return 1;
-  }
-  return Number((0.1 ** decimals).toFixed(decimals));
-}
-
 function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
-  const [blockedScrollbar, setBlockedScrollbar] = useRecoilState(scrollbarHandleState);
   const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const [lastBounced, setLastBounced] = useRecoilState(lastBouncedState);
+  const [currentSelection, setCurrentSelection] = useRecoilState(currentSelectionState);
 
   const all = useRecoilValue(allCandidatesState);
-  const activeOptimal = useRecoilValue(bestValuesState);
-  const metricImportance = useRecoilValue(getMetricImportance);
-
   const val = constraints[uid][1];
-  
-  let bounced = null;
 
-  enum HandleColours {
-    'white',  // default
-    'gray',   // blocked
-    'orange', // bounced
-    'red',    // blocking
-  }
+  const isBlocked = useRecoilValue(isBlockedState);
+  const blockString = (currentSelection === uid) && (isBlocked) ? "BLOCKED" : "";
+  
+  function onBeforeChange() {
+    setCurrentSelection(uid);
+  };
 
   function onChange(newVal: any) {
+
+    // copy constraints into a new object
     let n = {...constraints};
-    let m = {...blockedScrollbar};
 
     // set the bounds of the scrollbar
     n[uid] =  [n[uid][0], newVal] 
+
+    // check how many candidates are left
     const withNew = filterCandidates(all, n);
     
     if (withNew.length > 0) {
       setConstraints(n);
-    } else {
-      bounced = uid;
-      setLastBounced(uid);
     }
-
-    // change scrollbar handle colours
-    changeScrollbarColours();
-    setBlockedScrollbar(m);
   }
 
-  function onAfterChange() {
-    changeScrollbarColours();
-  }
-
-  function changeScrollbarColours() {
-    let n = {...constraints}
-    let m = {...blockedScrollbar};
-    const b = setBlockedMetrics(n, m, activeOptimal, uid, bounced, lastBounced, 
-      setLastBounced, decimals);
-    setBlockingMetrics(n, m, uid, activeOptimal, all, b, metricImportance);
-    setBlockedScrollbar(m);
-  }
+  const blockedScrollbar : any = useRecoilValue(scrollbarHandleState);
+  
+  const handleStyle = {
+    backgroundColor: HandleColours[blockedScrollbar[uid]], 
+    height: 20, 
+    width: 20, 
+    borderColor: HandleColours[blockedScrollbar[uid]]
+  };
 
   let rangeProps = {
     min: min,
     max: max,
+    onBeforeChange: onBeforeChange,
     onChange: onChange,
-    onAfterChange: onAfterChange,
+    // onAfterChange: onAfterChange,
     allowCross: false,
     value: val,
-    step: getSliderStep(max, min, decimals),
-    handleStyle: {backgroundColor: HandleColours[blockedScrollbar[uid]], height: 17, width: 17, borderColor: HandleColours[blockedScrollbar[uid]]},
+    step: getSliderStep(decimals),
+    handleStyle: handleStyle, 
     trackStyle: {backgroundColor: "lightblue"},
     railStyle: {backgroundColor: "gray"},
     reverse: !lowerIsBetter,
   };
-
+  
+  // for qualitative metrics
   if (marks !== null) {
     rangeProps["marks"] = marks;
     rangeProps["step"] = null;
   }
 
+  // const percentage = getTargetPercentage(higherIsBetterMap, uid, targets, min, max, decimals);
+  // const blockingState = {...blockedScrollbar}[uid];
+
   return (
   <div>
+    {/* <BlockingTargetBar percentage={percentage} blockingState={blockingState}/> */}
+    <p>{"Blocked status: " + blockString}</p>
     <Slider {...rangeProps} />
+    <OptimalDirection lowerIsBetter={lowerIsBetter}/>
   </div>
   );
 }
+
+function OptimalDirection({lowerIsBetter}) {
+  const leftColour= lowerIsBetter ? "text-green-500" : "text-red-500";
+  const rightColour = lowerIsBetter ? "text-red-500" : "text-green-500";
+  const leftText = lowerIsBetter ? "most optimal" : "least optimal";
+  const rightText = lowerIsBetter ? "least optimal" : "most optimal";
+
+  return (
+    <div className="grid grid-cols-4">
+      <div className={"col-span-2 text-left text-s " + leftColour}>
+       <p><i>← {leftText}</i></p>
+      </div>
+      <div className={"col-span-2 text-right text-s " + rightColour}>
+        <p><i>{rightText} →</i></p>
+      </div>
+    </div>
+  );
+}
+
+// function getTargetPercentage(higherIsBetterMap, uid, targets, min, max, decimals) {
+//   let target = null;
+//   let percentage = higherIsBetterMap.get(uid) ? 100 : 0;
+
+//   if (targets != null && targets[uid] != null) {
+//     target = targets[uid]
+//       .map(x => getRounded(higherIsBetterMap, uid, x, decimals))
+//       .filter(x => x != null);
+//     percentage = higherIsBetterMap.get(uid) 
+//       ? ((Math.max(...target) - min) / (max - min)) * 100
+//       : ((Math.min(...target) - min) / (max - min)) * 100;
+//   }
+//   return percentage;
+// }
+
+// function BlockingTargetBar({percentage, blockingState}) {
+
+//   let colour = "border-gray-600";
+//   colour = blockingState == blockingStates.blocking ? "border-red-500" : colour;
+//   colour = blockingState == blockingStates.bounced ? "border-yellow-500" : colour;
+
+//   return (
+//     <div className="w-full flex">
+//       <div className={"h-6 min-h-full border-r-4 bg-gray-600 " + colour} style={{width:percentage + "%"}}></div>
+//       <div className={"h-6 min-h-full bg-gray-600"} style={{width:(100-percentage) + "%"}}> </div>
+//     </div>
+//   );
+// }
 
 
 function StartButton({}) {
@@ -358,9 +354,6 @@ function StartButton({}) {
     }
   }, [submit]
   );
-
-
-
 
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
