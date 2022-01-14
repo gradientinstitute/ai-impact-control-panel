@@ -88,6 +88,8 @@ def main():
     for e in eli_scores:
         eli_scores[e] /= n_iter
 
+    print(eli_scores)
+
     plt.figure(1)
     for k in eli_scores:
         plt.plot(np.array(eli_scores[k]), label=f'{k}')
@@ -194,7 +196,14 @@ def evaluation(choices, ref, n_samples, oracle):
 
     train_X = choices
     train_y = [oracle(x) for x in train_X]
-    lr.fit(train_X, train_y)
+    if True in train_y and False in train_y:
+        lr.fit(train_X, train_y)
+    else:
+        project_X = 2 * ref - np.array(choices)
+        train_X += project_X
+        train_y = [oracle(x) for x in train_X]
+        print(train_y)
+        lr.fit(train_X, train_y)
 
     # generate random testing data
     test_X = random_choice(ref, n_samples)

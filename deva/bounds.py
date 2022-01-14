@@ -30,6 +30,7 @@ class BoundsEliciter:
     def terminated(self):
         raise NotImplementedError
 
+# TODO: Add prob.
 
 class LinearActive(BoundsEliciter):
     """
@@ -122,14 +123,12 @@ class LinearActive(BoundsEliciter):
         if self.steps > 0:
             self.old_w = self.w.copy()
 
-        # dims = len(self.ref)
-
         # Helper function: make random candidate
         def random_choice():
             while True:
                 diff = np.random.randn(len(self.ref)) * self.radius
-                diff -= w * (diff @ w) / (w @ w)  # make perpendicular
-                diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
+                # diff -= w * (diff @ w) / (w @ w)  # make perpendicular
+                # diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
                 choice = self.ref + diff
                 if self.check_valid(choice):
                     break
@@ -137,7 +136,7 @@ class LinearActive(BoundsEliciter):
 
         # logistic regressor
         if 0 in self.y:  # If a logistic regression model exists
-            test_X = [random_choice() for i in range(1000)]
+            test_X = [random_choice() for _ in range(1000)]
 
             # finding the least confident candidate
             probabilities = self.lr.predict_proba(test_X)[:, 1]
@@ -234,6 +233,7 @@ class LinearRandom(BoundsEliciter):
         diff = np.array(self.X, dtype=float) - self.ref[None, :]
         dcov = np.cov(diff.T)
         dmean = diff.mean(axis=0)
+        # TODO: make logistic regressor
         w = np.linalg.solve(dcov, dmean)
         self.w = w
 
