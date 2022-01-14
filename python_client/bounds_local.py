@@ -34,7 +34,7 @@ def main():
     eli_errors = {}  # storing the error rate for each eliciter
 
     n_iter = 0
-    max_iter = 5
+    max_iter = 2
     # A loop to reduce variance due to initial conditions
     while n_iter < max_iter:
         # Test whether the sampler can elicit this oracle's preference
@@ -87,8 +87,6 @@ def main():
         avg_scores[e] = np.array([i[:min_step] for i in eli_scores[e]])
         avg_scores[e] = np.mean(avg_scores[e], axis=0)
 
-    print(eli_scores)
-
     plt.figure(1)
     for k in eli_scores:
         plt.plot(np.array(avg_scores[k]), label=k)
@@ -100,21 +98,21 @@ def main():
     print("See sampling plot")
 
     # only shows the 3D plot for LinearActive Eliciter
-    sampler = eliciters["LinearActive"]
-    choices = eli_choices["LinearActive"]
+    # sampler = eliciters["LinearActive"]
+    # choices = eli_choices["LinearActive"]
 
-    # Display 3D plot  -------------------------
-    plt.figure(2)
-    sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
-                    for a in attribs])
+    # # Display 3D plot  -------------------------
+    # plt.figure(2)
+    # sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
+    #                 for a in attribs])
 
-    plot3d.sample_trajectory(choices * sign, attribs)
-    rad = plot3d.radius(choices)[:3]
-    plot3d.weight_disc(
-        w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
-    plot3d.weight_disc(
-        sampler.w[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
-    plt.legend()
+    # plot3d.sample_trajectory(choices * sign, attribs)
+    # rad = plot3d.radius(choices)[:3]
+    # plot3d.weight_disc(
+    #     w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
+    # plot3d.weight_disc(
+    #     sampler.w[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
+    # plt.legend()
     plt.show()
 
 
@@ -194,21 +192,45 @@ def evaluation(choices, ref, n_samples, oracle):
     lr = LogisticRegression()
 
     train_X = choices
+    # train_y = [oracle(x) for x in train_X]
+    # print("choices:" +  str(choices))
+    project_X = 2 * (ref) - (choices)
+    # print("project_X" + str(project_X))
+    # for x in project_X:
+    #     train_X.append(np.array(x))
+
+    # train_X.extend(project_X)
+    train_X.append(project_X[0])
+
+    # print("train: " + str(train_X))
     train_y = [oracle(x) for x in train_X]
-    if True in train_y and False in train_y:
-        lr.fit(train_X, train_y)
-    else:
-        project_X = 2 * ref - np.array(choices)
-        train_X += project_X
-        train_y = [oracle(x) for x in train_X]
-        print(train_y)
-        lr.fit(train_X, train_y)
+    # print(train_y)
+    lr.fit(train_X, train_y)
+
+    # if True in train_y and False in train_y:
+    #     lr.fit(train_X, train_y)
+    # else:
+    #     project_X = 2 * np.array(ref) - np.array(choices)
+
+    #     print("choices: " + str(choices))
+    #     # print(choices[0])
+    #     # print("ref: " + ref)
+    #     print("project_X: " + str(project_X))
+
+    #     train_X += project_X
+    #     train_y = [oracle(x) for x in train_X]
+    #     evaluation(train_X, ref, n_samples, oracle)
+    #     # print(train_y)
+    #     # lr.fit(train_X, train_y)
 
     # generate random testing data
     test_X = random_choice(ref, n_samples)
     test_y = [oracle(x) for x in test_X]  # y_true
     probabilities = lr.predict_proba(test_X)  # y_pred
     loss = log_loss(test_y, probabilities, labels=[True, False])
+
+    # import IPython
+    # IPython.embed()
 
     return loss  # lower is better
 
