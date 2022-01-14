@@ -8,13 +8,15 @@ function sigFigs(unit: any) {
 
 // ceil or floor numbers to the number of decimal places specified
 function roundValue(operation, number, decimals) {
-  let num = number;
+  if (typeof number != "number") {
+    return number;
+  }  
   if (operation == rvOperations.ceil) {
-    num = Math.ceil(num * (10 ** decimals) / (10 ** decimals));
+    number = Math.ceil(number * (10 ** decimals)) / (10 ** decimals);
   } else if (operation == rvOperations.floor) {
-    num = Math.floor(num * (10 ** decimals) / (10 ** decimals));
+    number = Math.floor(number * (10 ** decimals)) / (10 ** decimals);
   }
-  return num;
+  return number;
 }
 
 // adjust the min and max values for higher is better

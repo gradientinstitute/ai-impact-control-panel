@@ -38,15 +38,13 @@ def main():
     # A loop to reduce variance due to initial conditions
     while n_iter < max_iter:
         # Test whether the sampler can elicit this oracle's preference
-        plane_sampler = bounds.PlaneSampler(ref, table, attribs, steps=50)
-        linear_random = bounds.LinearRandom(ref, table, attribs, steps=50)
-        linear_active = bounds.LinearActive(ref, table, attribs, steps=50,
-                                            epsilon=0.05, n_steps_converge=5)
-
-        eliciters = [plane_sampler, linear_random, linear_active]
-        eli_names = {plane_sampler: "PlaneSampler",
-                     linear_random: "LinearRandom",
-                     linear_active: "LinearActive"}
+        eliciters = {
+            "PlaneSampler": bounds.PlaneSampler(ref, table, attribs, steps=50),
+            "LinearRandom": bounds.LinearRandom(ref, table, attribs, steps=50),
+            "LinearActive": bounds.LinearActive(ref, table, attribs, steps=50,
+                                                epsilon=0.05,
+                                                n_steps_converge=5)
+        }
 
         # Create a hidden "ground truth" oracle function
         dims = len(ref)
@@ -57,19 +55,17 @@ def main():
             return ((q - ref) @ w_true < 0)
 
         for eliciter in eliciters:
-            samp_name = eli_names[eliciter]
+            samp_name = eliciter
             print(f'You are using {samp_name} Eliciter\n')
-            outputs = run_bounds_eliciter(eliciter, metrics, table, baseline,
-                                          w_true, oracle, ref, n_samples=100)
+            outputs = run_bounds_eliciter(eliciters[eliciter], metrics, table,
+                                          baseline, w_true, oracle, ref,
+                                          n_samples=100)
             (sample_choices, est_w, scores) = outputs
 
             if n_iter == 0:
-                eli_scores[samp_name] = scores
+                eli_scores[samp_name] = []
             else:
-                pre_scores = eli_scores[samp_name]
-                last_index = min(len(pre_scores), len(scores))
-                eli_scores[samp_name] = np.add(pre_scores[:last_index],
-                                               scores[:last_index])
+                eli_scores[samp_name].append(scores)
             if n_iter == max_iter-1:
                 eli_choices[samp_name] = sample_choices
                 eli_errors[samp_name] = compare_weights(w_true, est_w)
@@ -79,20 +75,23 @@ def main():
     # compare three eliciters
     plt.figure(0)
     for k in eli_errors:
-        plt.plot(eli_errors[k], label=f'{k}')
+        plt.plot(eli_errors[k], label=k)
     plt.ylabel('error rate')
     plt.xlabel('steps')
     plt.suptitle('Eliciters Comparison')
     plt.legend()
 
-    for e in eli_scores:
-        eli_scores[e] /= n_iter
+    avg_scores = {}
+    for e in eliciters:
+        min_step = min(map(len, eli_scores[e]))
+        avg_scores[e] = np.array([i[:min_step] for i in eli_scores[e]])
+        avg_scores[e] = np.mean(avg_scores[e], axis=0)
 
     print(eli_scores)
 
     plt.figure(1)
     for k in eli_scores:
-        plt.plot(np.array(eli_scores[k]), label=f'{k}')
+        plt.plot(np.array(avg_scores[k]), label=k)
     plt.ylabel('log loss')
     plt.xlabel('steps')
     plt.suptitle('Eliciters Comparison')
@@ -101,7 +100,7 @@ def main():
     print("See sampling plot")
 
     # only shows the 3D plot for LinearActive Eliciter
-    sampler = linear_active
+    sampler = eliciters["LinearActive"]
     choices = eli_choices["LinearActive"]
 
     # Display 3D plot  -------------------------
