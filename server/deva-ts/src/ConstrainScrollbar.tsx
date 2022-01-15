@@ -75,12 +75,25 @@ export const bestValuesState = selector({
   key: 'optimalMetricValues',
   get: ({get}) => {
     const currentCandidates = get(currentCandidatesState);
+    const metadata = get(metadataState);
     let currOptimal = new Map();
     currentCandidates.forEach((candidate) => {
       Object.entries(candidate).forEach(([metric, value]) => {
-        const currVal = value as number;
+        let currVal = value as number;
         let currOpt = currOptimal.get(metric);
         currOpt = (typeof currOpt == 'undefined') ? Number.MAX_SAFE_INTEGER : currOpt;
+        
+        // find the threshold step to return
+        const decimals = metadata.metrics[metric]['displayDecimals'];
+        const min = metadata.metrics[metric]['min'];
+        const stepSize = getSliderStep(decimals);
+        const stepsFromMin = Math.ceil((currVal - min) / stepSize);
+        currVal = roundValue(
+          rvOperations.floor, 
+          (stepsFromMin * stepSize) + min, 
+          decimals
+        );
+
         currOptimal.set(metric, currVal < currOpt ? currVal : currOpt); 
       });
     });

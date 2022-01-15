@@ -4,6 +4,7 @@ import 'rc-slider/assets/index.css';
 import axios from 'axios';
 import _ from "lodash";
 
+import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
@@ -225,7 +226,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const isBlocked = useRecoilValue(isBlockedState);
   const blockString = (currentSelection === uid) && (isBlocked) ? "BLOCKED" : "";
-  
+    
   function onBeforeChange() {
     setCurrentSelection(uid);
   };
@@ -240,14 +241,11 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
-    
+
     if (withNew.length ==  0) {
       // if the constraints exceeds the threshold value 
       // set to the threshold value
-      const step = getSliderStep(decimals);
-      const numSteps = Math.ceil(thresholdValues.get(uid) / step); 
-      newVal = (step * numSteps).toFixed(decimals);
-      n[uid]  = [n[uid][0], newVal];
+      n[uid]  = [n[uid][0], thresholdValues.get(uid)];
     }
 
     setConstraints(n);
