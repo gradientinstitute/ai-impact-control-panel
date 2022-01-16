@@ -1,7 +1,8 @@
 import numpy as np
-# import matplotlib.pylab as plt
+import matplotlib.pylab as plt
 import click
 from deva import elicit
+from collections import namedtuple
 
 eliciters_map = {"TOY": elicit.Toy, "ACTIVERANKING":  elicit.ActiveRanking,
                  "ACTIVEMAX":  elicit.ActiveMax,
@@ -117,8 +118,78 @@ def print_result(result):
               help='The number of cadidate to be generated')
 @click.option('-d', '--dimension', default=3,
               help='Dimensions each candidate has.')
-def compareEliciters(eliciters, number, dimension):
-    print_result(test_eliciters(eliciters, number, dimension))
+@click.option('-r', '--runs', default=10,
+              help='The number of runs to average out outliers.')
+def compareEliciters(eliciters, number, dimension, runs):
+    Result = namedtuple('Result',
+                        'numberCandidate numberAttributes meanError errorLog')
+    result = Result(number, dimension, [], {})
+    varLog = {}
+    for x in range(runs):
+        num, attr, mean_error, res = test_eliciters(eliciters,
+                                                    number, dimension)
+        result.meanError.append(mean_error)
+        for eliciter in res.keys():
+            if eliciter not in varLog.keys():
+                varLog[eliciter] = {'distance': [],
+                                    'question_count': []}
+            varLog[eliciter]['distance'].append(res[eliciter]['distance'])
+            varLog[eliciter]['question_count'].append(
+                res[eliciter]['question_count'])
+    for eliciter in res.keys():
+        result.errorLog[eliciter] = {'distance': 0,
+                                     'question_count': 0}
+        for key in result[3][eliciter]:
+            result.errorLog[eliciter][key] = np.mean(varLog[eliciter][key])
+    result = result._replace(meanError=np.mean(result.meanError))
+    print_result(result)
+    for eliciter in res.keys():
+        plt.plot(result[3][eliciter]['question_count'],
+                 result[3][eliciter]['distance'], marker='x',
+                 label=eliciter)
+    plt.plot(0, result[2], marker='x', label='Random guess eliciter')
+    plt.title(f'Eliciter comparison. Number of cadidates={number},'
+              f'number of attributes={dimension}')
+    plt.xlabel('Number of questions')
+    plt.ylabel('Error')
+    plt.legend()
+    plt.savefig('plot.jpg')
+    # # box plot
+    error = []
+    question = []
+    # scatter cloud
+    plt.figure()
+    for eliciter in res.keys():
+        x = varLog[eliciter]['distance']
+        y = varLog[eliciter]['question_count']
+        error.append(x)
+        question.append(y)
+        plt.scatter(x, y, marker='o', alpha=0.2, label=eliciter)
+    plt.scatter(result.meanError, 0, marker='o', label='Random guess eliciter')
+    plt.title(f'{runs} runs that vary system attributes and user preferences'
+              f'\nNumber of cadidates={number},'
+              f'number of attributes={dimension}')
+    plt.ylabel('Number of questions')
+    plt.xlabel('Error')
+    plt.legend()
+    # plt.savefig('scatterCloud.jpg')
+    # box plot for error
+    plt.figure()
+    plt.boxplot(error, 0, '')
+    loc = range(1, len(eliciters)+1)
+    plt.xticks(loc, eliciters, fontsize=5.5)
+    plt.ylabel('Error')
+    plt.title('Box plot for errors')
+    # plt.savefig('errorBoxplt.jpg')
+    # box plot for # of questions
+    plt.figure()
+    plt.boxplot(question, 0, '')
+    loc = range(1, len(eliciters)+1)
+    plt.xticks(loc, eliciters, fontsize=5.5)
+    plt.ylabel('Number of questions')
+    plt.title('Box plot for number of questions')
+    # plt.savefig('q#Boxplt.jpg')
+    plt.show()
 
 
 if __name__ == "__main__":
