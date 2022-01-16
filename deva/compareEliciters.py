@@ -113,113 +113,6 @@ def print_result(result):
     print(print_str)
 
 
-def boxplot_2d(x, y, ax, whis=1.5):
-    xlimits = [np.percentile(x, q) for q in (25, 50, 75)]
-    ylimits = [np.percentile(y, q) for q in (25, 50, 75)]
-
-    # the box
-    box = Rectangle(
-        (xlimits[0], ylimits[0]),
-        (xlimits[2]-xlimits[0]),
-        (ylimits[2]-ylimits[0]),
-        ec='k',
-        zorder=0
-    )
-    ax.add_patch(box)
-
-    # the x median
-    vline = Line2D(
-        [xlimits[1], xlimits[1]], [ylimits[0], ylimits[2]],
-        color='k',
-        zorder=1
-    )
-    ax.add_line(vline)
-
-    # the y median
-    hline = Line2D(
-        [xlimits[0], xlimits[2]], [ylimits[1], ylimits[1]],
-        color='k',
-        zorder=1
-    )
-    ax.add_line(hline)
-
-    # the central point
-    ax.plot([xlimits[1]], [ylimits[1]], color='k', marker='o')
-
-    # the x-whisker
-    iqr = xlimits[2]-xlimits[0]
-
-    # left
-    left = np.min(x[x > xlimits[0]-whis*iqr])
-    whisker_line = Line2D(
-        [left, xlimits[0]], [ylimits[1], ylimits[1]],
-        color='k',
-        zorder=1
-    )
-    ax.add_line(whisker_line)
-    whisker_bar = Line2D(
-        [left, left], [ylimits[0], ylimits[2]],
-        color='k',
-        zorder=1
-    )
-    ax.add_line(whisker_bar)
-
-    # right
-    right = np.max(x[x < xlimits[2]+whis*iqr])
-    whisker_line = Line2D(
-        [right, xlimits[2]], [ylimits[1], ylimits[1]],
-        color='k',
-        zorder=1
-    )
-    ax.add_line(whisker_line)
-    whisker_bar = Line2D(
-        [right, right], [ylimits[0], ylimits[2]],
-        color='k',
-        zorder=1
-    )
-    ax.add_line(whisker_bar)
-
-    # the y-whisker
-    iqr = ylimits[2]-ylimits[0]
-
-    # bottom
-    bottom = np.min(y[y > ylimits[0]-whis*iqr])
-    whisker_line = Line2D(
-        [xlimits[1], xlimits[1]], [bottom, ylimits[0]],
-        color='k',
-        zorder=1
-    )
-    ax.add_line(whisker_line)
-    whisker_bar = Line2D(
-        [xlimits[0], xlimits[2]], [bottom, bottom],
-        color='k',
-        zorder=1
-    )
-    ax.add_line(whisker_bar)
-
-    # top
-    top = np.max(y[y < ylimits[2]+whis*iqr])
-    whisker_line = Line2D(
-        [xlimits[1], xlimits[1]], [top, ylimits[2]],
-        color='k',
-        zorder=1
-    )
-    ax.add_line(whisker_line)
-    whisker_bar = Line2D(
-        [xlimits[0], xlimits[2]], [top, top],
-        color='k',
-        zorder=1
-    )
-    ax.add_line(whisker_bar)
-
-    # outliers
-    mask = (x < left) | (x > right) | (y < bottom) | (y > top)
-    ax.scatter(
-        x[mask], y[mask],
-        facecolors='none', edgecolors='k'
-    )
-
-
 @click.command()
 @click.option('-e', '--eliciters', default=eliciters_map.keys(),
               multiple=True,
@@ -267,26 +160,40 @@ def compareEliciters(eliciters, number, dimension, runs):
     plt.legend()
     plt.savefig('plot.jpg')
     # # box plot
-    # fig, ax = plt.subplots()
-    # for eliciter in res.keys():
-    #     x = varLog[eliciter]['distance']
-    #     y = varLog[eliciter]['question_count']
-    #     if (len(set(x)) != 1) & (len(set(y)) != 1):
-    #         boxplot_2d(np.array(x), np.array(y), ax=ax, whis=1)
-    #     else:
-    #         ax.plot(x[0], y[0], label=eliciter)
-    # plt.savefig('test.jpg')
+    error = []
+    question = []
     # scatter cloud
     plt.figure()
     for eliciter in res.keys():
         x = varLog[eliciter]['distance']
         y = varLog[eliciter]['question_count']
+        error.append(x)
+        question.append(y)
         plt.scatter(x, y, marker='o', alpha=0.2, label=eliciter)
-    plt.title('Scatter cloud plot')
+    plt.scatter(result.meanError, 0, marker='o', label='Random guess eliciter')
+    plt.title(f'{runs} runs that vary system attributes and user preferences'
+              f'\nNumber of cadidates={number},'
+              f'number of attributes={dimension}')
     plt.ylabel('Number of questions')
     plt.xlabel('Error')
     plt.legend()
     plt.savefig('scatterCloud.jpg')
+    # box plot for error
+    plt.figure()
+    plt.boxplot(error, 0, '')
+    loc = range(1, len(eliciters)+1)
+    plt.xticks(loc, eliciters, fontsize=5.5)
+    plt.ylabel('Error')
+    plt.title('Box plot for errors')
+    plt.savefig('errorBoxplt.jpg')
+    # box plot for # of questions
+    plt.figure()
+    plt.boxplot(question, 0, '')
+    loc = range(1, len(eliciters)+1)
+    plt.xticks(loc, eliciters, fontsize=5.5)
+    plt.ylabel('Number of questions')
+    plt.title('Box plot for number of questions')
+    plt.savefig('q#Boxplt.jpg')
 
 
 if __name__ == "__main__":
