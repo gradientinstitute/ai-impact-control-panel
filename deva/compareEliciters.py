@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pylab as plt
 import click
-from matplotlib.patches import Rectangle
-from matplotlib.lines import Line2D
 from deva import elicit
 from collections import namedtuple
 
