@@ -175,7 +175,7 @@ def compareEliciters(eliciters, number, dimension, runs):
     plt.ylabel('Number of questions')
     plt.xlabel('Error')
     plt.legend()
-    #plt.savefig('scatterCloud.jpg')
+    # plt.savefig('scatterCloud.jpg')
     # box plot for error
     plt.figure()
     plt.boxplot(error, 0, '')
@@ -183,7 +183,7 @@ def compareEliciters(eliciters, number, dimension, runs):
     plt.xticks(loc, eliciters, fontsize=5.5)
     plt.ylabel('Error')
     plt.title('Box plot for errors')
-    #plt.savefig('errorBoxplt.jpg')
+    # plt.savefig('errorBoxplt.jpg')
     # box plot for # of questions
     plt.figure()
     plt.boxplot(question, 0, '')
@@ -191,7 +191,7 @@ def compareEliciters(eliciters, number, dimension, runs):
     plt.xticks(loc, eliciters, fontsize=5.5)
     plt.ylabel('Number of questions')
     plt.title('Box plot for number of questions')
-    #plt.savefig('q#Boxplt.jpg')
+    # plt.savefig('q#Boxplt.jpg')
     plt.show()
 
 
