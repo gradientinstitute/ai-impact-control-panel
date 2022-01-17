@@ -81,8 +81,8 @@ class LinearActive(BoundsEliciter):
         self.lr = LogisticRegression()  # Create a logistic regression instance
 
         # Initialise
-        X = [ref + radius]
-        y = [1]
+        X = [ref+radius, ref-radius]
+        y = [0, 1]
         for d in range(dims):
             v = ref + 0
             # these labels are virtual / allowed to go negative
@@ -92,36 +92,26 @@ class LinearActive(BoundsEliciter):
         self.X = X
         self.y = y
 
+        self.lr.fit(self.X, self.y)
+
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
         self._update()
 
     # input
     def observe(self, label):
-        # if ref+a is a no, ref-a is a yes
-        if label:
-            self.X.append(2.*self.ref-self.choice)
-        else:
-            self.X.append(self.choice)
+        self.X.append(self.choice)
         self.y.append(label)
 
-        # If there is more than one class
-        if 0 in self.y and 1 in self.y:
-            self.lr.fit(self.X, self.y)
+        self.lr.fit(self.X, self.y)
 
         self._update()
 
     def _update(self):
-        # linear discriminant analysis gives a decision plane normal
-        diff = np.array(self.X, dtype=float) - self.ref[None, :]
-        dcov = np.cov(diff.T)
-        dmean = diff.mean(axis=0)
-        w = np.linalg.solve(dcov, dmean)
-        w /= (w@w)**.5  # normalise
-        self.w = w
+        self.w = self.lr.coef_.ravel()
 
-        w_diff = abs(self.w - self.old_w)
-        self.sum_diff_w = sum(w_diff)
+        w_diff = np.abs(self.w - self.old_w)
+        self.sum_diff_w = np.sum(w_diff)
 
         if self.steps > 0:
             self.old_w = self.w.copy()
@@ -130,26 +120,19 @@ class LinearActive(BoundsEliciter):
         def random_choice():
             while True:
                 diff = np.random.randn(len(self.ref)) * self.radius
-                # diff -= w * (diff @ w) / (w @ w)  # make perpendicular
-                # diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
                 choice = self.ref + diff
                 if self.check_valid(choice):
                     break
             return choice
 
         # logistic regressor
-        if 0 in self.y and 1 in self.y:  # If logistic regression model exists
-            test_X = [random_choice() for _ in range(1000)]
+        test_X = [random_choice() for _ in range(1000)]
 
-            # finding the least confident candidate
-            probabilities = self.lr.predict_proba(test_X)[:, 1]
-            min_index = np.argmin(abs(probabilities - 0.5))
+        # finding the least confident candidate
+        probabilities = self.lr.predict_proba(test_X)[:, 1]
+        min_index = np.argmin(np.abs(probabilities - 0.5))
 
-            self.choice = test_X[min_index]
-
-        # if there is no logreg model, do random choice
-        else:
-            self.choice = random_choice()
+        self.choice = test_X[min_index]
 
         self.query = elicit.Candidate(
             fileio.autoname(self._step),
