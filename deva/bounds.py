@@ -83,12 +83,12 @@ class LinearActive(BoundsEliciter):
         # Initialise
         X = [ref+radius, ref-radius]
         y = [0, 1]
-        for d in range(dims):
-            v = ref + 0
-            # these labels are virtual / allowed to go negative
-            v[d] += radius[d]  # adding radius makes it better
-            X.append(v)
-            y.append(1)
+        # for d in range(dims):
+        #     v = ref + 0
+        #     # these labels are virtual / allowed to go negative
+        #     v[d] += radius[d]  # adding radius makes it better
+        #     X.append(v)
+        #     y.append(1)
         self.X = X
         self.y = y
 
@@ -158,20 +158,8 @@ class LinearActive(BoundsEliciter):
                 (self.sum_diff_w <= self.epsilon and
                  self._converge >= self.n_steps_converge))
 
-    def predict_prob(self, n_samples):
-        def random_choice(ref, n_samples):
-            rand = np.random.random_sample((n_samples, len(ref))) * 10
-            sign = np.random.choice([-1, 1])
-            choice = sign * rand + ref
-
-            return choice
-
-        if 0 in self.y and 1 in self.y:  # If logistic regression model exists
-            test_X = [random_choice() for _ in range(1000)]
-
-            # finding the least confident candidate
-            probabilities = self.lr.predict_proba(test_X)
-
+    def predict_prob(self, test_samp):        
+        probabilities = self.lr.predict_proba(test_samp)
         return probabilities
 
 
@@ -209,14 +197,24 @@ class LinearRandom(BoundsEliciter):
         self._step = 0
         self.steps = steps
 
+        # self.lr = LogisticRegression(fit_intercept=False)
+        self.lr = LogisticRegression()
+
         # Initialise
-        X = [ref+radius]
+        X = [ref+radius, ref-radius]
+        y = [0, 1]
         for d in range(dims):
             v = ref + 0
             # these labels are virtual / allowed to go negative
             v[d] += radius[d]  # adding radius makes it better
             X.append(v)
+            y.append(1)
         self.X = X
+        self.y = y
+
+        # self.lr.fit(self.X-ref, self.y)
+        self.lr.fit(self.X, self.y)
+
         self._update()
 
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
@@ -224,10 +222,12 @@ class LinearRandom(BoundsEliciter):
     # input
     def observe(self, label):
         # if ref+a is a no, ref-a is a yes
-        if label:
-            self.X.append(2.*self.ref-self.choice)
-        else:
-            self.X.append(self.choice)
+        self.X.append(self.choice)
+        self.y.append(label)
+
+        # self.lr.fit(self.X-self.ref, self.y)
+        self.lr.fit(self.X, self.y)
+
         self._update()
 
     def _update(self):
@@ -261,8 +261,15 @@ class LinearRandom(BoundsEliciter):
     def terminated(self):
         return self._step > self.steps
 
-    def predict_prob(self):
-        return super().predict_prob()
+    def predict_prob(self, test_samp):
+        # y = [oracle(x) for x in train_X]
+        # lr = LogisticRegression()
+        # y = 
+        # lr.fit(self.choice, y)
+        probabilities = self.lr.predict_proba(test_samp)
+
+        # probabilities = [0.5] * len(test_samp)
+        return probabilities
 
 
 class PlaneSampler(BoundsEliciter):
@@ -280,14 +287,21 @@ class PlaneSampler(BoundsEliciter):
         self._step = 0
         self.steps = steps
 
+        self.lr = LogisticRegression()
+
         # Initialise
-        X = [ref+radius]
+        X = [ref+radius, ref-radius]
+        y = [0, 1]
         for d in range(dims):
             v = ref + 0
             # these labels are virtual / allowed to go negative
             v[d] += radius[d]  # adding radius makes it better
             X.append(v)
+            y.append(1)
         self.X = X
+        self.y = y
+        self.lr.fit(self.X, self.y)
+
         self._update()
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
@@ -297,6 +311,9 @@ class PlaneSampler(BoundsEliciter):
             self.X.append(2.*self.ref-self.choice)
         else:
             self.X.append(self.choice)
+        self.y.append(0)
+        self.lr.fit(self.X, self.y)
+
         self._update()
 
     def _update(self):
@@ -332,6 +349,10 @@ class PlaneSampler(BoundsEliciter):
     @property
     def terminated(self):
         return self._step > self.steps
+
+    def predict_prob(self, test_samp):
+        probabilities = self.lr.predict_proba(test_samp)
+        return probabilities
 
 
 def tabulate(candidates, metrics):

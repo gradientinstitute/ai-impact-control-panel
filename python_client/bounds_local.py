@@ -98,21 +98,21 @@ def main():
     print("See sampling plot")
 
     # only shows the 3D plot for LinearActive Eliciter
-    # sampler = eliciters["LinearActive"]
-    # choices = eli_choices["LinearActive"]
+    sampler = eliciters["LinearActive"]
+    choices = eli_choices["LinearActive"]
 
-    # # Display 3D plot  -------------------------
-    # plt.figure(2)
-    # sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
-    #                 for a in attribs])
+    # Display 3D plot  -------------------------
+    plt.figure(2)
+    sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
+                    for a in attribs])
 
-    # plot3d.sample_trajectory(choices * sign, attribs)
-    # rad = plot3d.radius(choices)[:3]
-    # plot3d.weight_disc(
-    #     w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
-    # plot3d.weight_disc(
-    #     sampler.w[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
-    # plt.legend()
+    plot3d.sample_trajectory(choices * sign, attribs)
+    rad = plot3d.radius(choices)[:3]
+    plot3d.weight_disc(
+        w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
+    plot3d.weight_disc(
+        sampler.w[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
+    plt.legend()
     plt.show()
 
 
@@ -160,7 +160,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
             print("Choice: Oracle (REJECTED) candidate.\n\n")
 
         if step >= 10:
-            score = evaluation(choices, ref, n_samples, oracle)
+            score = evaluation(sampler, ref, n_samples, oracle)
             scores.append(score)
 
     # Display text results report
@@ -211,24 +211,13 @@ def compare_weights(w_true, est_w):
 #     return loss  # lower is better
 
 
-def evaluation(choices, ref, n_samples, oracle):
-    lr = LogisticRegression()
-
-    train_X = choices
-    train_y = [oracle(x) for x in train_X]
-
-    if 1 in train_y and 0 in train_y:
-        lr.fit(train_X, train_y)
-    else:
-        project_X = 2 * ref - choices  # mirror around ref
-        train_X.append(project_X[0])
-        train_y = [oracle(x) for x in train_X]
-        lr.fit(train_X, train_y)
-
+def evaluation(eliciter, ref, n_samples, oracle):
     # generate random testing data
     test_X = random_choice(ref, n_samples)
     test_y = [oracle(x) for x in test_X]  # y_true
-    probabilities = lr.predict_proba(test_X)  # y_pred
+
+    probabilities = eliciter.predict_prob(test_X)  # y_pred
+
     loss = log_loss(test_y, probabilities, labels=[True, False])
 
     return loss  # lower is better
