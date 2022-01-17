@@ -4,13 +4,14 @@ import 'rc-slider/assets/index.css';
 import axios from 'axios';
 import _ from "lodash";
 
+import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
 
 import { maxRangesState, currentCandidatesState, allCandidatesState,
-  currentSelectionState, blockedMetricState, isBlockedState, scrollbarHandleState, 
-  filterCandidates, getSliderStep, } from './ConstrainScrollbar';
+  currentSelectionState, isBlockedState, scrollbarHandleState, filterCandidates,
+  getSliderStep, bestValuesState, blockedMetricState, } from './ConstrainScrollbar';
 
 enum HandleColours {
   'white',  // default
@@ -99,7 +100,7 @@ function MultiRangeConstraint({}) {
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
     const u: any = x[1];
-    const lowerIsBetter = u.lowerIsBetter == false ? false : true;
+    const lowerIsBetter = u.lowerIsBetter === false ? false : true;
 
     const pane = (u.type === "qualitative") ? 
 
@@ -226,11 +227,12 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   const blockedMetric = useRecoilValue(blockedMetricState);
 
   const all = useRecoilValue(allCandidatesState);
+  const thresholdValues = useRecoilValue(bestValuesState);
   const val = constraints[uid][1];
 
   const isBlocked = useRecoilValue(isBlockedState);
   const blockString = (currentSelection === uid) && (isBlocked) ? "BLOCKED" : "";
-  
+    
   function onBeforeChange() {
     setCurrentSelection(uid);
   };
@@ -245,10 +247,23 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
-    
-    if (withNew.length > 0) {
-      setConstraints(n);
+
+    if (withNew.length ===  0) {
+      // if the constraints exceeds the threshold value 
+      // set to the threshold value
+      // find the threshold step to return
+      const stepSize = getSliderStep(decimals);
+      const stepsFromMin = Math.ceil((thresholdValues.get(uid) - min) / stepSize);
+      newVal = roundValue(
+        rvOperations.floor, 
+        (stepsFromMin * stepSize) + min, 
+        decimals
+      );
+      
+      n[uid]  = [n[uid][0], newVal];
     }
+
+    setConstraints(n);
   }
 
   const blockedScrollbar : any = useRecoilValue(scrollbarHandleState);

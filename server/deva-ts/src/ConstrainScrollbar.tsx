@@ -85,7 +85,7 @@ export const bestValuesState = selector({
     let currOptimal = new Map();
     currentCandidates.forEach((candidate) => {
       Object.entries(candidate).forEach(([metric, value]) => {
-        const currVal = value as number;
+        let currVal = value as number;
         let currOpt = currOptimal.get(metric);
         currOpt = (typeof currOpt == 'undefined') ? Number.MAX_SAFE_INTEGER : currOpt;
         currOptimal.set(metric, currVal < currOpt ? currVal : currOpt); 
@@ -181,7 +181,7 @@ export const isBlockedState = selector({
     
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
-    return (withNew.length == 0);
+    return (withNew.length === 0);
   }
 });
 
