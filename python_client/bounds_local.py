@@ -6,7 +6,7 @@ import plot3d
 from deva import interface, elicit, bounds
 from bounds_client import tabulate
 
-from sklearn.linear_model import LogisticRegression
+# from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 
 
@@ -186,29 +186,6 @@ def compare_weights(w_true, est_w):
     errors = np.abs(np.array(true_hat) - np.array(est_hat))
     error_sum = np.sum(errors, axis=1)
     return error_sum
-
-
-# def evaluation(choices, ref, n_samples, oracle):
-#     lr = LogisticRegression()
-
-#     train_X = choices
-#     train_y = [oracle(x) for x in train_X]
-
-#     if 1 in train_y and 0 in train_y:
-#         lr.fit(train_X, train_y)
-#     else:
-#         project_X = 2 * ref - choices
-#         train_X.append(project_X[0])
-#         train_y = [oracle(x) for x in train_X]
-#         lr.fit(train_X, train_y)
-
-#     # generate random testing data
-#     test_X = random_choice(ref, n_samples)
-#     test_y = [oracle(x) for x in test_X]  # y_true
-#     probabilities = lr.predict_proba(test_X)  # y_pred
-#     loss = log_loss(test_y, probabilities, labels=[True, False])
-
-#     return loss  # lower is better
 
 
 def evaluation(eliciter, ref, n_samples, oracle):
