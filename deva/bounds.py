@@ -66,7 +66,6 @@ class LinearActive(BoundsEliciter):
 
         self.ref = ref
         self.radius = radius
-        dims = len(ref)
         self._step = 0
         self.steps = steps
         self.epsilon = epsilon
@@ -80,12 +79,6 @@ class LinearActive(BoundsEliciter):
         # Initialise
         X = [ref+radius, ref-radius]
         y = [0, 1]
-        for d in range(dims):
-            v = ref + 0
-            # these labels are virtual / allowed to go negative
-            v[d] += radius[d]  # adding radius makes it better
-            X.append(v)
-            y.append(1)
         self.X = X
         self.y = y
 
