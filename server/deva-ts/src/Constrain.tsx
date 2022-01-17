@@ -11,12 +11,12 @@ import {Pane, paneState, scenarioState,
 
 import { maxRangesState, currentCandidatesState, allCandidatesState,
   currentSelectionState, isBlockedState, scrollbarHandleState, filterCandidates,
-  getSliderStep, bestValuesState, blockedMetricState, } from './ConstrainScrollbar';
+  getSliderStep, bestValuesState, blockedMetricState, 
+  potentialUnblockingCandidatesState } from './ConstrainScrollbar';
 
 enum HandleColours {
   'white',  // default
   'gray',   // blocked
-  'orange', // bounced
   'red',    // blocking
 }
 
@@ -300,6 +300,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   // const blockingState = {...blockedScrollbar}[uid];
 
   const buttonEnabled = ((currentSelection === uid) && (isBlocked)) || (blockedMetric === uid);
+  const wow = useRecoilValue(potentialUnblockingCandidatesState)
 
   return (
   <div>
@@ -308,6 +309,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     <Slider {...rangeProps} />
     <OptimalDirection lowerIsBetter={lowerIsBetter}/>
     <UnblockButton uid={uid} buttonDisabled={!buttonEnabled}/>
+    <p>{"Blocked :" + blockedMetric}</p>
   </div>
   );
 }

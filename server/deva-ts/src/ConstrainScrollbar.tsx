@@ -7,9 +7,7 @@ import { roundValue, rvOperations } from './Widgets';
 export enum blockingStates {
   'default',
   'blocked',
-  'willHelp',
-  'couldHelp',
-  'wontHelp',
+  'blocking',
 }
 
 export const currentSelectionState = atom({
@@ -32,14 +30,6 @@ export const allCandidatesState = atom({
   default: null, 
 });
 
-// Euclidean distance with scaled features for making scrollbar suggestions
-function weightedEucDistance(a, b, weight) {
-  return a
-    .map((x, i) => Math.abs(weight[i] * (x-b[i]))**2)
-    .reduce((sum, now) => sum + now)
-    ** (1/2);
-}
-
 // Heuristic for determining the precision of steps on the Slider 
 export function getSliderStep(decimals) {
   if (decimals == null) { 
@@ -47,20 +37,6 @@ export function getSliderStep(decimals) {
   }
   return Number((0.1 ** decimals).toFixed(decimals));
 }
-
-// // For metric scaling used in suggesting scrollbar blockers to adjust
-export const metricImportanceState = selector({
-  key: 'metricImportance',
-  get: ({get}) => {
-    const all = get(allCandidatesState);
-    const metadata = get(metadataState);
-    const importance = _.mapValues(metadata.metrics, (val, uid, _obj) => {
-      const tvals = all.map(x => x[uid]);
-      return 1 / std([...tvals]);
-    });    
-    return Object.values(importance);
-  }
-})
 
 // uses filterCandidates to give list of candidates
 // permissable by the currently selected ranges
@@ -101,41 +77,20 @@ export const potentialUnblockingCandidatesState = selector({
   get: ({get}) => {
     const all = get(allCandidatesState);
     const activeOptimal = get(bestValuesState);
-    const uid = get(currentSelectionState);
+    const uid = get(blockedMetricState);
   
     if (uid === null) {
       return [];
     }
 
-    let possibleCandidates = [];
-    Object.values(all).forEach((candidate) => {
-      if (candidate[uid] < activeOptimal.get(uid)) {
-        possibleCandidates.push(Object.values(candidate));
-      }
+    const potentialCandidates = all.map((candidate) => {
+      return candidate[uid] < activeOptimal.get(uid) ? candidate : null;
     });
-    return possibleCandidates;
+
+    return potentialCandidates.filter((x) => x != null);
   }
 });
 
-// Returns the least invasive candidate for scrollbar unblocking
-// this heuristic can be modified
-export const bestUnblockingCandidatesState = selector({
-  key: 'bestUnblockingCandidates',
-  get: ({get}) => {
-
-    const possibleCandidates = get(potentialUnblockingCandidatesState);
-    const metadata = get(metadataState);
-    const n = get(constraintsState);
-
-    const currPosition = _.mapValues(n, (val, key, _obj) => {
-      return val[1];
-    });
-    
-    const currentPositionVector = Array.from(Object.values(currPosition));
- 
-    return null;
-  }
-});
 
 // Stores the current 'state' of each scrollbar with the blocking status
 // {metric1: <value from blockingStates enum>, metric2: etc.}
@@ -149,15 +104,21 @@ export const scrollbarHandleState = selector({
     const constraints = get(constraintsState);
     const uidSelected = get(currentSelectionState);
     const isBlocked = get(isBlockedState);
+    const blockingMetrics = get(isBlocking);
+    console.log("blokcing", blockingMetrics);
     // colour test
     const state = _.mapValues(constraints, (cons, uid, _obj) => {
       // pick which constraint is changing
+      console.log(uid);
       let m = blockingStates.default;
       if (uidSelected === uid && isBlocked) { 
         m = blockingStates.blocked;
+      } else if (blockingMetrics.has(uid)) {
+        m = blockingStates.blocking;
       }
       return m;
     });
+    console.log("states", state);
     return state;
   }
 })
@@ -182,6 +143,33 @@ export const isBlockedState = selector({
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
     return (withNew.length === 0);
+  }
+});
+
+export const isBlocking = selector({
+  key: 'isBlocking',
+  get: ({get}) => {
+    const uidBlocked = get(blockedMetricState);
+    console.log("uid Blocked", uidBlocked);
+    const potentialCandidates = get(potentialUnblockingCandidatesState)
+    const blockingMetrics = new Set();
+    if (uidBlocked === null) {
+      return new Set("N");
+    }
+    const constraints = get(constraintsState);
+    console.log("potential candidates", potentialCandidates);
+    potentialCandidates.map(candidate => {
+      if (candidate[uidBlocked] < constraints[uidBlocked][1]) {
+        console.log(uidBlocked, candidate);
+        // candidate.forEach(([metric, val]) => {
+        //   console.log(uidBlocked, metric, val);
+        //   // if (candidate[metric] > constraints[metric][1]) {
+        //   //   blockingMetrics.add(uidBlocked);
+        //   // }
+        // })
+      }
+    });
+    return blockingMetrics;
   }
 });
 
