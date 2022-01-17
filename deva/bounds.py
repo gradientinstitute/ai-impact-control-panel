@@ -31,7 +31,6 @@ class BoundsEliciter:
         raise NotImplementedError
 
 
-# TODO: Add prob.
 class LinearActive(BoundsEliciter):
     """
     Eliciter using Logistics Regression
@@ -84,9 +83,8 @@ class LinearActive(BoundsEliciter):
 
         self.lr.fit(self.X, self.y)
 
-        self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
-
         self._update()
+        self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
     # input
     def observe(self, label):
@@ -98,25 +96,27 @@ class LinearActive(BoundsEliciter):
         self._update()
 
     def _update(self):
-        self.w = self.lr.coef_.ravel()
+        self.w = self.lr.coef_[0]
 
         w_diff = np.abs(self.w - self.old_w)
         self.sum_diff_w = np.sum(w_diff)
 
-        if self.steps > 0:
-            self.old_w = self.w.copy()
+        self.old_w = self.w.copy()
 
         # Helper function: make random candidate
-        def random_choice():
-            while True:
-                diff = np.random.randn(len(self.ref)) * self.radius
-                choice = self.ref + diff
-                if self.check_valid(choice):
-                    break
-            return choice
+        def random_choice(n):
+            choices = []
+            for _ in range(n):
+                while True:
+                    diff = np.random.randn(len(self.ref)) * self.radius
+                    choice = self.ref + diff
+                    choices.append(choice)
+                    if self.check_valid(choice):
+                        break
+            return choices
 
         # logistic regressor
-        test_X = [random_choice() for _ in range(1000)]
+        test_X = random_choice(1000)
 
         # finding the least confident candidate
         probabilities = self.lr.predict_proba(test_X)[:, 1]
@@ -179,39 +179,32 @@ class LinearRandom(BoundsEliciter):
 
         self.ref = ref
         self.radius = radius
-        dims = len(ref)
         self._step = 0
         self.steps = steps
 
+        self.lr = LogisticRegression()  # Create a logistic regression instance
+
         # Initialise
-        X = [ref+radius]
-        for d in range(dims):
-            v = ref + 0
-            # these labels are virtual / allowed to go negative
-            v[d] += radius[d]  # adding radius makes it better
-            X.append(v)
+        X = [ref+radius, ref-radius]
+        y = [0, 1]
         self.X = X
+        self.y = y
+        self.lr.fit(self.X, self.y)
+
         self._update()
 
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
-    # input
     def observe(self, label):
-        # if ref+a is a no, ref-a is a yes
-        if label:
-            self.X.append(2.*self.ref-self.choice)
-        else:
-            self.X.append(self.choice)
+        self.X.append(self.choice)
+        self.y.append(label)
+
+        self.lr.fit(self.X, self.y)
+
         self._update()
 
     def _update(self):
-        # linear discriminant analysis gives a decision plane normal
-        diff = np.array(self.X, dtype=float) - self.ref[None, :]
-        dcov = np.cov(diff.T)
-        dmean = diff.mean(axis=0)
-        # TODO: make logistic regressor
-        w = np.linalg.solve(dcov, dmean)
-        self.w = w
+        self.w = self.lr.coef_[0]
 
         while True:
             diff = np.random.randn(len(self.ref)) * self.radius
