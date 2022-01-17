@@ -100,7 +100,7 @@ function MultiRangeConstraint({}) {
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
     const u: any = x[1];
-    const lowerIsBetter = u.lowerIsBetter == false ? false : true;
+    const lowerIsBetter = u.lowerIsBetter === false ? false : true;
 
     const pane = (u.type === "qualitative") ? 
 
@@ -248,10 +248,10 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
 
-    if (withNew.length ==  0) {
+    if (withNew.length ===  0) {
       // if the constraints exceeds the threshold value 
       // set to the threshold value
-              // find the threshold step to return
+      // find the threshold step to return
       const stepSize = getSliderStep(decimals);
       const stepsFromMin = Math.ceil((thresholdValues.get(uid) - min) / stepSize);
       newVal = roundValue(

@@ -82,7 +82,6 @@ export const bestValuesState = selector({
   key: 'optimalMetricValues',
   get: ({get}) => {
     const currentCandidates = get(currentCandidatesState);
-    const metadata = get(metadataState);
     let currOptimal = new Map();
     currentCandidates.forEach((candidate) => {
       Object.entries(candidate).forEach(([metric, value]) => {
@@ -182,7 +181,7 @@ export const isBlockedState = selector({
     
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
-    return (withNew.length == 0);
+    return (withNew.length === 0);
   }
 });
 
