@@ -25,6 +25,9 @@ class BoundsEliciter:
         """Determine whether a query is valid."""
         # could be something like (choice < 0).any():
         return True  # placeholder
+    
+    def predict_prob(self, n_samples):
+        raise NotImplementedError
 
     @property
     def terminated(self):
@@ -172,6 +175,22 @@ class LinearActive(BoundsEliciter):
                 (self.sum_diff_w <= self.epsilon and
                  self._converge >= self.n_steps_converge))
 
+    def predict_prob(self, n_samples):
+        def random_choice(ref, n_samples):
+            rand = np.random.random_sample((n_samples, len(ref))) * 10
+            sign = np.random.choice([-1, 1])
+            choice = sign * rand + ref
+
+            return choice
+
+        if 0 in self.y and 1 in self.y:  # If logistic regression model exists
+            test_X = [random_choice() for _ in range(1000)]
+
+            # finding the least confident candidate
+            probabilities = self.lr.predict_proba(test_X)
+
+        return probabilities
+
 
 class LinearRandom(BoundsEliciter):
     """
@@ -258,6 +277,9 @@ class LinearRandom(BoundsEliciter):
     @property
     def terminated(self):
         return self._step > self.steps
+
+    def predict_prob(self):
+        return super().predict_prob()
 
 
 class PlaneSampler(BoundsEliciter):
