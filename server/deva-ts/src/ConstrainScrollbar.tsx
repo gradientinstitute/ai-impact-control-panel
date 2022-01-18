@@ -7,7 +7,41 @@ export enum blockingStates {
   'default',
   'blocked',
   'blocking',
+  'resolvedBlock',
+  'currentlySelected',
+  'blockedMetric'
 }
+
+export const blockedStatusState = selector({
+  key: 'blockedStatusState',
+  get: ({get}) => {
+    const constraints = get(constraintsState);
+    const uidSelected = get(currentSelectionState);
+    const isBlocked = get(isBlockedState);
+    const blockingMetrics = get(isBlocking);
+    const blockedMetric = get(blockedMetricState);
+    const resolvedBlock = get(resolvedBlockedState);
+
+    const state = _.mapValues(constraints, (cons, uid, _obj) => {
+      // pick which constraint is changing
+      let status = blockingStates.default;
+      if (blockedMetric === uid && !resolvedBlock) {
+        status = blockingStates.blockedMetric;
+      } else if (blockedMetric === uid && resolvedBlock) {
+        status = blockingStates.resolvedBlock;
+      } else if (blockingMetrics.has(uid) && !resolvedBlock) {
+        status = blockingStates.blocking;
+      } else if (uidSelected === uid && isBlocked) {
+        status = blockingStates.blocked;
+      } else if (uidSelected === uid) {
+        status = blockingStates.currentlySelected;
+      } 
+      return status;
+    });
+    return state;
+  }
+})
+
 
 export const currentSelectionState = atom({
   key: 'currentSelection',
@@ -90,40 +124,6 @@ export const potentialUnblockingCandidatesState = selector({
   }
 });
 
-
-// Stores the current 'state' of each scrollbar with the blocking status
-// {metric1: <value from blockingStates enum>, metric2: etc.}
-// const scrollbarHandleState = atom({
-//   key: 'scrollbarHandleState',
-//   default: null,
-// });
-export const scrollbarHandleState = selector({
-  key: 'scrollbarHandleState',
-  get: ({get}) => {
-    const constraints = get(constraintsState);
-    const uidSelected = get(currentSelectionState);
-    const isBlocked = get(isBlockedState);
-    const blockingMetrics = get(isBlocking);
-    const blockedMetric = get(blockedMetricState);
-    const resolvedBlock = get(resolvedBlockedState);
-    // colour test
-
-    const state = _.mapValues(constraints, (cons, uid, _obj) => {
-      // pick which constraint is changing
-      let m = blockingStates.default;
-      if (blockedMetric === uid && !resolvedBlock) {
-        m = blockingStates.blocked;
-      } else if (blockingMetrics.has(uid) && !resolvedBlock) {
-        m = blockingStates.blocking;
-      } else if (uidSelected === uid && isBlocked) {
-        m = blockingStates.blocked;
-      }
-      return m;
-    });
-    return state;
-  }
-})
-
 // returns whether or not the blocked metric has been unblocked
 export const resolvedBlockedState = selector({
   key: 'resolvedBlocked',
@@ -142,6 +142,10 @@ export const resolvedBlockedState = selector({
     const curr = constraints[uid][1];
     const newVal = curr - step;
 
+    if (newVal < metadata.metrics[uid].min) {
+      return true;
+    }
+    
     n[uid]  = [n[uid][0], newVal];
 
     // check how many candidates are left
@@ -167,7 +171,7 @@ export const isBlockedState = selector({
     let n = {...constraints};
     const curr = constraints[uid][1];
     const newVal = curr - step;
-    
+
     if (newVal < metadata.metrics[uid].min) {
       return false;
     }
