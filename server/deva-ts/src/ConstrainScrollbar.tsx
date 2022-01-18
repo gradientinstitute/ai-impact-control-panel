@@ -113,11 +113,11 @@ export const scrollbarHandleState = selector({
       let m = blockingStates.default;
       if (blockedMetric === uid && !resolvedBlock) {
         m = blockingStates.blocked;
-      } else if (uidSelected === uid && isBlocked) {
-        m = blockingStates.blocked;
       } else if (blockingMetrics.has(uid) && !resolvedBlock) {
         m = blockingStates.blocking;
-      } 
+      } else if (uidSelected === uid && isBlocked) {
+        m = blockingStates.blocked;
+      }
       return m;
     });
     return state;
@@ -141,8 +141,9 @@ export const resolvedBlockedState = selector({
     let n = {...constraints};
     const curr = constraints[uid][1];
     const newVal = curr - step;
+
     n[uid]  = [n[uid][0], newVal];
-    
+
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
     return !(withNew.length === 0);
@@ -158,6 +159,7 @@ export const isBlockedState = selector({
     if (uid === null) {
       return false;
     }
+
     const constraints = get(constraintsState);
     const all = get(allCandidatesState);
     const step = getSliderStep(metadata.metrics[uid].displayDecimals);
@@ -165,6 +167,11 @@ export const isBlockedState = selector({
     let n = {...constraints};
     const curr = constraints[uid][1];
     const newVal = curr - step;
+    
+    if (newVal < metadata.metrics[uid].min) {
+      return false;
+    }
+
     n[uid]  = [n[uid][0], newVal];
     
     // check how many candidates are left
