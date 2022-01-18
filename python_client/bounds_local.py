@@ -9,6 +9,8 @@ from bounds_client import tabulate
 # from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 
+import math
+
 
 def main():
     np.random.seed(42)
@@ -34,7 +36,7 @@ def main():
     eli_errors = {}  # storing the error rate for each eliciter
 
     n_iter = 0
-    max_iter = 5
+    max_iter = 2
     # A loop to reduce variance due to initial conditions
     while n_iter < max_iter:
         # Test whether the sampler can elicit this oracle's preference
@@ -54,11 +56,31 @@ def main():
         def oracle(q):
             return ((q - ref) @ w_true < 0)
 
+        # TODO: Create a non-linear oracle function
+        r = 5  # radius
+        center = ref / 2
+
+        def distance(a, center):
+            # if np.array(a).shape == 1:
+            if a.ndim == 1:
+                d = math.sqrt((a[0] - center[0]) ** 2 +
+                              (a[1] - center[1]) ** 2 +
+                              (a[2] - center[2]) ** 2)
+                return d
+            else:
+                return [distance(i, center) for i in a]
+
+        def new_oracle(q):
+            if q.ndim == 1:
+                return (distance(q, center) <= r)
+            else:
+                return (np.array(distance(q, center)) <= r)
+
         for eliciter in eliciters:
             samp_name = eliciter
             print(f'You are using {samp_name} Eliciter\n')
             outputs = run_bounds_eliciter(eliciters[eliciter], metrics, table,
-                                          baseline, w_true, oracle, ref,
+                                          baseline, w_true, new_oracle, ref,
                                           n_samples=100)
             (sample_choices, est_w, scores) = outputs
 
