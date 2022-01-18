@@ -134,39 +134,29 @@ def main():
         else:
             reject.append(choices[i])
 
-    # fig, (ax1, ax2, ax3) = plt.subplots(1,3)
-    # fig.suptitle("REPLACE")
-    # axs = (ax1, ax2, ax3)
-    
-    x = np.array(accept)[:,0]
-    y = np.array(accept)[:,1]
-    z = np.array(accept)[:,2]
+    x = np.array(accept)[:, 0]
+    y = np.array(accept)[:, 1]
+    z = np.array(accept)[:, 2]
     accepts = [x, y, z]
 
-    a = np.array(reject)[:,0]
-    b = np.array(reject)[:,1]
-    c = np.array(reject)[:,2]
+    a = np.array(reject)[:, 0]
+    b = np.array(reject)[:, 1]
+    c = np.array(reject)[:, 2]
     rejects = [a, b, c]
-
-    # n = 0
-    # for (i, j) in combinations([0, 1, 2], 2):
-    #     axs[n].scatter(accepts[i], accepts[j])
-    #     axs[n].scatter(rejects[i], rejects[j])
-    #     # axs[n].set_title(n)
-    #     n += 1
 
     n = 3
     for (i, j) in combinations([0, 1, 2], 2):
         plt.figure(n)
 
-        plt.scatter(accepts[i], accepts[j], color = 'g', marker = 'o', label="accept")
-        plt.scatter(rejects[i], rejects[j], color = 'r', marker = 'x', label="reject")
+        plt.scatter(accepts[i], accepts[j], color='g',
+                    marker='o', label="accept")
+        plt.scatter(rejects[i], rejects[j], color='r',
+                    marker='x', label="reject")
         plt.xlabel(attribs[i])
         plt.ylabel(attribs[j])
 
         plt.legend()
         n += 1
-
 
     # Display 3D plot  -------------------------
     plt.figure(2)
@@ -193,8 +183,6 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
     scores = []  # log_loss for each step
     step = 0
 
-    choices_with_label = []  # (choice, label)
-
     # For display purposes
     ref_candidate = elicit.Candidate("Baseline", baseline, None)
 
@@ -220,8 +208,6 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
             # Answer automatically
             label = oracle(sampler.choice)
             sampler.observe(label)
-
-            # TODO: save label
 
         else:
             # Answer based on user's input
@@ -250,7 +236,6 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
     print(f"Candidates labeled with {acc:.0%} accuracy.")
 
     return (choices, np.array(est_weights), scores)
-    # TODO return labels
 
 
 def compare_weights(w_true, est_w):
