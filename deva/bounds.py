@@ -26,6 +26,9 @@ class BoundsEliciter:
         # could be something like (choice < 0).any():
         return True  # placeholder
 
+    def predict_prob(self, n_samples):
+        raise NotImplementedError
+
     @property
     def terminated(self):
         raise NotImplementedError
@@ -65,7 +68,6 @@ class LinearActive(BoundsEliciter):
 
         self.ref = ref
         self.radius = radius
-        dims = len(ref)
         self._step = 0
         self.steps = steps
         self.epsilon = epsilon
@@ -77,77 +79,53 @@ class LinearActive(BoundsEliciter):
         self.lr = LogisticRegression()  # Create a logistic regression instance
 
         # Initialise
-        X = [ref + radius]
-        y = [1]
-        for d in range(dims):
-            v = ref + 0
-            # these labels are virtual / allowed to go negative
-            v[d] += radius[d]  # adding radius makes it better
-            X.append(v)
-            y.append(1)
+        X = [ref+radius, ref-radius]
+        y = [0, 1]
         self.X = X
         self.y = y
 
-        self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
+        self.lr.fit(self.X, self.y)
 
         self._update()
+        self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
     # input
     def observe(self, label):
-        # if ref+a is a no, ref-a is a yes
-        if label:
-            self.X.append(2.*self.ref-self.choice)
-        else:
-            self.X.append(self.choice)
+        self.X.append(self.choice)
         self.y.append(label)
 
-        # If there is more than one class
-        if 0 in self.y:
-            self.lr.fit(self.X, self.y)
+        self.lr.fit(self.X, self.y)
 
         self._update()
 
     def _update(self):
-        # linear discriminant analysis gives a decision plane normal
-        diff = np.array(self.X, dtype=float) - self.ref[None, :]
-        dcov = np.cov(diff.T)
-        dmean = diff.mean(axis=0)
-        w = np.linalg.solve(dcov, dmean)
-        w /= (w@w)**.5  # normalise
-        self.w = w
+        self.w = self.lr.coef_[0]
 
-        w_diff = abs(self.w - self.old_w)
-        self.sum_diff_w = sum(w_diff)
+        w_diff = np.abs(self.w - self.old_w)
+        self.sum_diff_w = np.sum(w_diff)
 
-        if self.steps > 0:
-            self.old_w = self.w.copy()
-
-        # dims = len(self.ref)
+        self.old_w = self.w.copy()
 
         # Helper function: make random candidate
-        def random_choice():
-            while True:
-                diff = np.random.randn(len(self.ref)) * self.radius
-                diff -= w * (diff @ w) / (w @ w)  # make perpendicular
-                diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
-                choice = self.ref + diff
-                if self.check_valid(choice):
-                    break
-            return choice
+        def random_choice(n):
+            choices = []
+            for _ in range(n):
+                while True:
+                    diff = np.random.randn(len(self.ref)) * self.radius
+                    choice = self.ref + diff
+                    choices.append(choice)
+                    if self.check_valid(choice):
+                        break
+            return choices
 
         # logistic regressor
-        if 0 in self.y:  # If a logistic regression model exists
-            test_X = [random_choice() for i in range(1000)]
+        test_X = random_choice(1000)
 
-            # finding the least confident candidate
-            probabilities = self.lr.predict_proba(test_X)[:, 1]
-            min_index = np.argmin(abs(probabilities - 0.5))
+        # finding the least confident candidate
+        probabilities = self.lr.predict_proba(test_X)[:, 1]
+        min_index = np.argmin(np.abs(probabilities - 0.5))
 
-            self.choice = test_X[min_index]
-
-        # if there is no logreg model, do random choice
-        else:
-            self.choice = random_choice()
+        self.choice = test_X[min_index]
 
         self.query = elicit.Candidate(
             fileio.autoname(self._step),
@@ -172,6 +150,10 @@ class LinearActive(BoundsEliciter):
         return (self._step > self.steps or
                 (self.sum_diff_w <= self.epsilon and
                  self._converge >= self.n_steps_converge))
+
+    def predict_prob(self, test_samp):
+        probabilities = self.lr.predict_proba(test_samp)
+        return probabilities
 
 
 class LinearRandom(BoundsEliciter):
@@ -204,40 +186,32 @@ class LinearRandom(BoundsEliciter):
 
         self.ref = ref
         self.radius = radius
-        dims = len(ref)
         self._step = 0
         self.steps = steps
 
+        self.lr = LogisticRegression()  # Create a logistic regression instance
+
         # Initialise
-        X = [ref+radius]
-        for d in range(dims):
-            v = ref + 0
-            # these labels are virtual / allowed to go negative
-            v[d] += radius[d]  # adding radius makes it better
-            X.append(v)
+        X = [ref+radius, ref-radius]
+        y = [0, 1]
         self.X = X
+        self.y = y
+        self.lr.fit(self.X, self.y)
+
         self._update()
 
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
-    # input
     def observe(self, label):
-        # if ref+a is a no, ref-a is a yes
-        if label:
-            self.X.append(2.*self.ref-self.choice)
-        else:
-            self.X.append(self.choice)
+        self.X.append(self.choice)
+        self.y.append(label)
+
+        self.lr.fit(self.X, self.y)
+
         self._update()
 
     def _update(self):
-        # linear discriminant analysis gives a decision plane normal
-        diff = np.array(self.X, dtype=float) - self.ref[None, :]
-        dcov = np.cov(diff.T)
-        dmean = diff.mean(axis=0)
-        w = np.linalg.solve(dcov, dmean)
-        self.w = w
-
-        # dims = len(self.ref)
+        self.w = self.lr.coef_[0]
 
         while True:
             diff = np.random.randn(len(self.ref)) * self.radius
@@ -260,6 +234,11 @@ class LinearRandom(BoundsEliciter):
     @property
     def terminated(self):
         return self._step > self.steps
+
+    def predict_prob(self, test_samp):
+        probabilities = self.lr.predict_proba(test_samp)
+
+        return probabilities
 
 
 class PlaneSampler(BoundsEliciter):
@@ -329,6 +308,10 @@ class PlaneSampler(BoundsEliciter):
     @property
     def terminated(self):
         return self._step > self.steps
+
+    def predict_prob(self, test_samp):
+        probabilities = [0.5] * len(test_samp)
+        return probabilities
 
 
 def tabulate(candidates, metrics):
