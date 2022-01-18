@@ -134,10 +134,9 @@ def main():
         else:
             reject.append(choices[i])
 
-    plt.figure(3)
-
-    fig, (ax1, ax2, ax3) = plt.subplots(1,3)
-    axs = [ax1, ax2, ax3]
+    # fig, (ax1, ax2, ax3) = plt.subplots(1,3)
+    # fig.suptitle("REPLACE")
+    # axs = (ax1, ax2, ax3)
     
     x = np.array(accept)[:,0]
     y = np.array(accept)[:,1]
@@ -149,20 +148,25 @@ def main():
     c = np.array(reject)[:,2]
     rejects = [a, b, c]
 
+    # n = 0
+    # for (i, j) in combinations([0, 1, 2], 2):
+    #     axs[n].scatter(accepts[i], accepts[j])
+    #     axs[n].scatter(rejects[i], rejects[j])
+    #     # axs[n].set_title(n)
+    #     n += 1
+
+    n = 3
     for (i, j) in combinations([0, 1, 2], 2):
-        n = 0
-        axs[n].scatter(accepts[i], accepts[j])
-        axs[n].scatter(rejects[i], rejects[j])
-        axs[n].set_title(attribs[i])
-        axs[n].set_title(attribs[j])
+        plt.figure(n)
+
+        plt.scatter(accepts[i], accepts[j], color = 'g', marker = 'o', label="accept")
+        plt.scatter(rejects[i], rejects[j], color = 'r', marker = 'x', label="reject")
+        plt.xlabel(attribs[i])
+        plt.ylabel(attribs[j])
+
+        plt.legend()
         n += 1
 
-    # plt.scatter(x, y, color = 'g', marker = 'o', label="accept")
-    # plt.scatter(a, b, color = 'r', marker = 'x', label="reject")
-
-    # plt.xlabel(attribs[0])
-    # plt.ylabel(attribs[1])
-    plt.legend()
 
     # Display 3D plot  -------------------------
     plt.figure(2)
