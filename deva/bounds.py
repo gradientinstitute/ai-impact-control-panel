@@ -34,7 +34,6 @@ class BoundsEliciter:
         raise NotImplementedError
 
 
-# TODO: Add prob.
 class LinearActive(BoundsEliciter):
     """
     Eliciter using Logistics Regression

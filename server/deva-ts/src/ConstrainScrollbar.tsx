@@ -17,6 +17,13 @@ export const currentSelectionState = atom({
   default: null,
 });
 
+// Metric to unblock as selected by the user
+// Suggestions for unblocking are made relative to this metric 
+export const blockedMetricState = atom({
+  key: 'blockedMetric',
+  default: null,
+});
+
 // info from the ranges API containing
 // array containing all of the candidates
 // [{metric1: value1, metric2: value1}, {metric1: value3, metric2:value4}]
@@ -78,7 +85,7 @@ export const bestValuesState = selector({
     let currOptimal = new Map();
     currentCandidates.forEach((candidate) => {
       Object.entries(candidate).forEach(([metric, value]) => {
-        const currVal = value as number;
+        let currVal = value as number;
         let currOpt = currOptimal.get(metric);
         currOpt = (typeof currOpt == 'undefined') ? Number.MAX_SAFE_INTEGER : currOpt;
         currOptimal.set(metric, currVal < currOpt ? currVal : currOpt); 
@@ -146,9 +153,9 @@ export const scrollbarHandleState = selector({
     const state = _.mapValues(constraints, (cons, uid, _obj) => {
       // pick which constraint is changing
       let m = blockingStates.default;
-      if ((uidSelected === uid) && isBlocked) {
+      if (uidSelected === uid && isBlocked) { 
         m = blockingStates.blocked;
-      } 
+      }
       return m;
     });
     return state;
@@ -174,7 +181,7 @@ export const isBlockedState = selector({
     
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
-    return (withNew.length == 0);
+    return (withNew.length === 0);
   }
 });
 
