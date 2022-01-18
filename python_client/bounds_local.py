@@ -44,8 +44,8 @@ def main():
             "PlaneSampler": bounds.PlaneSampler(ref, table, attribs, steps=50),
             "LinearRandom": bounds.LinearRandom(ref, table, attribs, steps=50),
             "LinearActive": bounds.LinearActive(ref, table, attribs, steps=50,
-                                                epsilon=0.05,
-                                                n_steps_converge=5)
+                                                epsilon=0.00,
+                                                n_steps_converge=5)  # TODO
         }
 
         # Create a hidden "ground truth" oracle function
@@ -56,12 +56,11 @@ def main():
         def oracle(q):
             return ((q - ref) @ w_true < 0)
 
-        # TODO: Create a non-linear oracle function
+        # Create a non-linear oracle function
         r = 5  # radius
-        center = ref / 2
+        center = ref  # TODO
 
         def distance(a, center):
-            # if np.array(a).shape == 1:
             if a.ndim == 1:
                 d = math.sqrt((a[0] - center[0]) ** 2 +
                               (a[1] - center[1]) ** 2 +
@@ -70,7 +69,7 @@ def main():
             else:
                 return [distance(i, center) for i in a]
 
-        def new_oracle(q):
+        def nl_oracle(q):
             if q.ndim == 1:
                 return (distance(q, center) <= r)
             else:
@@ -80,7 +79,7 @@ def main():
             samp_name = eliciter
             print(f'You are using {samp_name} Eliciter\n')
             outputs = run_bounds_eliciter(eliciters[eliciter], metrics, table,
-                                          baseline, w_true, new_oracle, ref,
+                                          baseline, w_true, nl_oracle, ref,
                                           n_samples=100)
             (sample_choices, est_w, scores) = outputs
 
@@ -123,6 +122,31 @@ def main():
     sampler = eliciters["LinearActive"]
     choices = eli_choices["LinearActive"]
 
+    # Display 2D plot for nl_oracle ------------
+    labels = nl_oracle(np.array(choices))
+    accept = []
+    reject = []
+
+    for i in range(len(labels)):
+        if labels[i]:
+            accept.append(choices[i])
+        else:
+            reject.append(choices[i])
+
+    plt.figure(3)
+    
+    x = np.array(accept)[:,0]
+    y = np.array(accept)[:,1]
+    z = np.array(accept)[:,2]
+    plt.scatter(x,y, label="accept")
+
+    a = np.array(reject)[:,0]
+    b = np.array(reject)[:,1]
+    c = np.array(reject)[:,2]
+    plt.scatter(a,b, label="reject")
+
+    plt.legend()
+
     # Display 3D plot  -------------------------
     plt.figure(2)
     sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
@@ -148,6 +172,8 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
     scores = []  # log_loss for each step
     step = 0
 
+    choices_with_label = []  # (choice, label)
+
     # For display purposes
     ref_candidate = elicit.Candidate("Baseline", baseline, None)
 
@@ -161,6 +187,8 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
     while not sampler.terminated:
         step += 1
 
+        # TODO: only asking "Would you accept system_X?"
+
         # Display the choice between this and the reference
         interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
         choices.append(sampler.choice)
@@ -171,6 +199,9 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
             # Answer automatically
             label = oracle(sampler.choice)
             sampler.observe(label)
+
+            # TODO: save label
+
         else:
             # Answer based on user's input
             label = input().lower() not in base
@@ -198,6 +229,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
     print(f"Candidates labeled with {acc:.0%} accuracy.")
 
     return (choices, np.array(est_weights), scores)
+    # TODO return labels
 
 
 def compare_weights(w_true, est_w):
