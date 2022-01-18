@@ -26,6 +26,9 @@ class BoundsEliciter:
         # could be something like (choice < 0).any():
         return True  # placeholder
 
+    def predict_prob(self, n_samples):
+        raise NotImplementedError
+
     @property
     def terminated(self):
         raise NotImplementedError
@@ -148,6 +151,10 @@ class LinearActive(BoundsEliciter):
                 (self.sum_diff_w <= self.epsilon and
                  self._converge >= self.n_steps_converge))
 
+    def predict_prob(self, test_samp):
+        probabilities = self.lr.predict_proba(test_samp)
+        return probabilities
+
 
 class LinearRandom(BoundsEliciter):
     """
@@ -228,6 +235,11 @@ class LinearRandom(BoundsEliciter):
     def terminated(self):
         return self._step > self.steps
 
+    def predict_prob(self, test_samp):
+        probabilities = self.lr.predict_proba(test_samp)
+
+        return probabilities
+
 
 class PlaneSampler(BoundsEliciter):
     """Example of a basic sampler that elicits a boundary hyperplane."""
@@ -296,6 +308,10 @@ class PlaneSampler(BoundsEliciter):
     @property
     def terminated(self):
         return self._step > self.steps
+
+    def predict_prob(self, test_samp):
+        probabilities = [0.5] * len(test_samp)
+        return probabilities
 
 
 def tabulate(candidates, metrics):
