@@ -10,6 +10,7 @@ from bounds_client import tabulate
 from sklearn.metrics import log_loss
 
 import math
+from itertools import combinations
 
 
 def main():
@@ -134,17 +135,33 @@ def main():
             reject.append(choices[i])
 
     plt.figure(3)
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1,3)
+    axs = [ax1, ax2, ax3]
     
     x = np.array(accept)[:,0]
     y = np.array(accept)[:,1]
     z = np.array(accept)[:,2]
-    plt.scatter(x,y, label="accept")
+    accepts = [x, y, z]
 
     a = np.array(reject)[:,0]
     b = np.array(reject)[:,1]
     c = np.array(reject)[:,2]
-    plt.scatter(a,b, label="reject")
+    rejects = [a, b, c]
 
+    for (i, j) in combinations([0, 1, 2], 2):
+        n = 0
+        axs[n].scatter(accepts[i], accepts[j])
+        axs[n].scatter(rejects[i], rejects[j])
+        axs[n].set_title(attribs[i])
+        axs[n].set_title(attribs[j])
+        n += 1
+
+    # plt.scatter(x, y, color = 'g', marker = 'o', label="accept")
+    # plt.scatter(a, b, color = 'r', marker = 'x', label="reject")
+
+    # plt.xlabel(attribs[0])
+    # plt.ylabel(attribs[1])
     plt.legend()
 
     # Display 3D plot  -------------------------
