@@ -1,5 +1,4 @@
 import { atom, selector } from 'recoil';
-import { std } from 'mathjs';
 import { metadataState, constraintsState } from './Base';
 import _ from "lodash";
 import { roundValue, rvOperations } from './Widgets';
@@ -105,24 +104,52 @@ export const scrollbarHandleState = selector({
     const uidSelected = get(currentSelectionState);
     const isBlocked = get(isBlockedState);
     const blockingMetrics = get(isBlocking);
-    console.log("blokcing", blockingMetrics);
+    const blockedMetric = get(blockedMetricState);
+    const resolvedBlock = get(resolvedBlockedState);
     // colour test
+
     const state = _.mapValues(constraints, (cons, uid, _obj) => {
       // pick which constraint is changing
-      console.log(uid);
       let m = blockingStates.default;
-      if (uidSelected === uid && isBlocked) { 
+      if (blockedMetric === uid && !resolvedBlock) {
         m = blockingStates.blocked;
-      } else if (blockingMetrics.has(uid)) {
+      } else if (uidSelected === uid && isBlocked) {
+        m = blockingStates.blocked;
+      } else if (blockingMetrics.has(uid) && !resolvedBlock) {
         m = blockingStates.blocking;
-      }
+      } 
       return m;
     });
-    console.log("states", state);
     return state;
   }
 })
 
+// returns whether or not the blocked metric has been unblocked
+export const resolvedBlockedState = selector({
+  key: 'resolvedBlocked',
+  get: ({get}) => {
+    const metadata = get(metadataState);
+
+    let uid = get(blockedMetricState);
+    if (uid === null) {
+      return true;
+    }
+    const constraints = get(constraintsState);
+    const all = get(allCandidatesState);
+    const step = getSliderStep(metadata.metrics[uid].displayDecimals);
+
+    let n = {...constraints};
+    const curr = constraints[uid][1];
+    const newVal = curr - step;
+    n[uid]  = [n[uid][0], newVal];
+    
+    // check how many candidates are left
+    const withNew = filterCandidates(all, n);
+    return !(withNew.length === 0);
+  }
+});
+
+// returns whether or not the currently selected metric is blocked
 export const isBlockedState = selector({
   key: 'isBlockedState',
   get: ({get}) => {
@@ -150,25 +177,27 @@ export const isBlocking = selector({
   key: 'isBlocking',
   get: ({get}) => {
     const uidBlocked = get(blockedMetricState);
-    console.log("uid Blocked", uidBlocked);
-    const potentialCandidates = get(potentialUnblockingCandidatesState)
-    const blockingMetrics = new Set();
-    if (uidBlocked === null) {
-      return new Set("N");
-    }
     const constraints = get(constraintsState);
-    console.log("potential candidates", potentialCandidates);
-    potentialCandidates.map(candidate => {
-      if (candidate[uidBlocked] < constraints[uidBlocked][1]) {
-        console.log(uidBlocked, candidate);
-        // candidate.forEach(([metric, val]) => {
-        //   console.log(uidBlocked, metric, val);
-        //   // if (candidate[metric] > constraints[metric][1]) {
-        //   //   blockingMetrics.add(uidBlocked);
-        //   // }
-        // })
-      }
-    });
+    const potentialCandidates = get(potentialUnblockingCandidatesState);
+    
+    const blockingMetrics = new Set();
+
+    if (uidBlocked === null) {
+      return blockingMetrics;
+    }
+
+    // filter for candidates where the blocked metric can be improved, then
+    // determine which other metrics need to be adjusted for change to happen
+    potentialCandidates
+      .filter(candidate => candidate[uidBlocked] < constraints[uidBlocked][1])
+      .forEach(candidate => {
+        (Object.keys(candidate)).forEach(metric => {
+          if (candidate[metric] > constraints[metric][1]) {
+            blockingMetrics.add(metric);
+          }
+        });
+      });
+
     return blockingMetrics;
   }
 });

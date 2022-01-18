@@ -6,12 +6,13 @@ import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useRecoilValue } from 'recoil';
-import {Pane, paneState, scenarioState, 
+import { Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
 
-import { maxRangesState, currentCandidatesState, allCandidatesState,
-  currentSelectionState, isBlockedState, scrollbarHandleState, filterCandidates,
-  getSliderStep, bestValuesState, blockedMetricState, 
+import { 
+  allCandidatesState, maxRangesState, currentCandidatesState,filterCandidates, 
+  getSliderStep, bestValuesState, scrollbarHandleState, currentSelectionState,
+  blockedMetricState, isBlockedState, resolvedBlockedState, 
   potentialUnblockingCandidatesState } from './ConstrainScrollbar';
 
 enum HandleColours {
@@ -19,6 +20,28 @@ enum HandleColours {
   'gray',   // blocked
   'red',    // blocking
 }
+
+function GetBackgroundColor(uid) {
+    
+  enum BackgroundColours {
+    default = 'bg-gray-600',
+    blocked = 'bg-yellow-800', 
+    currentlySelected = 'bg-gray-700',
+  }
+
+  const currentSelection = useRecoilValue(currentSelectionState);
+  const blockedMetric = useRecoilValue(blockedMetricState);
+  const resolvedBlock = useRecoilValue(resolvedBlockedState);
+
+  let backgroundColor = BackgroundColours.default;
+  if (blockedMetric === uid && !resolvedBlock) {
+    backgroundColor = BackgroundColours.blocked;
+  } else if (currentSelection === uid) {
+    backgroundColor = BackgroundColours.currentlySelected;
+  }
+
+  return backgroundColor;
+};
 
 export function ConstraintPane({}) {
 
@@ -144,12 +167,7 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter})
   const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
   const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
   const decimals = u.displayDecimals;
-
-  const blockedMetric = useRecoilValue(blockedMetricState);
-  const currentSelection = useRecoilValue(currentSelectionState);
-  let bgcolor = currentSelection === uid ? 'bg-gray-700' : 'bg-gray-600';
-  bgcolor = blockedMetric === uid ? 'bg-yellow-800' : bgcolor; 
-
+  const bgcolor = GetBackgroundColor(uid);
 
   return (
     <div key={uid} 
@@ -173,11 +191,7 @@ function QualitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) 
   const max = u.options.length - 1; 
   const cmin = constraints[uid][0];
   const cmax = constraints[uid][1];
-
-  const blockedMetric = useRecoilValue(blockedMetricState);
-  const currentSelection = useRecoilValue(currentSelectionState);
-  let bgcolor = currentSelection === uid ? 'bg-gray-700' : 'bg-gray-600';
-  bgcolor = blockedMetric === uid ? 'bg-yellow-800' : bgcolor; 
+  const bgcolor = GetBackgroundColor(uid);
 
   const options = Object.fromEntries(
     u.options.map(x => [u.options.indexOf(x), x])
@@ -224,7 +238,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const [currentSelection, setCurrentSelection] = useRecoilState(currentSelectionState);
-  const blockedMetric = useRecoilValue(blockedMetricState);
+  const [blockedMetric, setBlockedMetric] = useRecoilState(blockedMetricState);
 
   const all = useRecoilValue(allCandidatesState);
   const thresholdValues = useRecoilValue(bestValuesState);
@@ -232,7 +246,8 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const isBlocked = useRecoilValue(isBlockedState);
   const blockString = (currentSelection === uid) && (isBlocked) ? "BLOCKED" : "";
-    
+  const resolvedBlocked = useRecoilValue(resolvedBlockedState);
+
   function onBeforeChange() {
     setCurrentSelection(uid);
   };
@@ -264,6 +279,11 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     }
 
     setConstraints(n);
+    
+    if (resolvedBlocked) {
+      setBlockedMetric(null);
+    }
+  
   }
 
   const blockedScrollbar : any = useRecoilValue(scrollbarHandleState);
@@ -299,8 +319,8 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   // const percentage = getTargetPercentage(higherIsBetterMap, uid, targets, min, max, decimals);
   // const blockingState = {...blockedScrollbar}[uid];
 
-  const buttonEnabled = ((currentSelection === uid) && (isBlocked)) || (blockedMetric === uid);
-  const wow = useRecoilValue(potentialUnblockingCandidatesState)
+  const buttonEnabled = (currentSelection === uid && isBlocked) 
+    || (blockedMetric === uid && !resolvedBlocked);
 
   return (
   <div>
