@@ -193,7 +193,14 @@ def evaluation(choices, ref, n_samples, oracle):
 
     train_X = choices
     train_y = [oracle(x) for x in train_X]
-    lr.fit(train_X, train_y)
+
+    if 1 in train_y and 0 in train_y:
+        lr.fit(train_X, train_y)
+    else:
+        project_X = 2 * ref - choices  # mirror around ref
+        train_X.append(project_X[0])
+        train_y = [oracle(x) for x in train_X]
+        lr.fit(train_X, train_y)
 
     # generate random testing data
     test_X = random_choice(ref, n_samples)
