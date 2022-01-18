@@ -15,6 +15,225 @@ from sklearn.decomposition import PCA
 SHATTER_THRESH = 1e-10
 
 
+# Ranking algorithms
+
+
+class _HalfspaceBase:
+
+    def __init__(self):
+        self.query = None
+        self.response = None
+        self.result = None
+        # Don't allow instances of this base class
+        raise NotImplementedError
+
+    def next_round(self):
+        '''Initiate the next round of query-response from the algorithm.
+
+        Returns
+        -------
+        bool:
+            `True` if there is a new query ready
+        '''
+        raise NotImplementedError
+
+    def put_response(self, response):
+        '''Submit a response to the query.
+
+        Parameters
+        ----------
+        response: int
+            response to the query, x_1 < x_2? -1 if true, else 1.
+        '''
+        raise NotImplementedError
+
+    def get_result(self):
+        '''Get the final result from the algorithm.'''
+        return self.result
+
+    def get_query(self):
+        '''Get a query.
+
+        Returns
+        -------
+        tuple:
+            two objects (x_1, x_2) to ask whether x_1 < x_2
+        '''
+        return self.query
+
+
+# class HalfspaceRanking(_HalfspaceBase):
+#     '''Rank objects using the exhaustive active ranking algorithm.
+
+#     This is the "exhaustive" algorithm because it computes ALL (n choose 2)
+#     pairwise ranking comparisons for n object. However, it expected that only d
+#     log n queries will be made to an oracle on average, where each object has d
+#     features. As the authors note (Jamieson and Nowak, 2011), the computational
+#     complexity of the algorithm can be reduced by integrating the query label
+#     inference into a binary sorting algorithm, rather than running the sort on
+#     the result of the (n choose 2) comparisons.
+
+#     Queries are of the form, x_1 < x_2. If this ordering is correct, the oracle
+#     should return -1, otherwise 1.
+
+#     This class should be used in a loop like follows,
+
+#     ```
+#     ranker = HalfspaceRanking(X)
+#     while ranker.next_round():
+#         a, b = ranker.get_query()
+#         preference = oracle_fn(a, b)  # preference should be {-1, 1}
+#         ranker.put_response(preference)
+
+#     ranks = ranker.get_result()
+#     ```
+
+#     Where `ranks` are integer indexes into the object array `X`.
+
+#     The primary assumption behind this algorithm is that rankings can be
+#     computed as:
+
+#         x_1 < x_2 <=> ||x_1 - r|| < ||x_2 - r||
+
+#     For some unique reference point, r, in R^d that defines the "origin" of the
+#     ranking.
+
+#     Parameters
+#     ----------
+#     X: ndarray
+#         The n-objects of shape (n, d) to be ranked.
+#     yield_indices: bool
+#         Yield indices into X (True) or the rows of X themselves (False) for the
+#         queries.
+#     '''
+#     def __init__(self, X, query_order, yield_indices=False):
+#         self.yield_indices = yield_indices
+#         self.query_order = query_order
+#         self.result = None
+#         self.response = None
+#         self.query = next(self.query_gen)
+#         self.__first_round = True
+#         pass
+
+#     def _algorithm(self, X):
+#         n, d = X.shape
+#         nC2 = (n * (n - 1)) // 2  # number of unique pairwise comparisons
+#         Y = np.zeros(nC2)  # query labels
+#         H = np.zeros((nC2, d+1))  # query hyperplanes
+#         Q = np.zeros((n, n), dtype=int)  # All query labels, including reverse
+
+#         # Note we have not randomly shuffled X.
+#         qorder = self.query_order(X)
+#         for c, (j, i) in enumerate(qorder):
+#             H[c, :] = hyperplane(X[j], X[i])  # equidistant hyperplane
+#             if not impute_label(H[:c+1], Y[:c+1]):  # impute query label
+#                 y = (yield j, i) if self.yield_indices else (yield X[j], X[i])
+#                 if y is None:
+#                     raise RuntimeError('Expecting a query response.')
+#                 Y[c] = y
+#             Q[j, i], Q[i, j] = Y[c], - Y[c]  # query label, reverse query
+
+#         # binary sort positions in X using the comparisons in query_map
+#         key = cmp_to_key(lambda a, b: Q[a, b])
+#         self.result = np.array(sorted(range(n), key=key))
+
+
+#
+# Max algorithms
+#
+
+class HalfspaceMax(_HalfspaceBase):
+    '''Find the max object using the halfspace comparison algorithm.
+
+    Queries are of the form, x_1 < x_2. If this ordering is correct, the oracle
+    should return -1, otherwise 1.
+
+    This class should be used in a loop like follows,
+
+    ```
+    maxer = HalfspaceRanking(X)
+    while maxer.next_round():
+        a, b = maxer.get_query()
+        preference = oracle_fn(a, b)  # preference should be {-1, 1}
+        maxer.put_response(preference)
+
+    maximum = maxer.get_result()
+    ```
+
+    Where `maximum` is an integer index into the object array `X`.
+
+    The primary assumption behind this algorithm is that rankings can be
+    computed as:
+
+        x_1 < x_2 <=> ||x_1 - r|| < ||x_2 - r||
+
+    For some unique reference point, r, in R^d that defines the "origin" of the
+    ranking.
+
+    Parameters
+    ----------
+    X: ndarray
+        The n-objects of shape (n, d) to be ranked.
+    yield_indices: bool
+        Yield indices into X (True) or the rows of X themselves (False) for the
+        queries.
+    query_order: callable
+        A callable that returns the initial max object index guess and a
+        sequence of indices for subsequent comparisons.
+    '''
+
+    def __init__(self, X, query_order, yield_indices=False):
+        # Initialise state
+        self.yield_indices = yield_indices
+        self.result = None
+        self.query = None
+
+        self.order = query_order(X)
+        self.X = X[self.order]
+
+        self.maxi = 0  # current preference
+        self.i = 0     # will be incremented at beginning of loop
+
+        # Allocate storage
+        n, d = X.shape
+        self.Y = np.zeros(n-1)  # query labels
+        self.H = np.zeros((n-1, d+1))  # query hyperplanes
+        self.n = n
+
+    def next_round(self):
+
+        # Advance to the next round, (and determine whether terminated)
+        while self.i < self.n - 1:
+            self.i += 1
+
+            # make hyperplane comparing current with best
+            self.H[self.i-1, :] = hyperplane(self.X[self.maxi], self.X[self.i])
+
+            # the last label is modified inplace to determine ambiguities
+            if not impute_label(self.H[:self.i], self.Y[:self.i]):
+                break  # an ambiguity was found
+
+            # Otherwise the answer has been inferred
+            if self.Y[self.i-1] == -1:
+                self.maxi = self.i
+        else:
+            # loop finished without breaking - we're done
+            self.result = self.order[self.maxi]
+            return False
+
+        ret = self.order if self.yield_indices else self.X
+        self.query = (ret[self.maxi], ret[self.i])
+
+        return True
+
+    def put_response(self, y):
+        self.Y[self.i-1] = y
+        if y == -1:
+            self.maxi = self.i
+        self.query = None  # check next_round is only called after put_response
+
+
+
 #
 # Ranking utilities
 #
@@ -184,208 +403,13 @@ def max_compar_rand(X, random_state=None):
 
 
 def rank_compar_ord(X):
-    '''Generate all n choose 2 comparisons in order.'''
+    '''Generate all n choose 2 comparisons.'''
     n = len(X)
+    order = []
     for j in range(1, n):
         for i in range(j):
-            yield (j, i)
+            order.append((j, i))
+
+    return order
 
 
-#
-#  Ranking algorithms
-#
-
-class _HalfspaceBase():
-
-    def __init__(self, X, query_order, yield_indices=False):
-        self.indices = yield_indices
-        self.query_order = query_order
-        self.result = None
-        self.response = None
-        self.query_gen = self._algorithm(X)
-        self.query = next(self.query_gen)
-        self.__first_round = True
-
-    def next_round(self):
-        '''Initiate the next round of query-response from the algorithm.
-
-        Returns
-        -------
-        bool:
-            `True` if there is a new query ready, `False` if the algorithm is
-            finished and the result is ready.
-        '''
-        if self.__first_round:
-            self.__first_round = False
-        else:
-            try:
-                self.query = self.query_gen.send(self.response)
-            except StopIteration:
-                return False
-        return True
-
-    def get_query(self):
-        '''Get a query.
-
-        Returns
-        -------
-        tuple:
-            two objects (x_1, x_2) to compare, in particular x_1 < x_2 ?
-        '''
-        return self.query
-
-    def put_response(self, response):
-        '''Give a response to the query.
-
-        Parameters
-        ----------
-        response: int
-            response to the query, x_1 < x_2? -1 if true, else 1.
-        '''
-        self.response = response
-
-    def get_result(self):
-        '''Get the final result from the algorithm.
-
-        Returns
-        -------
-        result: None or Any
-            Returns None if there is no result ready, or the result, the type
-            of which depends on the algorithm.
-        '''
-        return self.result
-
-    def _algorithm(self, X):
-        raise NotImplementedError('HalfspaceBase is a base class only.')
-
-
-class HalfspaceRanking(_HalfspaceBase):
-    '''Rank objects using the exhaustive active ranking algorithm.
-
-    This is the "exhaustive" algorithm because it computes ALL (n choose 2)
-    pairwise ranking comparisons for n object. However, it expected that only d
-    log n queries will be made to an oracle on average, where each object has d
-    features. As the authors note (Jamieson and Nowak, 2011), the computational
-    complexity of the algorithm can be reduced by integrating the query label
-    inference into a binary sorting algorithm, rather than running the sort on
-    the result of the (n choose 2) comparisons.
-
-    Queries are of the form, x_1 < x_2. If this ordering is correct, the oracle
-    should return -1, otherwise 1.
-
-    This class should be used in a loop like follows,
-
-    ```
-    ranker = HalfspaceRanking(X)
-    while ranker.next_round():
-        a, b = ranker.get_query()
-        preference = oracle_fn(a, b)  # preference should be {-1, 1}
-        ranker.put_response(preference)
-
-    ranks = ranker.get_result()
-    ```
-
-    Where `ranks` are integer indexes into the object array `X`.
-
-    The primary assumption behind this algorithm is that rankings can be
-    computed as:
-
-        x_1 < x_2 <=> ||x_1 - r|| < ||x_2 - r||
-
-    For some unique reference point, r, in R^d that defines the "origin" of the
-    ranking.
-
-    Parameters
-    ----------
-    X: ndarray
-        The n-objects of shape (n, d) to be ranked.
-    yield_indices: bool
-        Yield indices into X (True) or the rows of X themselves (False) for the
-        queries.
-    '''
-
-    def _algorithm(self, X):
-        n, d = X.shape
-        nC2 = (n * (n - 1)) // 2  # number of unique pairwise comparisons
-        Y = np.zeros(nC2)  # query labels
-        H = np.zeros((nC2, d+1))  # query hyperplanes
-        Q = np.zeros((n, n), dtype=int)  # All query labels, including reverse
-
-        # Note we have not randomly shuffled X.
-        qorder = self.query_order(X)
-        for c, (j, i) in enumerate(qorder):
-            H[c, :] = hyperplane(X[j], X[i])  # equidistant hyperplane
-            if not impute_label(H[:c+1], Y[:c+1]):  # impute query label
-                y = (yield j, i) if self.indices else (yield X[j], X[i])
-                if y is None:
-                    raise RuntimeError('Expecting a query response.')
-                Y[c] = y
-            Q[j, i], Q[i, j] = Y[c], - Y[c]  # query label, reverse query
-
-        # binary sort positions in X using the comparisons in query_map
-        key = cmp_to_key(lambda a, b: Q[a, b])
-        self.result = np.array(sorted(range(n), key=key))
-
-
-#
-# Max algorithms
-#
-
-class HalfspaceMax(_HalfspaceBase):
-    '''Find the max object using the halfspace comparison algorithm.
-
-    Queries are of the form, x_1 < x_2. If this ordering is correct, the oracle
-    should return -1, otherwise 1.
-
-    This class should be used in a loop like follows,
-
-    ```
-    maxer = HalfspaceRanking(X)
-    while maxer.next_round():
-        a, b = maxer.get_query()
-        preference = oracle_fn(a, b)  # preference should be {-1, 1}
-        maxer.put_response(preference)
-
-    maximum = maxer.get_result()
-    ```
-
-    Where `maximum` is an integer index into the object array `X`.
-
-    The primary assumption behind this algorithm is that rankings can be
-    computed as:
-
-        x_1 < x_2 <=> ||x_1 - r|| < ||x_2 - r||
-
-    For some unique reference point, r, in R^d that defines the "origin" of the
-    ranking.
-
-    Parameters
-    ----------
-    X: ndarray
-        The n-objects of shape (n, d) to be ranked.
-    yield_indices: bool
-        Yield indices into X (True) or the rows of X themselves (False) for the
-        queries.
-    query_order: callable
-        A callable that returns the initial max object index guess and a
-        sequence of indices for subsequent comparisons.
-    '''
-
-    def _algorithm(self, X):
-        n, d = X.shape
-        Y = np.zeros(n-1)  # query labels
-        H = np.zeros((n-1, d+1))  # query hyperplanes
-
-        qorder = self.query_order(X)
-        maxi, qorder = qorder[0], qorder[1:]
-
-        for j, i in enumerate(qorder):
-            H[j, :] = hyperplane(X[maxi], X[i])
-            if not impute_label(H[:j+1], Y[:j+1]):
-                y = (yield maxi, i) if self.indices else (yield X[maxi], X[i])
-                if y is None:
-                    raise RuntimeError('Expecting a query response.')
-                Y[j] = y
-            if Y[j] == -1:
-                maxi = i
-        self.result = maxi
