@@ -4,6 +4,8 @@ from functools import partial
 import numpy as np
 from deva import halfspace
 
+from itertools import combinations
+
 
 class Candidate:
     def __init__(self, name, attributes, spec_name=None):
@@ -254,12 +256,12 @@ class ActiveMaxPrimary(ActiveRanking):
         return "ActiveMaxPrimary description"
 
 
-# export a list of eliciters
-eliciters = {
-    "Toy": Toy,
-    "ActiveRanking": ActiveRanking,
-    "ActiveMax": ActiveMax,
-    "ActiveMaxSmooth": ActiveMaxSmooth,
-    "ActiveMaxPrimary": ActiveMaxPrimary,
-    "VotingEliciter": VotingEliciter,
+# Export all the Eliciter classes
+algorithms = {
+    'Toy': Toy,
+    'ActiveRank': ActiveRanking,
+    'ActiveMax': ActiveMax,
+    'ActiveMaxSmooth': ActiveMaxSmooth,
+    'ActiveMaxPrimary': ActiveMaxPrimary,
+    'Voting':  VotingEliciter,
 }
