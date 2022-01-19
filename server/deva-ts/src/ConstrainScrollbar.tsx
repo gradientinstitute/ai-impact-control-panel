@@ -104,23 +104,15 @@ export const bestValuesState = selector({
   }
 });
 
-// All states where the constraint can be made better
+// return candidates where the blocked metric constraint can be improved
 export const potentialUnblockingCandidatesState = selector({
   key: 'potentialUnblockingCandidates',
   get: ({get}) => {
-    const all = get(allCandidatesState);
-    const activeOptimal = get(bestValuesState);
     const uid = get(blockedMetricState);
-  
-    if (uid === null) {
-      return [];
-    }
-
-    const potentialCandidates = all.map((candidate) => {
-      return candidate[uid] < activeOptimal.get(uid) ? candidate : null;
-    });
-
-    return potentialCandidates.filter((x) => x != null);
+    if (uid === null) return [];        
+    const all = get(allCandidatesState);
+    const constraints = get(constraintsState);
+    return all.filter(candidate => candidate[uid] < constraints[uid][1]);
   }
 });
 
@@ -199,22 +191,19 @@ export const blockingMetricsState = selector({
       return blockingMetrics;
     }
 
-    // filter for candidates where the blocked metric can be improved, then
     // determine which other metrics need to be adjusted for change to happen
-    potentialCandidates
-      .filter(candidate => candidate[uidBlocked] < constraints[uidBlocked][1])
-      .forEach(candidate => { (Object.entries(candidate))
-        .forEach(([metric, targetValue]) => {
-          if (targetValue > constraints[metric][1]) {
-            // map of metrics to set of target values
-            if (!blockingMetrics.has(metric)) {
-              blockingMetrics.set(metric, new Set([targetValue]));
-            } else {
-              blockingMetrics.get(metric).add(targetValue);
-            }
+    potentialCandidates.forEach(candidate => {
+      (Object.entries(candidate)).forEach(([metric, targetValue]) => {
+        if (targetValue > constraints[metric][1]) {
+          // map of metrics to set of target values
+          if (!blockingMetrics.has(metric)) {
+            blockingMetrics.set(metric, new Set([targetValue]));
+          } else {
+            blockingMetrics.get(metric).add(targetValue);
           }
-        });
+        }
       });
+    });
 
     return blockingMetrics;
   }
