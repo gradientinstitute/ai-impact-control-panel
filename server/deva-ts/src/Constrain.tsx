@@ -404,6 +404,9 @@ function OptimalDirection({lowerIsBetter}) {
 function UnblockButton({uid, buttonDisabled}) {
 
   const [blockedMetric, setBlockedMetric] = useRecoilState(blockedMetricState);
+  const text = (blockedMetric === uid) 
+    ? "finish unblocking"
+    : "suggest metrics to unblock";
 
   return (
     <button className="btn text-xl uppercase py-2 px-8 font-bold rounded-lg"
@@ -415,7 +418,7 @@ function UnblockButton({uid, buttonDisabled}) {
         }
       }}
       disabled={buttonDisabled}>
-      Toggle Unblocking Suggestions
+      {text}
     </button>
   );
 }
