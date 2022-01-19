@@ -62,80 +62,99 @@ class _HalfspaceBase:
         return self.query
 
 
-# class HalfspaceRanking(_HalfspaceBase):
-#     '''Rank objects using the exhaustive active ranking algorithm.
+class HalfspaceRanking(_HalfspaceBase):
+    '''Rank objects using the exhaustive active ranking algorithm.
 
-#     This is the "exhaustive" algorithm because it computes ALL (n choose 2)
-#     pairwise ranking comparisons for n object. However, it expected that only d
-#     log n queries will be made to an oracle on average, where each object has d
-#     features. As the authors note (Jamieson and Nowak, 2011), the computational
-#     complexity of the algorithm can be reduced by integrating the query label
-#     inference into a binary sorting algorithm, rather than running the sort on
-#     the result of the (n choose 2) comparisons.
+    This is the "exhaustive" algorithm because it computes ALL (n choose 2)
+    pairwise ranking comparisons for n object. However, it expected that only d
+    log n queries will be made to an oracle on average, where each object has d
+    features. As the authors note (Jamieson and Nowak, 2011), the computational
+    complexity of the algorithm can be reduced by integrating the query label
+    inference into a binary sorting algorithm, rather than running the sort on
+    the result of the (n choose 2) comparisons.
 
-#     Queries are of the form, x_1 < x_2. If this ordering is correct, the oracle
-#     should return -1, otherwise 1.
+    Queries are of the form, x_1 < x_2. If this ordering is correct, the oracle
+    should return -1, otherwise 1.
 
-#     This class should be used in a loop like follows,
+    This class should be used in a loop like follows,
 
-#     ```
-#     ranker = HalfspaceRanking(X)
-#     while ranker.next_round():
-#         a, b = ranker.get_query()
-#         preference = oracle_fn(a, b)  # preference should be {-1, 1}
-#         ranker.put_response(preference)
+    ```
+    ranker = HalfspaceRanking(X)
+    while ranker.next_round():
+        a, b = ranker.get_query()
+        preference = oracle_fn(a, b)  # preference should be {-1, 1}
+        ranker.put_response(preference)
 
-#     ranks = ranker.get_result()
-#     ```
+    ranks = ranker.get_result()
+    ```
 
-#     Where `ranks` are integer indexes into the object array `X`.
+    Where `ranks` are integer indexes into the object array `X`.
 
-#     The primary assumption behind this algorithm is that rankings can be
-#     computed as:
+    The primary assumption behind this algorithm is that rankings can be
+    computed as:
 
-#         x_1 < x_2 <=> ||x_1 - r|| < ||x_2 - r||
+        x_1 < x_2 <=> ||x_1 - r|| < ||x_2 - r||
 
-#     For some unique reference point, r, in R^d that defines the "origin" of the
-#     ranking.
+    For some unique reference point, r, in R^d that defines the "origin" of the
+    ranking.
 
-#     Parameters
-#     ----------
-#     X: ndarray
-#         The n-objects of shape (n, d) to be ranked.
-#     yield_indices: bool
-#         Yield indices into X (True) or the rows of X themselves (False) for the
-#         queries.
-#     '''
-#     def __init__(self, X, query_order, yield_indices=False):
-#         self.yield_indices = yield_indices
-#         self.query_order = query_order
-#         self.result = None
-#         self.response = None
-#         self.query = next(self.query_gen)
-#         self.__first_round = True
-#         pass
+    Parameters
+    ----------
+    X: ndarray
+        The n-objects of shape (n, d) to be ranked.
+    yield_indices: bool
+        Yield indices into X (True) or the rows of X themselves (False) for the
+        queries.
+    '''
+    def __init__(self, X, query_order, yield_indices=False):
 
-#     def _algorithm(self, X):
-#         n, d = X.shape
-#         nC2 = (n * (n - 1)) // 2  # number of unique pairwise comparisons
-#         Y = np.zeros(nC2)  # query labels
-#         H = np.zeros((nC2, d+1))  # query hyperplanes
-#         Q = np.zeros((n, n), dtype=int)  # All query labels, including reverse
+        self.yield_indices = yield_indices
+        self.result = None
+        self.query = None
+        self.order = query_order(X)  # sequence of tuples
+        self.X = X
+        self.i = -1   # incremented before first use
 
-#         # Note we have not randomly shuffled X.
-#         qorder = self.query_order(X)
-#         for c, (j, i) in enumerate(qorder):
-#             H[c, :] = hyperplane(X[j], X[i])  # equidistant hyperplane
-#             if not impute_label(H[:c+1], Y[:c+1]):  # impute query label
-#                 y = (yield j, i) if self.yield_indices else (yield X[j], X[i])
-#                 if y is None:
-#                     raise RuntimeError('Expecting a query response.')
-#                 Y[c] = y
-#             Q[j, i], Q[i, j] = Y[c], - Y[c]  # query label, reverse query
+        # Allocate storage buffers for imputation
+        n, d = X.shape
+        self.nc = (n * (n - 1)) // 2  # unique pairwise comparisons
+        self.Y = np.zeros(self.nc)  # query labels
+        self.H = np.zeros((self.nc, d+1))  # query hyperplanes
+        self.Q = np.zeros((n, n), dtype=int)  # All labels, including reversed
 
-#         # binary sort positions in X using the comparisons in query_map
-#         key = cmp_to_key(lambda a, b: Q[a, b])
-#         self.result = np.array(sorted(range(n), key=key))
+    def next_round(self):
+        assert not self.query
+
+        for self.i in range(self.i+1, self.nc):
+            left, right = self.order[self.i]
+
+            # construct hyperplane comparing left & right
+            self.H[self.i, :] = hyperplane(self.X[left], self.X[right])
+
+            # impute the label inplace to determine ambiguities
+            if impute_label(self.H[:self.i+1], self.Y[:self.i+1]):
+                self.put_response(self.Y[self.i])
+            else:
+                break
+        else:
+            # Comparisons exhausted - terminated
+            # binary sort positions in X using the comparisons in query_map
+            key = cmp_to_key(lambda a, b: self.Q[a, b])
+            self.result = np.array(sorted(range(len(self.X)), key=key))
+            return False  # no next round
+
+        # Stopped at ambiguity
+        self.query = (
+            (left, right) if self.yield_indices
+            else (self.X[left], self.X[right])
+        )
+        return True
+
+    def put_response(self, y):
+        left, right = self.order[self.i]
+        self.Y[self.i] = y
+        self.Q[[left, right], [right, left]] = [y, -y]
+        self.query = None  # unlock next_round
 
 
 #
@@ -183,47 +202,40 @@ class HalfspaceMax(_HalfspaceBase):
     '''
 
     def __init__(self, X, query_order, yield_indices=False):
-        # Initialise state
+
         self.yield_indices = yield_indices
         self.result = None
         self.query = None
-
         self.order = query_order(X)
         self.X = X[self.order]
-
         self.maxi = 0  # current preference
-        self.i = 0     # will be incremented at beginning of loop
+        self.i = 0    # incremented before use (starts from 1)
 
-        # Allocate storage
-        n, d = X.shape
-        self.Y = np.zeros(n-1)  # query labels
-        self.H = np.zeros((n-1, d+1))  # query hyperplanes
-        self.n = n
+        # Allocate storage buffers for imputation
+        self.n, d = X.shape
+        self.Y = np.zeros(self.n-1)  # comparison labels
+        self.H = np.zeros((self.n-1, d+1))  # comparison hyperplanes
 
     def next_round(self):
 
-        # Advance to the next round, (and determine whether terminated)
-        while self.i < self.n - 1:
-            self.i += 1
+        for self.i in range(self.i+1, self.n):
 
-            # make hyperplane comparing current with best
+            # construct hyperplane comparing candidate with best
             self.H[self.i-1, :] = hyperplane(self.X[self.maxi], self.X[self.i])
 
-            # the last label is modified inplace to determine ambiguities
-            if not impute_label(self.H[:self.i], self.Y[:self.i]):
-                break  # an ambiguity was found
-
-            # Otherwise the answer has been inferred
-            if self.Y[self.i-1] == -1:
-                self.maxi = self.i
+            # impute label inplace to determine ambiguities
+            if impute_label(self.H[:self.i], self.Y[:self.i]):
+                self.put_response(self.Y[self.i-1])
+            else:
+                break  # an ambiguity was found - let's ask the user
         else:
-            # loop finished without breaking - we're done
+            # loop finished - terminate
             self.result = self.order[self.maxi]
             return False
 
+        # We have two return behaviours depending on yield_indices
         ret = self.order if self.yield_indices else self.X
         self.query = (ret[self.maxi], ret[self.i])
-
         return True
 
     def put_response(self, y):
@@ -231,7 +243,6 @@ class HalfspaceMax(_HalfspaceBase):
         if y == -1:
             self.maxi = self.i
         self.query = None  # check next_round is only called after put_response
-
 
 
 #
@@ -411,5 +422,3 @@ def rank_compar_ord(X):
             order.append((j, i))
 
     return order
-
-
