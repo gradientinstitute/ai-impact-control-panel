@@ -18,7 +18,7 @@ export const blockedStatusState = selector({
     const constraints = get(constraintsState);
     const uidSelected = get(currentSelectionState);
     const isBlocked = get(isBlockedState);
-    const blockingMetrics = get(isBlocking);
+    const blockingMetrics = get(blockingMetricsState);
     const blockedMetric = get(blockedMetricState);
     const resolvedBlock = get(resolvedBlockedState);
 
@@ -184,14 +184,16 @@ export const isBlockedState = selector({
   }
 });
 
-export const isBlocking = selector({
-  key: 'isBlocking',
+// returns a map of metrics that can be improved and a set of target values
+// eg. { uid1: {1, 3, 4}, uid2: {4, 2, 9}, ... }
+export const blockingMetricsState = selector({
+  key: 'blockingMetrics',
   get: ({get}) => {
     const uidBlocked = get(blockedMetricState);
     const constraints = get(constraintsState);
     const potentialCandidates = get(potentialUnblockingCandidatesState);
     
-    const blockingMetrics = new Set();
+    const blockingMetrics = new Map();
 
     if (uidBlocked === null) {
       return blockingMetrics;
@@ -201,10 +203,15 @@ export const isBlocking = selector({
     // determine which other metrics need to be adjusted for change to happen
     potentialCandidates
       .filter(candidate => candidate[uidBlocked] < constraints[uidBlocked][1])
-      .forEach(candidate => {
-        (Object.keys(candidate)).forEach(metric => {
-          if (candidate[metric] > constraints[metric][1]) {
-            blockingMetrics.add(metric);
+      .forEach(candidate => { (Object.entries(candidate))
+        .forEach(([metric, targetValue]) => {
+          if (targetValue > constraints[metric][1]) {
+            // map of metrics to set of target values
+            if (!blockingMetrics.has(metric)) {
+              blockingMetrics.set(metric, new Set([targetValue]));
+            } else {
+              blockingMetrics.get(metric).add(targetValue);
+            }
           }
         });
       });
