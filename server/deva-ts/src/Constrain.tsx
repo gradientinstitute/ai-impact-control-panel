@@ -12,7 +12,7 @@ import { Pane, paneState, scenarioState,
 import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
   blockedMetricState, isBlockedState, resolvedBlockedState, 
-  blockedStatusState } from './ConstrainScrollbar';
+  blockedStatusState, blockingMetricsState, blockingStates} from './ConstrainScrollbar';
 
 const HandleColours = {
   0: 'white', // default
@@ -21,18 +21,23 @@ const HandleColours = {
 }
 
 const BackgroundColours = {
-  0: 'bg-gray-600',  // default
-  1: 'bg-gray-700',  // blocked
-  2: 'bg-pink-900',  // blocking
-  3: 'bg-green-900', // resolvedBlock
-  4: 'bg-gray-700',  // currentlySelected
-  5: 'bg-blue-700',  // blockedMetric
+  0: 'gray-600',  // default
+  1: 'gray-700',  // blocked
+  2: 'pink-900',  // blocking
+  3: 'green-900', // resolvedBlock
+  4: 'gray-700',  // currentlySelected
+  5: 'blue-700',  // blockedMetric
 }
 
 function GetBackgroundColor(uid) {
   const blockStatus = useRecoilValue(blockedStatusState)[uid];
-  return BackgroundColours[blockStatus];
+  return "bg-" + BackgroundColours[blockStatus];
 };
+
+function GetBorderColor(uid) {
+  const blockStatus = useRecoilValue(blockedStatusState)[uid];
+  return "border-" + BackgroundColours[blockStatus];
+}
 
 function GetHandleColor(uid) {
   const blockStatus = useRecoilValue(blockedStatusState)[uid];
@@ -305,8 +310,8 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     rangeProps["step"] = null;
   }
 
-  // const percentage = getTargetPercentage(higherIsBetterMap, uid, targets, min, max, decimals);
-  // const blockingState = {...blockedScrollbar}[uid];
+  const percentages = GetTargetPercentages(uid, min, max, decimals, lowerIsBetter);
+  const blockedStatus = useRecoilValue(blockedStatusState)[uid];
 
   const buttonEnabled = (blockedMetric === uid) 
     || (blockedMetric === null && currentSelection === uid && isBlocked)
@@ -317,7 +322,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   return (
   <div>
-    {/* <BlockingTargetBar percentage={percentage} blockingState={blockingState}/> */}
+    <BlockingTargetBar uid={uid} percentages={percentages} blockedStatus={blockedStatus}/>
     {/* <p>{"Blocked status: " + blockString}</p> */}
     <Slider {...rangeProps} />
     <OptimalDirection lowerIsBetter={lowerIsBetter}/>
@@ -372,34 +377,38 @@ function OptimalDirection({lowerIsBetter}) {
   );
 }
 
-// function getTargetPercentage(higherIsBetterMap, uid, targets, min, max, decimals) {
-//   let target = null;
-//   let percentage = higherIsBetterMap.get(uid) ? 100 : 0;
+function GetTargetPercentages(uid, min, max, decimals, lowerIsBetter) {
+  const blockingMetrics = useRecoilValue(blockingMetricsState);
+  let percentages = [];
+  if (blockingMetrics.has(uid)) {
+    percentages = ([...blockingMetrics.get(uid)])
+      .map(x => ((x - min) / (max - min)) * 100)
+      .map(x => lowerIsBetter ? x : 100 - x);
+  }
+  return percentages;
+}
 
-//   if (targets != null && targets[uid] != null) {
-//     target = targets[uid]
-//       .map(x => getRounded(higherIsBetterMap, uid, x, decimals))
-//       .filter(x => x != null);
-//     percentage = higherIsBetterMap.get(uid) 
-//       ? ((Math.max(...target) - min) / (max - min)) * 100
-//       : ((Math.min(...target) - min) / (max - min)) * 100;
-//   }
-//   return percentage;
-// }
+function BlockingTargetBar({uid, percentages, blockedStatus}) {
 
-// function BlockingTargetBar({percentage, blockingState}) {
+  // determine whether or not the target line is visible
+  const isBlocking = blockedStatus === blockingStates.blocking;
+  const borderColour = isBlocking ? "border-red-500" : GetBorderColor(uid);
+  const bgColour = isBlocking ? "bg-gray-600" : GetBackgroundColor(uid);
 
-//   let colour = "border-gray-600";
-//   colour = blockingState == blockingStates.blocking ? "border-red-500" : colour;
-//   colour = blockingState == blockingStates.bounced ? "border-yellow-500" : colour;
+  // minimum value that the metric needs to be at to unblock
+  let percentage = Math.min(...percentages);
 
-//   return (
-//     <div className="w-full flex">
-//       <div className={"h-6 min-h-full border-r-4 bg-gray-600 " + colour} style={{width:percentage + "%"}}></div>
-//       <div className={"h-6 min-h-full bg-gray-600"} style={{width:(100-percentage) + "%"}}> </div>
-//     </div>
-//   );
-// }
+  return (
+    <div className="w-full flex">
+      <div className={"h-6 min-h-full border-r-4 " + bgColour + " " + borderColour} 
+        style={{width:percentage + "%"}}> 
+      </div>
+      <div className={"h-6 min-h-full " + bgColour} 
+        style={{width:(100-percentage) + "%"}}> 
+      </div>
+    </div>
+  );
+}
 
 function UnblockButton({uid, buttonDisabled}) {
 
