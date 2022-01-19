@@ -29,44 +29,62 @@ def main():
         return (np.array(distance(q, center)) <= r)
 
     # ----------- visualisation --------------
-    choices = -100 * np.random.random_sample((1000, 2)) + 100  # TODO
+    # choices = -100 * np.random.random_sample((1000, 2)) + 100  # TODO
 
     # Display 2D plot for nl_oracle ------------
-    labels = nl_oracle(np.array(choices))
-    accept = []
-    reject = []
+    # labels = nl_oracle(np.array(choices))
+    # accept = []
+    # reject = []
 
-    for i in range(len(labels)):
-        if labels[i]:
-            accept.append(choices[i])
-        else:
-            reject.append(choices[i])
+    # for i in range(len(labels)):
+    #     if labels[i]:
+    #         accept.append(choices[i])
+    #     else:
+    #         reject.append(choices[i])
 
-    print(len(choices), len(labels))
-    print(len(accept), len(reject))
+    # print(len(accept), len(reject))
 
-    # accept
-    x = np.array(accept)[:, 0]
-    y = np.array(accept)[:, 1]
+    # # accept
+    # x = np.array(accept)[:, 0]
+    # y = np.array(accept)[:, 1]
 
-    # reject
-    a = np.array(reject)[:, 0]
-    b = np.array(reject)[:, 1]
+    # # reject
+    # a = np.array(reject)[:, 0]
+    # b = np.array(reject)[:, 1]
 
     plt.figure()
 
-    plt.scatter(x, y, color='g',
-                marker='o', label="accept")
-    plt.scatter(a, b, color='r',
-                marker='x', label="reject")
+    # plt.scatter(x, y, color='g',
+    #             marker='o', label="accept")
+    # plt.scatter(a, b, color='r',
+    #             marker='x', label="reject")
     # plt.xlabel(attribs[0])
     # plt.ylabel(attribs[1])
 
     # TODO draw boundary (make a grid, evaluate oracle on grid, radius)
     # plot truth (circle)
-    # plot estimate boundary (query hasnt asked points) (line? <- logreg)
+    u = np.arange(0, 100, 1)
+    v = np.arange(0, 100, 2)
+    U, V = np.meshgrid(u, v)
 
-    plt.legend()
+    # print(U.shape, V.shape)
+    points = []
+
+    for j in range(len(v)):
+        row = []
+        for i in range(len(u)):
+            row.append([u[i], v[j]])
+        points.append(row)
+
+    labels = nl_oracle(np.array(points))
+    Z = np.array(labels)
+
+    plt.contour(U, V, Z, cmap=plt.cm.Spectral)
+    plt.scatter(U, V, c=Z)
+
+    # TODO plot estimate boundary (query hasnt asked points) (line? <- logreg)
+
+    # plt.legend()
     plt.show()
 
 
