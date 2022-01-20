@@ -34,6 +34,10 @@ class BoundsEliciter:
         raise NotImplementedError
 
 
+# TODO: a model does NOT make linear assumption
+# initialise: at least 6 points
+
+
 class LinearActive(BoundsEliciter):
     """
     Eliciter using Logistics Regression

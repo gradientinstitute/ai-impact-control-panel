@@ -24,8 +24,7 @@ def main():
         for j in range(len(v)):
             candidates.append([u[i], v[j]])
 
-    table = np.array(candidates)  # TODO: 2d array
-    # metrics = []
+    table = np.array(candidates)
 
     # logged for plotting
     eli_choices = {}  # a dict storing the choices for each eliciter
@@ -37,17 +36,15 @@ def main():
     while n_iter < max_iter:
         # Test whether the sampler can elicit this oracle's preference
         eliciters = {
-            # "PlaneSampler": bounds.PlaneSampler(ref, table,
-            # attribs, steps=50),
-            # "LinearRandom": bounds.LinearRandom(ref, table,
-            #  attribs, steps=50),
+            "PlaneSampler": bounds.PlaneSampler(ref, table, attribs, steps=50),
+            "LinearRandom": bounds.LinearRandom(ref, table, attribs, steps=50),
             "LinearActive": bounds.LinearActive(ref, table, attribs, steps=50,
                                                 epsilon=0.005,
                                                 n_steps_converge=5)
         }
 
         # Create a non-linear oracle function
-        r = 20  # radius
+        r = 10  # radius
         center = [50, 50]
 
         def distance(a, center):
@@ -70,8 +67,8 @@ def main():
             return y <= y_max
 
         def nl_oracle(q):
-            return np.logical_or((np.array(distance(q, center)) <= r),
-                                 lower_is_better(q))
+            return np.logical_and((np.array(distance(q, center)) >= r),
+                                  lower_is_better(q))
 
         for eliciter in eliciters:
             samp_name = eliciter
@@ -90,32 +87,36 @@ def main():
         n_iter += 1
 
     # ----------- visualisation --------------
-    # sampler = eliciters["LinearActive"]
-    choices = eli_choices["LinearActive"]
+    sampler = eliciters["LinearRandom"]
+    choices = eli_choices["LinearRandom"]
 
     # Display 2D plot for nl_oracle ------------
-    # choices = -100 * np.random.random_sample((1000, 2)) + 100  # TODO
     labels = nl_oracle(np.array(choices))
 
     # Create an instance of Logistic Regression Classifier and fit the data.
     X = np.array(choices)
     Y = labels
 
-    # Plot the decision boundary. For that, we will assign a color to each
-    # point in the mesh [x_min, x_max]x[y_min, y_max].
-    x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
-    y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
-    h = 0.01  # step size in the mesh
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
-                         np.arange(y_min, y_max, h))
+    # Plot the decision boundary.
+    x_min, x_max = 20, 80
+    y_min, y_max = 20, 80
+    h = 100  # number of samples
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, h),
+                         np.linspace(y_min, y_max, h))
     Z = nl_oracle(np.c_[xx.ravel(), yy.ravel()])
 
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
     print(Z.shape)
     plt.figure()
-    plt.pcolormesh(xx, yy, Z, cmap=plt.cm.Paired)
-    plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral)
+    plt.contourf(xx, yy, Z, levels=[0, 0.5, 1], cmap=plt.cm.Spectral)
+    plt.colorbar()
+
+    # Plot the true boundary
+    Z = sampler.predict_prob(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+    Z = Z.reshape(xx.shape)
+    print(Z.shape)
+    plt.contour(xx, yy, Z, cmap="jet")
     plt.colorbar()
 
     # Plot also the training points
@@ -125,23 +126,8 @@ def main():
 
     plt.xlim(xx.min(), xx.max())
     plt.ylim(yy.min(), yy.max())
-    plt.xticks(())
-    plt.yticks(())
 
     plt.show()
-
-    # plt.figure()
-
-    # plt.scatter(x, y, color='g',
-    #             marker='o', label="accept")
-    # plt.scatter(a, b, color='r',
-    #             marker='x', label="reject")
-    # plt.xlabel(attribs[0])
-    # plt.ylabel(attribs[1])
-
-    # TODO draw boundary (make a grid, evaluate oracle on grid, radius)
-    # plot truth (circle)
-    # TODO plot estimate boundary (query hasnt asked points) (line? <- logreg)
 
 
 def run_bounds_eliciter(sample, table, oracle,
@@ -166,11 +152,6 @@ def run_bounds_eliciter(sample, table, oracle,
 
     while not sampler.terminated:
         step += 1
-
-        # TODO: only asking "Would you accept system_X?"
-
-        # Display the choice between this and the reference
-        # interface.text(elicit.Pair(sampler.query, ref))
 
         choices.append(sampler.choice)
 
@@ -197,8 +178,6 @@ def run_bounds_eliciter(sample, table, oracle,
 
     # Display text results report
     print("Experimental results ------------------")
-    # print("Truth:    ", w_true)
-    # print("Estimate: ", sampler.w)
     accept = oracle(table)
     accept_rt = accept.mean()
     pred = sampler.guess(table)
