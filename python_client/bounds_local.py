@@ -9,9 +9,6 @@ from bounds_client import tabulate
 # from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 
-import math
-from itertools import combinations
-
 
 def main():
     np.random.seed(42)
@@ -45,8 +42,8 @@ def main():
             "PlaneSampler": bounds.PlaneSampler(ref, table, attribs, steps=50),
             "LinearRandom": bounds.LinearRandom(ref, table, attribs, steps=50),
             "LinearActive": bounds.LinearActive(ref, table, attribs, steps=50,
-                                                epsilon=0.00,
-                                                n_steps_converge=5)  # TODO
+                                                epsilon=0.05,
+                                                n_steps_converge=5)
         }
 
         # Create a hidden "ground truth" oracle function
@@ -57,30 +54,11 @@ def main():
         def oracle(q):
             return ((q - ref) @ w_true < 0)
 
-        # Create a non-linear oracle function
-        r = 5  # radius
-        center = ref  # TODO
-
-        def distance(a, center):
-            if a.ndim == 1:
-                d = math.sqrt((a[0] - center[0]) ** 2 +
-                              (a[1] - center[1]) ** 2 +
-                              (a[2] - center[2]) ** 2)
-                return d
-            else:
-                return [distance(i, center) for i in a]
-
-        def nl_oracle(q):
-            if q.ndim == 1:
-                return (distance(q, center) <= r)
-            else:
-                return (np.array(distance(q, center)) <= r)
-
         for eliciter in eliciters:
             samp_name = eliciter
             print(f'You are using {samp_name} Eliciter\n')
             outputs = run_bounds_eliciter(eliciters[eliciter], metrics, table,
-                                          baseline, w_true, nl_oracle, ref,
+                                          baseline, w_true, oracle, ref,
                                           n_samples=100)
             (sample_choices, est_w, scores) = outputs
 
@@ -123,41 +101,6 @@ def main():
     sampler = eliciters["LinearActive"]
     choices = eli_choices["LinearActive"]
 
-    # Display 2D plot for nl_oracle ------------
-    labels = nl_oracle(np.array(choices))
-    accept = []
-    reject = []
-
-    for i in range(len(labels)):
-        if labels[i]:
-            accept.append(choices[i])
-        else:
-            reject.append(choices[i])
-
-    x = np.array(accept)[:, 0]
-    y = np.array(accept)[:, 1]
-    z = np.array(accept)[:, 2]
-    accepts = [x, y, z]
-
-    a = np.array(reject)[:, 0]
-    b = np.array(reject)[:, 1]
-    c = np.array(reject)[:, 2]
-    rejects = [a, b, c]
-
-    n = 3
-    for (i, j) in combinations([0, 1, 2], 2):
-        plt.figure(n)
-
-        plt.scatter(accepts[i], accepts[j], color='g',
-                    marker='o', label="accept")
-        plt.scatter(rejects[i], rejects[j], color='r',
-                    marker='x', label="reject")
-        plt.xlabel(attribs[i])
-        plt.ylabel(attribs[j])
-
-        plt.legend()
-        n += 1
-
     # Display 3D plot  -------------------------
     plt.figure(2)
     sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
@@ -195,8 +138,6 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
 
     while not sampler.terminated:
         step += 1
-
-        # TODO: only asking "Would you accept system_X?"
 
         # Display the choice between this and the reference
         interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
