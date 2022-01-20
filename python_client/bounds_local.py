@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 import plot3d
 from deva import interface, elicit, bounds
 from bounds_client import tabulate
-
-# from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 
 
