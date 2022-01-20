@@ -4,17 +4,15 @@ import matplotlib.pyplot as plt
 from deva import bounds  # , interface, elicit
 # from bounds_client import tabulate
 
-from sklearn.metrics import log_loss
-# from sklearn.linear_model import LogisticRegression
+from bounds_local import evaluation
 
 
 def main():
     np.random.seed(42)
 
-    # TODO: define nonlinear scenario
+    # Define nonlinear scenario
     attribs = ["attr1", "attr2"]
     ref = [50, 50]
-
     u = np.arange(0, 100, 1)
     v = np.arange(0, 100, 2)
 
@@ -47,28 +45,9 @@ def main():
         r = 10  # radius
         center = [50, 50]
 
-        def distance(a, center):
-            a = np.array(a)
-            center = np.array(center)
-            dist = np.sqrt(np.sum((a - center) ** 2, axis=-1))
-            return dist
-
-        def lower_is_better(q):
-            q = np.array(q)
-            if q.ndim == 1:
-                x = q[0]
-                y = q[1]
-            else:
-                x = q[:, 0]
-                y = q[:, 1]
-            b = np.sum(center)
-            y_max = -x + b
-
-            return y <= y_max
-
         def nl_oracle(q):
             return np.logical_and((np.array(distance(q, center)) >= r),
-                                  lower_is_better(q))
+                                  is_below(q, center))
 
         for eliciter in eliciters:
             samp_name = eliciter
@@ -76,7 +55,7 @@ def main():
             outputs = run_bounds_eliciter(eliciters[eliciter], table,
                                           nl_oracle, ref,
                                           n_samples=100)
-            (sample_choices, _, scores) = outputs
+            (sample_choices, scores) = outputs
 
             if n_iter == 0:
                 eli_scores[samp_name] = []
@@ -87,14 +66,14 @@ def main():
         n_iter += 1
 
     # ----------- visualisation --------------
-    sampler = eliciters["LinearRandom"]
-    choices = eli_choices["LinearRandom"]
+    sampler = eliciters["LinearActive"]
+    choices = eli_choices["LinearActive"]
 
     # Display 2D plot for nl_oracle ------------
-    labels = nl_oracle(np.array(choices))
+    labels = nl_oracle(choices)
 
     # Create an instance of Logistic Regression Classifier and fit the data.
-    X = np.array(choices)
+    X = choices
     Y = labels
 
     # Plot the decision boundary.
@@ -107,7 +86,6 @@ def main():
 
     # Put the result into a color plot
     Z = Z.reshape(xx.shape)
-    print(Z.shape)
     plt.figure()
     plt.contourf(xx, yy, Z, levels=[0, 0.5, 1], cmap=plt.cm.Spectral)
     plt.colorbar()
@@ -115,8 +93,7 @@ def main():
     # Plot the true boundary
     Z = sampler.predict_prob(np.c_[xx.ravel(), yy.ravel()])[:, 1]
     Z = Z.reshape(xx.shape)
-    print(Z.shape)
-    plt.contour(xx, yy, Z, cmap="jet")
+    plt.contour(xx, yy, Z, cmap="RdYlGn")
     plt.colorbar()
 
     # Plot also the training points
@@ -130,23 +107,37 @@ def main():
     plt.show()
 
 
+def distance(a, center):
+    a = np.array(a)
+    center = np.array(center)
+    dist = np.sqrt(np.sum((a - center) ** 2, axis=-1))
+    return dist
+
+
+def is_below(q, center):
+    # Check whether a point is below a straight line through the center
+    q = np.array(q)
+    if q.ndim == 1:
+        x = q[0]
+        y = q[1]
+    else:
+        x = q[:, 0]
+        y = q[:, 1]
+    b = np.sum(center)
+    y_max = -x + b
+
+    return y <= y_max
+
+
 def run_bounds_eliciter(sample, table, oracle,
                         ref, n_samples):
     sampler = sample
 
     # logged for plotting
-    est_weights = []
     choices = []
     scores = []  # log_loss for each step
     step = 0
 
-    # For display purposes
-    # ref_candidate = elicit.Candidate("Baseline", baseline, None)
-
-    print("Do you prefer to answer automatically? y/N")
-    # matching user inputs
-    # yes = ["y", "yes"]
-    # answer = input().lower() in yes
     answer = True
     base = ["baseline", "base"]
 
@@ -154,8 +145,6 @@ def run_bounds_eliciter(sample, table, oracle,
         step += 1
 
         choices.append(sampler.choice)
-
-        est_weights.append(sampler.w)
 
         if answer:
             # Answer automatically
@@ -186,27 +175,7 @@ def run_bounds_eliciter(sample, table, oracle,
             of real candidates.")
     print(f"Candidates labeled with {acc:.0%} accuracy.")
 
-    return (choices, np.array(est_weights), scores)
-
-
-def evaluation(eliciter, ref, n_samples, oracle):
-    # generate random testing data
-    test_X = random_choice(ref, n_samples)
-    test_y = [oracle(x) for x in test_X]  # y_true
-
-    probabilities = eliciter.predict_prob(test_X)  # y_pred
-
-    loss = log_loss(test_y, probabilities, labels=[True, False])
-
-    return loss  # lower is better
-
-
-def random_choice(ref, n_samples):
-    rand = np.random.random_sample((n_samples, len(ref))) * 10
-    sign = np.random.choice([-1, 1])
-    choice = sign * rand + ref
-
-    return choice
+    return (np.array(choices), scores)
 
 
 if __name__ == "__main__":
