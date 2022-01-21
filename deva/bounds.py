@@ -2,7 +2,6 @@ import numpy as np
 from deva import elicit, fileio
 
 from sklearn.linear_model import LogisticRegression
-# from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neighbors import KNeighborsClassifier
 
 from python_client.nl_bounds import is_below, distance
@@ -38,8 +37,6 @@ class BoundsEliciter:
         raise NotImplementedError
 
 
-# TODO: a model does NOT make linear assumption
-# initialise: at least 6 points
 class Active(BoundsEliciter):
     """
     A model making non-linear assumption.
@@ -62,7 +59,6 @@ class Active(BoundsEliciter):
             steps: int
                 decides when to terminate
         """
-        # min max for each value
         self.attribs = attribs
         radius = 0.5 * table.std(axis=0)  # scale of perturbations
         ref = np.asarray(ref, dtype=float)  # sometimes autocasts to long int
@@ -72,14 +68,11 @@ class Active(BoundsEliciter):
         self.radius = radius
         self._step = 0
         self.steps = steps
-        # self.epsilon = epsilon
         self._converge = 0  # No. of steps when the model starts to be stable
-        # self.n_steps_converge = n_steps_converge
-        # self.old_w = 0
 
         self.neigh = KNeighborsClassifier(n_neighbors=5)
 
-        # Initialise  # TODO
+        # Initialise
         X = [[10, 0], [20, 0], [150, 0], [0, 10],
              [0, 20], [0, 150], [100, 100]]
         y = [1, 1, 0, 1, 1, 0, 0]
@@ -89,7 +82,6 @@ class Active(BoundsEliciter):
         self.neigh.fit(self.X, self.y)
 
         self._update()
-        # self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
     # input
     def observe(self, label):
@@ -101,14 +93,6 @@ class Active(BoundsEliciter):
         self._update()
 
     def _update(self):
-        # self.w = self.lr.coef_[0]  # TODO
-        # self.w = self.neigh.score(self.X, self.y)
-
-        # w_diff = np.abs(self.w - self.old_w)
-        # self.sum_diff_w = np.sum(w_diff)
-
-        # self.old_w = self.w.copy()
-
         # make random candidates
         def random_choice(n):
             choices = []
@@ -125,7 +109,7 @@ class Active(BoundsEliciter):
         # KNeighborsRegressor
         test_X = random_choice(1000)
 
-        # TODO: finding the least confident candidate
+        # finding the least confident candidate
         probabilities = self.neigh.predict_proba(test_X)[:, 1]
         min_index = np.argmin(np.abs(probabilities - 0.5))
 
@@ -137,28 +121,16 @@ class Active(BoundsEliciter):
         )
         self._step += 1
 
-        # count the number of steps when the model becomes stable
-        # if self.sum_diff_w <= self.epsilon:
-        #     self._converge += 1
-        # else:
-        #     self._converge = 0
-
         return
 
     def guess(self, q):
-        # TODO
         r = 10
         return np.logical_and((np.array(distance(q, self.ref)) >= r),
                               is_below(q, self.ref))
-        # return ((q - self.ref) @ self.w < 0)
 
     @property
     def terminated(self):
         return self._step > self.steps
-        # either the steps reach the limit or the model converges
-        # return (self._step > self.steps or
-        #         (self.sum_diff_w <= self.epsilon and
-        #          self._converge >= self.n_steps_converge))
 
     def predict_prob(self, test_samp):
         probabilities = self.neigh.predict_proba(test_samp)
