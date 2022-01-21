@@ -194,6 +194,31 @@ def init_session(scenario, algo, name):
     return spec
 
 
+@app.route('/initpoints')
+def get_initpoints():
+    global eliciters
+
+    if "ID" not in session:
+        print("Session not initialised!")
+        abort(400)  # Not initialised
+
+    eliciter = eliciters[session["ID"]]
+    return jsonify(eliciter.get_z_points())
+
+
+@app.route('/setn/<n1>/<ns>')
+def set_n(n1, ns):
+    global eliciters
+
+    if "ID" not in session:
+        print("Session not initialised!")
+        abort(400)  # Not initialised
+
+    eliciter = eliciters[session["ID"]]
+    eliciter.updateForN(int(n1), int(ns))
+    return "OK"
+
+
 @app.route('/<scenario>/ranges', methods=['GET'])
 def get_ranges(scenario):
     global ranges
@@ -223,6 +248,78 @@ def apply_constraints(scenario):
     data = request.get_json(force=True)
     print(data)
     return "OK"
+
+
+@app.route('/Enautilus/zpoints')
+def get_z():
+    global eliciters
+    global loggers
+    if "ID" not in session:
+        print("Session not initialised!")
+        abort(400)  # Not initialised
+
+    eliciter = eliciters[session["ID"]]
+    # log = loggers[session["ID"]]
+    return jsonify(eliciter.get_z_points())
+
+
+@app.route('/Enautilus/choice', methods=['GET', 'PUT'])
+def get_enu_choice():
+    global eliciters
+    global loggers
+    if "ID" not in session:
+        print("Session not initialised!")
+        abort(400)  # Not initialised
+
+    eliciter = eliciters[session["ID"]]
+    log = loggers[session["ID"]]
+
+    # if we got a choice, process it
+    if request.method == "PUT":
+        print("PUT")
+        data = request.get_json(force=True)
+        log.add_choice([data])
+        x = data["first"]
+
+        # Only pass valid choices on to the eliciter
+        if not eliciter.terminated:
+            choice = eliciter.query
+            eliciter.input(choice[int(x)])
+    if eliciter.terminated:
+        result = eliciter.result
+        res = {result.name: {
+                'attr': result.attributes,
+                'spec': result.spec_name
+        }}
+        log.add_result(res)
+        data = log.get_log()
+        print(data)
+        if not os.path.exists('logs'):
+            os.mkdir('logs')
+        output_file_name = "logs/log of session " + str(session["ID"]) + \
+            ".toml"
+        with open(output_file_name, "w") as toml_file:
+            toml.dump(data, toml_file)
+        pdf = FPDF()
+        # Add a page
+        pdf.add_page()
+        # set style and size of font
+        # that you want in the pdf
+        pdf.set_font("Arial", size=15)
+        f = open(output_file_name, "r")
+        for lines in f:
+            pdf.cell(200, 10, txt=lines, ln=1, align='C')
+        pdf.output("logs/log of session " + str(session["ID"]) +
+                   ".pdf")
+    else:
+        res = {}
+        for index, option in enumerate(eliciter.query):
+            index = str(index)
+            res[index] = {}
+            res[index]['name'] = option.name
+            res[index]["values"] = option.attributes
+        log.add_options(res)
+    return jsonify(res)
 
 
 @app.route('/<scenario>/choice', methods=['GET', 'PUT'])

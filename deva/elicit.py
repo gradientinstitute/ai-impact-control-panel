@@ -149,6 +149,111 @@ class Toy(Eliciter):
         return "Toy description"
 
 
+class Enautilus(Eliciter):
+    _nadir = {}
+    _ideal = {}
+    _h = -1
+    _ns = -1
+
+    def __init__(self, candidates, scenario):
+        if len(candidates) < 2:
+            raise RuntimeError('Two or more candidates required.')
+        Eliciter.__init__(self)
+        self.candidates = list(candidates)
+        self.attribs = list(candidates[0].attributes.keys())
+        # calculate ideal and nadir
+        for att in self.attribs:
+            min = None
+            max = None
+            for candidate in candidates:
+                temp = candidate.attributes[att]
+                if min is None or temp < min:
+                    min = temp
+                if max is None or temp > max:
+                    max = temp
+            self._ideal[att] = min
+            self._nadir[att] = max
+
+    def get_z_points(self):
+        return [self._ideal, self._nadir]
+
+    def updateForN(self, n1, ns):
+        self._h = n1 + 1
+        self.ns = ns
+        self._update()
+
+    @property
+    def query(self):
+        return self._query
+
+    @property
+    def terminated(self):
+        return (self._h <= 0) or (len(self.candidates) == 1)
+
+    @property
+    def result(self):
+        assert (self._h <= 0) or (len(self.candidates) == 1), "Not terminated."
+        X = []
+        for can in self.candidates:
+            X.append(np.array(list(can.get_attr())))
+        return self.candidates[np.linalg.norm(np.array(X) - np.array(list(
+                                            self._nadir.values()))).argmin()]
+
+    def input(self, choice):
+        assert self._query and choice in self._query, "Response mismatch."
+        self._nadir = choice.attributes
+        # remove candidates that are worse in every attribute
+        copy = []
+        for can in self.candidates:
+            if np.all(np.array(list(can.get_attr())) <
+                      np.array(list(self._nadir.values()))):
+                copy.append(can)
+        for c in copy:
+            self.candidates.remove(c)
+        # calculate new ideal point
+        for att in self.attribs:
+            min = None
+            for candidate in self.candidates:
+                temp = candidate.attributes[att]
+                if min is None or temp < min:
+                    min = temp
+            self._ideal[att] = min
+        self._update()
+
+    def virtualCandidateGen(self):
+        X = []
+        for can in self.candidates:
+            X.append(np.array(list(can.get_attr())))
+        if self.ns > len(self.candidates):
+            self.ns = len(self.candidates)
+        from sklearn.cluster import KMeans
+        kmeans = KMeans(n_clusters=self.ns).fit(np.array(X))
+        centers = kmeans.cluster_centers_
+        # project to the line between pareto front and nadir point
+        if self._h == 1:
+            numerator = 1
+        else:
+            numerator = self._h - 1
+        centers = centers+(np.array(list(self._nadir.values()))-centers) *\
+            (numerator/self._h)
+        res = []
+        for index, system in enumerate(centers):
+            res.append(Candidate(index,
+                                 dict(zip(self.attribs, system))))
+        return res
+
+    def _update(self):
+        if (self._h > 0) and (len(self.candidates) != 1):
+            self._query = self.virtualCandidateGen()
+            self._h = self._h - 1
+        else:
+            self._query = None
+
+    @staticmethod
+    def description():
+        return "E-NAUTILUS eliciter"
+
+
 # Eliciter implementations
 class ActiveRanking(Eliciter):
 
@@ -262,4 +367,5 @@ eliciters = {
     "ActiveMaxSmooth": ActiveMaxSmooth,
     "ActiveMaxPrimary": ActiveMaxPrimary,
     "VotingEliciter": VotingEliciter,
+    "Enautilus": Enautilus
 }
