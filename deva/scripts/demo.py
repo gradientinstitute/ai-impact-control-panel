@@ -30,7 +30,7 @@ def cli(scenario, method, bounds, nofilter):
         input()
         return
 
-    eliciter = METHODS[method](candidates, scenario)
+    eliciter = elicit.algorithms[method](candidates, scenario)
     while not eliciter.terminated:
         display(eliciter.query, metrics)
 

@@ -4,8 +4,6 @@ from functools import partial
 import numpy as np
 from deva import halfspace
 
-from itertools import combinations
-
 
 class Candidate:
     def __init__(self, name, attributes, spec_name=None):
