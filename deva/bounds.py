@@ -98,8 +98,6 @@ class Active(BoundsEliciter):
             choices = []
             for _ in range(n):
                 while True:
-                    # uniform
-                    # define valid range, inform by sample
                     choice = np.random.rand(len(self.ref)) * 100
                     choices.append(choice)
                     if self.check_valid(choice):
