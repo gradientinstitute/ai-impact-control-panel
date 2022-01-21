@@ -6,7 +6,8 @@ import pytest
 
 
 def make_data():
-    data = list(permutations(range(4), 4))  # pareto efficient set
+    # make a simple multi-dimensional pareto efficient set with no repeats
+    data = list(permutations(range(4), 4))
     attribs = [f"X{i+1}" for i in range(4)]
 
     candidates = [
@@ -23,33 +24,25 @@ def make_data():
 
 @pytest.mark.parametrize('algorithm', elicit.algorithms)
 def test_works(algorithm):
-
+    # Note: assumes choice is from a discrete set (no continuous responses)
     candidates, scenario, attribs = make_data()
+
     # Simulate a linear preference - consistent and easy to discover
     w = np.array([1, 4, 2, 3])
 
     def oracle(query):
-        vals = np.array([[q[a] for a in attribs] for q in eliciter.query])
-        scores = vals @ w
-        if (scores[0] <= scores[1]):
-            return query[0].name
-        else:
-            return query[1].name
+        scores = np.array([[q[a] for a in attribs] for q in query]) @ w
+        return query[np.argmin(scores)].name
 
-    scores = np.array([[q[a] for a in attribs] for q in candidates]) @ w
-    best = np.argmin(scores)
+    best = oracle(candidates)
 
     eliciter = elicit.algorithms[algorithm](candidates, scenario)
 
     while not eliciter.terminated:
         ans = oracle(eliciter.query)
         eliciter.input(ans)
-    # run one step (not to convergence)
 
-    choice = eliciter.result.name
-    ref = candidates[best].name
-
-    assert choice == ref
+    assert eliciter.result.name == best
 
 
 @pytest.mark.parametrize('algorithm', elicit.algorithms)
