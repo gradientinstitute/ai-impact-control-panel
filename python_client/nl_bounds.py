@@ -38,12 +38,13 @@ def main():
             "LinearRandom": bounds.LinearRandom(ref, table, attribs, steps=50),
             "LinearActive": bounds.LinearActive(ref, table, attribs, steps=50,
                                                 epsilon=0.005,
-                                                n_steps_converge=5)
+                                                n_steps_converge=5),
+            "Active": bounds.Active(ref, table, attribs, steps=100)
         }
 
         # Create a non-linear oracle function
         r = 10  # radius
-        center = [50, 50]
+        center = ref
 
         def nl_oracle(q):
             return np.logical_and((np.array(distance(q, center)) >= r),
@@ -66,8 +67,8 @@ def main():
         n_iter += 1
 
     # ----------- visualisation --------------
-    sampler = eliciters["LinearActive"]
-    choices = eli_choices["LinearActive"]
+    sampler = eliciters["Active"]
+    choices = eli_choices["Active"]
 
     # Display 2D plot for nl_oracle ------------
     labels = nl_oracle(choices)
@@ -93,7 +94,7 @@ def main():
     # Plot the true boundary
     Z = sampler.predict_prob(np.c_[xx.ravel(), yy.ravel()])[:, 1]
     Z = Z.reshape(xx.shape)
-    plt.contour(xx, yy, Z, cmap="RdYlGn")
+    plt.contour(xx, yy, Z, levels=[.25, .5, .75], cmap="RdYlGn")
     plt.colorbar()
 
     # Plot also the training points
