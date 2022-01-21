@@ -6,18 +6,37 @@ import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useRecoilValue } from 'recoil';
-import {Pane, paneState, scenarioState, 
+import { Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
 
-import { maxRangesState, currentCandidatesState, allCandidatesState,
-  currentSelectionState, isBlockedState, scrollbarHandleState, filterCandidates,
-  getSliderStep, bestValuesState, blockedMetricState, } from './ConstrainScrollbar';
+import { allCandidatesState, maxRangesState, currentCandidatesState,
+  filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
+  blockedMetricState, isBlockedState, resolvedBlockedState, 
+  blockedStatusState } from './ConstrainScrollbar';
 
-enum HandleColours {
-  'white',  // default
-  'gray',   // blocked
-  'orange', // bounced
-  'red',    // blocking
+const HandleColours = {
+  0: 'white', // default
+  1: 'gray',  // blocked
+  2: 'red',   // blocking
+}
+
+const BackgroundColours = {
+  0: 'bg-gray-600',  // default
+  1: 'bg-gray-700',  // blocked
+  2: 'bg-pink-900',  // blocking
+  3: 'bg-green-900', // resolvedBlock
+  4: 'bg-gray-700',  // currentlySelected
+  5: 'bg-blue-700',  // blockedMetric
+}
+
+function GetBackgroundColor(uid) {
+  const blockStatus = useRecoilValue(blockedStatusState)[uid];
+  return BackgroundColours[blockStatus];
+};
+
+function GetHandleColor(uid) {
+  const blockStatus = useRecoilValue(blockedStatusState)[uid];
+  return HandleColours[blockStatus];
 }
 
 export function ConstraintPane({}) {
@@ -144,12 +163,7 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter})
   const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
   const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
   const decimals = u.displayDecimals;
-
-  const blockedMetric = useRecoilValue(blockedMetricState);
-  const currentSelection = useRecoilValue(currentSelectionState);
-  let bgcolor = currentSelection === uid ? 'bg-gray-700' : 'bg-gray-600';
-  bgcolor = blockedMetric === uid ? 'bg-yellow-800' : bgcolor; 
-
+  const bgcolor = GetBackgroundColor(uid);
 
   return (
     <div key={uid} 
@@ -173,11 +187,7 @@ function QualitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) 
   const max = u.options.length - 1; 
   const cmin = constraints[uid][0];
   const cmax = constraints[uid][1];
-
-  const blockedMetric = useRecoilValue(blockedMetricState);
-  const currentSelection = useRecoilValue(currentSelectionState);
-  let bgcolor = currentSelection === uid ? 'bg-gray-700' : 'bg-gray-600';
-  bgcolor = blockedMetric === uid ? 'bg-yellow-800' : bgcolor; 
+  const bgcolor = GetBackgroundColor(uid);
 
   const options = Object.fromEntries(
     u.options.map(x => [u.options.indexOf(x), x])
@@ -224,7 +234,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const [currentSelection, setCurrentSelection] = useRecoilState(currentSelectionState);
-  const blockedMetric = useRecoilValue(blockedMetricState);
+  const [blockedMetric, setBlockedMetric] = useRecoilState(blockedMetricState);
 
   const all = useRecoilValue(allCandidatesState);
   const thresholdValues = useRecoilValue(bestValuesState);
@@ -232,7 +242,8 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const isBlocked = useRecoilValue(isBlockedState);
   const blockString = (currentSelection === uid) && (isBlocked) ? "BLOCKED" : "";
-    
+  const resolvedBlocked = useRecoilValue(resolvedBlockedState);
+
   function onBeforeChange() {
     setCurrentSelection(uid);
   };
@@ -263,16 +274,14 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
       n[uid]  = [n[uid][0], newVal];
     }
 
-    setConstraints(n);
+    setConstraints(n);  
   }
-
-  const blockedScrollbar : any = useRecoilValue(scrollbarHandleState);
   
   const handleStyle = {
-    backgroundColor: HandleColours[blockedScrollbar[uid]], 
+    backgroundColor: GetHandleColor(uid), 
     height: 20, 
     width: 20, 
-    borderColor: HandleColours[blockedScrollbar[uid]]
+    borderColor: GetHandleColor(uid)
   };
 
   let rangeProps = {
@@ -299,16 +308,49 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   // const percentage = getTargetPercentage(higherIsBetterMap, uid, targets, min, max, decimals);
   // const blockingState = {...blockedScrollbar}[uid];
 
-  const buttonEnabled = ((currentSelection === uid) && (isBlocked)) || (blockedMetric === uid);
+  const buttonEnabled = (blockedMetric === uid) 
+    || (blockedMetric === null && currentSelection === uid && isBlocked)
+
+  const button = buttonEnabled 
+    ? <UnblockButton uid={uid} buttonDisabled={!buttonEnabled}/> 
+    : <StatusButton uid={uid}/>
 
   return (
   <div>
     {/* <BlockingTargetBar percentage={percentage} blockingState={blockingState}/> */}
-    <p>{"Blocked status: " + blockString}</p>
+    {/* <p>{"Blocked status: " + blockString}</p> */}
     <Slider {...rangeProps} />
     <OptimalDirection lowerIsBetter={lowerIsBetter}/>
-    <UnblockButton uid={uid} buttonDisabled={!buttonEnabled}/>
+    {button}
+    {/* <p>{"Blocked :" + blockedMetric}</p> */}
   </div>
+  );
+}
+
+function StatusButton({uid}) {
+
+  const StatusText = {
+    0: ' ',              // default
+    1: 'Blocked',        // overridden by toggle button (blockedMetric)
+    2: 'Blocking',       //
+    3: 'Resolved Block', // overridden by toggle button 
+    4: ' ',              // currently selected
+    5: 'Blocked'         //
+  }
+
+  const blockStatus = useRecoilValue(blockedStatusState)[uid];
+  const bgcolor = GetBackgroundColor(uid);
+  const text = StatusText[blockStatus];
+
+  return (
+    <button className={bgcolor + "text-xl uppercase py-2 px-8 font-bold rounded-lg"}
+      onMouseOver={() => {
+        // TODO: display information to guide user 
+        console.log("HOVERING OVER BUTTON");
+      }}
+    >
+    {text}
+    </button>
   );
 }
 
@@ -362,9 +404,12 @@ function OptimalDirection({lowerIsBetter}) {
 function UnblockButton({uid, buttonDisabled}) {
 
   const [blockedMetric, setBlockedMetric] = useRecoilState(blockedMetricState);
+  const text = (blockedMetric === uid) 
+    ? "finish unblocking"
+    : "suggest metrics to unblock";
 
   return (
-    <button className="btn text-xl uppercase py-4 px-8 font-bold rounded-lg"
+    <button className="btn text-xl uppercase py-2 px-8 font-bold rounded-lg"
       onClick={() => {
         if (blockedMetric === uid) {
           setBlockedMetric(null);
@@ -373,7 +418,7 @@ function UnblockButton({uid, buttonDisabled}) {
         }
       }}
       disabled={buttonDisabled}>
-    Toggle unblocking suggestions
+      {text}
     </button>
   );
 }
