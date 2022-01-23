@@ -254,12 +254,12 @@ class ActiveMaxPrimary(ActiveRanking):
         return "ActiveMaxPrimary description"
 
 
-# export a list of eliciters
-eliciters = {
-    "Toy": Toy,
-    "ActiveRanking": ActiveRanking,
-    "ActiveMax": ActiveMax,
-    "ActiveMaxSmooth": ActiveMaxSmooth,
-    "ActiveMaxPrimary": ActiveMaxPrimary,
-    "VotingEliciter": VotingEliciter,
+# Export all the Eliciter classes
+algorithms = {
+    'Toy': Toy,
+    'ActiveRank': ActiveRanking,
+    'ActiveMax': ActiveMax,
+    'ActiveMaxSmooth': ActiveMaxSmooth,
+    'ActiveMaxPrimary': ActiveMaxPrimary,
+    'Voting':  VotingEliciter,
 }

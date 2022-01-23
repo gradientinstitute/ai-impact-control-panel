@@ -16,7 +16,7 @@ app.config['SECRET_KEY'] = util.random_key(16)
 
 # TODO: proper cache / serialisation
 eliciters_descriptions = {k: v.description()
-                          for k, v in elicit.eliciters.items()}
+                          for k, v in elicit.algorithims.items()}
 
 eliciters = {}
 bounders = {}
@@ -30,9 +30,6 @@ def calc_ranges(candidates, spec):
     keys = spec['metrics'].keys()
     points = [c.attributes for c in candidates]
     collated = {k: [p[k] for p in points] for k in keys}
-    print("points:\n", points)
-    print("collated:\n", collated)
-
     return points, collated
 
 
