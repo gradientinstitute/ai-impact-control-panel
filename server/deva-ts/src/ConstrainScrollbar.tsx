@@ -18,7 +18,7 @@ export const blockedStatusState = selector({
     const constraints = get(constraintsState);
     const uidSelected = get(currentSelectionState);
     const isBlocked = get(isBlockedState);
-    const blockingMetrics = get(blockingMetricsState);
+    const blockingMetrics = get(blockingMetricsState).blockingMetrics;
     const blockedMetric = get(blockedMetricState);
     const resolvedBlock = get(resolvedBlockedState);
 
@@ -186,9 +186,10 @@ export const blockingMetricsState = selector({
     const potentialCandidates = get(potentialUnblockingCandidatesState);
     
     const blockingMetrics = new Map();
+    const suggestedCandidates = new Map();
 
     if (uidBlocked === null) {
-      return blockingMetrics;
+      return {blockingMetrics, suggestedCandidates};
     }
 
     // determine which other metrics need to be adjusted for change to happen
@@ -201,11 +202,42 @@ export const blockingMetricsState = selector({
           } else {
             blockingMetrics.get(metric).add(targetValue);
           }
+          // map of candidates to set of metrics and target values
+          if (!suggestedCandidates.has(candidate)) {
+            suggestedCandidates.set(candidate, new Set([{metric, targetValue}]));
+          } else {
+            suggestedCandidates.get(candidate).add({metric, targetValue});
+          }
         }
       });
     });
 
-    return blockingMetrics;
+    return {blockingMetrics, suggestedCandidates};
+  }
+});
+
+// determine the value required to definitely unblock a metric
+// without needing to adjust other sliders
+export const unblockValuesState = selector({
+  key: 'unblockValues',
+  get: ({get}) => {
+    const blockingMetrics = get(blockingMetricsState).suggestedCandidates;
+
+    // filter for candidates only one metric needs improvement
+    const m = (Array.from(blockingMetrics))
+      .map(x => x[1])
+      .filter(x => x.size == 1);
+
+    // take the smallest value required to unblock blockedMetric
+    let unblockingMetrics = new Map();
+    m.forEach(([x, y]) => {
+      if (!(unblockingMetrics.has(x.metric))) {
+        unblockingMetrics.set(x.metric, x.targetValue);
+      } else if (unblockingMetrics.get(x.metric) >= x.targetValue) {
+        unblockingMetrics.set(x.metric, x.targetValue);
+      }
+    });
+    return unblockingMetrics;
   }
 });
 
