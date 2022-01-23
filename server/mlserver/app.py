@@ -16,7 +16,7 @@ app.config['SECRET_KEY'] = util.random_key(16)
 
 # TODO: proper cache / serialisation
 eliciters_descriptions = {k: v.description()
-                          for k, v in elicit.algorithims.items()}
+                          for k, v in elicit.algorithms.items()}
 
 eliciters = {}
 bounders = {}
