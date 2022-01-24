@@ -21,17 +21,18 @@ class Candidate:
         return self.attributes.values()
 
 
-class Pair(tuple):
-    def __new__(cls, a: Candidate, b: Candidate):
-        assert isinstance(a, Candidate) and isinstance(b, Candidate)
-        return tuple.__new__(cls, (a, b))
+class Pair:
+    def __init__(self, a: Candidate, b: Candidate):
+        self._tuple = (a, b)
 
     def __contains__(self, x):
-        return ((x == self[0].name) or (x == self[1].name)
-                or tuple.__contains__(self, x))
+        return self._tuple.__contains__(x)
 
     def __repr__(self):
-        return f"Pair({self[0].name}, {self[1].name})"
+        return f"Pair({self._tuple[0].name}, {self._tuple[1].name})"
+
+    def __iter__(self):
+        return self._tuple.__iter__()
 
 
 class Eliciter:

@@ -1,29 +1,98 @@
-from flask import (Flask, session,
-                   abort, request, send_from_directory)
-
-# from flask_caching import Cache
+from flask import Flask, session, abort, request, send_from_directory
 from deva import elicit, bounds, fileio, logger
 from fpdf import FPDF
+import redis
 import toml
+import os
 import os.path
-import util
+import pickle
+import sys
+import hashlib
+from util import jsonify, random_key
 
-jsonify = util.jsonify
 
-# Set up the flask app
+# Set up the flask app and session management
 app = Flask(__name__)
-app.config['SECRET_KEY'] = util.random_key(16)
+app.config.from_envvar('DEVA_MLSERVER_CONFIG')
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("No SECRET_KEY set for Flask application")
+app.config['SECRET_KEY'] = SECRET_KEY
+
+
+class DB:
+    def __init__(self):
+        self.r = redis.Redis(host=app.config['REDIS_SERVER'],
+                             port=app.config['REDIS_PORT'], db=0,
+                             socket_connect_timeout=2)
+        try:
+            self.r.ping()
+        except Exception:
+            print("Could not connect to Redis database",
+                  f"Server:{app.config['REDIS_SERVER']}",
+                  f"Port:{app.config['REDIS_PORT']}")
+            sys.exit(-1)
+
+    def _get(self, key):
+        id = session['id']
+        raw = self.r.get(id + "/" + key)
+        result = pickle.loads(raw)
+        print(f"getting {key}:", hashlib.md5(raw).hexdigest())
+        return result
+
+    def _set(self, key, value):
+        id = session['id']
+        raw = pickle.dumps(value)
+        self.r.set(id + "/" + key, raw)
+        print(f"setting {key}: ", hashlib.md5(raw).hexdigest())
+
+    def _del(self, key):
+        id = session['id']
+        self.r.delete(id + '/' + key)
+
+    @property
+    def eliciter(self):
+        return self._get('eliciter')
+
+    @eliciter.setter
+    def eliciter(self, value):
+        return self._set('eliciter', value)
+
+    @eliciter.deleter
+    def eliciter(self):
+        return self._del('eliciter')
+
+    @property
+    def bounder(self):
+        return self._get('bounder')
+
+    @bounder.setter
+    def bounder(self, value):
+        return self._set('bounder', value)
+
+    @bounder.deleter
+    def bounder(self):
+        return self._del('bounder')
+
+    @property
+    def logger(self):
+        return self._get('logger')
+
+    @logger.setter
+    def logger(self, value):
+        return self._set('logger', value)
+
+    @logger.deleter
+    def logger(self):
+        return self._del('logger')
+
+
+db = DB()
 
 # TODO: proper cache / serialisation
 eliciters_descriptions = {k: v.description()
                           for k, v in elicit.algorithms.items()}
-
-eliciters = {}
-bounders = {}
-scenarios = {}
-# ranges = {}
-loggers = {}
-baselines = {}
 
 
 def calc_ranges(candidates, spec):
@@ -40,32 +109,32 @@ def check_status():
 
 @app.route('/scenarios')
 def get_scenarios():
+    if 'id' not in session:
+        session['id'] = random_key(16)
     data = fileio.list_scenarios()
     return jsonify(data)
 
 
 def _scenario(name="jobs"):
-    global scenarios
 
-    if name not in scenarios:
-        data = fileio.load_scenario(name)
+    data = fileio.load_scenario(name)
 
-        # Massage the metadata
-        models, spec = data
-        metrics = spec["metrics"]
-        for attr in metrics:
-            for key in metrics[attr]:
-                # get rid of my plural adjustments for now
-                if isinstance(metrics[attr][key], str):
-                    metrics[attr][key] = metrics[attr][key].format(s="s")
+    # Massage the metadata
+    models, spec = data
+    metrics = spec["metrics"]
+    for attr in metrics:
+        for key in metrics[attr]:
+            # get rid of my plural adjustments for now
+            if isinstance(metrics[attr][key], str):
+                metrics[attr][key] = metrics[attr][key].format(s="s")
 
-        for m in models:
-            # make html-friendly uuid
-            m.name = m.name.replace(" ", "_")
+    for m in models:
+        # make html-friendly uuid
+        m.name = m.name.replace(" ", "_")
 
-        scenarios[name] = (models, spec)
+    result = (models, spec)
 
-    return scenarios[name]
+    return result
 
 
 @app.route('/<scenario>/images/<path:name>')
@@ -85,34 +154,24 @@ def send_log(name):
 
 @app.route('/<scenario>/bounds/init', methods=['PUT'])
 def init_bounds(scenario):
-    global bounders
-
-    if "BOUND_ID" in session:
-        print("Reset session")
-    else:
-        print("Creating new session key")
-        session["BOUND_ID"] = util.random_key(16, bounders)
-        session.modified = True
-
-    ident = session["BOUND_ID"]
+    if 'id' not in session:
+        session['id'] = random_key(16)
     candidates, meta = _scenario(scenario)
     baseline = meta["baseline"]
     metrics = meta["metrics"]
     attribs, table = bounds.tabulate(candidates, metrics)
     ref = [baseline[a] for a in attribs]
-    bounders[ident] = bounds.PlaneSampler(ref, table, attribs, steps=30)
+    db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
     return ""
 
 
 @app.route('/<scenario>/bounds/choice', methods=['GET', 'PUT'])
 def get_bounds_choice(scenario):
-    global bounders
 
-    if "BOUND_ID" not in session:
+    if db.bounder is None:
         print("Session not initialised!")
         abort(400)  # Not initialised
-
-    sampler = bounders[session["BOUND_ID"]]
+    sampler = db.bounder
 
     # if we received a choice, process it
     if request.method == "PUT":
@@ -155,6 +214,9 @@ def get_bounds_choice(scenario):
                 }
         }
 
+    # Update database state
+    db.bounder = sampler
+
     return jsonify(res)
 
 
@@ -168,36 +230,23 @@ def get_algorithm():
 
 @app.route('/<scenario>/init/<algo>/<name>')
 def init_session(scenario, algo, name):
-    global eliciters
-    global loggers
-
-    if "ID" in session:
-        print("Reset session")
-    else:
-        print("New session")
-        session["ID"] = util.random_key(16, eliciters)
-        session.modified = True
-
+    if 'id' not in session:
+        session['id'] = random_key(16)
     # assume that a reload means user wants a restart
-    print("Init new session for ", session["ID"])
+    print("Init new session for user")
     candidates, spec = _scenario(scenario)
-    eliciter = elicit.eliciters[algo](candidates, spec)
+    eliciter = elicit.algorithms[algo](candidates, spec)
     log = logger.Logger(scenario, algo, name)
-    eliciters[session["ID"]] = eliciter
-    loggers[session["ID"]] = log
+    db.eliciter = eliciter
+    db.logger = log
     # ranges[session["ID"]] = calc_ranges(candidates, spec)
-    spec['ID'] = session["ID"]
+    # spec['ID'] = session["ID"]
     # send the metadata for the scenario
     return spec
 
 
 @app.route('/<scenario>/ranges', methods=['GET'])
 def get_ranges(scenario):
-    global ranges
-
-    # if "ID" not in session:
-    #     print("Session not initialised!")
-    #     abort(400)  # Not initialised
 
     candidates, spec = _scenario(scenario)
     points, _collated = calc_ranges(candidates, spec)
@@ -206,33 +255,25 @@ def get_ranges(scenario):
 
 @app.route('/<scenario>/baseline', methods=['GET'])
 def get_baseline(scenario):
-    global baselines
-
-    # We can just load from disk every time if we configure caching
-    if scenario not in baselines:
-        baselines[scenario] = fileio.load_baseline(scenario)
-
-    return jsonify(baselines[scenario])
+    result = fileio.load_baseline(scenario)
+    return jsonify(result)
 
 
 @app.route('/<scenario>/constraints', methods=['PUT'])
 def apply_constraints(scenario):
     data = request.get_json(force=True)
-    print(data)
     return "OK"
 
 
 @app.route('/<scenario>/choice', methods=['GET', 'PUT'])
 def get_choice(scenario):
-    global eliciters
-    global loggers
 
-    if "ID" not in session:
+    if db.eliciter is None:
         print("Session not initialised!")
         abort(400)  # Not initialised
 
-    eliciter = eliciters[session["ID"]]
-    log = loggers[session["ID"]]
+    eliciter = db.eliciter
+    log = db.logger
 
     # if we got a choice, process it
     if request.method == "PUT":
@@ -289,5 +330,9 @@ def get_choice(scenario):
                     "values": m2.attributes
                     }
             }
+
+    # the state has changed, needs to be written back
+    db.eliciter = eliciter
+    db.logger = log
 
     return jsonify(res)
