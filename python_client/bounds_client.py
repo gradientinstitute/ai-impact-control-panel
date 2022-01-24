@@ -10,6 +10,7 @@ from deva import elicit, interface
 
 import pickle
 
+
 def main():
     sess = requests.Session()
 
@@ -71,7 +72,7 @@ def main():
         ref = np.array([right.attributes[a] for a in attribs])
 
         choice_log.append(q)
-        
+
         # center = [50, 50]
         # r = 10
         # q = q[:2]
@@ -94,26 +95,21 @@ def main():
         # Reply to server
         choice = sess.put(request, json=data).json()
 
-
     # Terminated - decode the model
-    # print(os.path.abspath("."))
     model_ID = sess.get(request).json()
     path = 'server/mlserver/' + model_ID["model_ID"]
     model = pickle.load(open(path, "rb"))  # load the model from disk
     # proba = model.predict_prob
-    
-    # model = choice['hyperplane']
+
     # ref = np.array([model['origin'][a] for a in attribs])
-    # w_est = np.array([model['normal'][a] for a in attribs])
+    w_est = model.w
 
     # Display text results report
     print("Experimental results ------------------")
-    # print("Hidden weights:    ", w_true.round(2))
-    # print("Estimated weights: ", w_est.round(2))
+    print("Hidden weights:    ", w_true.round(2))
+    print("Estimated weights: ", w_est.round(2))
     accept = ((table - ref) @ w_true < 0)
-    # pred = ((table - ref) @ w_est < 0)
-    # pred = proba
-    # accept = nl_oracle(table)
+    pred = ((table - ref) @ w_est < 0)
     pred = model.guess(table)
     accept_rt = accept.mean()
     acc = np.mean(accept == pred)
@@ -123,17 +119,17 @@ def main():
 
     # Display 3D plot  -------------------------
     # because this is display, we need to flip choices
-    # sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
-    #                 for a in attribs])
+    sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
+                    for a in attribs])
 
-    # plot3d.sample_trajectory(choice_log * sign, attribs)
-    # rad = plot3d.radius(choice_log)[:3]
-    # plot3d.weight_disc(
-    #     w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
-    # plot3d.weight_disc(
-    #     w_est[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
-    # plt.legend()
-    # plt.show()
+    plot3d.sample_trajectory(choice_log * sign, attribs)
+    rad = plot3d.radius(choice_log)[:3]
+    plot3d.weight_disc(
+        w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
+    plot3d.weight_disc(
+        w_est[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
+    plt.legend()
+    plt.show()
 
 
 def tabulate(candidates, metrics):
