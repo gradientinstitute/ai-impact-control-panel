@@ -65,7 +65,7 @@ def main():
             choice["right"]["values"],
         )
 
-        interface.text(elicit.Pair(left, right), metrics)
+        interface.text((left, right), metrics)
 
         # Answer automatically
         q = np.array([left.attributes[a] for a in attribs])

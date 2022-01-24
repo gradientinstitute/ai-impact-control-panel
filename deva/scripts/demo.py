@@ -5,20 +5,12 @@ import logging
 from deva import fileio
 from deva import interface
 
-METHODS = {
-    'toy': elicit.Toy,
-    'rank': elicit.ActiveRanking,
-    'max': elicit.ActiveMax,
-    'max_smooth': elicit.ActiveMaxSmooth,
-    'max_prim': elicit.ActiveMaxPrimary,
-}
-
 
 @click.command()
 @click.argument('scenario', type=click.Path(
     exists=True, file_okay=False, dir_okay=True, resolve_path=True))
 @click.option('-m', '--method', default='max',
-              type=click.Choice(METHODS, case_sensitive=False),
+              type=click.Choice(elicit.algorithms, case_sensitive=False),
               help='interactive model selection method.')
 @click.option('-b', '--bounds', default=False, is_flag=True,
               help='interactively choose acceptable performance bounds.')
@@ -38,7 +30,7 @@ def cli(scenario, method, bounds, nofilter):
         input()
         return
 
-    eliciter = METHODS[method](candidates, scenario)
+    eliciter = elicit.algorithms[method](candidates, scenario)
     while not eliciter.terminated:
         display(eliciter.query, metrics)
 
