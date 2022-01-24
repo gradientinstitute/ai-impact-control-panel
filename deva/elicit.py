@@ -152,8 +152,8 @@ class Toy(Eliciter):
 class Enautilus(Eliciter):
     _nadir = {}
     _ideal = {}
-    _h = -1
-    _ns = -1
+    _h = 3
+    _ns = 2
 
     def __init__(self, candidates, scenario):
         if len(candidates) < 2:
@@ -173,13 +173,14 @@ class Enautilus(Eliciter):
                     max = temp
             self._ideal[att] = min
             self._nadir[att] = max
+        self._update()
 
     def get_z_points(self):
         return [self._ideal, self._nadir]
 
     def updateForN(self, n1, ns):
         self._h = n1 + 1
-        self.ns = ns
+        self._ns = ns
         self._update()
 
     @property
@@ -224,10 +225,10 @@ class Enautilus(Eliciter):
         X = []
         for can in self.candidates:
             X.append(np.array(list(can.get_attr())))
-        if self.ns > len(self.candidates):
-            self.ns = len(self.candidates)
+        if self._ns > len(self.candidates):
+            self._ns = len(self.candidates)
         from sklearn.cluster import KMeans
-        kmeans = KMeans(n_clusters=self.ns).fit(np.array(X))
+        kmeans = KMeans(n_clusters=self._ns).fit(np.array(X))
         centers = kmeans.cluster_centers_
         # project to the line between pareto front and nadir point
         if self._h == 1:

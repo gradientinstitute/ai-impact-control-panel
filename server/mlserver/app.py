@@ -181,7 +181,7 @@ def init_session(scenario, algo, name):
     # assume that a reload means user wants a restart
     print("Init new session for ", session["ID"])
     candidates, spec = _scenario(scenario)
-    eliciter = elicit.eliciters[algo](candidates, spec)
+    eliciter = elicit.algorithms[algo](candidates, spec)
     log = logger.Logger(scenario, algo, name)
     eliciters[session["ID"]] = eliciter
     loggers[session["ID"]] = log
