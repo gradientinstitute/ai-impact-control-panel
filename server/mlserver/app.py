@@ -1,94 +1,38 @@
-from flask import Flask, session, abort, request, send_from_directory
-from deva import elicit, bounds, fileio, logger
-from fpdf import FPDF
-import redis
-import toml
+"""Flask backend elicitation server for AI Impact Control Panel."""
+
 import os
 import os.path
-import pickle
-import sys
-import hashlib
 from util import jsonify, random_key
 
+import redis
+import toml
+from flask import Flask, session, abort, request, send_from_directory
+from fpdf import FPDF
 
-# Set up the flask app and session management
+from deva import elicit, bounds, fileio, logger
+from deva.db import RedisDB, DevDB
+
+# Set up the flask app
 app = Flask(__name__)
 app.config.from_envvar('DEVA_MLSERVER_CONFIG')
 
+# Secret key for signing session cookies
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("No SECRET_KEY set for Flask application")
 app.config['SECRET_KEY'] = SECRET_KEY
 
-
-class DB:
-    def __init__(self):
-        self.r = redis.Redis(host=app.config['REDIS_SERVER'],
-                             port=app.config['REDIS_PORT'], db=0,
-                             socket_connect_timeout=2)
-        try:
-            self.r.ping()
-        except Exception:
-            print("Could not connect to Redis database",
-                  f"Server:{app.config['REDIS_SERVER']}",
-                  f"Port:{app.config['REDIS_PORT']}")
-            sys.exit(-1)
-
-    def _get(self, key):
-        id = session['id']
-        raw = self.r.get(id + "/" + key)
-        result = pickle.loads(raw)
-        print(f"getting {key}:", hashlib.md5(raw).hexdigest())
-        return result
-
-    def _set(self, key, value):
-        id = session['id']
-        raw = pickle.dumps(value)
-        self.r.set(id + "/" + key, raw)
-        print(f"setting {key}: ", hashlib.md5(raw).hexdigest())
-
-    def _del(self, key):
-        id = session['id']
-        self.r.delete(id + '/' + key)
-
-    @property
-    def eliciter(self):
-        return self._get('eliciter')
-
-    @eliciter.setter
-    def eliciter(self, value):
-        return self._set('eliciter', value)
-
-    @eliciter.deleter
-    def eliciter(self):
-        return self._del('eliciter')
-
-    @property
-    def bounder(self):
-        return self._get('bounder')
-
-    @bounder.setter
-    def bounder(self, value):
-        return self._set('bounder', value)
-
-    @bounder.deleter
-    def bounder(self):
-        return self._del('bounder')
-
-    @property
-    def logger(self):
-        return self._get('logger')
-
-    @logger.setter
-    def logger(self, value):
-        return self._set('logger', value)
-
-    @logger.deleter
-    def logger(self):
-        return self._del('logger')
-
-
-db = DB()
+# Database for production is redis, is a dict for development
+if app.config['ENV'] == 'production':
+    print("Using production database (redis)")
+    r = redis.Redis(host=app.config['REDIS_SERVER'],
+                    port=app.config['REDIS_PORT'],
+                    db=0,
+                    socket_connect_timeout=2)
+    db = RedisDB(r, session)
+else:
+    print("Using development database (thread local object)")
+    db = DevDB(session)
 
 # TODO: proper cache / serialisation
 eliciters_descriptions = {k: v.description()
@@ -139,7 +83,6 @@ def _scenario(name="jobs"):
 
 @app.route('/<scenario>/images/<path:name>')
 def send_image(scenario, name):
-    print("trying to get image")
     scenario_path = os.path.join(fileio.repo_root(),
                                  f'scenarios/{scenario}/images')
     return send_from_directory(scenario_path, name)
@@ -147,7 +90,6 @@ def send_image(scenario, name):
 
 @app.route('/log/<path:name>')
 def send_log(name):
-    print("trying to get log")
     scenario_path = 'logs'
     return send_from_directory(scenario_path, name)
 
@@ -175,12 +117,9 @@ def get_bounds_choice(scenario):
 
     # if we received a choice, process it
     if request.method == "PUT":
-        print("PUT METHOD")
         data = request.get_json(force=True)
-        print("Data is:", data)
         x = data["first"]
         y = data["second"]
-        print(x, y)
         options = [sampler.query.name, "Baseline"]
         valid = (x in options) & (y in options)
 
@@ -239,8 +178,6 @@ def init_session(scenario, algo, name):
     log = logger.Logger(scenario, algo, name)
     db.eliciter = eliciter
     db.logger = log
-    # ranges[session["ID"]] = calc_ranges(candidates, spec)
-    # spec['ID'] = session["ID"]
     # send the metadata for the scenario
     return spec
 
@@ -302,8 +239,7 @@ def get_choice(scenario):
         data = log.get_log()
         if not os.path.exists('logs'):
             os.mkdir('logs')
-        output_file_name = "logs/log of session " + str(session["ID"]) + \
-            ".toml"
+        output_file_name = f"logs/{session['id']}.toml"
         with open(output_file_name, "w") as toml_file:
             toml.dump(data, toml_file)
         pdf = FPDF()
@@ -315,8 +251,7 @@ def get_choice(scenario):
         f = open(output_file_name, "r")
         for lines in f:
             pdf.cell(200, 10, txt=lines, ln=1, align='C')
-        pdf.output("logs/log of session " + str(session["ID"]) +
-                   ".pdf")
+        pdf.output(f"logs/{str(session['id'])}.pdf")
 
     else:
         # eliciter has not terminated - extract the next choice
@@ -331,9 +266,7 @@ def get_choice(scenario):
                     "values": m2.attributes
                     }
             }
-
     # the state has changed, needs to be written back
     db.eliciter = eliciter
     db.logger = log
-
     return jsonify(res)
