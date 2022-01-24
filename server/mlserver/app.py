@@ -293,7 +293,6 @@ def get_enu_choice():
         }}
         log.add_result(res)
         data = log.get_log()
-        print(data)
         if not os.path.exists('logs'):
             os.mkdir('logs')
         output_file_name = "logs/log of session " + str(session["ID"]) + \
