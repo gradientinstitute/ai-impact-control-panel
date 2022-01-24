@@ -1,3 +1,4 @@
+from importlib.resources import path
 from flask import (Flask, session,
                    abort, request, send_from_directory)
 
@@ -137,10 +138,16 @@ def get_bounds_choice(scenario):
             print("Ignoring input")
 
     if sampler.terminated:
-        filename = "models/" + util.random_key(16)
-        pickle.dump(sampler, open(filename, "wb"))
-        res = {filename}
-        # res = {"model_ID": filename}
+        model_id = util.random_key(16)
+        path = "models/" + model_id + ".toml"
+        if not os.path.exists('models'):
+            os.mkdir('models')
+            # os.mkdir(path)
+        # print(os.path.abspath("."))
+        # filename = "models/" + util.random_key(16)
+        pickle.dump(sampler, open(path, "wb"))
+        # res = {filename}
+        res = {"model_ID": path}
 
         # TODO consider return options.
         # For now, making it closely resemble the eliciter's returns

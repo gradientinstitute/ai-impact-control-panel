@@ -2,10 +2,12 @@
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
-# import plot3d
+import plot3d
 from deva import elicit, interface
 
 # from python_client.nl_bounds import distance, is_below
+# from python_client.bounds_local import evaluation
+
 import pickle
 
 def main():
@@ -70,16 +72,16 @@ def main():
 
         choice_log.append(q)
         
-        center = [50, 50]
-        r = 10
-        q = q[:2]
-        def nl_oracle(q):
-            return np.logical_and((np.array(distance(q, center)) >= r),
-                                  is_below(q, center))
+        # center = [50, 50]
+        # r = 10
+        # q = q[:2]
+        # def nl_oracle(q):
+        #     return np.logical_and((np.array(distance(q, center)) >= r),
+        #                           is_below(q, center))
 
-        label = nl_oracle(q)
+        # label = nl_oracle(q)
 
-        # label = ((q - ref) @ w_true < 0)  # oracle!
+        label = ((q - ref) @ w_true < 0)  # oracle!
         data = {}
 
         if label:
@@ -92,13 +94,12 @@ def main():
         # Reply to server
         choice = sess.put(request, json=data).json()
 
-        # model_ID = sess.get(request).json()
 
     # Terminated - decode the model
-    # TODO
+    # print(os.path.abspath("."))
     model_ID = sess.get(request).json()
-    model = pickle.load(open(model_ID, "rb"))  # load the model from disk
-    # model = pickle.load(open(model_ID["model_ID"], "rb"))
+    path = 'server/mlserver/' + model_ID["model_ID"]
+    model = pickle.load(open(path, "rb"))  # load the model from disk
     # proba = model.predict_prob
     
     # model = choice['hyperplane']
@@ -109,10 +110,10 @@ def main():
     print("Experimental results ------------------")
     # print("Hidden weights:    ", w_true.round(2))
     # print("Estimated weights: ", w_est.round(2))
-    # accept = ((table - ref) @ w_true < 0)
+    accept = ((table - ref) @ w_true < 0)
     # pred = ((table - ref) @ w_est < 0)
     # pred = proba
-    accept = nl_oracle(table)
+    # accept = nl_oracle(table)
     pred = model.guess(table)
     accept_rt = accept.mean()
     acc = np.mean(accept == pred)
@@ -146,26 +147,26 @@ def tabulate(candidates, metrics):
     return attribs, table
 
 
-def distance(a, center):
-    a = np.array(a)
-    center = np.array(center)
-    dist = np.sqrt(np.sum((a - center) ** 2, axis=-1))
-    return dist
+# def distance(a, center):
+#     a = np.array(a)
+#     center = np.array(center)
+#     dist = np.sqrt(np.sum((a - center) ** 2, axis=-1))
+#     return dist
 
 
-def is_below(q, center):
-    # Check whether a point is below a straight line through the center
-    q = np.array(q)
-    if q.ndim == 1:
-        x = q[0]
-        y = q[1]
-    else:
-        x = q[:, 0]
-        y = q[:, 1]
-    b = np.sum(center)
-    y_max = -x + b
+# def is_below(q, center):
+#     # Check whether a point is below a straight line through the center
+#     q = np.array(q)
+#     if q.ndim == 1:
+#         x = q[0]
+#         y = q[1]
+#     else:
+#         x = q[:, 0]
+#         y = q[:, 1]
+#     b = np.sum(center)
+#     y_max = -x + b
 
-    return y <= y_max
+#     return y <= y_max
 
 
 if __name__ == "__main__":
