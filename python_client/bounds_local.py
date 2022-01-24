@@ -6,7 +6,7 @@ import plot3d
 from deva import interface, elicit, bounds
 from bounds_client import tabulate
 
-from sklearn.linear_model import LogisticRegression
+# from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 
 
@@ -160,7 +160,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
             print("Choice: Oracle (REJECTED) candidate.\n\n")
 
         if step >= 10:
-            score = evaluation(choices, ref, n_samples, oracle)
+            score = evaluation(sampler, ref, n_samples, oracle)
             scores.append(score)
 
     # Display text results report
@@ -188,17 +188,13 @@ def compare_weights(w_true, est_w):
     return error_sum
 
 
-def evaluation(choices, ref, n_samples, oracle):
-    lr = LogisticRegression()
-
-    train_X = choices
-    train_y = [oracle(x) for x in train_X]
-    lr.fit(train_X, train_y)
-
+def evaluation(eliciter, ref, n_samples, oracle):
     # generate random testing data
     test_X = random_choice(ref, n_samples)
     test_y = [oracle(x) for x in test_X]  # y_true
-    probabilities = lr.predict_proba(test_X)  # y_pred
+
+    probabilities = eliciter.predict_prob(test_X)  # y_pred
+
     loss = log_loss(test_y, probabilities, labels=[True, False])
 
     return loss  # lower is better
