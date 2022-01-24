@@ -8,6 +8,8 @@ import toml
 import os.path
 import util
 
+import pickle
+
 jsonify = util.jsonify
 
 # Set up the flask app
@@ -135,14 +137,19 @@ def get_bounds_choice(scenario):
             print("Ignoring input")
 
     if sampler.terminated:
+        filename = "models/" + util.random_key(16)
+        pickle.dump(sampler, open(filename, "wb"))
+        res = {filename}
+        # res = {"model_ID": filename}
+
         # TODO consider return options.
         # For now, making it closely resemble the eliciter's returns
-        res = {
-                "hyperplane": {
-                    "origin": sampler.baseline.attributes,
-                    "normal": dict(zip(sampler.attribs, sampler.w)),
-                }
-        }
+        # res = {
+        #         "hyperplane": {
+        #             "origin": sampler.baseline.attributes,
+        #             "normal": dict(zip(sampler.attribs, sampler.w)),
+        #         }
+        # }
     else:
         # eliciter has not terminated - extract the next choice
         assert isinstance(sampler.query, elicit.Candidate)
