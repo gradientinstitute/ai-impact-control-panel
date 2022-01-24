@@ -21,19 +21,6 @@ class Candidate:
         return self.attributes.values()
 
 
-class Pair(tuple):
-    def __new__(cls, a: Candidate, b: Candidate):
-        assert isinstance(a, Candidate) and isinstance(b, Candidate)
-        return tuple.__new__(cls, (a, b))
-
-    def __contains__(self, x):
-        return ((x == self[0].name) or (x == self[1].name)
-                or tuple.__contains__(self, x))
-
-    def __repr__(self):
-        return f"Pair({self[0].name}, {self[1].name})"
-
-
 class Eliciter:
     '''Base class for elicitation algorithms.'''
 
@@ -74,7 +61,6 @@ class VotingEliciter(Eliciter):
         self._update()
 
     def input(self, choice):
-        assert self._query and choice in self._query, "Response mismatch."
         if choice == self.query[0].name:
             self.chosen[self.query[0]] += 1
         if choice == self.query[1].name:
@@ -98,7 +84,7 @@ class VotingEliciter(Eliciter):
     def _update(self):
         if len(self.comparisons) >= 1 and self.i < len(self.comparisons):
             queries = self.comparisons[self.i]
-            self._query = Pair(queries[0], queries[1])
+            self._query = (queries[0], queries[1])
             self.i += 1
         else:
             self._query = None
@@ -118,7 +104,6 @@ class Toy(Eliciter):
         self._update()
 
     def input(self, choice):
-        assert self._query and choice in self._query, "Response mismatch."
         if choice == self.query[1].name:
             self.candidates.remove(self.query[0])
         else:
@@ -140,7 +125,7 @@ class Toy(Eliciter):
 
     def _update(self):
         if len(self.candidates) > 1:
-            self._query = Pair(self.candidates[0], self.candidates[1])
+            self._query = (self.candidates[0], self.candidates[1])
         else:
             self._query = None
 
@@ -284,7 +269,6 @@ class ActiveRanking(Eliciter):
         self._update()
 
     def input(self, choice):
-        assert self._query and choice in self._query, "Response mismatch."
         if choice == self._query[0].name:
             val = 1
         else:
@@ -295,7 +279,7 @@ class ActiveRanking(Eliciter):
     def _update(self):
         if self.active.next_round():
             a, b = self.active.get_query()
-            self._query = Pair(self.candidates[a], self.candidates[b])
+            self._query = (self.candidates[a], self.candidates[b])
         else:
             res = self.active.get_result()
             ind = res if np.issubdtype(type(res), np.int64) else res[-1]

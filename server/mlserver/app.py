@@ -181,7 +181,7 @@ def init_session(scenario, algo, name):
     # assume that a reload means user wants a restart
     print("Init new session for ", session["ID"])
     candidates, spec = _scenario(scenario)
-    eliciter = elicit.eliciters[algo](candidates, spec)
+    eliciter = elicit.algorithms[algo](candidates, spec)
     log = logger.Logger(scenario, algo, name)
     eliciters[session["ID"]] = eliciter
     loggers[session["ID"]] = log
@@ -335,12 +335,14 @@ def get_choice(scenario):
     if request.method == "PUT":
         data = request.get_json(force=True)
         log.add_choice(data)
+
+        # TODO: support more than two options
         x = data["first"]
         y = data["second"]
 
-        # Only pass valid choices on to the eliciter
+        # Filter to ensure valid choices go to the eliciter
         if not eliciter.terminated:
-            choice = eliciter.query
+            choice = [v.name for v in eliciter.query]
             if (x in choice) and (y in choice) and (x != y):
                 eliciter.input(x)
 
@@ -374,8 +376,7 @@ def get_choice(scenario):
 
     else:
         # eliciter has not terminated - extract the next choice
-        assert isinstance(eliciter.query, elicit.Pair)
-        m1, m2 = eliciter.query
+        m1, m2 = eliciter.query  # TODO - support more than 2 options
         res = {
                 "left": {
                     "name": m1.name,

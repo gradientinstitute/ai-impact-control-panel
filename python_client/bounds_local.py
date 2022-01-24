@@ -140,7 +140,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
         step += 1
 
         # Display the choice between this and the reference
-        interface.text(elicit.Pair(sampler.query, ref_candidate), metrics)
+        interface.text((sampler.query, ref_candidate), metrics)
         choices.append(sampler.choice)
 
         est_weights.append(sampler.w)
