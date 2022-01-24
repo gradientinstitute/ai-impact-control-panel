@@ -80,7 +80,7 @@ def compare(sys1, sys2, meta, attribute):
 
 def text(value, meta):
 
-    if isinstance(value, elicit.Pair):
+    if isinstance(value, tuple):
         # Display a pairwise comparison
         a, b = value
         print(f"{'Do you prefer?':45s}{a.name:17s}{b.name:17s}")

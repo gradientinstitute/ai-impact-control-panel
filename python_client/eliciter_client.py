@@ -59,7 +59,7 @@ def main():
         # (why not a list? do we answer left/right in the API?)
         options = [choices['left'], choices['right']]
 
-        fchoice = elicit.Pair(
+        fchoice = (
             elicit.Candidate(options[0]['name'], options[0]['values']),
             elicit.Candidate(options[1]['name'], options[1]['values']),
         )
