@@ -73,15 +73,6 @@ def main():
 
         choice_log.append(q)
 
-        # center = [50, 50]
-        # r = 10
-        # q = q[:2]
-        # def nl_oracle(q):
-        #     return np.logical_and((np.array(distance(q, center)) >= r),
-        #                           is_below(q, center))
-
-        # label = nl_oracle(q)
-
         label = ((q - ref) @ w_true < 0)  # oracle!
         data = {}
 
@@ -99,9 +90,7 @@ def main():
     model_ID = sess.get(request).json()
     path = 'server/mlserver/' + model_ID["model_ID"]
     model = pickle.load(open(path, "rb"))  # load the model from disk
-    # proba = model.predict_prob
 
-    # ref = np.array([model['origin'][a] for a in attribs])
     w_est = model.w
 
     # Display text results report
@@ -141,28 +130,6 @@ def tabulate(candidates, metrics):
         table[i, :] = [c[a] for a in attribs]
 
     return attribs, table
-
-
-# def distance(a, center):
-#     a = np.array(a)
-#     center = np.array(center)
-#     dist = np.sqrt(np.sum((a - center) ** 2, axis=-1))
-#     return dist
-
-
-# def is_below(q, center):
-#     # Check whether a point is below a straight line through the center
-#     q = np.array(q)
-#     if q.ndim == 1:
-#         x = q[0]
-#         y = q[1]
-#     else:
-#         x = q[:, 0]
-#         y = q[:, 1]
-#     b = np.sum(center)
-#     y_max = -x + b
-
-#     return y <= y_max
 
 
 if __name__ == "__main__":
