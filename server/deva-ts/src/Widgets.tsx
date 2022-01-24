@@ -6,14 +6,19 @@ function sigFigs(unit: any) {
     return 2;
 }
 
+enum rvOperations {
+  'ceil',
+  'floor'
+}
+
 // ceil or floor numbers to the number of decimal places specified
 function roundValue(operation, number, decimals) {
   if (typeof number != "number") {
     return number;
   }  
-  if (operation == rvOperations.ceil) {
+  if (operation === rvOperations.ceil) {
     number = Math.ceil(number * (10 ** decimals)) / (10 ** decimals);
-  } else if (operation == rvOperations.floor) {
+  } else if (operation === rvOperations.floor) {
     number = Math.floor(number * (10 ** decimals)) / (10 ** decimals);
   }
   return number;
@@ -27,11 +32,6 @@ export function adjustUnitRange(unit) {
   adjustedUnit['min'] = unit['max'] * -1;
   adjustedUnit['max'] = unit['min'] * -1;
   return adjustedUnit;
-}
-
-enum rvOperations {
-  'ceil',
-  'floor'
 }
 
 function Model({unit, value, name, isMirror}) {
