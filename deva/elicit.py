@@ -360,7 +360,7 @@ class ActiveMaxPrimary(ActiveRanking):
 
 
 # export a list of eliciters
-eliciters = {
+algorithms = {
     "Toy": Toy,
     "ActiveRanking": ActiveRanking,
     "ActiveMax": ActiveMax,
