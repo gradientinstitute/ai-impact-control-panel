@@ -69,14 +69,6 @@ optional = false
 python-versions = "*"
 
 [[package]]
-name = "cachelib"
-version = "0.4.1"
-description = "A collection of cache libraries in the same API interface."
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[[package]]
 name = "certifi"
 version = "2021.10.8"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -168,18 +160,6 @@ Werkzeug = ">=2.0"
 [package.extras]
 async = ["asgiref (>=3.2)"]
 dotenv = ["python-dotenv"]
-
-[[package]]
-name = "flask-session"
-version = "0.4.0"
-description = "Adds server-side session support to your Flask application"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-cachelib = "*"
-Flask = ">=0.8"
 
 [[package]]
 name = "fpdf"
@@ -894,7 +874,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "a1e39de59a9d3b627ea53e6e0fc0d34f1822847eab3e2c78bf47d97a58c4bc2a"
+content-hash = "b1048edcddb1244eea3133576f1ed91741796d30f4936fb80223a7eb79c7295a"
 
 [metadata.files]
 alabaster = [
@@ -924,10 +904,6 @@ babel = [
 backcall = [
     {file = "backcall-0.2.0-py2.py3-none-any.whl", hash = "sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255"},
     {file = "backcall-0.2.0.tar.gz", hash = "sha256:5cbdbf27be5e7cfadb448baf0aa95508f91f2bbc6c6437cd9cd06e2a4c215e1e"},
-]
-cachelib = [
-    {file = "cachelib-0.4.1-py3-none-any.whl", hash = "sha256:b766ce83499652b1c7bf3fb09fedc26121533bf21249e8a9927f39445b939430"},
-    {file = "cachelib-0.4.1.tar.gz", hash = "sha256:68e27dae1bb73ba02071f1cf413111d96f8175fd37176f35a5ccb9bdf6848c5c"},
 ]
 certifi = [
     {file = "certifi-2021.10.8-py2.py3-none-any.whl", hash = "sha256:d62a0163eb4c2344ac042ab2bdf75399a71a2d8c7d47eac2e2ee91b9d6339569"},
@@ -964,10 +940,6 @@ flake8 = [
 flask = [
     {file = "Flask-2.0.2-py3-none-any.whl", hash = "sha256:cb90f62f1d8e4dc4621f52106613488b5ba826b2e1e10a33eac92f723093ab6a"},
     {file = "Flask-2.0.2.tar.gz", hash = "sha256:7b2fb8e934ddd50731893bdcdb00fc8c0315916f9fcd50d22c7cc1a95ab634e2"},
-]
-flask-session = [
-    {file = "Flask-Session-0.4.0.tar.gz", hash = "sha256:c9ed54321fa8c4ca0132ffd3369582759eda7252fb4b3bee480e690d1ba41f46"},
-    {file = "Flask_Session-0.4.0-py2.py3-none-any.whl", hash = "sha256:1e3f8a317005db72c831f85d884a5a9d23145f256c730d80b325a3150a22c3db"},
 ]
 fpdf = [
     {file = "fpdf-1.7.2.tar.gz", hash = "sha256:125840783289e7d12552b1e86ab692c37322e7a65b96a99e0ea86cca041b6779"},
