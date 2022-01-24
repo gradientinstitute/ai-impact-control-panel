@@ -198,7 +198,7 @@ def get_baseline(scenario):
 
 @app.route('/<scenario>/constraints', methods=['PUT'])
 def apply_constraints(scenario):
-    data = request.get_json(force=True)
+    # _ = request.get_json(force=True)
     return "OK"
 
 
