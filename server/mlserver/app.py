@@ -105,6 +105,7 @@ def init_bounds(scenario):
     metrics = meta["metrics"]
     attribs, table = bounds.tabulate(candidates, metrics)
     ref = [baseline[a] for a in attribs]
+    # Choose eliciter
     bounders[ident] = bounds.PlaneSampler(ref, table, attribs, steps=30)
     return ""
 

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from deva import bounds  # , interface, elicit
 # from bounds_client import tabulate
 
-from bounds_local import evaluation
+from python_client.bounds_local import evaluation
 
 
 def main():
