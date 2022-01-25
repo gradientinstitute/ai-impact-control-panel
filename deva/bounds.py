@@ -4,8 +4,6 @@ from deva import elicit, fileio
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 
-# from python_client.nl_bounds import is_below, distance
-
 
 # Things to try:
 # TODO: limit query perturbations to 2 dimensions
@@ -37,7 +35,7 @@ class BoundsEliciter:
         raise NotImplementedError
 
 
-class Active(BoundsEliciter):
+class KNeighborsEliciter(BoundsEliciter):
     """
     A model making non-linear assumption.
     Eliciter using KNeighborsRegressor

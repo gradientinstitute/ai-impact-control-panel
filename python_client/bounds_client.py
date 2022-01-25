@@ -3,10 +3,7 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 import plot3d
-from deva import elicit, interface
-
-# from python_client.nl_bounds import distance, is_below
-# from python_client.bounds_local import evaluation
+from deva import elicit, interface  # , bounds
 
 import pickle
 
