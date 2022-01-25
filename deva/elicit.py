@@ -135,7 +135,7 @@ class Toy(Eliciter):
 
 
 class Enautilus(Eliciter):
-    '''Enautilus Eliciter from paper 
+    '''Enautilus Eliciter from paper
        E-NAUTILUS: A decision support system for complex multiobjective
        optimization problems based on the NAUTILUS method'''
     _nadir = {}
