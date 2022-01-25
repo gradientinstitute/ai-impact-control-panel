@@ -13,7 +13,7 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
   blockedMetricState, isBlockedState, resolvedBlockedState, 
   blockedStatusState, blockingMetricsState, blockingStates, 
-  unblockValuesState} from './ConstrainScrollbar';
+  unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';
 
 const HandleColours = {
   0: 'white', // default
@@ -408,17 +408,17 @@ function BlockingTargetBar({uid, minPercentage, maxPercentage, blockedStatus}) {
   const isBlocking = blockedStatus === blockingStates.blocking;
   const borderColour = isBlocking ? "border-red-500" : GetBorderColor(uid);
   const bgColour = isBlocking ? "bg-gray-600" : GetBackgroundColor(uid);
+  const bgColourUnblock = isBlocking ? "bg-red-500" : GetBackgroundColor(uid);
 
   // minimum value that the metric needs to be at to unblock
   minPercentage = Math.min(...minPercentage);
-  // const inclMinBorder = (minPercentage === maxPercentage) ? " " : "border-r-4 ";
-  const inclMinBorder = "border-r-4 ";
+  const inclMinBorder = (minPercentage === maxPercentage) ? " " : "border-r-4 ";
   return (
     <div className="w-full flex">
       <div className={"h-6 min-h-full " + inclMinBorder + bgColour + " " + borderColour} 
         style={{width:minPercentage + "%"}}> 
       </div>
-      <div className={"h-6 min-h-full border-r-4 " + bgColour + " " + borderColour} 
+      <div className={"h-6 min-h-full border-r-4 " + bgColourUnblock + " " + borderColour} 
         style={{width:(maxPercentage - minPercentage) + "%"}}> 
       </div>
       <div className={"h-6 min-h-full " + bgColour} 
@@ -431,6 +431,9 @@ function BlockingTargetBar({uid, minPercentage, maxPercentage, blockedStatus}) {
 function UnblockButton({uid, buttonDisabled}) {
 
   const [blockedMetric, setBlockedMetric] = useRecoilState(blockedMetricState);
+  const [_blockedConstraints, setBlockedConstraints] = useRecoilState(blockedConstraintsState);
+  const currentConstraints = useRecoilValue(constraintsState);
+
   const text = (blockedMetric === uid) 
     ? "finish unblocking"
     : "suggest metrics to unblock";
@@ -440,8 +443,10 @@ function UnblockButton({uid, buttonDisabled}) {
       onClick={() => {
         if (blockedMetric === uid) {
           setBlockedMetric(null);
+          setBlockedConstraints(null);
         } else {
           setBlockedMetric(uid);
+          setBlockedConstraints(currentConstraints);
         }
       }}
       disabled={buttonDisabled}>

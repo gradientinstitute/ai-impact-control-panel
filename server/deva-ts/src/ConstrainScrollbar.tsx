@@ -62,6 +62,13 @@ export const allCandidatesState = atom({
   default: null, 
 });
 
+// snapshot of hte current constraint state when the 'unblock metrics' button
+// is clicked. used for making unblocking suggestions for the target bar
+export const blockedConstraintsState = atom({
+  key: 'blockedconstraints',
+  default: null,
+});
+
 // Heuristic for determining the precision of steps on the Slider 
 export function getSliderStep(decimals) {
   if (decimals == null) { 
@@ -181,7 +188,7 @@ export const blockingMetricsState = selector({
   key: 'blockingMetrics',
   get: ({get}) => {
     const uidBlocked = get(blockedMetricState);
-    const constraints = get(constraintsState);
+    const constraints = get(blockedConstraintsState);
     const potentialCandidates = get(potentialUnblockingCandidatesState);
     
     let blockingMetrics = new Map();
@@ -197,8 +204,6 @@ export const blockingMetricsState = selector({
     // map of candidates to set of metrics and target values
     suggestedCandidates = blockingMaps.suggestedCandidates;
 
-    console.log("CURRENT", blockingMetrics, suggestedCandidates);
-
     // filter out metrics and models that are not a factor in unblocking
     let models = Array.from(suggestedCandidates)
       .map(x => x[0])
@@ -208,7 +213,6 @@ export const blockingMetricsState = selector({
     blockingMaps = getBlockingMaps(models, constraints)
     blockingMetrics = blockingMaps.blockingMetrics;
     suggestedCandidates = blockingMaps.suggestedCandidates;
-    console.log("BLOCKING", blockingMetrics, "SUGGESTED", suggestedCandidates)
     return {blockingMetrics, suggestedCandidates};
   }
 });
