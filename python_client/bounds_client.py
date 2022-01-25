@@ -3,7 +3,9 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 import plot3d
-from deva import elicit, interface
+from deva import elicit, interface  # , bounds
+
+import pickle
 
 
 def main():
@@ -67,6 +69,7 @@ def main():
         ref = np.array([right.attributes[a] for a in attribs])
 
         choice_log.append(q)
+
         label = ((q - ref) @ w_true < 0)  # oracle!
         data = {}
 
@@ -81,9 +84,11 @@ def main():
         choice = sess.put(request, json=data).json()
 
     # Terminated - decode the model
-    model = choice['hyperplane']
-    ref = np.array([model['origin'][a] for a in attribs])
-    w_est = np.array([model['normal'][a] for a in attribs])
+    model_ID = sess.get(request).json()
+    path = 'server/mlserver/' + model_ID["model_ID"]
+    model = pickle.load(open(path, "rb"))  # load the model from disk
+
+    w_est = model.w
 
     # Display text results report
     print("Experimental results ------------------")
@@ -91,6 +96,7 @@ def main():
     print("Estimated weights: ", w_est.round(2))
     accept = ((table - ref) @ w_true < 0)
     pred = ((table - ref) @ w_est < 0)
+    pred = model.guess(table)
     accept_rt = accept.mean()
     acc = np.mean(accept == pred)
     print(f"True preference would accept {accept_rt:.0%} of real candidates.")

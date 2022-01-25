@@ -12,6 +12,8 @@ from fpdf import FPDF
 from deva import elicit, bounds, fileio, logger
 from deva.db import RedisDB, DevDB
 
+import pickle
+
 # Set up the flask app
 app = Flask(__name__)
 app.config.from_envvar('DEVA_MLSERVER_CONFIG')
@@ -130,14 +132,13 @@ def get_bounds_choice(scenario):
             print("Ignoring input")
 
     if sampler.terminated:
-        # TODO consider return options.
-        # For now, making it closely resemble the eliciter's returns
-        res = {
-                "hyperplane": {
-                    "origin": sampler.baseline.attributes,
-                    "normal": dict(zip(sampler.attribs, sampler.w)),
-                }
-        }
+        model_id = random_key(16)
+        path = "models/" + model_id + ".toml"
+        if not os.path.exists('models'):
+            os.mkdir('models')
+        pickle.dump(sampler, open(path, "wb"))
+        res = {"model_ID": path}
+
     else:
         # eliciter has not terminated - extract the next choice
         assert isinstance(sampler.query, elicit.Candidate)
