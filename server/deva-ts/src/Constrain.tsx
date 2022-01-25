@@ -324,7 +324,8 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   return (
   <div>
-    <BlockingTargetBar uid={uid} minPercentage={minPercentage} maxPercentage={maxPercentage} blockedStatus={blockedStatus}/>
+    <BlockingTargetBar uid={uid} minPercentage={minPercentage} maxPercentage={maxPercentage}
+      blockedStatus={blockedStatus} lowerIsBetter={lowerIsBetter}/>
     {/* <p>{"Blocked status: " + blockString}</p> */}
     <Slider {...rangeProps} />
     <OptimalDirection lowerIsBetter={lowerIsBetter}/>
@@ -388,8 +389,7 @@ function GetTargetMinPercentages(uid, min, max, decimals, lowerIsBetter) {
       .map(x => ((x - min) / (max - min)) * 100)
       .map(x => lowerIsBetter ? x : 100 - x);
   }
-
-  return percentages;
+  return lowerIsBetter ? Math.min(...percentages) : Math.max(...percentages);
 }
 
 function GetTargetMaxPercentages(uid, min, max, decimals, lowerIsBetter) {
@@ -402,30 +402,46 @@ function GetTargetMaxPercentages(uid, min, max, decimals, lowerIsBetter) {
   return percentage;
 }
 
-function BlockingTargetBar({uid, minPercentage, maxPercentage, blockedStatus}) {
+function BlockingTargetBar({uid, minPercentage, maxPercentage, blockedStatus, lowerIsBetter}) {
 
   // determine whether or not the target line is visible
   const isBlocking = blockedStatus === blockingStates.blocking;
-  const borderColour = isBlocking ? "border-red-500" : GetBorderColor(uid);
-  const bgColour = isBlocking ? "bg-gray-600" : GetBackgroundColor(uid);
-  const bgColourUnblock = isBlocking ? "bg-red-500" : GetBackgroundColor(uid);
+  const borderColour = isBlocking ? "border-yellow-500" : GetBorderColor(uid);
+  const borderColourUnblock = isBlocking ? "border-green-500" : GetBorderColor(uid);
+  
+  let bgColourDefault = isBlocking ? "bg-gray-600" : GetBackgroundColor(uid);
+  let bgColour = isBlocking ? "bg-yellow-500" : GetBackgroundColor(uid);
+  let bgColourUnblock = isBlocking ? "bg-green-500" : GetBackgroundColor(uid);
 
-  // minimum value that the metric needs to be at to unblock
-  minPercentage = Math.min(...minPercentage);
-  const inclMinBorder = (minPercentage === maxPercentage) ? " " : "border-r-4 ";
-  return (
+  const lowerIsBetterTarget = (
     <div className="w-full flex">
-      <div className={"h-6 min-h-full " + inclMinBorder + bgColour + " " + borderColour} 
+      <div className={"h-6 min-h-full " + bgColourDefault + " " + borderColour} 
         style={{width:minPercentage + "%"}}> 
       </div>
-      <div className={"h-6 min-h-full border-r-4 " + bgColourUnblock + " " + borderColour} 
+      <div className={"h-6 min-h-full border-r-4 " + bgColour + " " + borderColourUnblock} 
         style={{width:(maxPercentage - minPercentage) + "%"}}> 
       </div>
-      <div className={"h-6 min-h-full " + bgColour} 
+      <div className={"h-6 min-h-full " + bgColourUnblock} 
         style={{width:(100-maxPercentage) + "%"}}> 
       </div>
     </div>
   );
+
+  const higherIsBetterTarget = (
+    <div className="w-full flex">
+      <div className={"h-6 min-h-full " + bgColourUnblock + " " + borderColourUnblock} 
+        style={{width:maxPercentage + "%"}}> 
+      </div>
+      <div className={"h-6 min-h-full border-l-4 " + bgColour + " " + borderColourUnblock} 
+        style={{width:(minPercentage - maxPercentage) + "%"}}> 
+      </div>
+      <div className={"h-6 min-h-full " + bgColourDefault} 
+        style={{width:(100-minPercentage) + "%"}}> 
+      </div>
+    </div>
+  );
+
+  return lowerIsBetter ? lowerIsBetterTarget : higherIsBetterTarget;
 }
 
 function UnblockButton({uid, buttonDisabled}) {
