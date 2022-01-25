@@ -280,8 +280,7 @@ def get_enu_choice():
 
         # Only pass valid choices on to the eliciter
         if not eliciter.terminated:
-            choice = eliciter.query
-            eliciter.input(choice[int(x)])
+            eliciter.input(x)
     if eliciter.terminated:
         result = eliciter.result
         res = {result.name: {

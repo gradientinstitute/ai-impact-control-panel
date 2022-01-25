@@ -186,7 +186,7 @@ class Enautilus(Eliciter):
                                             self._nadir.values()))).argmin()]
 
     def input(self, choice):
-        assert self._query and choice in self._query, "Response mismatch."
+        choice = self._query[int(choice)]
         self._nadir = choice.attributes
         # remove candidates that are worse in every attribute
         copy = []
