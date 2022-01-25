@@ -42,7 +42,6 @@ export const blockedStatusState = selector({
   }
 })
 
-
 export const currentSelectionState = atom({
   key: 'currentSelection',
   default: null,
@@ -176,8 +175,8 @@ export const isBlockedState = selector({
   }
 });
 
-// returns a map of metrics that can be improved and a set of target values
-// eg. { uid1: {1, 3, 4}, uid2: {4, 2, 9}, ... }
+// Returns maps required for determining whether metrics are blocked
+// and the associated target values/candidates
 export const blockingMetricsState = selector({
   key: 'blockingMetrics',
   get: ({get}) => {
@@ -185,36 +184,115 @@ export const blockingMetricsState = selector({
     const constraints = get(constraintsState);
     const potentialCandidates = get(potentialUnblockingCandidatesState);
     
-    const blockingMetrics = new Map();
-    const suggestedCandidates = new Map();
+    let blockingMetrics = new Map();
+    let suggestedCandidates = new Map();
 
     if (uidBlocked === null) {
       return {blockingMetrics, suggestedCandidates};
     }
 
-    // determine which other metrics need to be adjusted for change to happen
-    potentialCandidates.forEach(candidate => {
-      (Object.entries(candidate)).forEach(([metric, targetValue]) => {
-        if (targetValue > constraints[metric][1]) {
-          // map of metrics to set of target values
-          if (!blockingMetrics.has(metric)) {
-            blockingMetrics.set(metric, new Set([targetValue]));
-          } else {
-            blockingMetrics.get(metric).add(targetValue);
-          }
-          // map of candidates to set of metrics and target values
-          if (!suggestedCandidates.has(candidate)) {
-            suggestedCandidates.set(candidate, new Set([{metric, targetValue}]));
-          } else {
-            suggestedCandidates.get(candidate).add({metric, targetValue});
-          }
-        }
-      });
-    });
+    let blockingMaps = getBlockingMaps(potentialCandidates, constraints);
+    // map of metrics to set of target values
+    blockingMetrics = blockingMaps.blockingMetrics;
+    // map of candidates to set of metrics and target values
+    suggestedCandidates = blockingMaps.suggestedCandidates;
 
+    console.log("CURRENT", blockingMetrics, suggestedCandidates);
+
+    // filter out metrics and models that are not a factor in unblocking
+    let models = Array.from(suggestedCandidates)
+      .map(x => x[0])
+      .map(candidate => filteredCandidate(candidate, blockingMetrics, constraints, uidBlocked));
+
+    models = removeNonPareto(models);
+    blockingMaps = getBlockingMaps(models, constraints)
+    blockingMetrics = blockingMaps.blockingMetrics;
+    suggestedCandidates = blockingMaps.suggestedCandidates;
+    console.log("BLOCKING", blockingMetrics, "SUGGESTED", suggestedCandidates)
     return {blockingMetrics, suggestedCandidates};
   }
 });
+
+function removeNonPareto(models) {
+
+  let dominated = new Array(models.length);
+  for (let i = 0; i < dominated.length; i++) {
+    dominated[i] = false;
+  }
+
+  for (let [i, m] of models.entries()) {
+    for (let [j, n] of models.entries()) {
+
+      if (dominated[i] === true)
+        break;
+      
+      if (dominated[j] === true || i == j)
+        continue;
+      
+      const mArray = Object.entries(m);
+      const d = mArray.every(([a,v]) => m[a] >= n[a]) && 
+                mArray.some(([a,v]) => m[a] > n[a]);
+
+      dominated[i] = d ? true : dominated[i];
+    }
+  }
+
+  let efficient = [...models];
+  dominated.forEach((dom, index) => {
+    efficient[index] = (dom === true) ? null : efficient[index]
+  });
+
+  return efficient.filter(x => x != null);
+}
+
+function getBlockingMaps(potentialCandidates, constraints) {
+  const blockingMetrics = new Map();
+  const suggestedCandidates = new Map();
+
+  // determine which other metrics need to be adjusted for change to happen
+  potentialCandidates.forEach(candidate => {
+    (Object.entries(candidate)).forEach(([metric, targetValue]) => {
+      if (targetValue > constraints[metric][1]) {
+
+        // map of metrics to set of target values
+        // used for calculating the minimum required to potentially unblock
+        if (!blockingMetrics.has(metric)) {
+          blockingMetrics.set(metric, new Set([{targetValue, candidate}]));
+        } else {
+          blockingMetrics.get(metric).add({targetValue, candidate});
+        }
+        
+        // map of candidates to set of metrics and target values
+        // used for calculating the minimum required to definitey unblock
+        if (!suggestedCandidates.has(candidate)) {
+          suggestedCandidates.set(candidate, new Set([{metric, targetValue}]));
+        } else {
+          suggestedCandidates.get(candidate).add({metric, targetValue});
+        }
+      }
+    });
+  });
+
+  return {blockingMetrics, suggestedCandidates};
+}
+
+// Eliminate variables that do not affect blocking by setting them to 
+// the current constraint. Used for filtering for efficient set for unblocking
+function filteredCandidate(candidate, blockingMetrics, constraints, uidBlocked) {
+  let modifiedCandidate = new Map(Object.entries(candidate));
+  const keys = Object.keys(candidate);
+  keys.forEach(key => {
+    if (!blockingMetrics.has(key)) {
+      // the metric is not blocking
+      modifiedCandidate.set(key, constraints[key][1]);
+    } else if (modifiedCandidate.get(key) < constraints[key][1]) {
+      // the candidate value for a particular metric is already included 
+      // with the current constraint setting
+      modifiedCandidate.set(key, constraints[key][1]);
+    }
+  });
+  return Object.fromEntries(modifiedCandidate);
+}
 
 // determine the value required to definitely unblock a metric
 // without needing to adjust other sliders

@@ -384,9 +384,11 @@ function GetTargetMinPercentages(uid, min, max, decimals, lowerIsBetter) {
   let percentages = [];
   if (blockingMetrics.has(uid)) {
     percentages = ([...blockingMetrics.get(uid)])
+      .map(x => x.targetValue)
       .map(x => ((x - min) / (max - min)) * 100)
       .map(x => lowerIsBetter ? x : 100 - x);
   }
+
   return percentages;
 }
 
@@ -409,11 +411,11 @@ function BlockingTargetBar({uid, minPercentage, maxPercentage, blockedStatus}) {
 
   // minimum value that the metric needs to be at to unblock
   minPercentage = Math.min(...minPercentage);
-  const inclMinBorder = (minPercentage === maxPercentage) ? " " : "border-r-4 ";
-
+  // const inclMinBorder = (minPercentage === maxPercentage) ? " " : "border-r-4 ";
+  const inclMinBorder = "border-r-4 ";
   return (
     <div className="w-full flex">
-      <div className={"h-6 min-h-full" + inclMinBorder + bgColour + " " + borderColour} 
+      <div className={"h-6 min-h-full " + inclMinBorder + bgColour + " " + borderColour} 
         style={{width:minPercentage + "%"}}> 
       </div>
       <div className={"h-6 min-h-full border-r-4 " + bgColour + " " + borderColour} 
