@@ -249,8 +249,6 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   const val = constraints[uid][1];
 
   const isBlocked = useRecoilValue(isBlockedState);
-  const blockString = (currentSelection === uid) && (isBlocked) ? "BLOCKED" : "";
-  const resolvedBlocked = useRecoilValue(resolvedBlockedState);
 
   function onBeforeChange() {
     setCurrentSelection(uid);
@@ -297,7 +295,6 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     max: max,
     onBeforeChange: onBeforeChange,
     onChange: onChange,
-    // onAfterChange: onAfterChange,
     allowCross: false,
     value: val,
     step: getSliderStep(decimals),
@@ -328,11 +325,9 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   <div>
     <BlockingTargetBar uid={uid} minPercentage={minPercentage} maxPercentage={maxPercentage}
       blockedStatus={blockedStatus} lowerIsBetter={lowerIsBetter}/>
-    {/* <p>{"Blocked status: " + blockString}</p> */}
     <Slider {...rangeProps} />
     <OptimalDirection lowerIsBetter={lowerIsBetter}/>
     {button}
-    {/* <p>{"Blocked :" + blockedMetric}</p> */}
   </div>
   );
 }
@@ -340,20 +335,21 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 function StatusButton({uid}) {
 
   const StatusText = {
-    0: ' ',              // default
+    0: 'Default',        // default
     1: 'Blocked',        // overridden by toggle button (blockedMetric)
     2: 'Blocking',       //
     3: 'Resolved Block', // overridden by toggle button 
-    4: ' ',              // currently selected
+    4: 'Selected',       // currently selected
     5: 'Blocked'         //
   }
 
   const blockStatus = useRecoilValue(blockedStatusState)[uid];
   const bgcolor = GetBackgroundColor(uid);
   const text = StatusText[blockStatus];
+  const visibility = ["Default", "Selected"].includes(text) ? " invisible" : "";
 
   return (
-    <button className={bgcolor + "text-xl uppercase py-2 px-8 font-bold rounded-lg"}
+    <button className={bgcolor + "text-xl uppercase py-2 px-8 font-bold rounded-lg" + visibility}
       onMouseOver={() => {
         // TODO: display information to guide user 
         console.log("HOVERING OVER BUTTON");
