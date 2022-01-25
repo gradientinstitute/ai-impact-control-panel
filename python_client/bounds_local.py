@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 import plot3d
 from deva import interface, elicit, bounds
 from bounds_client import tabulate
-
-# from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 
 
@@ -149,6 +147,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
             # Answer automatically
             label = oracle(sampler.choice)
             sampler.observe(label)
+
         else:
             # Answer based on user's input
             label = input().lower() not in base
