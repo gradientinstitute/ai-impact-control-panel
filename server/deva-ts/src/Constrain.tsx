@@ -189,22 +189,24 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter})
 
 function QualitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) {
   const u: any = x[1];
-  const min = 0;
-  const max = u.options.length - 1; 
+  const vals = maxRanges[uid];
+  const min = vals[0];
+  const max = vals[1];
   const cmin = constraints[uid][0];
   const cmax = constraints[uid][1];
   const bgcolor = GetBackgroundColor(uid);
+  const options = (u.options).slice(min, max + 1);
 
-  const options = Object.fromEntries(
-    u.options.map(x => [u.options.indexOf(x), x])
+  const marks = Object.fromEntries(
+    options.map(x => [u.options.indexOf(x), x])
   )
 
   const name = u.name;
-  const allowed = u.options
+  const allowed = options
     .filter(x => (u.options.indexOf(x) >= cmin && u.options.indexOf(x) <= cmax))
     .map(x => (<p>{x}</p>));
 
-  const notAllowed = u.options
+  const notAllowed = options
   .filter(x => !(u.options.indexOf(x) >= cmin && u.options.indexOf(x) <= cmax))
   .map(x => (<p>{x}</p>));
 
@@ -228,7 +230,7 @@ function QualitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) 
 
       <p className="col-span-2 my-auto">{}</p>
       <div className="col-span-6 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={options} decimals={null} lowerIsBetter={lowerIsBetter}/>
+        <RangeConstraint uid={uid} min={min} max={max} marks={marks} decimals={null} lowerIsBetter={lowerIsBetter}/>
       </div>
       <p className="col-span-2 my-auto">{}</p>
 
