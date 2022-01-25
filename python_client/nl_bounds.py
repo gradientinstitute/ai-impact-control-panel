@@ -29,7 +29,7 @@ def main():
     eli_scores = {}  # storing the average 'log loss' for each eliciter
 
     n_iter = 0
-    max_iter = 2
+    max_iter = 5
     # A loop to reduce variance due to initial conditions
     while n_iter < max_iter:
         # Test whether the sampler can elicit this oracle's preference
@@ -39,7 +39,7 @@ def main():
             "LinearActive": bounds.LinearActive(ref, table, attribs, steps=50,
                                                 epsilon=0.005,
                                                 n_steps_converge=5),
-            "Active": bounds.Active(ref, table, attribs, steps=100)
+            "Active": bounds.KNeighborsEliciter(ref, table, attribs, steps=100)
         }
 
         # Create a non-linear oracle function
@@ -47,8 +47,8 @@ def main():
         center = ref
 
         def nl_oracle(q):
-            return np.logical_and((np.array(distance(q, center)) >= r),
-                                  is_below(q, center))
+            return np.logical_and((np.array(bounds.distance(q, center)) >= r),
+                                  bounds.is_below(q, center))
 
         for eliciter in eliciters:
             samp_name = eliciter
@@ -106,28 +106,6 @@ def main():
     plt.ylim(yy.min(), yy.max())
 
     plt.show()
-
-
-def distance(a, center):
-    a = np.array(a)
-    center = np.array(center)
-    dist = np.sqrt(np.sum((a - center) ** 2, axis=-1))
-    return dist
-
-
-def is_below(q, center):
-    # Check whether a point is below a straight line through the center
-    q = np.array(q)
-    if q.ndim == 1:
-        x = q[0]
-        y = q[1]
-    else:
-        x = q[:, 0]
-        y = q[:, 1]
-    b = np.sum(center)
-    y_max = -x + b
-
-    return y <= y_max
 
 
 def run_bounds_eliciter(sample, table, oracle,

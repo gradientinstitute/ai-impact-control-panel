@@ -32,7 +32,7 @@ def main():
     eli_errors = {}  # storing the error rate for each eliciter
 
     n_iter = 0
-    max_iter = 2
+    max_iter = 5
     # A loop to reduce variance due to initial conditions
     while n_iter < max_iter:
         # Test whether the sampler can elicit this oracle's preference

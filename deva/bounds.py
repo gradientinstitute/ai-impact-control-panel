@@ -4,8 +4,6 @@ from deva import elicit, fileio
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 
-from python_client.nl_bounds import is_below, distance
-
 
 # Things to try:
 # TODO: limit query perturbations to 2 dimensions
@@ -37,7 +35,7 @@ class BoundsEliciter:
         raise NotImplementedError
 
 
-class Active(BoundsEliciter):
+class KNeighborsEliciter(BoundsEliciter):
     """
     A model making non-linear assumption.
     Eliciter using KNeighborsRegressor
@@ -423,3 +421,25 @@ def tabulate(candidates, metrics):
         table[i, :] = [c[a] for a in attribs]
 
     return attribs, table
+
+
+def distance(a, center):
+    a = np.array(a)
+    center = np.array(center)
+    dist = np.sqrt(np.sum((a - center) ** 2, axis=-1))
+    return dist
+
+
+def is_below(q, center):
+    # Check whether a point is below a straight line through the center
+    q = np.array(q)
+    if q.ndim == 1:
+        x = q[0]
+        y = q[1]
+    else:
+        x = q[:, 0]
+        y = q[:, 1]
+    b = np.sum(center)
+    y_max = -x + b
+
+    return y <= y_max
