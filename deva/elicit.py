@@ -135,12 +135,18 @@ class Toy(Eliciter):
 
 
 class Enautilus(Eliciter):
+    '''Enautilus Eliciter from paper 
+       E-NAUTILUS: A decision support system for complex multiobjective
+       optimization problems based on the NAUTILUS method'''
     _nadir = {}
     _ideal = {}
     _h = 3
     _ns = 2
 
     def __init__(self, candidates, scenario):
+        '''Initialise the eliciter, generate initial ideal point and
+           ndair point from the given candidates, and extract attributes
+           of the candidates'''
         if len(candidates) < 2:
             raise RuntimeError('Two or more candidates required.')
         Eliciter.__init__(self)
@@ -161,23 +167,29 @@ class Enautilus(Eliciter):
         self._update()
 
     def get_z_points(self):
+        '''Return ideal point and nadir point in a list'''
         return [self._ideal, self._nadir]
 
     def updateForN(self, n1, ns):
+        '''Update the number of questions
+        and options the user would like to have'''
         self._h = n1 + 1
         self._ns = ns
         self._update()
 
     @property
     def query(self):
+        '''Return the current query'''
         return self._query
 
     @property
     def terminated(self):
+        '''Check if the termination condition is met'''
         return (self._h <= 0) or (len(self.candidates) == 1)
 
     @property
     def result(self):
+        '''Return result of the eliciter if the termination condition is met'''
         assert (self._h <= 0) or (len(self.candidates) == 1), "Not terminated."
         X = []
         for can in self.candidates:
@@ -186,6 +198,8 @@ class Enautilus(Eliciter):
                                             self._nadir.values()))).argmin()]
 
     def input(self, choice):
+        '''Receive input from the user and update new
+         ideal point, nadir point, and remaining candidates'''
         choice = self._query[int(choice)]
         self._nadir = choice.attributes
         # remove candidates that are worse in every attribute
@@ -199,14 +213,20 @@ class Enautilus(Eliciter):
         # calculate new ideal point
         for att in self.attribs:
             min = None
+            max = None
             for candidate in self.candidates:
                 temp = candidate.attributes[att]
                 if min is None or temp < min:
                     min = temp
+                if max is None or temp > max:
+                    max = temp
             self._ideal[att] = min
+            self._nadir[att] = max
         self._update()
 
     def virtualCandidateGen(self):
+        '''Generate virtual candidates by selecting points between
+        the nadir point and the the kmeans center'''
         X = []
         for can in self.candidates:
             X.append(np.array(list(can.get_attr())))
@@ -229,6 +249,7 @@ class Enautilus(Eliciter):
         return res
 
     def _update(self):
+        '''Update new query and the number of questions remained'''
         if (self._h > 0) and (len(self.candidates) != 1):
             self._query = self.virtualCandidateGen()
             self._h = self._h - 1
