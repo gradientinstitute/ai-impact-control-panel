@@ -4,12 +4,6 @@ import click
 from deva import elicit
 from collections import namedtuple
 
-eliciters_map = {"TOY": elicit.Toy, "ACTIVERANKING":  elicit.ActiveRanking,
-                 "ACTIVEMAX":  elicit.ActiveMax,
-                 "ACTIVEMAXSMOOTH":  elicit.ActiveMaxSmooth,
-                 "ACTIVEMAXPRIMARY":  elicit.ActiveMaxPrimary,
-                 "VOTINGELICITER":  elicit.VotingEliciter}
-
 
 def system_gen(num=1000, attr=5):
     '''Generate n random systems on the Pareto front
@@ -53,8 +47,8 @@ def test_eliciters(eliciter_list, num, attr):
     # transfer from string to function
     e_list = []
     for e in eliciter_list:
+        e_list.append(elicit.algorithms[e])
         e = e.upper()
-        e_list.append(eliciters_map[e])
     # start prep for testing
     candidates = []
     systems = favourite_gen(num, attr)
@@ -109,10 +103,10 @@ def print_result(result):
 
 
 @click.command()
-@click.option('-e', '--eliciters', default=eliciters_map.keys(),
+@click.option('-e', '--eliciters', default=elicit.algorithms,
               multiple=True,
               help=f'The eliciters you want to compare,\
-                    choose from {list(eliciters_map.keys())}.\n\
+                    choose from {list(elicit.algorithms)}.\n\
                      Sample usage: -e Toy -e ActiveMax')
 @click.option('-n', '--number', default=50,
               help='The number of cadidate to be generated')
