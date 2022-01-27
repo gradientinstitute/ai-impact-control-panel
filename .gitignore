@@ -143,3 +143,4 @@ tests/tmp/
 # database and server files
 */**/dump.rdb
 */**/server.secret
+tests/results/*
