@@ -17,10 +17,10 @@ class Logger:
         self.log['result'] = None
 
     def add_options(self, option):
-        for o in option.values():
+        for o in option:
             del o['name']
         self.log['choices']['Question number ' +
-                            str(self.choice_number + 1)] = option
+                            str(self.choice_number + 1)] = {'options': option}
 
     def add_choice(self, choice):
         for key in choice[0].keys():

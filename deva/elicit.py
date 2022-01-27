@@ -140,8 +140,8 @@ class Enautilus(Eliciter):
        optimization problems based on the NAUTILUS method'''
     _nadir = {}
     _ideal = {}
-    _h = 3
-    _ns = 2
+    _h = 5  # number of questions
+    _ns = 2  # number of options
 
     def __init__(self, candidates, scenario):
         '''Initialise the eliciter, generate initial ideal point and

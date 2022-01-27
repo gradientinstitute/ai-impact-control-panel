@@ -45,37 +45,19 @@ def main():
     print("Scenario Metrics:", *metrics)
 
     if algo == "Enautilus":
-        request = 'http://127.0.0.1:8666/initpoints'
-        print(request)
-        points = sess.get(request).json()
-        print(f'The initial ideal point is: \n{points[0]}\n'
-              f'the initial nadir point is: \n{points[1]}\n'
-              'How many questions would you like to answer?')
-        n1 = input()
-        print('How many options would you like to have in one question?')
-        ns = input()
-        request = f'http://127.0.0.1:8666/setn/{n1}/{ns}'
-        print(request)
-        sess.get(request)
         request = 'http://127.0.0.1:8666/Enautilus/choice'
         print(request)
         choices = sess.get(request).json()
-        n1 = int(n1)
         while True:
-            n1 -= 1
-            if n1 < 0:
-                break
-            request = 'http://127.0.0.1:8666/Enautilus/zpoints'
-            points = sess.get(request).json()
-            print(f"\nThe new ideal point is: \n{points[0]}")
-            print(f"The new nadir point is: \n{points[1]}\n")
+            if len(choices) != 2:
+                break  # termination condition
             print("Opening comparison:")
             for choice in choices:
-                print(choices[choice])
-            options = list(choices.values())
+                print(choice)
+            options = [*range(len(choices))]
             i = None
-            print(f'Answer from {list(choices.keys())}')
-            while i not in choices.keys():
+            print(f'Answer from {options}')
+            while (i is None) or (int(i) not in options):
                 i = input()
             print("Submitting: ", end="")
             request = 'http://127.0.0.1:8666/Enautilus/choice'

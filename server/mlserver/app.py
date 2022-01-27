@@ -191,31 +191,6 @@ def init_session(scenario, algo, name):
     return spec
 
 
-@app.route('/initpoints')
-def get_initpoints():
-    global eliciters
-
-    if "ID" not in session:
-        print("Session not initialised!")
-        abort(400)  # Not initialised
-
-    eliciter = eliciters[session["ID"]]
-    return jsonify(eliciter.get_z_points())
-
-
-@app.route('/setn/<n1>/<ns>')
-def set_n(n1, ns):
-    global eliciters
-
-    if "ID" not in session:
-        print("Session not initialised!")
-        abort(400)  # Not initialised
-
-    eliciter = eliciters[session["ID"]]
-    eliciter.updateForN(int(n1), int(ns))
-    return "OK"
-
-
 @app.route('/<scenario>/ranges', methods=['GET'])
 def get_ranges(scenario):
     global ranges
@@ -307,10 +282,10 @@ def get_enu_choice():
         pdf.output("logs/log of session " + str(session["ID"]) +
                    ".pdf")
     else:
-        res = {}
+        res = []
         for index, option in enumerate(eliciter.query):
-            index = str(index)
-            res[index] = {}
+            res.append({})
+            index = int(index)
             res[index]['name'] = option.name
             res[index]["values"] = option.attributes
         log.add_options(res)
@@ -336,12 +311,12 @@ def get_choice(scenario):
 
         # TODO: support more than two options
         x = data["first"]
-        y = data["second"]
+        # y = data["second"]
 
         # Filter to ensure valid choices go to the eliciter
         if not eliciter.terminated:
             choice = [v.name for v in eliciter.query]
-            if (x in choice) and (y in choice) and (x != y):
+            if x in choice:
                 eliciter.input(x)
 
     # now give some new choices
@@ -373,17 +348,12 @@ def get_choice(scenario):
                    ".pdf")
 
     else:
-        # eliciter has not terminated - extract the next choice
-        m1, m2 = eliciter.query  # TODO - support more than 2 options
-        res = {
-                "left": {
-                    "name": m1.name,
-                    "values": m1.attributes
-                    },
-                "right": {
-                    "name": m2.name,
-                    "values": m2.attributes
-                    }
-            }
+        res = []
+        for index, option in enumerate(eliciter.query):
+            res.append({})
+            index = str(index)
+            res[index]['name'] = option.name
+            res[index]["values"] = option.attributes
+        log.add_options(res)
 
     return jsonify(res)
