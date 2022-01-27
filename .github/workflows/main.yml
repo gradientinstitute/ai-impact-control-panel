@@ -35,19 +35,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
           poetry install
-      #- name: Lint
-      #  run: |
-      #    make lint
-      #- name: Typecheck
-      #  run: |
-      #    make typecheck      
       - name: Lint
         run: |
-          poetry run flake8 deva tests server/mlserver python_client
+          poetry run make lint-xml
+      # - name: Typecheck
+      #   run: |
+      #     poetry run make typecheck-xml      
       - name: Test
         run: |
-          poetry run pytest .
-      #    make test
+          poetry run make test-xml
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: tests/results/**/*.xml
       - name: action-docker-compose
         uses: sudo-bot/action-docker-compose@latest
         with:
