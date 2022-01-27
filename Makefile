@@ -16,8 +16,7 @@ lint:
 	flake8 deva tests server/mlserver python_client
 
 lint-xml:
-	flake8 deva tests server/mlserver python_client --tee --output-file ./tests/results/flake8.txt
-	flake8_junit ./tests/results/flake8.txt ./tests/results/flake8.xml
+	flake8 deva tests server/mlserver python_client --tee --output-file ./tests/results/flake8.txt || flake8_junit ./tests/results/flake8.txt ./tests/results/flake8.xml
 
 test:
 	pytest . --cov=deva tests/	
