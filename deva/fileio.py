@@ -156,3 +156,15 @@ def delete_files(folder):
                 shutil.rmtree(file_path)
         except Exception as e:
             print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+
+# Auto compute min/max range
+def compute_range(scenario, candidates):
+    # scenario, candidates = load_scenario(scenario_name)
+    metrics = scenario["metrics"]
+    ranges = {}
+    for u in metrics:
+        if metrics[u]["isMetrics"]:
+            if "min_range" not in metrics[u] or "max_range" not in metrics[u]:
+                ranges[metrics[u]] = len(candidates)
+    return ranges

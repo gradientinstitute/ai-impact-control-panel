@@ -32,6 +32,10 @@ description = "Ensure that candidates shortlisted are suitable."
     displayDecimals = 0
     countable = true
 
+    isMetric = True
+    range_min = 0
+    range_max = 4
+
 [metrics.Xmin]
     name = "Proportion of suitable candidates missed"
     captures = ["minimise_missing_out"]
@@ -47,6 +51,10 @@ description = "Ensure that candidates shortlisted are suitable."
     action = "missed"
     displayDecimals = 0
     countable = true
+
+    isMetric = True
+    range_min = 0
+    range_max = 4
 
 [metrics.Ymax]
     name = "Correctly shortlisted candidates"
@@ -65,6 +73,10 @@ description = "Ensure that candidates shortlisted are suitable."
     displayDecimals = 2
     countable = true
 
+    isMetric = True
+    range_min = 0
+    range_max = 1
+
 [metrics.Zmin]
     name = "feature use"
     icon = "fairness.png"
@@ -82,3 +94,7 @@ description = "Ensure that candidates shortlisted are suitable."
     comparison_better = "uses less personal data than" 
     comparison_worse = "uses more personal data than"
     comparison_equal = "uses the same amount of personal data as"
+
+    isMetric = True
+    range_min = 0
+    range_max = 4

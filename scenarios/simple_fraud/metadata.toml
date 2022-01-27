@@ -55,6 +55,8 @@ description = "Minimise harm of repeated fraud to those most affected by it."
     lowerIsBetter = false
     displayDecimals = 2
 
+    isMetric = True
+
 [metrics.fn_cvar]
     name = "False Negative CVaR 10%"
     captures = ["minimise_recurrent_undetected_fraud"]
@@ -68,3 +70,7 @@ description = "Minimise harm of repeated fraud to those most affected by it."
     action = "burden{s} the worst-off individuals with"
     countable = "number"
     displayDecimals = 1
+
+    isMetric = True
+    range_min = 0
+    range_max = 100
