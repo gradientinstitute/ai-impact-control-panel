@@ -48,3 +48,7 @@ jobs:
         run: |
           poetry run pytest .
       #    make test
+      - name: action-docker-compose
+        uses: sudo-bot/action-docker-compose@latest
+        with:
+          cli-args: build
