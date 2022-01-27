@@ -7,10 +7,10 @@ help:
 	@echo "pytest-xml - run unit tests with junit output"
 
 typecheck:
-	mypy ./chisel
+	mypy deva tests server/mlserver python_client
 
 typecheck-xml:
-	mypy ./chisel | mypy2junit > ./tests/results/mypy.xml
+	mypy deva tests server/mlserver python_client | mypy2junit > ./tests/results/mypy.xml
 
 lint:
 	flake8 deva tests server/mlserver python_client
