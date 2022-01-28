@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import axios from 'axios';
 
+import _ from "lodash";
 import {Pane, metadataState, paneState, 
         resultState, scenarioState, constraintsState} from './Base';
 import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
@@ -22,6 +23,12 @@ const choiceState = atom({
   default: null,
 });
 
+// the feedback data from the user about their choice
+const feedbackState = atom({
+  key: 'feedback',
+  default: null,
+})
+
 // main panel
 export function PairwisePane({}) {
   
@@ -33,6 +40,7 @@ export function PairwisePane({}) {
   const choice = useRecoilValue(choiceState);
   const [candidates, setCandidates] = useRecoilState(candidatesState);
   const [_pane, setPane] = useRecoilState(paneState);
+  const [feedback, setFeedback] = useRecoilState(feedbackState);
 
   // initial loading of candidates
   // a bit complicated by the fact we can get either candidates or a result
@@ -56,7 +64,9 @@ export function PairwisePane({}) {
   // sending new choice
   useEffect(() => {
     const send = async () => {
-      const result = await axios.put<any>("api/" + scenario + "/choice", choice);
+      let payload = {...choice};
+      payload["feedback"] = feedback;
+      const result = await axios.put<any>("api/" + scenario + "/choice", payload);
       const d = result.data;
       const k = Object.keys(d);
       if (k.length === 1) {
@@ -72,6 +82,19 @@ export function PairwisePane({}) {
   }, [choice]
   );
 
+  // resetting user feedback
+  useEffect(() => {
+    const isImportant = _.mapValues(metadata.metrics, (cons, uid, _obj) => {
+      return false;
+      });
+    const reasoningText = "";
+    const feedback = {
+      important: isImportant,
+      reasoning: reasoningText,
+    };
+    setFeedback(feedback);
+  }, [candidates]);
+
 
   // loading condition
   // must come after the useEffect so useEffect always runs
@@ -85,7 +108,7 @@ export function PairwisePane({}) {
       result.push(
       <div className="bg-gray-700 rounded-lg p-3">
         <PairwiseComparator 
-          key={uid}
+          uid={uid}
           unit={u} 
           leftValue={candidates.left.values[uid]} 
           rightValue={candidates.right.values[uid]} 
@@ -117,12 +140,27 @@ export function PairwisePane({}) {
 }
 
 // Text box to fill in motivation for the choice of system
-// TODO: implement so it gets sent / recorded by server
 function Motivation({}) {
+  
+  const [feedback, setFeedback] = useRecoilState(feedbackState);
+  const onChange = (event) => {
+    const n = {
+      "important": {...feedback["important"]},
+      "reasoning": event.target.value
+    };
+    setFeedback(n);
+  };
+
   return (
     <div>
       <p className="text-xl mb-5"> What is motivating your choice? </p>
-      <textarea id="reasons" className="w-full" rows={5}></textarea>
+      <textarea 
+        className="w-full" 
+        rows={5}
+        value={feedback["reasoning"]}
+        onChange={onChange}
+      >
+      </textarea>
     </div>
   );
 }
@@ -157,18 +195,6 @@ function InputGetter({leftName, rightName}) {
 
 function PreferenceButton({me, other, label}) {
 
-  // TODO remove / implement, utter hack for demo
-  // used to clear the checkboxes and textbox after each submission
-  useEffect(() => {
-    const textBox: any = document.getElementById("reasons");
-    textBox.value =  "";
-    const checkBoxes = document.getElementsByName("important");
-    for (let i=0; i < checkBoxes.length; i++) {
-      checkBoxes[i]["checked"] = false;
-    }
-
-  }, [label]);
-
   const [_choice, setChoice] = useRecoilState(choiceState);
 
   function onClick() {
@@ -185,16 +211,34 @@ function PreferenceButton({me, other, label}) {
   );
 }
 
-function FlagImportant({}) {
+function FlagImportant({uid}) {
+  
+  const [feedback, setFeedback] = useRecoilState(feedbackState);
+
+  const onChange = () => {
+    let n = {...feedback["important"]};
+    n[uid] = !n[uid];
+    const result = {
+      important: n,
+      reasoning: feedback["reasoning"],
+    }
+    setFeedback(result);
+  }
+
   return (
     <div>
-      <input type="checkbox" name="important" value="yes" />
+      <input 
+        type="checkbox" 
+        name="important"  
+        checked={feedback["important"][uid]}
+        onChange={onChange}
+      />
       <p className="text-s">Important consideration</p>
     </div>
   );
 }
 
-function PairwiseComparator({leftName, leftValue, 
+function PairwiseComparator({uid, leftName, leftValue, 
   rightName, rightValue, unit}) {
 
   if (!unit.lowerIsBetter) {
@@ -207,7 +251,7 @@ function PairwiseComparator({leftName, leftValue,
     
     <div className="w-auto flex space-x-16">
       <div className="my-auto" style={{width:"10%"}}>
-        <FlagImportant />
+        <FlagImportant uid={uid} />
       </div>
       <div className="my-auto" style={{width:"10%"}}>
         <Key unit={unit}/>
