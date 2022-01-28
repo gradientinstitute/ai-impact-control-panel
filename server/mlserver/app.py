@@ -235,8 +235,8 @@ def get_z():
     return jsonify(eliciter.get_z_points())
 
 
-@app.route('/Enautilus/choice', methods=['GET', 'PUT'])
-def get_enu_choice():
+@app.route('/<scenario>/choice', methods=['GET', 'PUT'])
+def get_choice(scenario):
     global eliciters
     global loggers
     if "ID" not in session:
@@ -289,71 +289,4 @@ def get_enu_choice():
             res[index]['name'] = option.name
             res[index]["values"] = option.attributes
         log.add_options(res)
-    return jsonify(res)
-
-
-@app.route('/<scenario>/choice', methods=['GET', 'PUT'])
-def get_choice(scenario):
-    global eliciters
-    global loggers
-
-    if "ID" not in session:
-        print("Session not initialised!")
-        abort(400)  # Not initialised
-
-    eliciter = eliciters[session["ID"]]
-    log = loggers[session["ID"]]
-
-    # if we got a choice, process it
-    if request.method == "PUT":
-        data = request.get_json(force=True)
-        log.add_choice(data)
-
-        # TODO: support more than two options
-        x = data["first"]
-        # y = data["second"]
-
-        # Filter to ensure valid choices go to the eliciter
-        if not eliciter.terminated:
-            choice = [v.name for v in eliciter.query]
-            if x in choice:
-                eliciter.input(x)
-
-    # now give some new choices
-    if eliciter.terminated:
-        # terminate by sending a single model
-        result = eliciter.result
-        res = {result.name: {
-                'attr': result.attributes,
-                'spec': result.spec_name
-        }}
-        log.add_result(res)
-        data = log.get_log()
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-        output_file_name = "logs/log of session " + str(session["ID"]) + \
-            ".toml"
-        with open(output_file_name, "w") as toml_file:
-            toml.dump(data, toml_file)
-        pdf = FPDF()
-        # Add a page
-        pdf.add_page()
-        # set style and size of font
-        # that you want in the pdf
-        pdf.set_font("Arial", size=15)
-        f = open(output_file_name, "r")
-        for lines in f:
-            pdf.cell(200, 10, txt=lines, ln=1, align='C')
-        pdf.output("logs/log of session " + str(session["ID"]) +
-                   ".pdf")
-
-    else:
-        res = []
-        for index, option in enumerate(eliciter.query):
-            res.append({})
-            index = str(index)
-            res[index]['name'] = option.name
-            res[index]["values"] = option.attributes
-        log.add_options(res)
-
     return jsonify(res)
