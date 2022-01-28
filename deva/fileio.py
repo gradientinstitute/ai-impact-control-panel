@@ -5,6 +5,7 @@ from glob import glob
 from deva import elicit
 import toml
 from deva.pareto import remove_non_pareto
+from deva.niceRange import nice_range
 
 
 def repo_root():
@@ -120,23 +121,34 @@ def load_all_metrics(metrics, candidates):
             # set default type
             metrics[u]["type"] = "quantitative"
 
+        # calculate the true range
+        metrics[u]["max"] = max(c[u] for c in candidates)
+        metrics[u]["min"] = min(c[u] for c in candidates)
+
+        # set min/max range default using nice_range
+        if metrics[u]["isMetrics"]:
+            if "min_range" not in metrics[u] or "max_range" not in metrics[u]:
+                (metrics[u]["range_min"],
+                 metrics[u]["range_max"]) = nice_range(metrics[u]["min"],
+                                                       metrics[u]["max"])
+
         if metrics[u]["type"] == "qualitative":
             load_qualitative_metric(metrics, candidates, u)
         elif metrics[u]["type"] == "quantitative":
             load_quantitative_metric(metrics, candidates, u)
+        # if metrics[u]["type"] == "qualitative":
+        #     load_qualitative_metric(metrics, candidates, u)
+        # elif metrics[u]["type"] == "quantitative":
+        #     load_quantitative_metric(metrics, candidates, u)
 
 
-def load_qualitative_metric(metrics, candidates, u):
-    metrics[u]["max"] = max(c[u] for c in candidates)
-    metrics[u]["min"] = min(c[u] for c in candidates)
+def load_qualitative_metric(metrics, u):
     metrics[u]["displayDecimals"] = None
     if "lowerIsBetter" not in metrics[u]:
         metrics[u]["lowerIsBetter"] = True
 
 
-def load_quantitative_metric(metrics, candidates, u):
-    metrics[u]["max"] = max(c[u] for c in candidates)
-    metrics[u]["min"] = min(c[u] for c in candidates)
+def load_quantitative_metric(metrics, u):
     metrics[u]["displayDecimals"] = int(metrics[u]["displayDecimals"])
     if "countable" not in metrics[u]:
         # auto-fill optional field
@@ -144,6 +156,26 @@ def load_quantitative_metric(metrics, candidates, u):
             "number" if metrics[u]["displayDecimals"] == 0 else "amount")
     if "lowerIsBetter" not in metrics[u]:
         metrics[u]["lowerIsBetter"] = True
+
+
+# def load_qualitative_metric(metrics, candidates, u):
+#     metrics[u]["max"] = max(c[u] for c in candidates)
+#     metrics[u]["min"] = min(c[u] for c in candidates)
+#     metrics[u]["displayDecimals"] = None
+#     if "lowerIsBetter" not in metrics[u]:
+#         metrics[u]["lowerIsBetter"] = True
+
+
+# def load_quantitative_metric(metrics, candidates, u):
+#     metrics[u]["max"] = max(c[u] for c in candidates)
+#     metrics[u]["min"] = min(c[u] for c in candidates)
+#     metrics[u]["displayDecimals"] = int(metrics[u]["displayDecimals"])
+#     if "countable" not in metrics[u]:
+#         # auto-fill optional field
+#         metrics[u]["countable"] = (
+#             "number" if metrics[u]["displayDecimals"] == 0 else "amount")
+#     if "lowerIsBetter" not in metrics[u]:
+#         metrics[u]["lowerIsBetter"] = True
 
 
 def delete_files(folder):
@@ -156,15 +188,3 @@ def delete_files(folder):
                 shutil.rmtree(file_path)
         except Exception as e:
             print('Failed to delete %s. Reason: %s' % (file_path, e))
-
-
-# Auto compute min/max range
-def compute_range(scenario, candidates):
-    # scenario, candidates = load_scenario(scenario_name)
-    metrics = scenario["metrics"]
-    ranges = {}
-    for u in metrics:
-        if metrics[u]["isMetrics"]:
-            if "min_range" not in metrics[u] or "max_range" not in metrics[u]:
-                ranges[metrics[u]] = len(candidates)
-    return ranges

@@ -8,7 +8,6 @@ import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
-// TODO: metadata
 
 import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState,
@@ -249,8 +248,6 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     // copy constraints into a new object
     let n = {...constraints};
 
-    // TODO: set the bounds of the scrollbar
-    // n[uid] = [min_range, max_range]
     n[uid] =  [n[uid][0], newVal] 
 
     setConstraints(n);  
@@ -282,10 +279,6 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
       <OptimalDirection lowerIsBetter={lowerIsBetter}/>
     </div>
     );
-
-//   const minPercentage = GetMinValue(uid, min, max, decimals, lowerIsBetter);
-//   const maxPercentage = GetMaxValue(uid, min, max, decimals, lowerIsBetter);
-
 }
 
 
@@ -306,9 +299,6 @@ function OptimalDirection({lowerIsBetter}) {
     </div>
   );
 }
-
-// TODO max range -> lower is better (GetMaxValue)
-// TODO min range -> higher is better(GetMinValue)
 
 
 function StartButton({}) {
