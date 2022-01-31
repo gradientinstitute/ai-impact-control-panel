@@ -32,7 +32,6 @@ description = "Ensure that candidates shortlisted are suitable."
     displayDecimals = 0
     countable = true
 
-    isMetric = True
     range_min = 0
     range_max = 4
 
@@ -52,7 +51,6 @@ description = "Ensure that candidates shortlisted are suitable."
     displayDecimals = 0
     countable = true
 
-    isMetric = True
     range_min = 0
     range_max = 4
 
@@ -73,7 +71,6 @@ description = "Ensure that candidates shortlisted are suitable."
     displayDecimals = 2
     countable = true
 
-    isMetric = True
     range_min = 0
     range_max = 1
 
@@ -95,6 +92,5 @@ description = "Ensure that candidates shortlisted are suitable."
     comparison_worse = "uses more personal data than"
     comparison_equal = "uses the same amount of personal data as"
 
-    isMetric = True
     range_min = 0
     range_max = 4

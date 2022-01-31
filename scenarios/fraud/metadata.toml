@@ -62,7 +62,6 @@ description = "Ensure system doesnt make disproportionate errors on women"
     action = "overlook{s}"
     displayDecimals = 0
 
-    isMetric = True
     range_min = 0
     range_max = 100
 
@@ -80,7 +79,6 @@ description = "Ensure system doesnt make disproportionate errors on women"
     action = "falsely flag{s}"
     displayDecimals = 0
 
-    isMetric = True
     range_min = 0
     range_max = 100
 
@@ -99,8 +97,7 @@ description = "Ensure system doesnt make disproportionate errors on women"
     action = "burden{s} the worst-off individuals with"
     countable = "number"
     displayDecimals = 1
-    
-    isMetric = True
+
     range_min = 0
     range_max = 100
 
@@ -119,8 +116,6 @@ description = "Ensure system doesnt make disproportionate errors on women"
     lowerIsBetter = false
     displayDecimals = 2
 
-    isMetric = True
-
 [metrics.eo_disadvantage_rate]
     name = "Inequality of Fraud Prevention"
     icon = "fairness.png"
@@ -135,6 +130,5 @@ description = "Ensure system doesnt make disproportionate errors on women"
     action = "is"
     displayDecimals = 2
 
-    isMetric = True
     range_min = 0
     range_max = 100

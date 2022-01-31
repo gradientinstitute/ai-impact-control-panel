@@ -126,7 +126,7 @@ def load_all_metrics(metrics, candidates):
         metrics[u]["min"] = min(c[u] for c in candidates)
 
         # set min/max range default using nice_range
-        if metrics[u]["isMetric"]:
+        if not metrics[u]["isMetric"]:
             (range_min, range_max) = nice_range(metrics[u]["min"],
                                                 metrics[u]["max"])
             if "range_min" not in metrics[u] and "range_max" not in metrics[u]:
