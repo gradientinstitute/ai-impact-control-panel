@@ -4,7 +4,8 @@ import { ArcherContainer, ArcherElement } from 'react-archer';
 import _ from "lodash";
 import axios from 'axios';
 
-import { Pane, paneState, metadataState, scenarioState } from './Base';
+import { Pane, paneState, metadataState, scenarioState,
+         problemType} from './Base';
 import { algoState, nameState } from './Base';
 import {sigFigs} from './Widgets';
 
@@ -308,9 +309,15 @@ function BlockWithSubBlocks({title, items}) {
 // button to proceed to the next pane
 function ReadyButton({}) {
   const [_pane, setPane] = useRecoilState(paneState);
+  const [_problemType, setProblemType] = useRecoilState(problemType);
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
-        onClick={() => {setPane(Pane.Constrain)}}>
+        onClick={() => {
+            setPane((_problemType === "preferences")?
+                Pane.Constrain : Pane.Boundaries)
+        }
+
+        }>
         <div className="p-4 text-5xl">
           Begin
         </div>

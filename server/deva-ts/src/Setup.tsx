@@ -7,7 +7,8 @@ import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
 
-import {Pane, paneState, scenarioState, algoState, nameState} from './Base';
+import {Pane, paneState, scenarioState, algoState, nameState,
+        problemType} from './Base';
 
 
 // the set of scenarios retrieved from the serever
@@ -22,11 +23,13 @@ const currentScenarioState = atom({
   default: null,
 });
 
-// the set of algorithms retrieved from the serever
+// the set of algorithms retrieved from the server
 const algoChoicesState = atom({
     key: 'algorithmChoices',
     default: [],
   });
+
+
 
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
@@ -76,43 +79,40 @@ export function SetupPane({}) {
   );
 }
 
-
 // steps of intro flow
-function Steps({}) {
-  const [stepIndex, setStepIndex] = useState(0);
-
-  function handleStepsChange(i) {
-    setStepIndex(i);
-  }
+function Steps() {
+  const [tabIndex, setTabIndex] = useState(0);
 
  return (
-   <Tabs className="intro-content flex items-stretch" index={stepIndex} onChange={handleStepsChange}>
+   <Tabs className="intro-content flex items-stretch" index={tabIndex} onChange={setTabIndex}>
      <TabPanels className="self-center flex-1">
-       <Step1 handleStepsChange={handleStepsChange} />
-       <Step2 stepIndex={stepIndex} setStepIndex={setStepIndex}/>
+       <ChooseProblem setTabIndex={setTabIndex} />
+       <ChooseScenario setTabIndex={setTabIndex}/>
      </TabPanels>
    </Tabs>
  )
 }
 
-// first step: choose what to elicit
-function Step1({handleStepsChange}) {
+function ChooseProblem({setTabIndex}) {
+  // first tab: choose whether to elicit boundaries or preferences
   return (
     <TabPanel key={0}>
       <p className="text-lg">I want to elicit</p>
-      <StartButtons onChange={handleStepsChange} />
+      <StartButtons setTabIndex={setTabIndex} />
   </TabPanel>
   )
 }
 
-// second step: select scenario and eliciter (algorithm)
-function Step2({stepIndex, setStepIndex}) {
+function ChooseScenario({setTabIndex}) {
+  // second tab: select scenario and eliciter (algorithm)
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
   const [_scenario, setScenario] = useRecoilState(scenarioState);
   const [_name, setName] = useRecoilState(nameState);
-  const canGoBack = stepIndex >= 0;
-  const buttonDisabled = current === null;
+  // const canGoBack = tabIndex >= 0;
+  const [_problemType, setProblemType] = useRecoilState(problemType);
+  const buttonDisabled = (current === null) || (_name === "");
+  const hasAlgoSelect = (_problemType === "preferences");
 
   return (
     <TabPanel key={1}>
@@ -123,12 +123,11 @@ function Step2({stepIndex, setStepIndex}) {
       <p className="text-lg pb-6">Select a scenario</p>
       <ScenarioSelector />
       <br></br>
-      <p className="text-lg pb-6">Select an algorithm</p>
-      <AlgoSelector />
+      { hasAlgoSelect ?  <AlgoSelector />  : null }
       <div className="flex justify-between btn-row mt-12">
         <div className="flex flex-1 align-middle text-left">
           <button className="hover:text-gray-300 transition"
-            onClick={() => canGoBack && setStepIndex(stepIndex-1)}>
+            onClick={() => setTabIndex(0)}>
             &#8249; Back
           </button>
         </div>
@@ -243,20 +242,24 @@ function AlgoSelector({}) {
 
 // select the type of elicitation to do with two buttons
 // TODO: hook up to boundary elicitation when its implemented
-function StartButtons({onChange}) {
+function StartButtons({setTabIndex}) {
+
+  const [_problemType, setProblemType] = useRecoilState(problemType);
 
   return (
       <div className="grid grid-cols-2 gap-10 py-12 px-6">
         <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
           onClick={() => {
-            onChange(1);
+            setProblemType("bounds");
+            setTabIndex(1);
           }}
-          disabled={true}>
+          disabled={false}>
             Boundaries
         </button>
         <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
           onClick={() => {
-            onChange(1);
+            setProblemType("preferences");
+            setTabIndex(1);
           }}
           disabled={false}>
             Deployment
