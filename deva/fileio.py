@@ -5,6 +5,7 @@ from glob import glob
 from deva import elicit
 import toml
 from deva.pareto import remove_non_pareto
+from deva.niceRange import nice_range
 
 
 def repo_root():
@@ -120,23 +121,32 @@ def load_all_metrics(metrics, candidates):
             # set default type
             metrics[u]["type"] = "quantitative"
 
+        # calculate the true range
+        metrics[u]["max"] = max(c[u] for c in candidates)
+        metrics[u]["min"] = min(c[u] for c in candidates)
+
+        # set min/max range default using nice_range
+        if not metrics[u]["isMetric"]:
+            (range_min, range_max) = nice_range(metrics[u]["min"],
+                                                metrics[u]["max"])
+            if "range_min" not in metrics[u]:
+                metrics[u]["range_min"] = range_min
+            if "range_max" not in metrics[u]:
+                metrics[u]["range_max"] = range_max
+
         if metrics[u]["type"] == "qualitative":
             load_qualitative_metric(metrics, candidates, u)
         elif metrics[u]["type"] == "quantitative":
             load_quantitative_metric(metrics, candidates, u)
 
 
-def load_qualitative_metric(metrics, candidates, u):
-    metrics[u]["max"] = max(c[u] for c in candidates)
-    metrics[u]["min"] = min(c[u] for c in candidates)
+def load_qualitative_metric(metrics, u):
     metrics[u]["displayDecimals"] = None
     if "lowerIsBetter" not in metrics[u]:
         metrics[u]["lowerIsBetter"] = True
 
 
-def load_quantitative_metric(metrics, candidates, u):
-    metrics[u]["max"] = max(c[u] for c in candidates)
-    metrics[u]["min"] = min(c[u] for c in candidates)
+def load_quantitative_metric(metrics, u):
     metrics[u]["displayDecimals"] = int(metrics[u]["displayDecimals"])
     if "countable" not in metrics[u]:
         # auto-fill optional field
