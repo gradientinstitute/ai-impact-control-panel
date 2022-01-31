@@ -17,8 +17,9 @@ class Logger:
         self.log['result'] = None
 
     def add_options(self, option):
-        for o in option:
-            del o['name']
+        # option
+        # for o in option:
+        #     del o['name']
         self.log['choices']['Question number ' +
                             str(self.choice_number + 1)] = {'options': option}
 

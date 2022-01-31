@@ -41,12 +41,16 @@ export function PairwisePane({}) {
     const fetch = async () => {
       const result = await axios.get<any>("api/" + scenario + "/choice");
       const d = result.data;
-      const k = Object.keys(d);
-      if (k.length === 1) {
+      // const k = Object.keys(d);
+      if (!Array.isArray(d)) {
         setResult(d);
         setPane(Pane.Result);
       } else {
-        setCandidates(d);
+        const ddash = {
+          left: d[0], right: d[1]
+        };
+        console.log(ddash);
+        setCandidates(ddash);
       }
     }
     fetch();
@@ -58,12 +62,16 @@ export function PairwisePane({}) {
     const send = async () => {
       const result = await axios.put<any>("api/" + scenario + "/choice", choice);
       const d = result.data;
-      const k = Object.keys(d);
-      if (k.length === 1) {
+      // const k = Object.keys(d);
+      if (!Array.isArray(d)) {
         setResult(d);
         setPane(Pane.Result);
       } else {
-        setCandidates(d);
+        const ddash = {
+          left: d[0], right: d[1]
+        };
+        console.log(ddash);
+        setCandidates(ddash);
       }
     }
     if (choice !== null) {

@@ -283,10 +283,7 @@ def get_choice(scenario):
                    ".pdf")
     else:
         res = []
-        for index, option in enumerate(eliciter.query):
-            res.append({})
-            index = int(index)
-            res[index]['name'] = option.name
-            res[index]["values"] = option.attributes
+        for option in eliciter.query:
+            res.append({'name': option.name, 'values': option.attributes})
         log.add_options(res)
     return jsonify(res)
