@@ -44,49 +44,25 @@ def main():
     metrics = meta["metrics"]
     print("Scenario Metrics:", *metrics)
 
-    request = f'http://127.0.0.1:8666/{scenario}/choice'
+    request = 'http://127.0.0.1:8666/{scenario}/choice'
     print(request)
     choices = sess.get(request).json()
-    print("Opening comparison: ", choices['left']['name'],
-          choices['right']['name'])
-
     while True:
         if len(choices) != 2:
             break  # termination condition
-
-        # its name, attribute, spec_name
-        # why did this left / right business get introduced
-        # (why not a list? do we answer left/right in the API?)
-        options = [choices['left'], choices['right']]
-
-        fchoice = (
-            elicit.Candidate(options[0]['name'], options[0]['values']),
-            elicit.Candidate(options[1]['name'], options[1]['values']),
-        )
-        interface.text(fchoice, metrics)
-        name_options = [options[0]['name'], options[1]['name']]
-
+        print("Opening comparison:")
+        for choice in choices:
+            print(choice)
+        options = [*range(len(choices))]
         i = None
-        print(f'(Answer {name_options[0]} or {name_options[1]})')
-        while i not in name_options:
+        print(f'Answer from {options}')
+        while (i is None) or (int(i) not in options):
             i = input()
-            if len(i) == 1:
-                # allow shorthand
-                i = "System_" + i
-        if i == name_options[0]:
-            j = name_options[1]
-        else:
-            j = name_options[0]
-
         print("Submitting: ", end="")
-        request = f'http://127.0.0.1:8666/{scenario}/choice'
-        rdata = {"first": i, "second": j}
-
+        request = 'http://127.0.0.1:8666/{scenario}/choice'
+        rdata = {"first": i}
         print(request, rdata)
         choices = sess.put(request, json=rdata).json()
-
-    # Now we're terminated
-    assert len(choices) == 1
     uid = list(choices.keys())[0]
     # choices now contains 'spec':'precise'...
     name = f"Spec: {choices[uid]['spec']} ({uid})"

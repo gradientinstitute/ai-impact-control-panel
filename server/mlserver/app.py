@@ -203,6 +203,17 @@ def apply_constraints(scenario):
     return "OK"
 
 
+@app.route('/Enautilus/zpoints')
+def get_z():
+    eliciter = db.eliciter
+    if db.eliciter is None:
+        print("Session not initialised!")
+        abort(400)  # Not initialised
+
+    # log = loggers[session["ID"]]
+    return jsonify(eliciter.get_z_points())
+
+
 @app.route('/<scenario>/choice', methods=['GET', 'PUT'])
 def get_choice(scenario):
 
@@ -215,22 +226,15 @@ def get_choice(scenario):
 
     # if we got a choice, process it
     if request.method == "PUT":
+        print("PUT")
         data = request.get_json(force=True)
-        log.add_choice(data)
-
-        # TODO: support more than two options
+        log.add_choice([data])
         x = data["first"]
-        y = data["second"]
 
-        # Filter to ensure valid choices go to the eliciter
+        # Only pass valid choices on to the eliciter
         if not eliciter.terminated:
-            choice = [v.name for v in eliciter.query]
-            if (x in choice) and (y in choice) and (x != y):
-                eliciter.input(x)
-
-    # now give some new choices
+            eliciter.input(x)
     if eliciter.terminated:
-        # terminate by sending a single model
         result = eliciter.result
         res = {result.name: {
                 'attr': result.attributes,
@@ -253,21 +257,11 @@ def get_choice(scenario):
         for lines in f:
             pdf.cell(200, 10, txt=lines, ln=1, align='C')
         pdf.output(f"logs/{str(session['id'])}.pdf")
-
     else:
-        # eliciter has not terminated - extract the next choice
-        m1, m2 = eliciter.query  # TODO - support more than 2 options
-        res = {
-                "left": {
-                    "name": m1.name,
-                    "values": m1.attributes
-                    },
-                "right": {
-                    "name": m2.name,
-                    "values": m2.attributes
-                    }
-            }
-    # the state has changed, needs to be written back
+        res = []
+        for option in eliciter.query:
+            res.append({'name': option.name, 'values': option.attributes})
+        log.add_options(res)
     db.eliciter = eliciter
     db.logger = log
     return jsonify(res)
