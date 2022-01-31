@@ -3,8 +3,7 @@ import {atom} from 'recoil';
 // what pane are we looking at
 export enum Pane {
   Setup,
-  Intro,
-  Constrain,
+  Configure,
   Pairwise,
   Result,
 }

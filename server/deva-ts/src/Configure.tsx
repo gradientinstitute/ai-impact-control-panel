@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import { ArcherContainer, ArcherElement } from 'react-archer';
 import _ from "lodash";
 import axios from 'axios';
 
-import { Pane, paneState, metadataState, scenarioState } from './Base';
-import { algoState, nameState } from './Base';
+import { Pane, paneState, algoState, nameState, 
+         metadataState, scenarioState} from './Base';
 import {sigFigs} from './Widgets';
 
 // TODO siigh css? 
@@ -14,62 +14,125 @@ const FIRST_COLOUR = "bg-gray-700";
 const SECOND_COLOUR = "bg-blue-600";
 const THIRD_COLOUR = "bg-green-700";
 
+// the set of algorithms retrieved from the serever
+const algoChoicesState = atom({
+    key: 'algorithmChoices',
+    default: [],
+  });
 
-// the Introduction pane -- root node
-export function IntroPane({}) {
+// info from the ranges API containing
+// array containing all of the candidates
+// [{metric1: value1, metric2: value1}, {metric1: value3, metric2:value4}]
+export const allCandidatesState = atom({  
+  key: 'allCandidates', 
+  default: null, 
+});
+
+// root node
+export function ConfigurePane({}) {
   
-  const [metadata, setMetadata] = useRecoilState(metadataState);
   const scenario = useRecoilValue(scenarioState);
-  const name = useRecoilValue(nameState);
-  const algo = useRecoilValue(algoState);
+
+  // const name = useRecoilValue(nameState);
+  // algorithms / eliciters
+  // const algo = useRecoilValue(algoState);
+  
+  // all candidates sent to us by the server
+  const [_current, setCurrent] = useRecoilState(algoState);
+  const [metadata, setMetadata] = useRecoilState(metadataState);
+  const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
+  const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+
 
   // initial request on load
   useEffect(() => {
-    // let req = "api/" + scenario + "/metadata";
-    // TODO: load algo
-    // let algo = "toy"
-    let req = "api/" + scenario + "/init/" + algo + "/" + name;
+    let req = "api/" + scenario + "/all";
     async function fetchData() {
       const result = await axios.get<any>(req);
-      setMetadata(result.data);
+      const d = result.data;
+      setMetadata(d.metadata);
+      setAlgos(d.algorithms);
+      setAllCandidates(d.candidates);
+      // setBaselines(d.baselines);
     }
     fetchData();
   }, []
   );
+  
+  // default selection of a particular algorithm
+  useEffect( () => {
+    if (algorithms !== null) {
+      setCurrent(Object.keys(algorithms)[0]);
+    }
+  }, [algorithms]);
 
-  if (metadata === null) {
-    return (<p>Loading...</p>);
-  }
+  // if (metadata === null) {
+  //   return (<p>Loading...</p>);
+  // }
 
   return (
-    <div className="mx-auto max-w-screen-lg pb-8 grid gap-x-8 
-      gap-y-6 grid-cols-1 text-center items-center">
-
-      <div className="mb-8">
-        <h1 className=""> System under study: {metadata.name} </h1>
-        <p className="">A system {metadata.purpose}</p>
-      </div>
-    
-      <KeyValue 
-        title={"Purpose"} 
-        titleSize="4xl" 
-        value={metadata.operation} 
-        valueSize="xl"
-        colour={HIGHLIGHT_COLOUR}
-      />
-
-      <ObjectiveBlock
-        items={metadata.objectives}
-        title={"Objectives"} />
-
-      <Pipeline />
-
-      <Metrics />
-
-      <ReadyButton />
+    <div>
+      <p>Metadata: {JSON.stringify(metadata)}</p>
     </div>
   );
+
+  // return (
+  //   <div className="mx-auto max-w-screen-lg pb-8 grid gap-x-8 
+  //     gap-y-6 grid-cols-1 text-center items-center">
+
+  //     <div className="mb-8">
+  //       <h1 className=""> System under study: {metadata.name} </h1>
+  //       <p className="">A system {metadata.purpose}</p>
+  //     </div>
+    
+  //     <KeyValue 
+  //       title={"Purpose"} 
+  //       titleSize="4xl" 
+  //       value={metadata.operation} 
+  //       valueSize="xl"
+  //       colour={HIGHLIGHT_COLOUR}
+  //     />
+
+  //     <ObjectiveBlock
+  //       items={metadata.objectives}
+  //       title={"Objectives"} />
+
+  //     <Pipeline />
+
+  //     <Metrics />
+
+  //     <ReadyButton />
+  //   </div>
+  // );
 }
+
+// Select algorithm from list and preview details
+function AlgoSelector({}) {
+  
+  const algos = useRecoilValue(algoChoicesState);
+  const [current, setCurrent] = useRecoilState(algoState);
+
+  const elements = Object.entries(algos).map(([name, d]) => {
+    return (<option key={name} value={name}>{name}</option>);
+  });
+  
+  return (
+      <div className="p-4 gap-4 bg-gray-500 grid grid-cols-3" >
+        <p className="text-right col-span-1">Eliciter</p>
+        <select className="col-span-2" name="scenarios" value={current} 
+          onChange={ (x) => {setCurrent(x.target.value)}}>
+          {elements}
+        </select>
+        <div className="col-span-1">
+        </div>
+        <div className="col-span-2">
+          <p>{algos[current]}</p>
+        </div>
+      </div>
+    );
+
+}
+
 
 // visual-ish display of the data -> model -> decision pipeline
 function Pipeline({}) {

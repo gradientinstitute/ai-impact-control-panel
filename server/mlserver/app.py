@@ -183,6 +183,18 @@ def init_session(scenario, algo, name):
     return spec
 
 
+# TODO this could replace some of the other calls
+@app.route('/<scenario>/all')
+def get_all(scenario):
+    candidates, spec = _scenario(scenario)
+    points, _ = calc_ranges(candidates, spec)
+    baselines = []
+    # baselines = fileio.load_baseline(scenario)
+    r = {"metadata": spec, "candidates": points, "baselines": baselines,
+         "algorithms": eliciters_descriptions}
+    return r
+
+
 @app.route('/<scenario>/ranges', methods=['GET'])
 def get_ranges(scenario):
 
