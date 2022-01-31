@@ -261,6 +261,7 @@ def get_choice(scenario):
         res = []
         for option in eliciter.query:
             res.append({'name': option.name, 'values': option.attributes})
+        log.add_options(res)
     db.eliciter = eliciter
     db.logger = log
     return jsonify(res)
