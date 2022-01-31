@@ -126,7 +126,7 @@ def load_all_metrics(metrics, candidates):
         metrics[u]["min"] = min(c[u] for c in candidates)
 
         # set min/max range default using nice_range
-        if not metrics[u]["isMetric"]:
+        if "isMetric" not in metrics[u]:
             (range_min, range_max) = nice_range(metrics[u]["min"],
                                                 metrics[u]["max"])
             if "range_min" not in metrics[u]:
@@ -135,9 +135,9 @@ def load_all_metrics(metrics, candidates):
                 metrics[u]["range_max"] = range_max
 
         if metrics[u]["type"] == "qualitative":
-            load_qualitative_metric(metrics, candidates, u)
+            load_qualitative_metric(metrics, u)
         elif metrics[u]["type"] == "quantitative":
-            load_quantitative_metric(metrics, candidates, u)
+            load_quantitative_metric(metrics, u)
 
 
 def load_qualitative_metric(metrics, u):
