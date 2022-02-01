@@ -6,15 +6,19 @@ from deva import halfspace
 
 
 class Candidate:
+    """Represent a candidate model's name and attributes."""
+
     def __init__(self, name, attributes, spec_name=None):
         self.name = name
         self.attributes = attributes
         self.spec_name = spec_name or name
 
     def __getitem__(self, key):
+        """Access attributes directly."""
         return self.attributes[key]
 
     def __repr__(self):
+        """Human readable display of candidate."""
         return f"Candidate({self.name})"
 
     def get_attr(self):
@@ -22,21 +26,25 @@ class Candidate:
 
 
 class Eliciter:
-    '''Base class for elicitation algorithms.'''
+    """Base class for elicitation algorithms."""
 
     # Just a promise that inheriting classes will have these members
     def terminated(self, choice):
+        """Check whether the eliciter is finished."""
         raise NotImplementedError
 
     @property
     def query(self, choice):
+        """Collect the options the algorithm is presenting to the user."""
         raise NotImplementedError
 
     @property
     def result(self, choice):
+        """Return the preferred candidate."""
         raise NotImplementedError
 
-    def input(self, choice):
+    def put(self, choice):
+        """Input a user preference."""
         raise NotImplementedError
 
     @staticmethod
@@ -46,7 +54,7 @@ class Eliciter:
 
 
 class VotingEliciter(Eliciter):
-    '''Simple eliciter that chooses the most selected candidate'''
+    """Simple eliciter that chooses the most selected candidate."""
 
     def __init__(self, candidates, scenario):
         assert candidates, "No candidate models"
@@ -60,7 +68,7 @@ class VotingEliciter(Eliciter):
 
         self._update()
 
-    def input(self, choice):
+    def put(self, choice):
         if choice == self.query[0].name:
             self.chosen[self.query[0]] += 1
         if choice == self.query[1].name:
@@ -95,7 +103,7 @@ class VotingEliciter(Eliciter):
 
 
 class Toy(Eliciter):
-    '''Simple eliciter with sequential elimination.'''
+    """Simple eliciter with sequential elimination."""
 
     def __init__(self, candidates, scenario):
         assert candidates, "No candidate models"
@@ -103,7 +111,7 @@ class Toy(Eliciter):
         self.candidates = list(candidates)  # copy references
         self._update()
 
-    def input(self, choice):
+    def put(self, choice):
         if choice == self.query[1].name:
             self.candidates.remove(self.query[0])
         else:
@@ -197,7 +205,7 @@ class Enautilus(Eliciter):
         return self.candidates[np.linalg.norm(np.array(X) - np.array(list(
                                             self._nadir.values()))).argmin()]
 
-    def input(self, choice):
+    def put(self, choice):
         '''Receive input from the user and update new
          ideal point, nadir point, and remaining candidates'''
         choice = self._query[int(choice)]
@@ -263,13 +271,14 @@ class Enautilus(Eliciter):
 
 # Eliciter implementations
 class ActiveRanking(Eliciter):
+    """Implements an eliciter based on linear plane queries."""
 
     _active_alg = halfspace.HalfspaceRanking
-    _active_kw = {'query_order': halfspace.rank_compar_ord}
+    _active_kw = {"query_order": halfspace.rank_compar_ord}
 
     def __init__(self, candidates, scenario):
         if len(candidates) < 2:
-            raise RuntimeError('Two or more candidates required.')
+            raise RuntimeError("Two or more candidates required.")
         Eliciter.__init__(self)
         self.candidates = list(candidates)
         attribs = list(candidates[0].attributes.keys())
@@ -281,7 +290,7 @@ class ActiveRanking(Eliciter):
             data.append([c[a] for a in attribs])
         data = np.array(data)
 
-        # metrics = scenario['metrics']
+        # metrics = scenario["metrics"]
         # already pre-applied, we can assume lower is always better
         self.active = self._active_alg(
             data,
@@ -290,7 +299,7 @@ class ActiveRanking(Eliciter):
         )
         self._update()
 
-    def input(self, choice):
+    def put(self, choice):
         if choice == self._query[0].name:
             val = 1
         else:
@@ -326,9 +335,10 @@ class ActiveRanking(Eliciter):
 
 
 class ActiveMax(ActiveRanking):
+    """Elicit the preferred candidate using pairwise linear separation."""
 
     _active_alg = halfspace.HalfspaceMax
-    _active_kw = {'query_order': halfspace.max_compar_rand}
+    _active_kw = {"query_order": halfspace.max_compar_rand}
 
     @staticmethod
     def description():
@@ -336,9 +346,14 @@ class ActiveMax(ActiveRanking):
 
 
 class ActiveMaxSmooth(ActiveRanking):
+    """
+    Elicit the preferred candidate using pairwise linear separation.
+
+    Distinct from ActiveMax by using a query order heuristic.
+    """
 
     _active_alg = halfspace.HalfspaceMax
-    _active_kw = {'query_order': halfspace.max_compar_smooth}
+    _active_kw = {"query_order": halfspace.max_compar_smooth}
 
     @staticmethod
     def description():
@@ -346,18 +361,23 @@ class ActiveMaxSmooth(ActiveRanking):
 
 
 class ActiveMaxPrimary(ActiveRanking):
+    """
+    Elicit the preferred candidate using pairwise linear separation.
+
+    Distinct from ActiveMax by using a query order based on a primary metric.
+    """
 
     _active_alg = halfspace.HalfspaceMax
 
     def __init__(self, candidates, scenario):
-        if 'primary_metric' not in scenario:
-            raise RuntimeError('Expecting a primary_metric to be specified in'
-                               ' the metadata.')
-        pmetric = scenario['primary_metric']
+        if "primary_metric" not in scenario:
+            raise RuntimeError("Expecting a primary_metric to be specified in"
+                               " the metadata.")
+        pmetric = scenario["primary_metric"]
         attribs = list(candidates[0].attributes.keys())
         pri_ind = attribs.index(pmetric)
         qorder = partial(halfspace.max_compar_primary, primary_index=pri_ind)
-        self._active_kw = {'query_order': qorder}
+        self._active_kw = {"query_order": qorder}
         super().__init__(candidates, scenario)
 
     @staticmethod
@@ -365,7 +385,7 @@ class ActiveMaxPrimary(ActiveRanking):
         return "ActiveMaxPrimary description"
 
 
-# export a list of eliciters
+# Export all the Eliciter classes
 algorithms = {
     "Toy": Toy,
     "ActiveRanking": ActiveRanking,

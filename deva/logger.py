@@ -1,3 +1,4 @@
+"""Module to support eliciter logging."""
 from copy import deepcopy
 from datetime import datetime
 from collections import OrderedDict
@@ -33,7 +34,7 @@ class Logger:
         self.choice_number += 1
 
     def add_result(self, result):
-        self.log['result'] = result
+        self.log["result"] = result
 
     def get_log(self):
         return self.log

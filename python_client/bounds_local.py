@@ -1,4 +1,4 @@
-"""Productionising LDA.py"""
+"""Run a linear bounds experiment offline."""
 from deva import fileio
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +9,7 @@ from sklearn.metrics import log_loss
 
 
 def main():
+    """Run a linear bounds experiment offline."""
     np.random.seed(42)
 
     # Load candidates and metadata
@@ -28,7 +29,7 @@ def main():
 
     # logged for plotting
     eli_choices = {}  # a dict storing the choices for each eliciter
-    eli_scores = {}  # storing the average 'log loss' for each eliciter
+    eli_scores = {}  # storing the average "log loss" for each eliciter
     eli_errors = {}  # storing the error rate for each eliciter
 
     n_iter = 0
@@ -54,7 +55,7 @@ def main():
 
         for eliciter in eliciters:
             samp_name = eliciter
-            print(f'You are using {samp_name} Eliciter\n')
+            print(f"You are using {samp_name} Eliciter\n")
             outputs = run_bounds_eliciter(eliciters[eliciter], metrics, table,
                                           baseline, w_true, oracle, ref,
                                           n_samples=100)
@@ -64,7 +65,7 @@ def main():
                 eli_scores[samp_name] = []
             else:
                 eli_scores[samp_name].append(scores)
-            if n_iter == max_iter-1:
+            if n_iter == max_iter - 1:
                 eli_choices[samp_name] = sample_choices
                 eli_errors[samp_name] = compare_weights(w_true, est_w)
         n_iter += 1
@@ -74,9 +75,9 @@ def main():
     plt.figure(0)
     for k in eli_errors:
         plt.plot(eli_errors[k], label=k)
-    plt.ylabel('error rate')
-    plt.xlabel('steps')
-    plt.suptitle('Eliciters Comparison')
+    plt.ylabel("error rate")
+    plt.xlabel("steps")
+    plt.suptitle("Eliciters Comparison")
     plt.legend()
 
     avg_scores = {}
@@ -88,9 +89,9 @@ def main():
     plt.figure(1)
     for k in eli_scores:
         plt.plot(np.array(avg_scores[k]), label=k)
-    plt.ylabel('log loss')
-    plt.xlabel('steps')
-    plt.suptitle('Eliciters Comparison')
+    plt.ylabel("log loss")
+    plt.xlabel("steps")
+    plt.suptitle("Eliciters Comparison")
     plt.legend()
 
     print("See sampling plot")
@@ -101,21 +102,22 @@ def main():
 
     # Display 3D plot  -------------------------
     plt.figure(2)
-    sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
+    sign = np.array([1 if metrics[a].get("lowerIsBetter", True) else -1
                     for a in attribs])
 
     plot3d.sample_trajectory(choices * sign, attribs)
     rad = plot3d.radius(choices)[:3]
     plot3d.weight_disc(
-        w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
+        w_true[:3], (ref * sign)[:3], rad, "b", "true boundary")
     plot3d.weight_disc(
-        sampler.w[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
+        sampler.w[:3], (ref * sign)[:3], rad, "r", "estimated boundary")
     plt.legend()
     plt.show()
 
 
 def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
                         ref, n_samples):
+    """Run a single bounds eliciter to termination."""
     sampler = sample
 
     # logged for plotting
@@ -178,6 +180,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
 
 
 def compare_weights(w_true, est_w):
+    """Evaluate a linear eliciter's model by comparing weights."""
     # normalise to unit vector
     true_hat = np.array(w_true / (w_true @ w_true)**.5)
     est_hat = np.array([est_w[i] / (est_w[i] @ est_w[i])**.5
@@ -188,6 +191,7 @@ def compare_weights(w_true, est_w):
 
 
 def evaluation(eliciter, ref, n_samples, oracle):
+    """Evaluate an eliciter by predicting on a test set."""
     # generate random testing data
     test_X = random_choice(ref, n_samples)
     test_y = [oracle(x) for x in test_X]  # y_true
@@ -200,6 +204,7 @@ def evaluation(eliciter, ref, n_samples, oracle):
 
 
 def random_choice(ref, n_samples):
+    """Pick a random sample about the reference point."""
     rand = np.random.random_sample((n_samples, len(ref))) * 10
     sign = np.random.choice([-1, 1])
     choice = sign * rand + ref

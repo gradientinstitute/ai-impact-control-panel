@@ -1,3 +1,4 @@
+"""Plotting tools to visualise a plane model in 3D."""
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches  # NOQA
 from mpl_toolkits import mplot3d
@@ -7,18 +8,20 @@ Poly3D = mplot3d.art3d.Poly3DCollection
 
 
 def radius(choices):
+    """Heuristic to estimate axis scales given candidate data."""
     c = np.array(choices)[:, :3]
     # rad = radius  # don't need to clip tight
     return 0.8 * (c.max(axis=0) - c.min(axis=0))
 
 
 def sample_trajectory(choices, attribs):
+    """Plot the sequence of eliciter samples against 3D axes."""
     # plot the sampler trajectory
-    ax = plt.axes(projection='3d')
+    ax = plt.axes(projection="3d")
     c = np.array(choices)[:, :3]
 
-    ax.plot3D(*c.T[:3], 'k-', alpha=0.5, label="Query Trajectory")
-    ax.plot3D(*c.T[:3], 'ko', alpha=0.5, label="Query Systems")
+    ax.plot3D(*c.T[:3], "k-", alpha=0.5, label="Query Trajectory")
+    ax.plot3D(*c.T[:3], "ko", alpha=0.5, label="Query Systems")
 
     def m(name):
         ren = {
@@ -33,9 +36,10 @@ def sample_trajectory(choices, attribs):
     ax.set_zlabel(m(attribs[2]))
 
     def ranger(v):
+        """Return a window with 20% buffer around the min and max in a set."""
         a = v.min()
         b = v.max()
-        return [1.2*a-.2*b, 1.2*b-.2*a]
+        return [1.2 * a - .2 * b, 1.2 * b - .2 * a]
 
     ax.set_xlim3d(*ranger(c[:, 0]))
     ax.set_ylim3d(*ranger(c[:, 1]))
@@ -43,12 +47,13 @@ def sample_trajectory(choices, attribs):
 
 
 def weight_disc(w, ref, radius, c, label="Boundary"):
-    w = w / (w@w)**.5  # ensure unit vector
+    """Plot a weight disc on a plane scaled to the viewports aspect ratio."""
+    w = w / (w @ w)**.5  # ensure unit vector
     v = w * radius
-    v /= (v@v)**.5
+    v /= (v @ v)**.5
     _, R = np.linalg.eigh(np.outer(v, v))
-    theta = np.linspace(0, 2*np.pi, 101)
-    diff = np.array((np.cos(theta), np.sin(theta), 0*theta)).T @ R.T
+    theta = np.linspace(0, 2 * np.pi, 101)
+    diff = np.array((np.cos(theta), np.sin(theta), 0 * theta)).T @ R.T
     diff = diff * radius
     ax = plt.gca()
     pts = ref + diff
@@ -61,7 +66,7 @@ def weight_disc(w, ref, radius, c, label="Boundary"):
     collection._edgecolors2d = collection._edgecolor3d
 
     ax.plot3D(
-        *ref[:3], 'o', markerfacecolor='#fff',
-        markeredgecolor='#000', zorder=100, label="Reference system"
+        *ref[:3], "o", markerfacecolor="#fff",
+        markeredgecolor="#000", zorder=100, label="Reference system"
     )
     ax.add_collection3d(collection)
