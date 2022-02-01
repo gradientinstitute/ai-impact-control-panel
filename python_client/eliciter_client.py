@@ -54,13 +54,19 @@ def main():
         print("Opening comparison:")
         for choice in choices:
             print(choice)
-        options = [*range(len(choices))]
+
+        options = [c["name"] for c in choices]
         i = None
         print(f"Answer from {options}")
-        while (i is None) or (int(i) not in options):
+        while i not in options:
             i = input()
+            if (len(i) == 1):
+                for o in options:
+                    if o.endswith(i):
+                        print(f"Autocomplete {i}-->{o}")
+                        i = o
         print("Submitting: ", end="")
-        request = "http://127.0.0.1:8666/{scenario}/choice"
+        request = f"http://127.0.0.1:8666/{scenario}/choice"
         rdata = {"first": i}
         print(request, rdata)
         choices = sess.put(request, json=rdata).json()

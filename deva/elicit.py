@@ -217,6 +217,7 @@ class Enautilus(Eliciter):
         """Receive input from the user and update ideal point."""
         choice = self._query[int(choice)]
         self._nadir = choice.attributes
+
         # remove candidates that are worse in every attribute
         copy = []
         for can in self.candidates:
@@ -265,8 +266,10 @@ class Enautilus(Eliciter):
             * numerator / self._h
         )
         res = []
+        step = ""  # TODO: make a different letter for each step
         for index, system in enumerate(centers):
-            res.append(Candidate(index,
+            cname = f"{step}{index}"
+            res.append(Candidate(cname,
                                  dict(zip(self.attribs, system))))
         return res
 
