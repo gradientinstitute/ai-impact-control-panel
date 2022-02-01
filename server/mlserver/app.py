@@ -201,7 +201,7 @@ def apply_constraints(scenario):
     return "OK"
 
 
-@app.route('/Enautilus/zpoints')
+@app.route("/Enautilus/zpoints")
 def get_z():
     eliciter = db.eliciter
     if db.eliciter is None:
@@ -212,7 +212,7 @@ def get_z():
     return jsonify(eliciter.get_z_points())
 
 
-@app.route('/<scenario>/choice', methods=['GET', 'PUT'])
+@app.route("/<scenario>/choice", methods=["GET", "PUT"])
 def get_choice(scenario):
 
     if db.eliciter is None:
@@ -232,7 +232,7 @@ def get_choice(scenario):
         # Only pass valid choices on to the eliciter
         if not eliciter.terminated:
             choice = [v.name for v in eliciter.query]
-            if (x in choice) and (y in choice) and (x != y):
+            if (x in choice):  # and (y in choice) and (x != y):
                 eliciter.put(x)
 
     # now give some new choices
@@ -264,7 +264,7 @@ def get_choice(scenario):
     else:
         res = []
         for option in eliciter.query:
-            res.append({'name': option.name, 'values': option.attributes})
+            res.append({"name": option.name, "values": option.attributes})
         log.add_options(res)
     db.eliciter = eliciter
     db.logger = log

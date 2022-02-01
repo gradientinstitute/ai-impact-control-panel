@@ -56,11 +56,11 @@ def main():
             print(choice)
         options = [*range(len(choices))]
         i = None
-        print(f'Answer from {options}')
+        print(f"Answer from {options}")
         while (i is None) or (int(i) not in options):
             i = input()
         print("Submitting: ", end="")
-        request = 'http://127.0.0.1:8666/{scenario}/choice'
+        request = "http://127.0.0.1:8666/{scenario}/choice"
         rdata = {"first": i}
         print(request, rdata)
         choices = sess.put(request, json=rdata).json()

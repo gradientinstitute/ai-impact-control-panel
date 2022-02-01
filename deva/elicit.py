@@ -143,98 +143,110 @@ class Toy(Eliciter):
 
 
 class Enautilus(Eliciter):
-    '''Enautilus Eliciter from paper
-       E-NAUTILUS: A decision support system for complex multiobjective
-       optimization problems based on the NAUTILUS method'''
+    """
+    Enautilus eliciter.
+
+    See: E-NAUTILUS: A decision support system for complex multiobjective
+    optimization problems based on the NAUTILUS method.
+    """
+
     _nadir = {}
     _ideal = {}
     _h = 5  # number of questions
     _ns = 2  # number of options
 
     def __init__(self, candidates, scenario):
-        '''Initialise the eliciter, generate initial ideal point and
-           ndair point from the given candidates, and extract attributes
-           of the candidates'''
+        """
+        Initialise Enautilus.
+
+        Generate initial ideal point and ndair point from the given candidates,
+        and extract attributes of the candidates.
+        """
         if len(candidates) < 2:
-            raise RuntimeError('Two or more candidates required.')
+            raise RuntimeError("Two or more candidates required.")
         Eliciter.__init__(self)
         self.candidates = list(candidates)
         self.attribs = list(candidates[0].attributes.keys())
         # calculate ideal and nadir
         for att in self.attribs:
-            min = None
-            max = None
+            minv = None
+            maxv = None
             for candidate in candidates:
                 temp = candidate.attributes[att]
-                if min is None or temp < min:
-                    min = temp
-                if max is None or temp > max:
-                    max = temp
-            self._ideal[att] = min
-            self._nadir[att] = max
+                if minv is None or temp < minv:
+                    minv = temp
+                if maxv is None or temp > maxv:
+                    maxv = temp
+            self._ideal[att] = minv
+            self._nadir[att] = maxv
         self._update()
 
     def get_z_points(self):
-        '''Return ideal point and nadir point in a list'''
+        """Return ideal point and nadir point in a list."""
         return [self._ideal, self._nadir]
 
     def updateForN(self, n1, ns):
-        '''Update the number of questions
-        and options the user would like to have'''
+        """Update the number of questions the algorithm will use."""
         self._h = n1 + 1
         self._ns = ns
         self._update()
 
     @property
     def query(self):
-        '''Return the current query'''
+        """Return the current query."""
         return self._query
 
     @property
     def terminated(self):
-        '''Check if the termination condition is met'''
+        """Check if the termination condition is met."""
         return (self._h <= 0) or (len(self.candidates) == 1)
 
     @property
     def result(self):
-        '''Return result of the eliciter if the termination condition is met'''
+        """Return result of the eliciter if terminated."""
         assert (self._h <= 0) or (len(self.candidates) == 1), "Not terminated."
         X = []
         for can in self.candidates:
             X.append(np.array(list(can.get_attr())))
-        return self.candidates[np.linalg.norm(np.array(X) - np.array(list(
-                                            self._nadir.values()))).argmin()]
+        return self.candidates[
+            np.linalg.norm(np.array(X)
+                           - np.array(list(self._nadir.values()))).argmin()
+        ]
 
     def put(self, choice):
-        '''Receive input from the user and update new
-         ideal point, nadir point, and remaining candidates'''
+        """Receive input from the user and update ideal point."""
         choice = self._query[int(choice)]
         self._nadir = choice.attributes
         # remove candidates that are worse in every attribute
         copy = []
         for can in self.candidates:
-            if np.all(np.array(list(can.get_attr())) <
-                      np.array(list(self._nadir.values()))):
+            if np.all(np.array(list(can.get_attr()))
+                      < np.array(list(self._nadir.values()))):
                 copy.append(can)
         for c in copy:
             self.candidates.remove(c)
+
         # calculate new ideal point
+        # TODO: AL - while reviewing linting I notice this is repeated code.
         for att in self.attribs:
-            min = None
-            max = None
+            minv = None
+            maxv = None
             for candidate in self.candidates:
                 temp = candidate.attributes[att]
-                if min is None or temp < min:
-                    min = temp
-                if max is None or temp > max:
-                    max = temp
-            self._ideal[att] = min
-            self._nadir[att] = max
+                if minv is None or temp < minv:
+                    minv = temp
+                if maxv is None or temp > maxv:
+                    maxv = temp
+            self._ideal[att] = minv
+            self._nadir[att] = maxv
         self._update()
 
     def virtualCandidateGen(self):
-        '''Generate virtual candidates by selecting points between
-        the nadir point and the the kmeans center'''
+        """
+        Generate virtual candidates.
+
+        Selects points between the nadir point and the the kmeans centers.
+        """
         X = []
         for can in self.candidates:
             X.append(np.array(list(can.get_attr())))
@@ -248,8 +260,10 @@ class Enautilus(Eliciter):
             numerator = 1
         else:
             numerator = self._h - 1
-        centers = centers+(np.array(list(self._nadir.values()))-centers) *\
-            (numerator/self._h)
+        centers = centers + (
+            (np.array(list(self._nadir.values())) - centers)
+            * numerator / self._h
+        )
         res = []
         for index, system in enumerate(centers):
             res.append(Candidate(index,
@@ -257,7 +271,7 @@ class Enautilus(Eliciter):
         return res
 
     def _update(self):
-        '''Update new query and the number of questions remained'''
+        """Update new query and the number of questions remaining."""
         if (self._h > 0) and (len(self.candidates) != 1):
             self._query = self.virtualCandidateGen()
             self._h = self._h - 1

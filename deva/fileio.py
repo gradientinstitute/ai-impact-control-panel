@@ -6,7 +6,7 @@ from glob import glob
 from deva import elicit
 import toml
 from deva.pareto import remove_non_pareto
-from deva.niceRange import nice_range
+from deva.nice_range import nice_range
 
 
 def repo_root():
