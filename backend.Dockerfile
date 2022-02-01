@@ -21,6 +21,8 @@ RUN mkdir deva
 COPY deva ./deva
 RUN poetry install 
 
-COPY server/mlserver/app.py server/mlserver/run_prod.sh ./
+COPY server/mlserver/app.py server/mlserver/util.py server/mlserver/run_prod.sh server/mlserver/gen_key.sh server/mlserver/prod.cfg ./
+
+RUN poetry run ./gen_key.sh
 
 CMD ["poetry", "run", "./run_prod.sh"]

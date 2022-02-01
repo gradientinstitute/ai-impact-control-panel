@@ -68,3 +68,6 @@ description = "Minimise harm of repeated fraud to those most affected by it."
     action = "burden{s} the worst-off individuals with"
     countable = "number"
     displayDecimals = 1
+
+    range_min = 0
+    range_max = 100

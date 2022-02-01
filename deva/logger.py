@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import datetime
 from collections import OrderedDict
 
@@ -13,14 +14,16 @@ class Logger:
         self.log['profile']['algorithm'] = algo
         self.log['profile']['time'] = datetime.now()
         self.log['profile']['user'] = name
-        self.log['choices'] = OrderedDict()
+        self.log['choices'] = {}
         self.log['result'] = None
 
     def add_options(self, option):
-        for o in option.values():
+        option_store = deepcopy(option)
+        for o in option_store:
             del o['name']
         self.log['choices']['Question number ' +
-                            str(self.choice_number + 1)] = option
+                            str(self.choice_number + 1)] =\
+            {'options': option_store}
 
     def add_choice(self, choice):
         for key in choice[0].keys():

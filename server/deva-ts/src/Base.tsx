@@ -7,6 +7,7 @@ export enum Pane {
   Constrain,
   Pairwise,
   Result,
+  Boundaries, // new one for boundary scroll bars
 }
 
 // this global state is only for items that need to persist across panes
@@ -16,6 +17,13 @@ export const paneState = atom({
   key: 'pane', 
   default: Pane.Setup, // default value (aka initial value)
 });
+
+// Which type of problem the user has chosen to elicit
+export const problemType = atom({
+    key: 'problemType',
+    default: null,
+  });
+
 
 // state for which scenario has been chosen by the user
 export const scenarioState = atom({  
@@ -32,7 +40,7 @@ export const algoState = atom({
 // state for name entered by the user
 export const nameState = atom({  
   key: 'name', 
-  default: null, 
+  default: "", 
 });
 
 // state for the metadata for the chosen scenario

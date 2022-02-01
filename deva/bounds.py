@@ -2,6 +2,7 @@ import numpy as np
 from deva import elicit, fileio
 
 from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 
 
 # Things to try:
@@ -32,6 +33,104 @@ class BoundsEliciter:
     @property
     def terminated(self):
         raise NotImplementedError
+
+
+class KNeighborsEliciter(BoundsEliciter):
+    """
+    A model making non-linear assumption.
+    Eliciter using KNeighborsRegressor
+    which helps to generate the candidate in the query closer
+    to the boundary in order to narrow the error.
+    """
+
+    def __init__(self, ref, table, attribs, steps):
+        """
+        Parameters
+        ----------
+            ref: array
+                an array representing the reference system (1 * m metrics)
+            table: array
+                a 2d array storing all the candidates
+                (n candidates * m metrics)
+            attribs: array
+                metrics for each candidate
+            steps: int
+                decides when to terminate
+        """
+        self.attribs = attribs
+        radius = 0.5 * table.std(axis=0)  # scale of perturbations
+        ref = np.asarray(ref, dtype=float)  # sometimes autocasts to long int
+        radius = np.asarray(radius, dtype=float)
+
+        self.ref = ref
+        self.radius = radius
+        self._step = 0
+        self.steps = steps
+        self._converge = 0  # No. of steps when the model starts to be stable
+
+        self.neigh = KNeighborsClassifier(n_neighbors=5)
+
+        # Initialise
+        X = [[10, 0], [20, 0], [150, 0], [0, 10],
+             [0, 20], [0, 150], [100, 100]]
+        y = [1, 1, 0, 1, 1, 0, 0]
+        self.X = X
+        self.y = y
+
+        self.neigh.fit(self.X, self.y)
+
+        self._update()
+
+    # input
+    def observe(self, label):
+        self.X.append(self.choice)
+        self.y.append(label)
+
+        self.neigh.fit(self.X, self.y)
+
+        self._update()
+
+    def _update(self):
+        # make random candidates
+        def random_choice(n):
+            choices = []
+            for _ in range(n):
+                while True:
+                    choice = np.random.rand(len(self.ref)) * 100
+                    choices.append(choice)
+                    if self.check_valid(choice):
+                        break
+            return choices
+
+        # KNeighborsRegressor
+        test_X = random_choice(1000)
+
+        # finding the least confident candidate
+        probabilities = self.neigh.predict_proba(test_X)[:, 1]
+        min_index = np.argmin(np.abs(probabilities - 0.5))
+
+        self.choice = test_X[min_index]
+
+        self.query = elicit.Candidate(
+            fileio.autoname(self._step),
+            dict(zip(self.attribs, self.choice))
+        )
+        self._step += 1
+
+        return
+
+    def guess(self, q):
+        r = 10
+        return np.logical_and((np.array(distance(q, self.ref)) >= r),
+                              is_below(q, self.ref))
+
+    @property
+    def terminated(self):
+        return self._step > self.steps
+
+    def predict_prob(self, test_samp):
+        probabilities = self.neigh.predict_proba(test_samp)
+        return probabilities
 
 
 class LinearActive(BoundsEliciter):
@@ -322,3 +421,25 @@ def tabulate(candidates, metrics):
         table[i, :] = [c[a] for a in attribs]
 
     return attribs, table
+
+
+def distance(a, center):
+    a = np.array(a)
+    center = np.array(center)
+    dist = np.sqrt(np.sum((a - center) ** 2, axis=-1))
+    return dist
+
+
+def is_below(q, center):
+    # Check whether a point is below a straight line through the center
+    q = np.array(q)
+    if q.ndim == 1:
+        x = q[0]
+        y = q[1]
+    else:
+        x = q[:, 0]
+        y = q[:, 1]
+    b = np.sum(center)
+    y_max = -x + b
+
+    return y <= y_max
