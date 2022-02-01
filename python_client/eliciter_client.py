@@ -1,6 +1,6 @@
 """Basic client to chat to the server with a console interface."""
 import requests
-from va import interface, elicit
+from deva import interface, elicit
 
 
 def main():

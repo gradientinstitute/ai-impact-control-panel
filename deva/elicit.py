@@ -167,18 +167,7 @@ class Enautilus(Eliciter):
         Eliciter.__init__(self)
         self.candidates = list(candidates)
         self.attribs = list(candidates[0].attributes.keys())
-        # calculate ideal and nadir
-        for att in self.attribs:
-            minv = None
-            maxv = None
-            for candidate in candidates:
-                temp = candidate.attributes[att]
-                if minv is None or temp < minv:
-                    minv = temp
-                if maxv is None or temp > maxv:
-                    maxv = temp
-            self._ideal[att] = minv
-            self._nadir[att] = maxv
+        self._update_zpoints()
         self._update()
 
     def get_z_points(self):
@@ -213,6 +202,20 @@ class Enautilus(Eliciter):
                            - np.array(list(self._nadir.values()))).argmin()
         ]
 
+    def _update_zpoints(self):
+        """calculate new ideal and nadirpoint"""
+        for att in self.attribs:
+            minv = None
+            maxv = None
+            for candidate in self.candidates:
+                temp = candidate.attributes[att]
+                if minv is None or temp < minv:
+                    minv = temp
+                if maxv is None or temp > maxv:
+                    maxv = temp
+            self._ideal[att] = minv
+            self._nadir[att] = maxv
+
     def put(self, choice):
         """Receive input from the user and update ideal point."""
         choice = self._query[int(choice)]
@@ -225,20 +228,7 @@ class Enautilus(Eliciter):
                 copy.append(can)
         for c in copy:
             self.candidates.remove(c)
-
-        # calculate new ideal point
-        # TODO: AL - while reviewing linting I notice this is repeated code.
-        for att in self.attribs:
-            minv = None
-            maxv = None
-            for candidate in self.candidates:
-                temp = candidate.attributes[att]
-                if minv is None or temp < minv:
-                    minv = temp
-                if maxv is None or temp > maxv:
-                    maxv = temp
-            self._ideal[att] = minv
-            self._nadir[att] = maxv
+        self._update_zpoints()
         self._update()
 
     def virtualCandidateGen(self):
