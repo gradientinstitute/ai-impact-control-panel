@@ -228,7 +228,7 @@ class Enautilus(Eliciter):
         # remove candidates that are worse in every attribute
         copy = []
         for can in self.candidates:
-            if np.all(np.array(can.get_attr.values())
+            if np.all(np.array(can.get_attr_values())
                       < np.array(list(self._nadir.values()))):
                 copy.append(can)
         for c in copy:
@@ -260,8 +260,10 @@ class Enautilus(Eliciter):
             * numerator / self._h
         )
         res = []
+        step = ""  # TODO: make a different letter for each step
         for index, system in enumerate(centers):
-            res.append(Candidate(index,
+            cname = f"{step}{index}"
+            res.append(Candidate(cname,
                                  dict(zip(self.attribs, system))))
         return res
 
