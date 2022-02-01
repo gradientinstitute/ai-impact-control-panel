@@ -1,3 +1,4 @@
+"""Module supporting DEVA flask server."""
 from flask import jsonify as _jsonify
 import random
 import string
@@ -20,10 +21,10 @@ def jsonify(o):
     return _jsonify(round_floats(o))
 
 
-def random_key(n, exclude={}):
+def random_key(n, exclude=()):
     """Make a random string of n characters."""
     while True:
-        key = ''.join(random.choice(string.ascii_letters) for i in range(n))
+        key = "".join(random.choice(string.ascii_letters) for i in range(n))
         if key not in exclude:
             break
 

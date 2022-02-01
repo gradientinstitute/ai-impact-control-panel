@@ -1,3 +1,4 @@
+"""Module for eliciting minimum performance requirements."""
 import numpy as np
 from deva import elicit, fileio
 
@@ -13,7 +14,7 @@ from sklearn.neighbors import KNeighborsClassifier
 # TODO: elicit non-linear boundaries (provided client can receive them)
 
 class BoundsEliciter:
-    '''Base class for bounds elicitation'''
+    """Base class for bounds elicitation algorithms."""
 
     # Just a promise that inheriting classes will have these members
     def observe(self, label):
@@ -37,14 +38,16 @@ class BoundsEliciter:
 
 class KNeighborsEliciter(BoundsEliciter):
     """
-    A model making non-linear assumption.
-    Eliciter using KNeighborsRegressor
-    which helps to generate the candidate in the query closer
-    to the boundary in order to narrow the error.
+    Bounds elicitation using a non-linear classifier.
+
+    Samples on the decision boundary of a KNeighborsRegressor.
+    Note this does not take into account sampling density.
     """
 
     def __init__(self, ref, table, attribs, steps):
         """
+        Bounds elicitation using a non-linear classifier.
+
         Parameters
         ----------
             ref: array
@@ -135,14 +138,17 @@ class KNeighborsEliciter(BoundsEliciter):
 
 class LinearActive(BoundsEliciter):
     """
-    Eliciter using Logistics Regression
-    which helps to generate the candidate in the query closer
-    to the boundary in order to narrow the error.
+    Bounds eliciter using a Logistic Regressor model.
+
+    Samples on the decision boundary (decision plane) to actively refine
+    the boundary.
     """
 
     def __init__(self, ref, table, attribs,
                  steps, epsilon, n_steps_converge):
         """
+        Bounds eliciter using a Logistic Regressor model.
+
         Parameters
         ----------
             ref: array
@@ -178,7 +184,7 @@ class LinearActive(BoundsEliciter):
         self.lr = LogisticRegression()  # Create a logistic regression instance
 
         # Initialise
-        X = [ref+radius, ref-radius]
+        X = [ref + radius, ref - radius]
         y = [0, 1]
         self.X = X
         self.y = y
@@ -246,9 +252,13 @@ class LinearActive(BoundsEliciter):
     @property
     def terminated(self):
         # either the steps reach the limit or the model converges
-        return (self._step > self.steps or
-                (self.sum_diff_w <= self.epsilon and
-                 self._converge >= self.n_steps_converge))
+        return (
+            self._step > self.steps
+            or (
+                self.sum_diff_w <= self.epsilon
+                and self._converge >= self.n_steps_converge
+            )
+        )
 
     def predict_prob(self, test_samp):
         probabilities = self.lr.predict_proba(test_samp)
@@ -257,14 +267,15 @@ class LinearActive(BoundsEliciter):
 
 class LinearRandom(BoundsEliciter):
     """
-    LinearRandom Eliciter that selects random candidates
-    and asks whether the user prefer candidate to baseline or not.
-    The bound generated separates the candidates being accepted and
-    those being rejected.
+    Bounds eliciter that samples randomly and learns model at termination.
+
+    This approach is inefficient but makes few assumptions.
     """
 
     def __init__(self, ref, table, attribs, steps):
         """
+        Bounds eliciter that samples randomly and learns model at termination.
+
         Parameters
         ----------
             ref: array
@@ -277,7 +288,6 @@ class LinearRandom(BoundsEliciter):
             steps: int
                 decides when to terminate
         """
-
         self.attribs = attribs
         radius = 0.5 * table.std(axis=0)  # scale of perturbations
         ref = np.asarray(ref, dtype=float)  # sometimes autocasts to long int
@@ -291,7 +301,7 @@ class LinearRandom(BoundsEliciter):
         self.lr = LogisticRegression()  # Create a logistic regression instance
 
         # Initialise
-        X = [ref+radius, ref-radius]
+        X = [ref + radius, ref - radius]
         y = [0, 1]
         self.X = X
         self.y = y
@@ -356,7 +366,7 @@ class PlaneSampler(BoundsEliciter):
         self.steps = steps
 
         # Initialise
-        X = [ref+radius]
+        X = [ref + radius]
         for d in range(dims):
             v = ref + 0
             # these labels are virtual / allowed to go negative
@@ -369,7 +379,7 @@ class PlaneSampler(BoundsEliciter):
     def observe(self, label):
         # if ref+a is a no, ref-a is a yes
         if label:
-            self.X.append(2.*self.ref-self.choice)
+            self.X.append(2. * self.ref - self.choice)
         else:
             self.X.append(self.choice)
         self._update()
@@ -380,7 +390,7 @@ class PlaneSampler(BoundsEliciter):
         dcov = np.cov(diff.T)
         dmean = diff.mean(axis=0)
         w = np.linalg.solve(dcov, dmean)
-        w /= (w@w)**.5  # normalise
+        w /= (w @ w)**.5  # normalise
         self.w = w
 
         dims = len(self.ref)
@@ -388,7 +398,7 @@ class PlaneSampler(BoundsEliciter):
         while True:
             diff = np.random.randn(len(self.ref)) * self.radius
             diff -= w * (diff @ w) / (w @ w)  # make perpendicular
-            diff /= np.sum((diff/self.radius)**2) ** .5  # re-normalise
+            diff /= np.sum((diff / self.radius)**2) ** .5  # re-normalise
             choice = self.ref + diff
             if self.check_valid(choice):
                 break
