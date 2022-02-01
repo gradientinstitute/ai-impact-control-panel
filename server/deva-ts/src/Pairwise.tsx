@@ -7,6 +7,8 @@ import {Pane, metadataState, paneState,
         resultState, scenarioState, constraintsState} from './Base';
 import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
+import {VisualiseRadar} from './Radar'
+import RadarChart, {VisualiseData} from './RadarD3'
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
@@ -143,6 +145,21 @@ export function PairwisePane({}) {
         leftName={candidates.left.name} 
         rightName={candidates.right.name} 
       />
+      <VisualiseData
+        metadata={metadata}
+        leftValues={candidates.left.values} 
+        rightValues={candidates.right.values} 
+        leftName={candidates.left.name} 
+        rightName={candidates.right.name}
+      />
+
+      <VisualiseRadar
+        metadata={metadata}
+        leftValues={candidates.left.values} 
+        rightValues={candidates.right.values} 
+        leftName={candidates.left.name} 
+        rightName={candidates.right.name}
+      />  
     </div>
   );
 }
