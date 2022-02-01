@@ -45,7 +45,7 @@ function GetHandleColor(uid) {
   return HandleColours[blockStatus];
 }
 
-export function ConstraintPane({}) {
+export function Constraints({}) {
 
   // name of current scenorio for url purposes e.g. "ezyfraud"
   const scenario = useRecoilValue(scenarioState);
@@ -56,44 +56,30 @@ export function ConstraintPane({}) {
   // the actual/current contraints as defined by the position of scrollbars
 
   // current constraints done by metric
-  const [_costraints, setConstraints] = useRecoilState(constraintsState);
+  // const [_costraints, setConstraints] = useRecoilState(constraintsState);
 
   // all candidates sent to us by the server
-  const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+  // const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
 
-  // initial loading of candidates
-  useEffect(() => {
-    const fetch = async () => {
-      axios.get<any>("api/" + scenario + "/ranges")
-        .then( response => response.data)
-        .then( data => {
-          setAllCandidates(data);
-        });
-    }
-    fetch();
-  }, []
-  );
+  const [_constraints, setConstraints] = useRecoilState(constraintsState);
 
   // set initial value of the constraints
   useEffect(() => {
     setConstraints(maxRanges)
   }, [maxRanges]);
 
+  // initial loading of candidates
   if (currentCandidates === null) {
     return (<div>Loading...</div>);
   }
 
+
   return (
-    <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
-      <h1>Constraint Pane</h1>
-      <div>
-        <ConstraintStatus />
-      </div>
+    <div className="mx-auto grid gap-x-8 gap-y-10 grid-cols-1">
+      <h2>Metric Filters</h2>
+      <ConstraintStatus />
       <div className="mb-10">
         <MultiRangeConstraint />
-      </div>
-      <div className="width-1/4">
-        <StartButton />
       </div>
     </div>
   );
@@ -105,11 +91,39 @@ function ConstraintStatus({}) {
   const all = useRecoilValue(allCandidatesState);
 
   return (
-  <div className="rounded-lg bg-green-700 p-4 my-auto">
-    <h2 className="text-2xl">{curr.length} of {all.length}</h2>
-    <p>candidate models remain</p>
+  <div className="">
+    <span className="italic text-2xl">{curr.length +" of " + all.length + " "}</span>
+    candidate models remain
   </div>
   );
+
+}
+
+function DescriptionRangeConstraint({uid, unit}) {
+
+  const lowerIsBetter = unit.lowerIsBetter === false ? false : true;
+  const maxRanges = useRecoilValue(maxRangesState);
+  const constraints = useRecoilValue(constraintsState);
+  const pane = (unit.type === "qualitative") ? 
+
+    (<QualitativeConstraint u={unit} 
+      maxRanges={maxRanges} 
+      constraints={constraints}
+      uid={uid}
+      lowerIsBetter={lowerIsBetter}/>) :
+
+    (<QuantitativeConstraint u={unit}
+      maxRanges={maxRanges}
+      constraints={constraints}
+      uid={uid}
+      lowerIsBetter={lowerIsBetter}/>)
+
+  return (
+    <div>
+      {pane}
+    </div>
+  )
+
 
 }
 
@@ -125,25 +139,9 @@ function MultiRangeConstraint({}) {
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
     const u: any = x[1];
-    const lowerIsBetter = u.lowerIsBetter === false ? false : true;
-
-    const pane = (u.type === "qualitative") ? 
-
-      (<QualitativeConstraint x={x} 
-        maxRanges={maxRanges} 
-        constraints={constraints}
-        uid={uid}
-        lowerIsBetter={lowerIsBetter}/>) :
-
-      (<QuantitativeConstraint x={x}
-        maxRanges={maxRanges}
-        constraints={constraints}
-        uid={uid}
-        lowerIsBetter={lowerIsBetter}/>)
-
     return (
-      <div >
-        {pane}
+      <div>
+        <DescriptionRangeConstraint uid={uid} unit={u} />
       </div>
     );
   });
@@ -155,9 +153,8 @@ function MultiRangeConstraint({}) {
   );
 }
 
-function QuantitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) {
+function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter}) {
   // TODO: remember how to specify these types in destructuring args
-  const u: any = x[1];
   const vals = maxRanges[uid];
   const sign = lowerIsBetter ? 1 : -1;
   const min = vals[0];
@@ -187,8 +184,7 @@ function QuantitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter})
   )
 }
 
-function QualitativeConstraint({x, maxRanges, constraints, uid, lowerIsBetter}) {
-  const u: any = x[1];
+function QualitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter}) {
   const vals = maxRanges[uid];
   const min = vals[0];
   const max = vals[1];
@@ -469,31 +465,3 @@ function UnblockButton({uid, buttonDisabled}) {
   );
 }
 
-function StartButton({}) {
-
-  const [submit, setSubmit] = useState(false);
-
-  const scenario = useRecoilValue(scenarioState);
-  const constraints = useRecoilValue(constraintsState);
-  const [_pane, setPane] = useRecoilState(paneState);
-
-  useEffect(() => {
-    const fetch = async () => {
-      await axios.put<any>("api/" + scenario + "/constraints", constraints);
-      setPane(Pane.Pairwise);
-    }
-    if (submit) {
-      fetch();
-    }
-  }, [submit]
-  );
-
-  return (
-      <button className="bg-gray-200 text-black rounded-lg" 
-        onClick={() => {setSubmit(true)}}>
-        <div className="p-4 text-5xl">
-          Next
-        </div>
-      </button>
-  );
-}
