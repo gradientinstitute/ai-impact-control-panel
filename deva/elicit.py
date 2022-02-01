@@ -10,7 +10,9 @@ class Candidate:
 
     def __init__(self, name, attributes, spec_name=None):
         self.name = name
-        self.attributes = attributes
+        self.attr_keys = sorted(list(attributes.keys()))
+        self.attr_values = [attributes[a] for a in self.attr_keys]
+        self.attributes = dict(zip(self.attr_keys, self.attr_values))
         self.spec_name = spec_name or name
 
     def __getitem__(self, key):
@@ -21,8 +23,11 @@ class Candidate:
         """Human readable display of candidate."""
         return f"Candidate({self.name})"
 
-    def get_attr(self):
-        return self.attributes.values()
+    def get_attr_values(self):
+        return self.attr_values
+
+    def get_attr_keys(self):
+        return self.attr_keys
 
 
 class Eliciter:
@@ -166,7 +171,7 @@ class Enautilus(Eliciter):
             raise RuntimeError("Two or more candidates required.")
         Eliciter.__init__(self)
         self.candidates = list(candidates)
-        self.attribs = list(candidates[0].attributes.keys())
+        self.attribs = candidates[0].get_attr_keys()
         self._update_zpoints()
         self._update()
 
@@ -196,7 +201,7 @@ class Enautilus(Eliciter):
         assert (self._h <= 0) or (len(self.candidates) == 1), "Not terminated."
         X = []
         for can in self.candidates:
-            X.append(np.array(list(can.get_attr())))
+            X.append(np.array(can.get_attr_values()))
         return self.candidates[
             np.linalg.norm(np.array(X)
                            - np.array(list(self._nadir.values()))).argmin()
@@ -223,7 +228,7 @@ class Enautilus(Eliciter):
         # remove candidates that are worse in every attribute
         copy = []
         for can in self.candidates:
-            if np.all(np.array(list(can.get_attr()))
+            if np.all(np.array(can.get_attr.values())
                       < np.array(list(self._nadir.values()))):
                 copy.append(can)
         for c in copy:
@@ -239,7 +244,7 @@ class Enautilus(Eliciter):
         """
         X = []
         for can in self.candidates:
-            X.append(np.array(list(can.get_attr())))
+            X.append(np.array(can.get_attr_values()))
         if self._ns > len(self.candidates):
             self._ns = len(self.candidates)
         from sklearn.cluster import KMeans
