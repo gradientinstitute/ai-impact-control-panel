@@ -1,4 +1,4 @@
-'''Test the halfspace ranking algorithm.'''
+"""Test the halfspace ranking algorithm."""
 import pytest
 import numpy as np
 from functools import partial
@@ -6,7 +6,7 @@ from deva import halfspace
 
 
 def test_hyperplane(random):
-    '''Test hyperplane returns expected objects.'''
+    """Test hyperplane returns expected objects."""
     a = random.randn(10)
     b = random.randn(10)
 
@@ -20,7 +20,7 @@ def test_hyperplane(random):
 
 
 def test_shatter(shatterable_data):
-    '''Test the shatter test can actually shatter points.'''
+    """Test the shatter test can actually shatter points."""
     # This can be shattered
     X, Y = shatterable_data
     assert halfspace.shatter_test(X, Y)
@@ -31,7 +31,7 @@ def test_shatter(shatterable_data):
 
 
 def test_impute_label(shatterable_data):
-    '''Test that label imputation works correctly.'''
+    """Test that label imputation works correctly."""
     X, Y = shatterable_data
 
     # This should be a positive label
@@ -52,7 +52,7 @@ def test_impute_label(shatterable_data):
 
 
 def test_impute_label_random_order(random, shatterable_data):
-    '''Test that label imputation correctly with out of order queries.'''
+    """Test that label imputation correctly with out of order queries."""
     X, Y = shatterable_data
     n = len(Y)
     perm = random.permutation(n)
@@ -62,16 +62,16 @@ def test_impute_label_random_order(random, shatterable_data):
     Y_hat = np.zeros_like(Y)
     Y_hat[0] = Y[0]
 
-    for i in range(2, n+1):
+    for i in range(2, n + 1):
         halfspace.impute_label(X[:i], Y_hat[:i])
-        if Y_hat[i-1] == 0:
-            Y_hat[i-1] = Y[i-1]
+        if Y_hat[i - 1] == 0:
+            Y_hat[i - 1] = Y[i - 1]
 
     assert np.all(Y == Y_hat)
 
 
 def test_arank(random):
-    '''Test the ranking algorithm'''
+    """Test the ranking algorithm."""
     n = 30
     X = random.multivariate_normal(
         mean=[0, 0],
@@ -102,13 +102,13 @@ def test_arank(random):
     assert cnt < n * (n - 1) // 2
 
 
-@pytest.mark.parametrize('query_order', [
+@pytest.mark.parametrize("query_order", [
     halfspace.max_compar_smooth,
     halfspace.max_compar_rand,
     partial(halfspace.max_compar_primary, primary_index=0)
 ])
 def test_amax(random, query_order):
-    '''Test the active max algorithm'''
+    """Test the active max algorithm."""
     n = 30
     X = random.multivariate_normal(
         mean=[0, 0],

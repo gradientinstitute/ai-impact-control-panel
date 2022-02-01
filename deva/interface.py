@@ -14,9 +14,9 @@ def readout(x, info, suffix=False, sigfig=2):
         return fmt.format(x)
 
     if x > 1e6:
-        s = fmt.format(x/1e6) + "M"
+        s = fmt.format(x / 1e6) + "M"
     elif x > 1e3:
-        s = fmt.format(x/1e3) + "K"
+        s = fmt.format(x / 1e3) + "K"
     else:
         fmt = f"{{:.{info['displayDecimals']}f}}"
         s = fmt.format(x)  # use natural display
@@ -49,12 +49,12 @@ def compare(sys1, sys2, meta, attribute):
     rtol = 1.05  # 5% difference
     atol = 0  # single count difference
 
-    diffv = abs(v1-v2)
+    diffv = abs(v1 - v2)
     diff = readout(diffv, info)
     action = info["action"].format(s="")
-    name = info['name'].lower()
-    if '(' in name:
-        name = name.split('(')[1].split(')')[0]
+    name = info["name"].lower()
+    if "(" in name:
+        name = name.split("(")[1].split(")")[0]
 
     descr = name + " " + info["suffix"]  # heuristic repair
     focus = "The systems"
@@ -89,9 +89,9 @@ def text(value, meta):
             info = meta[attrib]
             v1 = readout(a[attrib], info, suffix=False)
             v2 = readout(b[attrib], info, suffix=False)
-            name = info['name']
-            if '(' in name:
-                name = name.split('(')[1].split(')')[0]
+            name = info["name"]
+            if "(" in name:
+                name = name.split("(")[1].split(")")[0]
 
             print(f"{name:45s}{v1:17s}{v2:17s}")
 

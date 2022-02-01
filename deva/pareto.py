@@ -1,3 +1,4 @@
+"""Module to filter pareto inefficient candidates."""
 import numpy as np
 
 
@@ -19,8 +20,8 @@ def remove_non_pareto(models):
             if dominated[j] | (i == j):
                 continue
 
-            dominated[i] |= (all(m[a] >= n[a] for a in m) &
-                             any(m[a] > n[a] for a in m))
+            dominated[i] |= (all(m[a] >= n[a] for a in m)
+                             & any(m[a] > n[a] for a in m))
             # count += 1
 
     # print(f"Comparisons: {count/len(names)**2:.0%}")

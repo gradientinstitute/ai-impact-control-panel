@@ -1,7 +1,10 @@
-"""A python file that includes unit tests for 'nice_range' function.
+"""
+Unit tests for estimating a bounds range from data.
+
 Date: 28 Jan 2022
-Author: Cindy Chen """
-from deva.niceRange import nice_range
+Author: Cindy Chen
+"""
+from deva.nice_range import nice_range
 
 
 def test_rounded():
@@ -30,6 +33,5 @@ def test_decimals():
 
 
 def test_wrong_order():
-    """Test when the min values and the max values
-        are not correctly ordered in the input."""
+    """Test handling of min and max being out of order."""
     assert(nice_range(122, 69) == (60, 130))

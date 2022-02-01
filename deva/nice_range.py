@@ -1,12 +1,14 @@
-"""A python file which includes 'nice_range' function
-that can be used as a helper function in fileio.py
+"""
+Compute brackets around data values.
+
 Date: Jan 28, 2022
-Author: Muyao Chen """
+Author: Muyao Chen
+"""
 import math
 
 
 def nice_range(a, b):
-    """Round min down and max up to nearest the 10"""
+    """Round min down and max up to nearest the 10."""
     min_num = min(a, b)
     max_num = max(a, b)
     div = 10
