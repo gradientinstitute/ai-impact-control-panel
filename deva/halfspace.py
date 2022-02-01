@@ -1,10 +1,10 @@
-'''Halfspace active ranking.
+"""Halfspace active ranking.
 
 This implements the algorithm described in:
 
 Jamieson, K.G., Nowak, R., 2011. Active Ranking using Pairwise Comparisons.
 Advances in Neural Information Processing Systems (NeurIPS) 24, 9.
-'''
+"""
 import numpy as np
 from functools import cmp_to_key
 from scipy.optimize import linprog
@@ -28,42 +28,43 @@ class _HalfspaceBase:
         raise NotImplementedError
 
     def next_round(self):
-        '''Initiate the next round of query-response from the algorithm.
+        """Initiate the next round of query-response from the algorithm.
 
         Returns
         -------
         bool:
             `True` if there is a new query ready
-        '''
+        """
         raise NotImplementedError
 
     def put_response(self, response):
-        '''Submit a response to the query.
+        """Submit a response to the query.
 
         Parameters
         ----------
         response: int
             response to the query, x_1 < x_2? -1 if true, else 1.
-        '''
+        """
         raise NotImplementedError
 
     def get_result(self):
-        '''Get the final result from the algorithm.'''
+        """Get the final result from the algorithm."""
         return self.result
 
     def get_query(self):
-        '''Get a query.
+        """Get a query.
 
         Returns
         -------
         tuple:
             two objects (x_1, x_2) to ask whether x_1 < x_2
-        '''
+        """
         return self.query
 
 
 class HalfspaceRanking(_HalfspaceBase):
-    '''Rank objects using the exhaustive active ranking algorithm.
+    """
+    Rank objects using the exhaustive active ranking algorithm.
 
     This is the "exhaustive" algorithm because it computes ALL (n choose 2)
     pairwise ranking comparisons for n object. However, it expected that only d
@@ -105,7 +106,8 @@ class HalfspaceRanking(_HalfspaceBase):
     yield_indices: bool
         Yield indices into X (True) or the rows of X themselves (False) for the
         queries.
-    '''
+    """
+
     def __init__(self, X, query_order, yield_indices=False):
 
         self.yield_indices = yield_indices
@@ -119,20 +121,20 @@ class HalfspaceRanking(_HalfspaceBase):
         n, d = X.shape
         self.nc = (n * (n - 1)) // 2  # unique pairwise comparisons
         self.Y = np.zeros(self.nc)  # query labels
-        self.H = np.zeros((self.nc, d+1))  # query hyperplanes
+        self.H = np.zeros((self.nc, d + 1))  # query hyperplanes
         self.Q = np.zeros((n, n), dtype=int)  # All labels, including reversed
 
     def next_round(self):
         assert not self.query
 
-        for self.i in range(self.i+1, self.nc):
+        for self.i in range(self.i + 1, self.nc):
             left, right = self.order[self.i]
 
             # construct hyperplane comparing left & right
             self.H[self.i, :] = hyperplane(self.X[left], self.X[right])
 
             # impute the label inplace to determine ambiguities
-            if impute_label(self.H[:self.i+1], self.Y[:self.i+1]):
+            if impute_label(self.H[:self.i + 1], self.Y[:self.i + 1]):
                 self.put_response(self.Y[self.i])
             else:
                 break
@@ -162,7 +164,7 @@ class HalfspaceRanking(_HalfspaceBase):
 #
 
 class HalfspaceMax(_HalfspaceBase):
-    '''Find the max object using the halfspace comparison algorithm.
+    """Find the max object using the halfspace comparison algorithm.
 
     Queries are of the form, x_1 < x_2. If this ordering is correct, the oracle
     should return -1, otherwise 1.
@@ -199,7 +201,7 @@ class HalfspaceMax(_HalfspaceBase):
     query_order: callable
         A callable that returns the initial max object index guess and a
         sequence of indices for subsequent comparisons.
-    '''
+    """
 
     def __init__(self, X, query_order, yield_indices=False):
 
@@ -213,19 +215,20 @@ class HalfspaceMax(_HalfspaceBase):
 
         # Allocate storage buffers for imputation
         self.n, d = X.shape
-        self.Y = np.zeros(self.n-1)  # comparison labels
-        self.H = np.zeros((self.n-1, d+1))  # comparison hyperplanes
+        self.Y = np.zeros(self.n - 1)  # comparison labels
+        self.H = np.zeros((self.n - 1, d + 1))  # comparison hyperplanes
 
     def next_round(self):
 
-        for self.i in range(self.i+1, self.n):
+        for self.i in range(self.i + 1, self.n):
 
             # construct hyperplane comparing candidate with best
-            self.H[self.i-1, :] = hyperplane(self.X[self.maxi], self.X[self.i])
+            self.H[self.i - 1, :] = hyperplane(self.X[self.maxi],
+                                               self.X[self.i])
 
             # impute label inplace to determine ambiguities
             if impute_label(self.H[:self.i], self.Y[:self.i]):
-                self.put_response(self.Y[self.i-1])
+                self.put_response(self.Y[self.i - 1])
             else:
                 break  # an ambiguity was found - let's ask the user
         else:
@@ -239,7 +242,7 @@ class HalfspaceMax(_HalfspaceBase):
         return True
 
     def put_response(self, y):
-        self.Y[self.i-1] = y
+        self.Y[self.i - 1] = y
         if y == -1:
             self.maxi = self.i
         self.query = None  # check next_round is only called after put_response
@@ -250,7 +253,7 @@ class HalfspaceMax(_HalfspaceBase):
 #
 
 def hyperplane(a, b):
-    '''Compute the plane equidistant from points a and b.
+    """Compute the plane equidistant from points a and b.
 
     Parameters
     ----------
@@ -268,7 +271,7 @@ def hyperplane(a, b):
         coef is a scalar defining the halfspaces. I.e. the equation of the
         plane is;
             plane_1 . x_1 + ... + plane_d . x_d >= coef
-    '''
+    """
     # compute the midpoint
     mp = (a + b) / 2
 
@@ -281,7 +284,7 @@ def hyperplane(a, b):
 
 
 def shatter_test(X, Y):
-    r'''Test to see if the points in (X, Y) can be shattered by a hyperplane.
+    r"""Test to see if the points in (X, Y) can be shattered by a hyperplane.
 
     This runs a linear program to see if the points in X labelled by Y can be
     shattered by a homogeneous linear separator (hyperplane containing the
@@ -311,19 +314,19 @@ def shatter_test(X, Y):
     -------
     bool:
         True the objects can be shattered by a homogeneous linear separator.
-    '''
+    """
     n, d = X.shape
     c = np.array([0.] * d + [1.])  # encodes min_{w, s} s
     A_ub = - np.vstack((Y * X.T, np.ones(n))).T  # Y * X @ w + s
     b_ub = np.full(n, -1.)
     bounds = [(None, None)] * d + [(0., None)]  # s >= 0
-    res = linprog(c, A_ub, b_ub, bounds=bounds, method='highs')
+    res = linprog(c, A_ub, b_ub, bounds=bounds, method="highs")
     shattered = res.x[-1] < SHATTER_THRESH
     return shattered
 
 
 def impute_label(H, Y):
-    '''Attempt to impute a label of a query, which is the last object in H.
+    """Attempt to impute a label of a query, which is the last object in H.
 
     Parameters
     ----------
@@ -342,7 +345,7 @@ def impute_label(H, Y):
         If the hyperplanes can no longer be shattered by their labelling. This
         means inconsistent comparison labels have been given by the oracle.
         This function is not robust to a noisy oracle
-    '''
+    """
     assert len(H) == len(Y)
 
     if len(Y) < 2:
@@ -366,7 +369,7 @@ def impute_label(H, Y):
     elif negative and not positive:
         Y[-1] = -1
     else:
-        raise RuntimeError('Ranking has become inconsistent!')
+        raise RuntimeError("Ranking has become inconsistent!")
     return imputable
 
 
@@ -375,14 +378,14 @@ def impute_label(H, Y):
 #
 
 def max_compar_primary(X, primary_index):
-    '''Generate comparisons based on the order of the primary metric.'''
+    """Generate comparisons based on the order of the primary metric."""
     pmetric = X[:, primary_index]
     order = np.argsort(pmetric)[::-1]
     return order
 
 
 def max_compar_smooth(X):
-    '''Generate "smoothly transitioning" pairwise comparisons.'''
+    """Generate "smoothly transitioning" pairwise comparisons."""
     Xstd = (X - X.mean(axis=0)) / X.std(axis=0)
     Xproj = np.squeeze(PCA(n_components=1).fit_transform(Xstd))
     order = np.argsort(Xproj)[::-1]  # largest first
@@ -391,7 +394,7 @@ def max_compar_smooth(X):
 
 
 def max_compar_rand(X, random_state=None):
-    '''Generate random comparisons, with the largest magnitude object first.'''
+    """Generate random comparisons, with the largest magnitude object first."""
     n = len(X)
     inds = list(range(n))
 
@@ -414,7 +417,7 @@ def max_compar_rand(X, random_state=None):
 
 
 def rank_compar_ord(X):
-    '''Generate all n choose 2 comparisons.'''
+    """Generate all n choose 2 comparisons."""
     n = len(X)
     order = []
     for j in range(1, n):

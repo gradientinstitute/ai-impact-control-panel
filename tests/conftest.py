@@ -1,4 +1,4 @@
-'''Pytest fixtures and utilities.'''
+"""Pytest fixtures and utilities."""
 
 import numpy as np
 import pytest
@@ -16,7 +16,7 @@ def random():
 
 @pytest.fixture
 def shatterable_data():
-    '''Make (homogeneous) linearly separable data.'''
+    """Make (homogeneous) linearly separable data."""
     X = RAND.rand(20, 2)
     X[:10, :] += np.array([2, 2])
     X[10:, :] += np.array([-2, -2])

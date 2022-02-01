@@ -1,4 +1,4 @@
-"""Productionising LDA.py"""
+"""Non-linear bounds experiment."""
 import numpy as np
 import matplotlib.pyplot as plt
 from deva import bounds  # , interface, elicit
@@ -8,6 +8,7 @@ from python_client.bounds_local import evaluation
 
 
 def main():
+    """Non-linear bounds experiment."""
     np.random.seed(42)
 
     # Define nonlinear scenario
@@ -26,7 +27,7 @@ def main():
 
     # logged for plotting
     eli_choices = {}  # a dict storing the choices for each eliciter
-    eli_scores = {}  # storing the average 'log loss' for each eliciter
+    eli_scores = {}  # storing the average "log loss" for each eliciter
 
     n_iter = 0
     max_iter = 5
@@ -52,7 +53,7 @@ def main():
 
         for eliciter in eliciters:
             samp_name = eliciter
-            print(f'You are using {samp_name} Eliciter\n')
+            print(f"You are using {samp_name} Eliciter\n")
             outputs = run_bounds_eliciter(eliciters[eliciter], table,
                                           nl_oracle, ref,
                                           n_samples=100)
@@ -62,7 +63,7 @@ def main():
                 eli_scores[samp_name] = []
             else:
                 eli_scores[samp_name].append(scores)
-            if n_iter == max_iter-1:
+            if n_iter == max_iter - 1:
                 eli_choices[samp_name] = sample_choices
         n_iter += 1
 
@@ -108,8 +109,8 @@ def main():
     plt.show()
 
 
-def run_bounds_eliciter(sample, table, oracle,
-                        ref, n_samples):
+def run_bounds_eliciter(sample, table, oracle, ref, n_samples):
+    """Run a bounds eliciter to termination."""
     sampler = sample
 
     # logged for plotting

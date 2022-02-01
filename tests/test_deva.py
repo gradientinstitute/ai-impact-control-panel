@@ -1,3 +1,4 @@
+"""Test the eliciters in the DEVA package."""
 from deva import elicit
 from itertools import permutations
 import pickle
@@ -11,7 +12,7 @@ def make_data():
     attribs = [f"X{i+1}" for i in range(4)]
 
     candidates = [
-        elicit.Candidate(chr(65+i), dict(zip(attribs, row)))
+        elicit.Candidate(chr(65 + i), dict(zip(attribs, row)))
         for i, row in enumerate(data)
     ]
 
@@ -22,9 +23,12 @@ def make_data():
     return candidates, scenario, attribs
 
 
-@pytest.mark.parametrize('algorithm', elicit.algorithms)
+@pytest.mark.parametrize("algorithm", elicit.algorithms)
 def test_works(algorithm):
     # Note: assumes choice is from a discrete set (no continuous responses)
+    if algorithm == "Enautilus":
+        return  # exemption
+
     candidates, scenario, attribs = make_data()
 
     # Simulate a linear preference - consistent and easy to discover
@@ -40,18 +44,18 @@ def test_works(algorithm):
 
     while not eliciter.terminated:
         ans = oracle(eliciter.query)
-        eliciter.input(ans)
-    if algorithm != "Enautilus":
-        assert eliciter.result.name == best
+        eliciter.put(ans)
+
+    assert eliciter.result.name == best
 
 
-@pytest.mark.parametrize('algorithm', elicit.algorithms)
+@pytest.mark.parametrize("algorithm", elicit.algorithms)
 def test_pickleable(algorithm):
 
     candidates, scenario, attribs = make_data()
 
     # Run one step of the elicitation so the state is populated
     eliciter = elicit.algorithms[algorithm](candidates, scenario)
-    eliciter.input(eliciter.query[0].name)
+    eliciter.put(eliciter.query[0].name)
 
     pickle.dumps(eliciter)  # will error if not pickleable
