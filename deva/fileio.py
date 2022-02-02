@@ -135,11 +135,13 @@ def load_all_metrics(metrics, candidates):
         # calculate the true range
         metrics[u]["max"] = max(c[u] for c in candidates)
         metrics[u]["min"] = min(c[u] for c in candidates)
+        range = (metrics[u]["max"] - metrics[u]["min"]) // 1
+        digits = len(str(range)) - 1
 
         if "isMetric" not in metrics[u]:
             # set min/max range default using nice_range
             (range_min, range_max) = nice_range(metrics[u]["min"],
-                                                metrics[u]["max"])
+                                                metrics[u]["max"], 10**digits)
             if "range_min" not in metrics[u]:
                 metrics[u]["range_min"] = range_min
             if "range_max" not in metrics[u]:

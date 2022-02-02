@@ -7,11 +7,10 @@ Author: Muyao Chen
 import math
 
 
-def nice_range(a, b):
-    """Round min down and max up to nearest the 10."""
+def nice_range(a, b, div):
+    """Round min down and max up to the nearest `div`."""
     min_num = min(a, b)
     max_num = max(a, b)
-    div = 10
     if min_num % div == 0:
         min_num -= div
     if max_num % div == 0:
