@@ -3,13 +3,12 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import axios from 'axios';
 
-import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
 
 import { allCandidatesState, maxRangesState, currentCandidatesState,
-  filterCandidates, getSliderStep, bestValuesState,
+  filterCandidates, getSliderStep,
   currentSelectionState} from './BoundsSlider';
 
 
@@ -63,10 +62,7 @@ export function BoundariesPane({}) {
   
     return (
       <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
-        <h1>Constraint Pane</h1>
-        <div>
-          <ConstraintStatus />
-        </div>
+        <h1>Boundaries Pane</h1>
         <div className="mb-10">
           <MultiRangeConstraint />
         </div>
@@ -75,43 +71,17 @@ export function BoundariesPane({}) {
         </div>
       </div>
     );
-
-  // return (
-  //   <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
-  //     <h1>Boundaries Placeholder</h1>
-  //     Your content here. We may need to fix the step numbering above.
-  //     <Slider {...100}>
-  //       slider
-  //     </Slider>
-
-  //   </div>
-  // );
-}
-
-
-function ConstraintStatus({}) {
-  
-  const curr = useRecoilValue(currentCandidatesState);
-  const all = useRecoilValue(allCandidatesState);
-
-  return (
-  <div className="rounded-lg bg-green-700 p-4 my-auto">
-    <h2 className="text-2xl">{curr.length} of {all.length}</h2>
-    <p>candidate models remain</p>
-  </div>
-  );
-
 }
 
 
 function MultiRangeConstraint({}) {
   const metadata = useRecoilValue(metadataState);
-  const maxRanges = useRecoilValue(maxRangesState);
+
   const constraints = useRecoilValue(constraintsState);
 
-  if (maxRanges === null || constraints === null) {
-    return (<div>Loading...</div>);
-  }
+  // if (maxRanges === null || constraints === null) {
+  //   return (<div>Loading...</div>);
+  // }
 
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
@@ -158,7 +128,7 @@ function QualitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, r
   const max = range_max
   const cmin = constraints[uid][0];
   const cmax = constraints[uid][1];
-//   const bgcolor = GetBackgroundColor(uid);
+  const bgcolor = GetBackgroundColor(uid);
 
   const options = (u.options).slice(min, max + 1);
 
@@ -176,8 +146,9 @@ function QualitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, r
   .map(x => (<p>{x}</p>));
 
   return (
-    <div      
-      className="col-span-10 text-center">{name}
+    <div
+    className={"grid grid-cols-10 gap-8 " + bgcolor + " rounded-lg p-4 pb-10"}>
+      <h2 className="col-span-10 text-center">{name}</h2>
 
       <p className="col-span-3 my-auto">{}</p>
       <div className="col-span-2 text-center">
@@ -192,6 +163,9 @@ function QualitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, r
       <p className="col-span-3 my-auto">{}</p>
 
       <p className="col-span-2 my-auto">{}</p>
+      <div className="col-span-6 my-auto">
+        <RangeConstraint uid={uid} min={min} max={max} marks={marks} decimals={null} lowerIsBetter={lowerIsBetter}/>
+      </div>
 
       <p className="col-span-2 my-auto">{}</p>
 
@@ -238,10 +212,9 @@ function QuantitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, 
 function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const [currentSelection, setCurrentSelection] = useRecoilState(currentSelectionState);
+  const [_, setCurrentSelection] = useRecoilState(currentSelectionState);
 
   const all = useRecoilValue(allCandidatesState);
-  const thresholdValues = useRecoilValue(bestValuesState);
   const val = constraints[uid][1];
 
   function onBeforeChange() {
@@ -255,24 +228,6 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
     n[uid] =  [n[uid][0], newVal]
 
-    // check how many candidates are left
-    const withNew = filterCandidates(all, n);
-
-    if (withNew.length ===  0) {
-      // if the constraints exceeds the threshold value 
-      // set to the threshold value
-      // find the threshold step to return
-      const stepSize = getSliderStep(decimals);
-      const stepsFromMin = Math.ceil((thresholdValues.get(uid) - min) / stepSize);
-      newVal = roundValue(
-        rvOperations.floor, 
-        (stepsFromMin * stepSize) + min, 
-        decimals
-      );
-      
-      n[uid]  = [n[uid][0], newVal];
-    }
-
     setConstraints(n);  
   }
   
@@ -284,7 +239,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     onChange: onChange,
     allowCross: false,
     value: val,
-  //   step: getSliderStep(decimals),
+    step: getSliderStep(decimals),
     trackStyle: {backgroundColor: "lightblue"},
     railStyle: {backgroundColor: "gray"},
     reverse: !lowerIsBetter,

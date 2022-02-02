@@ -1,7 +1,6 @@
 import { atom, selector } from 'recoil';
 import { metadataState, constraintsState } from './Base';
 import _ from "lodash";
-import { roundValue, rvOperations } from './Widgets';
 
 export const currentSelectionState = atom({
   key: 'currentSelection',
@@ -71,19 +70,19 @@ export const maxRangesState = selector({
     if (all === null) {
       return null;
     }
-    
-    const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
-      // doesn't exist in the qualitative metrics
-      const decimals = val.displayDecimals != null ? val.displayDecimals : 0; 
-      const tvals = all.map(x => x[uid]);
-      // TODO: deal with stuff like this in the server
-      const min = roundValue(rvOperations.floor, Math.min(...tvals), decimals); 
-      const max = roundValue(rvOperations.ceil, Math.max(...tvals), decimals); 
-      return [min, max];
-    });
+
+    // TODO: change default range -> range min/max
+    // const ranges = [metadata.metrics.range_min, metadata.metrics.range_max]
+    const ranges = _.mapValues(metadata.metrics, (val, _obj) => {
+        const min = val.range_min
+        const max = val.range_max
+        return [min, max];
+      });
+
     return ranges;
   },
 });
+
 
 // higher is better map
 // return only candidates that are within the supplied bounds
