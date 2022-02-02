@@ -3,6 +3,9 @@ from itertools import combinations
 from functools import partial
 import numpy as np
 from deva import halfspace
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from collections import OrderedDict
 
 
 class Candidate:
@@ -154,12 +157,6 @@ class Enautilus(Eliciter):
     See: E-NAUTILUS: A decision support system for complex multiobjective
     optimization problems based on the NAUTILUS method.
     """
-
-    _nadir = {}
-    _ideal = {}
-    _h = 5  # number of questions
-    _ns = 2  # number of options
-
     def __init__(self, candidates, scenario):
         """
         Initialise Enautilus.
@@ -170,8 +167,13 @@ class Enautilus(Eliciter):
         if len(candidates) < 2:
             raise RuntimeError("Two or more candidates required.")
         Eliciter.__init__(self)
+        self._nadir = {}
+        self._ideal = {}
+        self._h = 5  # number of questions
+        self._ns = 2  # number of options
         self.candidates = list(candidates)
         self.attribs = candidates[0].get_attr_keys()
+        self.current_centers = []
         self._update_zpoints()
         self._update()
 
@@ -224,7 +226,10 @@ class Enautilus(Eliciter):
     def put(self, choice):
         """Receive input from the user and update ideal point."""
         choice = self._query[int(choice)]
+        # import IPython;IPython.embed()
         self._nadir = choice.attributes
+        print(self._nadir)
+        # import IPython;IPython.embed()
         # remove candidates that are worse in every attribute
         copy = []
         for can in self.candidates:
@@ -259,6 +264,7 @@ class Enautilus(Eliciter):
             (np.array(list(self._nadir.values())) - centers)
             * numerator / self._h
         )
+        self.current_centers = centers
         res = []
         step = ""  # TODO: make a different letter for each step
         for index, system in enumerate(centers):
@@ -272,12 +278,37 @@ class Enautilus(Eliciter):
         if (self._h > 0) and (len(self.candidates) != 1):
             self._query = self.virtualCandidateGen()
             self._h = self._h - 1
+            self.plot_2d()
         else:
             self._query = None
 
     @staticmethod
     def description():
         return "E-NAUTILUS eliciter"
+
+    def plot_2d(self):
+        """plot 2d scenarios according to the paper"""
+        plt.figure()
+        width = self._nadir[self.attribs[0]] - self._ideal[self.attribs[0]]
+        height = self._nadir[self.attribs[1]] - self._ideal[self.attribs[1]]
+        currentAxis = plt.gca()
+        currentAxis.add_patch(Rectangle((self._ideal[self.attribs[0]],
+                              self._ideal[self.attribs[1]]),
+                              width, height, fill=None, alpha=0.1))
+        plt.scatter(self._ideal[self.attribs[0]], self._ideal[self.attribs[1]],
+                    s=80, marker=(5, 1), label='ideal point')
+        plt.scatter(self._nadir[self.attribs[0]], self._nadir[self.attribs[1]],
+                    s=80, marker=(3, 1), label='nadir point')
+        for point in self.current_centers:
+            plt.scatter(point[0], point[1], c='black', label='centers')
+        for can in self.candidates:
+            point1 = np.array(can.get_attr_values())
+            plt.scatter(point1[0], point1[1], c='red', alpha=0.3,
+                        label='candidates')
+        handles, labels = plt.gca().get_legend_handles_labels()
+        by_label = OrderedDict(zip(labels, handles))
+        plt.legend(by_label.values(), by_label.keys())
+        plt.savefig(f"last {self._h} plot.jpg")
 
 
 # Eliciter implementations
