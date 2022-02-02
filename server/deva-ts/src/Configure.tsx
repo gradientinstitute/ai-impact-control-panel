@@ -89,6 +89,7 @@ function AlgorithmMenu({}) {
   
   return (
     <div>
+      <h1 className="text-left">Elicitation Settings</h1>
       <AlgoSelector />
     </div>
   );
@@ -106,15 +107,13 @@ function AlgoSelector({}) {
   });
   
   return (
-      <div className="p-4 gap-4 bg-gray-500 grid grid-cols-3" >
+      <div className="p-4 gap-4 grid grid-cols-10" >
         <p className="text-right col-span-1">Eliciter</p>
-        <select className="col-span-2" name="scenarios" value={current} 
+        <select className="col-span-8" name="scenarios" value={current} 
           onChange={ (x) => {setCurrent(x.target.value)}}>
           {elements}
         </select>
-        <div className="col-span-1">
-        </div>
-        <div className="col-span-2">
+        <div className="col-span-10">
           <p>{algos[current]}</p>
         </div>
       </div>
@@ -145,8 +144,8 @@ function StartButton({}) {
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
         onClick={() => {setSubmit(true)}}>
-        <div className="p-4 text-5xl">
-          Next
+        <div className="p-4 text-3xl">
+          Continue
         </div>
       </button>
   );

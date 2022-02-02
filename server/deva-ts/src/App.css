@@ -65,3 +65,7 @@ button[disabled=disabled], button:disabled {
     border: 5px solid gray;
     box-sizing: border-box;
 }
+
+.rc-slider-mark-text {
+  padding-top: 25px;
+}

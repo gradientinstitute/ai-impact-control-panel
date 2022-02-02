@@ -99,6 +99,17 @@ function ConstraintStatus({}) {
 
 }
 
+function UnitDescription({uid, unit}) {
+  return (
+    <div className="bg-gray-600 h-full">
+      <h2>{unit.name}</h2>
+      <p className="italic">{unit.description}</p>
+      <p>Captures: {unit.captures}</p>
+      <p>Limitations: {unit.limitations}</p>
+    </div>
+  )
+}
+
 function DescriptionRangeConstraint({uid, unit}) {
 
   const lowerIsBetter = unit.lowerIsBetter === false ? false : true;
@@ -119,8 +130,13 @@ function DescriptionRangeConstraint({uid, unit}) {
       lowerIsBetter={lowerIsBetter}/>)
 
   return (
-    <div>
-      {pane}
+    <div className="grid grid-cols-8 bg-gray-700">
+      <div className="col-span-3">
+        <UnitDescription uid={uid} unit={unit} />
+      </div>
+      <div className="col-span-5">
+        {pane}
+      </div>
     </div>
   )
 
@@ -161,7 +177,6 @@ function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter})
   const max = vals[1];
   const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + " " + u.suffix;
   const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + " " + u.suffix;
-  const name = u.name;
   const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
   const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
   const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
@@ -170,10 +185,9 @@ function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter})
 
   return (
     <div key={uid} 
-    className={"grid grid-cols-5 gap-8 " + bgcolor + " rounded-lg p-4"}>
+    className={"grid grid-cols-5 gap-8 p-4"}>
       
-      <h2 className="col-span-5 text-center">{name}</h2>
-      <p className="col-span-5 text-3xl">{cstring}</p>
+      <p className="col-span-5 text-xl text-center">{cstring}</p>
 
       <p className="col-span-1 text-xs text-right my-auto">{min_string}</p>
       <div className="col-span-3 my-auto">
@@ -193,43 +207,17 @@ function QualitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter}) 
   const bgcolor = GetBackgroundColor(uid);
   const options = (u.options).slice(min, max + 1);
 
+  const markstyle = {
+    color: "white"
+  }
+
   const marks = Object.fromEntries(
-    options.map(x => [u.options.indexOf(x), x])
+    options.map(x => [u.options.indexOf(x), { label: x, style: markstyle }])
   )
 
-  const name = u.name;
-  const allowed = options
-    .filter(x => (u.options.indexOf(x) >= cmin && u.options.indexOf(x) <= cmax))
-    .map(x => (<p>{x}</p>));
-
-  const notAllowed = options
-  .filter(x => !(u.options.indexOf(x) >= cmin && u.options.indexOf(x) <= cmax))
-  .map(x => (<p>{x}</p>));
-
   return (
-    <div key={uid} 
-    className={"grid grid-cols-10 gap-8 " + bgcolor + " rounded-lg p-4 pb-10"}>
-            
-      <h2 className="col-span-10 text-center">{name}</h2>
-
-      <p className="col-span-3 my-auto">{}</p>
-      <div className="col-span-2 text-center">
-      <p className="font-bold">Allowed</p>
-      <p>{allowed}</p>
-      </div>
-
-      <div className="col-span-2 text-center">
-      <p className="font-bold">Not Allowed</p>
-      <p>{notAllowed}</p>
-      </div>
-      <p className="col-span-3 my-auto">{}</p>
-
-      <p className="col-span-2 my-auto">{}</p>
-      <div className="col-span-6 my-auto">
+    <div key={uid} className="py-10 px-20">
         <RangeConstraint uid={uid} min={min} max={max} marks={marks} decimals={null} lowerIsBetter={lowerIsBetter}/>
-      </div>
-      <p className="col-span-2 my-auto">{}</p>
-
     </div>
   )
 }
