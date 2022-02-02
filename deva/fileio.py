@@ -124,12 +124,20 @@ def load_all_metrics(metrics, candidates):
             # set default type
             metrics[u]["type"] = "quantitative"
 
+        # compensate higher is better
+        if "lowerIsBetter" in metrics[u]:
+            if "range_min" in metrics[u] and "range_max" in metrics[u]:
+                range_min = metrics[u]["range_min"]
+                range_max = metrics[u]["range_max"]
+                metrics[u]["range_min"] = range_max * (-1)
+                metrics[u]["range_max"] = range_min * (-1)
+
         # calculate the true range
         metrics[u]["max"] = max(c[u] for c in candidates)
         metrics[u]["min"] = min(c[u] for c in candidates)
 
-        # set min/max range default using nice_range
         if "isMetric" not in metrics[u]:
+            # set min/max range default using nice_range
             (range_min, range_max) = nice_range(metrics[u]["min"],
                                                 metrics[u]["max"])
             if "range_min" not in metrics[u]:

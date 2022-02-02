@@ -8,8 +8,7 @@ import { Pane, paneState, scenarioState,
         metadataState, constraintsState } from './Base';
 
 import { allCandidatesState, rangesState, currentCandidatesState,
-  filterCandidates, getSliderStep,
-  currentSelectionState} from './BoundsSlider';
+  getSliderStep, currentSelectionState} from './BoundsSlider';
 
 
 const BackgroundColours = {
@@ -82,27 +81,18 @@ function MultiRangeConstraint({}) {
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
     const u: any = x[1];
-    // const lowerIsBetter = u.lowerIsBetter === false ? false : true;
     const lowerIsBetter = u.lowerIsBetter;
     
     const range_min = u.range_min
     const range_max = u.range_max
 
-    const pane = (u.type === "qualitative") ? 
-
-      (<QualitativeConstraint x={x} 
-        constraints={constraints}
-        uid={uid}
-        lowerIsBetter={lowerIsBetter}
-        range_min = {range_min}
-        range_max = {range_max}/>) :
-
+    const pane = (u.type === "quantitative") ? 
       (<QuantitativeConstraint x={x}
         constraints={constraints}
         uid={uid}
         lowerIsBetter={lowerIsBetter}
         range_min = {range_min}
-        range_max = {range_max}/>)
+        range_max = {range_max}/>) : null
 
     return (
       <div >
@@ -116,58 +106,6 @@ function MultiRangeConstraint({}) {
       {items}
     </div>
   );
-}
-
-
-function QualitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, range_max}) {
-  const u: any = x[1];
-  const min = range_min
-  const max = range_max
-  const cmin = constraints[uid][0];
-  const cmax = constraints[uid][1];
-  const bgcolor = GetBackgroundColor(uid);
-
-  const options = (u.options).slice(min, max + 1);
-
-  const marks = Object.fromEntries(
-    options.map(x => [u.options.indexOf(x), x])
-  )
-
-  const name = u.name;
-  const allowed = options
-    .filter(x => (u.options.indexOf(x) >= cmin && u.options.indexOf(x) <= cmax))
-    .map(x => (<p>{x}</p>));
-
-  const notAllowed = options
-  .filter(x => !(u.options.indexOf(x) >= cmin && u.options.indexOf(x) <= cmax))
-  .map(x => (<p>{x}</p>));
-
-  return (
-    <div
-    className={"grid grid-cols-10 gap-8 " + bgcolor + " rounded-lg p-4 pb-10"}>
-      <h2 className="col-span-10 text-center">{name}</h2>
-
-      <p className="col-span-3 my-auto">{}</p>
-      <div className="col-span-2 text-center">
-      <p className="font-bold">Allowed</p>
-      <p>{allowed}</p>
-      </div>
-
-      <div className="col-span-2 text-center">
-      <p className="font-bold">Not Allowed</p>
-      <p>{notAllowed}</p>
-      </div>
-      <p className="col-span-3 my-auto">{}</p>
-
-      <p className="col-span-2 my-auto">{}</p>
-      <div className="col-span-6 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={marks} decimals={null} lowerIsBetter={lowerIsBetter}/>
-      </div>
-
-      <p className="col-span-2 my-auto">{}</p>
-
-    </div>
-  )
 }
 
 
@@ -288,7 +226,7 @@ function StartButton({}) {
   useEffect(() => {
     const fetch = async () => {
       await axios.put<any>("api/" + scenario + "/constraints", constraints);
-      setPane(Pane.Pairwise);
+      setPane(Pane.Setup);
     }
     if (submit) {
       fetch();
