@@ -7,7 +7,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { Pane, paneState, scenarioState, 
         metadataState, constraintsState } from './Base';
 
-import { allCandidatesState, maxRangesState, currentCandidatesState,
+import { allCandidatesState, rangesState, currentCandidatesState,
   filterCandidates, getSliderStep,
   currentSelectionState} from './BoundsSlider';
 
@@ -27,7 +27,7 @@ export function BoundariesPane({}) {
     // name of current scenorio for url purposes e.g. "ezyfraud"
     const scenario = useRecoilValue(scenarioState);
     // largest possible ranges for specifying the scrollbar extents
-    const maxRanges = useRecoilValue(maxRangesState);
+    const maxRanges = useRecoilValue(rangesState);
     // list of currently permissible candidates based on current constraints
     const currentCandidates = useRecoilValue(currentCandidatesState);
     // the actual/current contraints as defined by the position of scrollbars
@@ -78,10 +78,6 @@ function MultiRangeConstraint({}) {
   const metadata = useRecoilValue(metadataState);
 
   const constraints = useRecoilValue(constraintsState);
-
-  // if (maxRanges === null || constraints === null) {
-  //   return (<div>Loading...</div>);
-  // }
 
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
@@ -177,18 +173,22 @@ function QualitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, r
 function QuantitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, range_max}) {
   // TODO: remember how to specify these types in destructuring args
   const u: any = x[1];
-//   const vals = maxRanges[uid];
-  const sign = lowerIsBetter ? 1 : -1;
+  // const sign = lowerIsBetter ? 1 : -1;
   const min = range_min
   const max = range_max
-  const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + " " + u.suffix;
-  const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + " " + u.suffix;
+  // const min_string = u.prefix + " " + (lowerIsBetter ? min : max) + " " + u.suffix;
+  // const max_string = u.prefix + " " + (lowerIsBetter ? max : min) + " " + u.suffix;
+  const min_string = u.prefix + " " + min + " " + u.suffix;
+  const max_string = u.prefix + " " + max + " " + u.suffix;
   const name = u.name;
 
-  const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
-  const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
+  // const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
+  // const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
+
+  const cmin = constraints[uid][0];
+  const cmax = constraints[uid][1];
   
-  const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
+  const cstring = u.prefix + " (" + (cmin) + " - " + (cmax) + ")\n" + u.suffix;
   const decimals = u.displayDecimals;
   const bgcolor = GetBackgroundColor(uid);
 
@@ -242,6 +242,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     step: getSliderStep(decimals),
     trackStyle: {backgroundColor: "lightblue"},
     railStyle: {backgroundColor: "gray"},
+    // TODO
     reverse: !lowerIsBetter,
   };
   

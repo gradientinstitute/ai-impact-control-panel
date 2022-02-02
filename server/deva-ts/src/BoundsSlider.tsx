@@ -2,11 +2,11 @@ import { atom, selector } from 'recoil';
 import { metadataState, constraintsState } from './Base';
 import _ from "lodash";
 
+
 export const currentSelectionState = atom({
   key: 'currentSelection',
   default: null,
 });
-
 
 // info from the ranges API containing
 // array containing all of the candidates
@@ -39,30 +39,10 @@ export const currentCandidatesState = selector({
   },
 });
 
-// Returns the most optimal values for each metric given possible candidates
-// {metric1: <most desirable value in current candidate set>, etc.}
-export const bestValuesState = selector({
-  key: 'optimalMetricValues',
-  get: ({get}) => {
-    const currentCandidates = get(currentCandidatesState);
-    let currOptimal = new Map();
-    currentCandidates.forEach((candidate) => {
-      Object.entries(candidate).forEach(([metric, value]) => {
-        let currVal = value as number;
-        let currOpt = currOptimal.get(metric);
-        currOpt = (typeof currOpt == 'undefined') ? Number.MAX_SAFE_INTEGER : currOpt;
-        currOptimal.set(metric, currVal < currOpt ? currVal : currOpt); 
-      });
-    });
-    return currOptimal;
-  }
-});
-  
-// TODO
-// maximum possible ranges (doesnt change)
+
 // {metric1: [min, max], metric2: [min, max]}
-export const maxRangesState = selector({
-  key: 'maxRanges',
+export const rangesState = selector({
+  key: 'ranges',
   get: ({get}) => {
     const all = get(allCandidatesState);
     const metadata = get(metadataState);
