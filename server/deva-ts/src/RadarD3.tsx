@@ -12,29 +12,44 @@ export function VisualiseData({metadata, leftValues, rightValues, leftName, righ
   return RadarChart({data, ranges});   
 }
 
+function getPercentage(val, min, max, lowerIsBetter) {
+  let x = ((val - min) / (max - min)) * 100;
+  x = lowerIsBetter ? x : 100 - x;
+  return x;
+}
+
 // Returns data required by the Radar Chart in the right format
 function parseData({metadata, leftValues, rightValues, ranges, leftName, rightName}) {
   let leftData = [];
   let rightData = []; 
   for (const [uid, x] of Object.entries(metadata.metrics)) {
-    const min = ranges[uid][0];
-    const max = ranges[uid][1];
     const u = x as any;
     const lowerIsBetter = u.lowerIsBetter;
     const sign = lowerIsBetter ? 1 : -1;
-    const valLeft = lowerIsBetter ? (max - leftValues[uid]) : (max - leftValues[uid]);
-    const valRight = lowerIsBetter ? (max - rightValues[uid]) : (max - rightValues[uid]);
+
+    // Determine where the point should be on the scale by calculating 
+    // the percenage that the value is relative to its max/min bounds
+    const min = ranges[uid][0];
+    const max = ranges[uid][1];
+    const valLeft = getPercentage(leftValues[uid], min, max, lowerIsBetter)
+    const valRight = getPercentage(rightValues[uid], min, max, lowerIsBetter)
+
     leftData.push({
       "legend" : leftName,
       "axis" : u.name, 
       "value" : valLeft, 
       "actualValue" : leftValues[uid] * sign,
-    }); 
+      "rangeMin" : min,
+      "rangeMax" : max,
+    });
+
     rightData.push({
       "legend" : rightName,
       "axis" : u.name, 
       "value" : valRight, 
       "actualValue" : rightValues[uid] * sign,
+      "rangeMin" : u.range_min,
+      "rangeMax" : u.range_max,
     });
   }
   return [leftData, rightData];
@@ -69,7 +84,8 @@ function DrawRadarChart(id, data, svg, ranges) {
   const cfg = getConfiguration();
   const width = cfg.w;
   const margin = cfg.margin;
-  const maxValue = getMaxValue(cfg.maxValue, data);
+  // const maxValue = getMaxValue(cfg.maxValue, data);
+  const maxValue = 100; // have all values as a percentage of 100
 
   // names axes
   var allAxis = data[0].map((val) => val.axis); // replace name with .name
@@ -178,13 +194,6 @@ function getConfiguration() {
   };
 
   return config;
-}
-
-function getMaxValue(cfgMax, data) {
-  const dataMax = d3.max(data, function (i) {
-    return d3.max(i.map((o) => o.value))
-  });
-  return Math.max(cfgMax, dataMax);
 }
 
 function initiateRadarSVG(svg, cfg, id) {
