@@ -82,7 +82,8 @@ function MultiRangeConstraint({}) {
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
     const u: any = x[1];
-    const lowerIsBetter = u.lowerIsBetter === false ? false : true;
+    // const lowerIsBetter = u.lowerIsBetter === false ? false : true;
+    const lowerIsBetter = u.lowerIsBetter;
     
     const range_min = u.range_min
     const range_max = u.range_max
@@ -173,22 +174,20 @@ function QualitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, r
 function QuantitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, range_max}) {
   // TODO: remember how to specify these types in destructuring args
   const u: any = x[1];
-  // const sign = lowerIsBetter ? 1 : -1;
   const min = range_min
   const max = range_max
-  // const min_string = u.prefix + " " + (lowerIsBetter ? min : max) + " " + u.suffix;
-  // const max_string = u.prefix + " " + (lowerIsBetter ? max : min) + " " + u.suffix;
-  const min_string = u.prefix + " " + min + " " + u.suffix;
-  const max_string = u.prefix + " " + max + " " + u.suffix;
   const name = u.name;
 
-  // const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
-  // const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
+  const sign = lowerIsBetter ? 1 : -1;
 
-  const cmin = constraints[uid][0];
-  const cmax = constraints[uid][1];
-  
-  const cstring = u.prefix + " (" + (cmin) + " - " + (cmax) + ")\n" + u.suffix;
+  const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + " " + u.suffix;
+  const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + " " + u.suffix;
+
+  const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
+  const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
+
+  const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
+
   const decimals = u.displayDecimals;
   const bgcolor = GetBackgroundColor(uid);
 
@@ -237,12 +236,10 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     max: max,
     onBeforeChange: onBeforeChange,
     onChange: onChange,
-    allowCross: false,
     value: val,
     step: getSliderStep(decimals),
     trackStyle: {backgroundColor: "lightblue"},
     railStyle: {backgroundColor: "gray"},
-    // TODO
     reverse: !lowerIsBetter,
   };
   

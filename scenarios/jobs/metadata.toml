@@ -60,8 +60,8 @@ role recommendations more than average."""
     type = "quantitative" # type determines how options are presented to the user
                           # omitting type sets the default to quantitative
 
-    range_min = 0
-    range_max = 100
+    range_min = -100
+    range_max = 0
 
 [metrics.fnr]
     name = "Proportion of suitable candidates missed"
