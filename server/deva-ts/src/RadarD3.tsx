@@ -2,24 +2,43 @@
 
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
+import _ from "lodash";
+import {maxRangesState} from "./ConstrainScrollbar"
+import { useRecoilValue } from "recoil";
 
 export function VisualiseData({metadata, leftValues, rightValues, leftName, rightName}) {
-  const data = parseData({metadata, leftValues, rightValues});
-  return RadarChart({data});   
+  const ranges = useRecoilValue(maxRangesState);
+  const data = parseData({metadata, leftValues, rightValues, ranges});
+  return RadarChart({data, ranges});   
 }
 
 // Returns data required by the Radar Chart in the right format
-function parseData({metadata, leftValues, rightValues}) {
+function parseData({metadata, leftValues, rightValues, ranges}) {
   let leftData = [];
   let rightData = []; 
   for (const [uid, x] of Object.entries(metadata.metrics)) {
-    leftData.push({"axis" : uid, "value" : leftValues[uid]});    
-    rightData.push({"axis" : uid, "value" : rightValues[uid]});
+    const min = ranges[uid][0];
+    const max = ranges[uid][1];
+    const u = x as any;
+    const lowerIsBetter = u.lowerIsBetter;
+    const sign = lowerIsBetter ? 1 : -1;
+    const valLeft = lowerIsBetter ? (max - leftValues[uid]) : (max - leftValues[uid]);
+    const valRight = lowerIsBetter ? (max - rightValues[uid]) : (max - rightValues[uid]);
+    leftData.push({
+      "axis" : u.name, 
+      "value" : valLeft, 
+      "actualValue" : leftValues[uid] * sign,
+    }); 
+    rightData.push({
+      "axis" : u.name, 
+      "value" : valRight, 
+      "actualValue" : rightValues[uid] * sign,
+    });
   }
   return [leftData, rightData];
 }
 
-function RadarChart({data}) {
+function RadarChart({data, ranges}) {
   const svgRef = useRef();
   useEffect(() => {
     if (svgRef.current) {
@@ -29,13 +48,13 @@ function RadarChart({data}) {
   }, [svgRef]);
 
   const drawChart = (svg) => {
-    DrawRadarChart(".radarChart", data, svg);
+    DrawRadarChart(".radarChart", data, svg, ranges);
   };
 
   return (
     <div className="w-auto flex space-x-16">
       <div className="my-auto" style={{width:"20%"}}/>
-      <div className="bg-gray-200">
+      <div className="bg-gray-800">
         <svg className="radarChart" ref={svgRef}></svg>
       </div>
       <div className="my-auto" style={{width:"20%"}}/>
@@ -43,7 +62,7 @@ function RadarChart({data}) {
   );
 }
 
-function DrawRadarChart(id, data, svg) {
+function DrawRadarChart(id, data, svg, ranges) {
 
   const cfg = getConfiguration();
   const width = cfg.w;
@@ -51,12 +70,15 @@ function DrawRadarChart(id, data, svg) {
   const maxValue = getMaxValue(cfg.maxValue, data);
 
   // names axes
-  var allAxis = data[0].map((val) => val.axis);
+  var allAxis = data[0].map((val) => val.axis); // replace name with .name
+  console.log("DATA0", data[0])
   var total = allAxis.length;
 
   // outermost circle and formatting
   var radius = Math.min(cfg.w / 2, cfg.h / 2);
   var angleSlice = (Math.PI * 2) / total;
+  
+  // scale for the radius
   var rScale = d3.scaleLinear().range([0, radius]).domain([0, maxValue]);
 
   /////////////// CREATE CONTAINER SVG AND G //////////////////
@@ -67,14 +89,14 @@ function DrawRadarChart(id, data, svg) {
   /////////////// DRAW THE CIRCULAR GRID /////////////////////
   var axisGrid = g.append("g").attr("class", "axisWrapper");
   drawBackgroundCircles(axisGrid, cfg, radius);
-  addLevelLabels(axisGrid, cfg, radius, maxValue);
+  // addLevelLabels(axisGrid, cfg, radius, maxValue);
 
   ////////////////// DRAW THE AXES //////////////////////////
-  var axis =  drawRadialLines(axisGrid, allAxis, rScale, maxValue, angleSlice);
+  var axis = drawRadialLines(axisGrid, allAxis, rScale, maxValue, angleSlice);
   appendAxisLabels(axis, cfg, svg, rScale, maxValue, angleSlice, width, margin);
   
   ///////////// DRAW THE RADAR CHART BLOBS ////////////////
-  var radarLine = getRadarLine(cfg, rScale, angleSlice);
+  var radarLine = getRadarLine(cfg, rScale, angleSlice, ranges);
   var blobWrapper = createBlobWrapper(g, data);
   appendBlobBackgrounds(blobWrapper, radarLine, cfg);
   createBlobOutlines(blobWrapper, radarLine, cfg);
@@ -129,8 +151,8 @@ function getConfiguration() {
   const margin = { top: 100, right: 100, bottom: 100, left: 100 };
   const width = Math.min(700, window.innerWidth - 10) - margin.left - margin.right;
   const height = Math.min(width, window.innerHeight - margin.top - margin.bottom - 20);
-  // const colour = d3.scaleBand().range(["#739CC4", "#CC333F", "#00A0B0"]);
-  const color = ["#739CC4", "#CC333F", "#00A0B0"];
+  // const color = d3.scaleBand().range(["#739CC4", "#CC333F", "#00A0B0"]);
+  const color = ["#CC333F", "#00A0B0", "#739CC4"];
   const config = {
     // Circle
     w: width,
@@ -138,6 +160,7 @@ function getConfiguration() {
     margin: margin,
     levels: 5,
     maxValue: 0.5,
+    minValue: 0,
 
     // Labels
     labelFactor: 1.25,
@@ -149,17 +172,15 @@ function getConfiguration() {
     strokeWidth: 2,
     roundStrokes: false,
     color: color,
-    dotRadius: 4,
+    dotRadius: 3,
   };
 
   return config;
 }
 
 function getMaxValue(cfgMax, data) {
-  const dataMax = d3.max(data, function (i) { 
-    return d3.max(i.map(function (o) {
-      return o.value;
-    }));
+  const dataMax = d3.max(data, function (i) {
+    return d3.max(i.map((o) => o.value))
   });
   return Math.max(cfgMax, dataMax);
 }
@@ -202,9 +223,7 @@ function drawBackgroundCircles(axisGrid, cfg, radius) {
   .enter()
   .append("circle")
   .attr("class", "gridCircle")
-  .attr("r", function (d, i) {
-    return (radius / cfg.levels) * d;
-  })
+  .attr("r", (d) => (radius / cfg.levels) * d)
   .style("fill", "#CDCDCD")
   .style("stroke", "#CDCDCD")
   .style("fill-opacity", cfg.opacityCircles)
@@ -219,15 +238,11 @@ function addLevelLabels(axisGrid, cfg, radius, maxValue) {
   .append("text")
   .attr("class", "axisLabel")
   .attr("x", 4)
-  .attr("y", function (d) {
-    return (-d * radius) / cfg.levels;
-  })
+  .attr("y", (d) => ((-d * radius) / cfg.levels))
   .attr("dy", "0.4em")
   .style("font-size", "10px")
   .attr("fill", "#737373")
-  .text(function (d, i) {
-    return ((maxValue * d) / cfg.levels);
-  });
+  .text((d) => ((maxValue * d) / cfg.levels));
 }
 
 function drawRadialLines(axisGrid, allAxis, rScale, maxValue, angleSlice) {
@@ -243,16 +258,8 @@ function drawRadialLines(axisGrid, allAxis, rScale, maxValue, angleSlice) {
     .append("line")
     .attr("x1", 0)
     .attr("y1", 0)
-    .attr("x2", function (d, i) {
-      return (
-        rScale(maxValue * 1.1) * Math.cos(angleSlice * i - Math.PI / 2)
-      );
-    })
-    .attr("y2", function (d, i) {
-      return (
-        rScale(maxValue * 1.1) * Math.sin(angleSlice * i - Math.PI / 2)
-      );
-    })
+    .attr("x2", (d, i) => rScale(maxValue * 1.1) * Math.cos(angleSlice * i - Math.PI / 2))
+    .attr("y2", (d, i) => rScale(maxValue * 1.1) * Math.sin(angleSlice * i - Math.PI / 2))
     .attr("class", "line")
     .style("stroke", "white")
     .style("stroke-width", "2px");
@@ -265,36 +272,28 @@ function appendAxisLabels(axis, cfg, svg, rScale, maxValue, angleSlice, width, m
     .append("text")
     .attr("class", "legend")
     .style("font-size", "11px")
+    .style("fill", "white")
     .attr("text-anchor", "middle")
     .attr("dy", "0.35em")
-    .attr("x", function (d, i) {
-      return (
-        rScale(maxValue * cfg.labelFactor) *
-        Math.cos(angleSlice * i - Math.PI / 2)
-      );
-    })
-    .attr("y", function (d, i) {
-      return (
-        rScale(maxValue * cfg.labelFactor) *
-        Math.sin(angleSlice * i - Math.PI / 2)
-      );
-    })
-    .text(function (d) {
-      return d;
-    })
+    .attr("x", (d, i) => 
+      rScale(maxValue * cfg.labelFactor) *
+      Math.cos(angleSlice * i - Math.PI / 2))
+    .attr("y", (d, i) =>
+      rScale(maxValue * cfg.labelFactor) *
+      Math.sin(angleSlice * i - Math.PI / 2))
+    .text((d) => d)
     .call(wrap, cfg.wrapWidth);
 }
 
-function getRadarLine(cfg, rScale, angleSlice) {
+function getRadarLine(cfg, rScale, angleSlice, ranges) {
   var radarLine = d3
   .lineRadial()
   .curve(d3.curveLinearClosed)
-  .radius(function (d) {
-    return rScale(d.value);
+  .radius((d) => {
+    let val = d.value;
+    return rScale(val)
   })
-  .angle(function (d, i) {
-    return i * angleSlice;
-  });
+  .angle((d, i) => i * angleSlice);
   if (cfg.roundStrokes) {
     radarLine.curve(d3.curveCardinalClosed);
   }
@@ -314,12 +313,8 @@ function appendBlobBackgrounds(blobWrapper, radarLine, cfg) {
   blobWrapper
     .append("path")
     .attr("class", "radarArea")
-    .attr("d", function (d, i) {
-      return radarLine(d);
-    })
-    .style("fill", function (d, i) {
-      return cfg.color[i];
-    })
+    .attr("d", (d, i) => radarLine(d))
+    .style("fill", (d, i) => cfg.color[i])
     .style("fill-opacity", cfg.opacityArea)
     .on("mouseover", function (d, i) {
       //Dim all blobs
@@ -344,13 +339,9 @@ function createBlobOutlines(blobWrapper, radarLine, cfg) {
   blobWrapper
     .append("path")
     .attr("class", "radarStroke")
-    .attr("d", function (d, i) {
-      return radarLine(d);
-    })
+    .attr("d", (d, i) => radarLine(d))
     .style("stroke-width", cfg.strokeWidth + "px")
-    .style("stroke", function (d, i) {
-      return cfg.color[i];
-    })
+    .style("stroke", (d, i) => cfg.color[i])
     .style("fill", "none")
     .style("filter", "url(#glow)");
 }
@@ -358,22 +349,14 @@ function createBlobOutlines(blobWrapper, radarLine, cfg) {
 function appendBlobCircles(blobWrapper, cfg, rScale, angleSlice) {
   blobWrapper
   .selectAll(".radarCircle")
-  .data(function (d, i) {
-    return d;
-  })
+  .data((d, i) => d)
   .enter()
   .append("circle")
   .attr("class", "radarCircle")
   .attr("r", cfg.dotRadius)
-  .attr("cx", function (d, i) {
-    return rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2);
-  })
-  .attr("cy", function (d, i) {
-    return rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2);
-  })
-  .style("fill", function (d, i, j) {
-    return cfg.color[j];
-  })
+  .attr("cx", (d, i) => rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2))
+  .attr("cy", (d, i) => rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
+  .style("fill", "black")
   .style("fill-opacity", 0.8);
 }
 
@@ -391,32 +374,26 @@ function appendInvisibleCircles(blobCircleWrapper, cfg, rScale, angleSlice, tool
   //Append a set of invisible circles on top for the mouseover pop-up
   blobCircleWrapper
     .selectAll(".radarInvisibleCircle")
-    .data(function (d, i) {
-      return d;
-    })
+    .data((d, i) => d)
     .enter()
     .append("circle")
     .attr("class", "radarInvisibleCircle")
     .attr("r", cfg.dotRadius * 1.5)
-    .attr("cx", function (d, i) {
-      return rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2);
-    })
-    .attr("cy", function (d, i) {
-      return rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2);
-    })
+    .attr("cx", (d, i) => rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2))
+    .attr("cy", (d, i) => rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
     .style("fill", "none")
     .style("pointer-events", "all")
     .on("mouseover", function (d, i) {
       let newX = parseFloat(d3.select(this).attr("cx")) - 10;
       let newY = parseFloat(d3.select(this).attr("cy")) - 10;
-
       tooltip
         .attr("x", newX)
         .attr("y", newY)
-        .text(d.value)
+        .text(i.actualValue)
         .transition()
         .duration(200)
-        .style("opacity", 1);
+        .style("opacity", 1)
+        .style("fill", "white");
     })
     .on("mouseout", function () {
       tooltip.transition().duration(200).style("opacity", 0);
@@ -428,7 +405,6 @@ function setupHoverTooltip(g) {
   return g
     .append("text")
     .attr("class", "tooltip")
-    .style("opacity", 0);
 }
 
 export default RadarChart;

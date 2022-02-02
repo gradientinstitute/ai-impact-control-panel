@@ -59,7 +59,7 @@ export function PairwisePane({}) {
         const ddash = {
           left: d[0], right: d[1]
         };
-        console.log(ddash);
+        // console.log(ddash);
         setCandidates(ddash);
       }
     }
@@ -82,7 +82,7 @@ export function PairwisePane({}) {
         const ddash = {
           left: d[0], right: d[1]
         };
-        console.log(ddash);
+        // console.log(ddash);
         setCandidates(ddash);
       }
     }
@@ -152,14 +152,6 @@ export function PairwisePane({}) {
         leftName={candidates.left.name} 
         rightName={candidates.right.name}
       />
-
-      <VisualiseRadar
-        metadata={metadata}
-        leftValues={candidates.left.values} 
-        rightValues={candidates.right.values} 
-        leftName={candidates.left.name} 
-        rightName={candidates.right.name}
-      />  
     </div>
   );
 }
