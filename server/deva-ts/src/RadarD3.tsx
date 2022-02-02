@@ -8,12 +8,12 @@ import { useRecoilValue } from "recoil";
 
 export function VisualiseData({metadata, leftValues, rightValues, leftName, rightName}) {
   const ranges = useRecoilValue(maxRangesState);
-  const data = parseData({metadata, leftValues, rightValues, ranges});
+  const data = parseData({metadata, leftValues, rightValues, ranges, leftName, rightName});
   return RadarChart({data, ranges});   
 }
 
 // Returns data required by the Radar Chart in the right format
-function parseData({metadata, leftValues, rightValues, ranges}) {
+function parseData({metadata, leftValues, rightValues, ranges, leftName, rightName}) {
   let leftData = [];
   let rightData = []; 
   for (const [uid, x] of Object.entries(metadata.metrics)) {
@@ -25,11 +25,13 @@ function parseData({metadata, leftValues, rightValues, ranges}) {
     const valLeft = lowerIsBetter ? (max - leftValues[uid]) : (max - leftValues[uid]);
     const valRight = lowerIsBetter ? (max - rightValues[uid]) : (max - rightValues[uid]);
     leftData.push({
+      "legend" : leftName,
       "axis" : u.name, 
       "value" : valLeft, 
       "actualValue" : leftValues[uid] * sign,
     }); 
     rightData.push({
+      "legend" : rightName,
       "axis" : u.name, 
       "value" : valRight, 
       "actualValue" : rightValues[uid] * sign,
@@ -71,7 +73,6 @@ function DrawRadarChart(id, data, svg, ranges) {
 
   // names axes
   var allAxis = data[0].map((val) => val.axis); // replace name with .name
-  console.log("DATA0", data[0])
   var total = allAxis.length;
 
   // outermost circle and formatting
@@ -101,6 +102,7 @@ function DrawRadarChart(id, data, svg, ranges) {
   appendBlobBackgrounds(blobWrapper, radarLine, cfg);
   createBlobOutlines(blobWrapper, radarLine, cfg);
   appendBlobCircles(blobWrapper, cfg, rScale, angleSlice);
+  appendLegend(svg, cfg, data);
 
   //////// APPEND INVISIBLE CIRCLES FOR TOOLTP ///////////
   var blobCircleWrapper = getBlobCircleWrapper(g, data);
@@ -317,16 +319,19 @@ function appendBlobBackgrounds(blobWrapper, radarLine, cfg) {
     .style("fill", (d, i) => cfg.color[i])
     .style("fill-opacity", cfg.opacityArea)
     .on("mouseover", function (d, i) {
-      //Dim all blobs
+      // Dim all blobs
       d3.selectAll(".radarArea")
         .transition()
         .duration(200)
         .style("fill-opacity", 0.1);
-      //Bring back the hovered over blob
-      d3.select(this).transition().duration(200).style("fill-opacity", 0.7);
+      // Bring back the hovered over blob
+      d3.select(this)
+        .transition()
+        .duration(200)
+        .style("fill-opacity", 0.7);
     })
     .on("mouseout", function () {
-      //Bring back all blobs
+      // Bring back all blobs
       d3.selectAll(".radarArea")
         .transition()
         .duration(200)
@@ -405,6 +410,40 @@ function setupHoverTooltip(g) {
   return g
     .append("text")
     .attr("class", "tooltip")
+}
+
+function appendLegend(svg, cfg, data) {
+  svg
+    .append("circle")
+    .attr("cx",100)
+    .attr("cy",30)
+    .attr("r", 6)
+    .style("fill", (d, i) => cfg.color[0])
+
+  svg
+    .append("circle")
+    .attr("cx",100)
+    .attr("cy",60)
+    .attr("r", 6)
+    .style("fill", (d, i) => cfg.color[1])
+  
+  svg
+    .append("text")
+    .attr("x", 120)
+    .attr("y", 30)
+    .text(data[0].map((val) => val.legend).find(x => x)) // data[0].map((val) => val.axis)
+    .style("font-size", "15px")
+    .style("fill", "white")
+    .attr("alignment-baseline","middle")
+
+  svg
+    .append("text")
+    .attr("x", 120)
+    .attr("y", 60)
+    .text(data[1].map((val) => val.legend).find(x => x))
+    .style("font-size", "15px")
+    .style("fill", "white")
+    .attr("alignment-baseline","middle")  
 }
 
 export default RadarChart;
