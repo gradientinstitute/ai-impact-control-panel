@@ -131,6 +131,10 @@ export function PairwisePane({}) {
     return result;
   }
 
+  const values = {}
+  values[candidates.left.name] = candidates.left.values;
+  values[candidates.right.name] = candidates.right.values
+
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 
       gap-y-6 grid-cols-1 text-center items-center">
@@ -147,10 +151,7 @@ export function PairwisePane({}) {
       />
       <VisualiseData
         metadata={metadata}
-        leftValues={candidates.left.values} 
-        rightValues={candidates.right.values} 
-        leftName={candidates.left.name} 
-        rightName={candidates.right.name}
+        values={values}
       />
     </div>
   );

@@ -6,47 +6,45 @@ import _ from "lodash";
 import { maxRangesState } from "./ConstrainScrollbar"
 import { useRecoilValue } from "recoil";
 
-export function VisualiseData({metadata, leftValues, rightValues, leftName, rightName}) {
+export function VisualiseData({metadata, values}) {
   const ranges = useRecoilValue(maxRangesState);
-  const data = parseData({metadata, leftValues, rightValues, ranges, leftName, rightName});
+  const data = parseData({metadata, values, ranges});
   return RadarChart({data});   
 }
 
 // Returns data required by the Radar Chart in the right format
-function parseData({metadata, leftValues, rightValues, ranges, leftName, rightName}) {
-  let leftData = [];
-  let rightData = []; 
-  for (const [uid, x] of Object.entries(metadata.metrics)) {
-    const u = x as any;
-    const lowerIsBetter = u.lowerIsBetter;
-    const sign = lowerIsBetter ? 1 : -1;
+// Values should be in format 
+// {"candidateName": {uid1: 3, uid2: 4..}, "candidateName2" : ...}
+function parseData({metadata, values, ranges}) {
+  let parsedData = [];
+  for (const [name, vals] of Object.entries(values)) {
+    let d = [];
 
-    // Determine where the point should be on the scale by calculating 
-    // the percenage that the value is relative to its max/min bounds
-    const min = ranges[uid][0];
-    const max = ranges[uid][1];
-    const valLeft = getPercentage(leftValues[uid], min, max, lowerIsBetter)
-    const valRight = getPercentage(rightValues[uid], min, max, lowerIsBetter)
+    for (const [uid, x] of Object.entries(metadata.metrics)) {
+      const u = x as any;
+      const lowerIsBetter = u.lowerIsBetter;
+      const sign = lowerIsBetter ? 1 : -1;
+  
+      // Determine where the point should be on the scale by calculating 
+      // the percenage that the value is relative to its max/min bounds
+      const min = ranges[uid][0];
+      const max = ranges[uid][1];
+      const val = getPercentage(vals[uid], min, max, lowerIsBetter);
 
-    leftData.push({
-      "legend" : leftName,
-      "axis" : u.name, 
-      "value" : valLeft, 
-      "actualValue" : leftValues[uid] * sign,
-      "rangeMin" : min,
-      "rangeMax" : max,
-    });
+      d.push({
+        "legend" : name,
+        "axis" : u.name, 
+        "value" : val, 
+        "actualValue" : vals[uid] * sign,
+        "rangeMin" : min,
+        "rangeMax" : max,
+      });
+    }
 
-    rightData.push({
-      "legend" : rightName,
-      "axis" : u.name, 
-      "value" : valRight, 
-      "actualValue" : rightValues[uid] * sign,
-      "rangeMin" : u.range_min,
-      "rangeMax" : u.range_max,
-    });
+    parsedData.push(d);
   }
-  return [leftData, rightData];
+
+  return parsedData;
 }
 
 function getPercentage(val, min, max, lowerIsBetter) {
@@ -430,37 +428,24 @@ function setupHoverTooltip(g) {
 }
 
 function appendLegend(svg, cfg, data) {
-  svg
-    .append("circle")
-    .attr("cx",100)
-    .attr("cy",30)
-    .attr("r", 6)
-    .style("fill", (d, i) => cfg.color[0])
-
-  svg
-    .append("circle")
-    .attr("cx",100)
-    .attr("cy",60)
-    .attr("r", 6)
-    .style("fill", (d, i) => cfg.color[1])
-  
-  svg
-    .append("text")
-    .attr("x", 120)
-    .attr("y", 30)
-    .text(data[0].map((val) => val.legend).find(x => x)) // data[0].map((val) => val.axis)
-    .style("font-size", "15px")
-    .style("fill", "white")
-    .attr("alignment-baseline","middle")
-
-  svg
-    .append("text")
-    .attr("x", 120)
-    .attr("y", 60)
-    .text(data[1].map((val) => val.legend).find(x => x))
-    .style("font-size", "15px")
-    .style("fill", "white")
-    .attr("alignment-baseline","middle")  
+  for (const x in data) {
+    const i = parseInt(x);
+    svg
+      .append("circle")
+      .attr("cx", 100)
+      .attr("cy", 30 * (i + 1))
+      .attr("r", 6)
+      .style("fill", cfg.color[i])
+      
+    svg
+      .append("text")
+      .attr("x", 120)
+      .attr("y", 30 * (i + 1))
+      .text(data[i].map((val) => val.legend).find(x => x))
+      .style("font-size", "15px")
+      .style("fill", "white")
+      .attr("alignment-baseline","middle")
+  }
 }
 
 export default RadarChart;
