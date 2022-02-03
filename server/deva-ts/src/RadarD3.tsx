@@ -3,19 +3,13 @@
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import _ from "lodash";
-import {maxRangesState} from "./ConstrainScrollbar"
+import { maxRangesState } from "./ConstrainScrollbar"
 import { useRecoilValue } from "recoil";
 
 export function VisualiseData({metadata, leftValues, rightValues, leftName, rightName}) {
   const ranges = useRecoilValue(maxRangesState);
   const data = parseData({metadata, leftValues, rightValues, ranges, leftName, rightName});
-  return RadarChart({data, ranges});   
-}
-
-function getPercentage(val, min, max, lowerIsBetter) {
-  let x = ((val - min) / (max - min)) * 100;
-  x = lowerIsBetter ? x : 100 - x;
-  return x;
+  return RadarChart({data});   
 }
 
 // Returns data required by the Radar Chart in the right format
@@ -55,7 +49,14 @@ function parseData({metadata, leftValues, rightValues, ranges, leftName, rightNa
   return [leftData, rightData];
 }
 
-function RadarChart({data, ranges}) {
+function getPercentage(val, min, max, lowerIsBetter) {
+  let x = ((val - min) / (max - min)) * 100;
+  x = lowerIsBetter ? x : 100 - x;
+  return x;
+}
+
+// Create the Spider Plot / Radar Chart
+function RadarChart({data}) {
   const svgRef = useRef();
   useEffect(() => {
     if (svgRef.current) {
@@ -65,7 +66,7 @@ function RadarChart({data, ranges}) {
   }, [svgRef]);
 
   const drawChart = (svg) => {
-    DrawRadarChart(".radarChart", data, svg, ranges);
+    DrawRadarChart(".radarChart", data, svg);
   };
 
   return (
@@ -79,16 +80,17 @@ function RadarChart({data, ranges}) {
   );
 }
 
-function DrawRadarChart(id, data, svg, ranges) {
+function DrawRadarChart(id, data, svg) {
+
+  /////////////////////////// SET UP //////////////////////////////
 
   const cfg = getConfiguration();
   const width = cfg.w;
   const margin = cfg.margin;
-  // const maxValue = getMaxValue(cfg.maxValue, data);
   const maxValue = 100; // have all values as a percentage of 100
 
   // names axes
-  var allAxis = data[0].map((val) => val.axis); // replace name with .name
+  var allAxis = data[0].map((val) => val.axis);
   var total = allAxis.length;
 
   // outermost circle and formatting
@@ -99,21 +101,25 @@ function DrawRadarChart(id, data, svg, ranges) {
   var rScale = d3.scaleLinear().range([0, radius]).domain([0, maxValue]);
 
   /////////////// CREATE CONTAINER SVG AND G //////////////////
-  initiateRadarSVG(svg, cfg, id);
-  var g = initiategElement(svg, cfg);
+
+  initialiseRadarSVG(svg, cfg, id);
+  var g = initialiseGElement(svg, cfg);
   addGlowFilter(g);
 
   /////////////// DRAW THE CIRCULAR GRID /////////////////////
+  
   var axisGrid = g.append("g").attr("class", "axisWrapper");
   drawBackgroundCircles(axisGrid, cfg, radius);
   // addLevelLabels(axisGrid, cfg, radius, maxValue);
 
   ////////////////// DRAW THE AXES //////////////////////////
+  
   var axis = drawRadialLines(axisGrid, allAxis, rScale, maxValue, angleSlice);
   appendAxisLabels(axis, cfg, svg, rScale, maxValue, angleSlice, width, margin);
   
   ///////////// DRAW THE RADAR CHART BLOBS ////////////////
-  var radarLine = getRadarLine(cfg, rScale, angleSlice, ranges);
+  
+  var radarLine = getRadarLine(cfg, rScale, angleSlice);
   var blobWrapper = createBlobWrapper(g, data);
   appendBlobBackgrounds(blobWrapper, radarLine, cfg);
   createBlobOutlines(blobWrapper, radarLine, cfg);
@@ -121,9 +127,11 @@ function DrawRadarChart(id, data, svg, ranges) {
   appendLegend(svg, cfg, data);
 
   //////// APPEND INVISIBLE CIRCLES FOR TOOLTP ///////////
+  
   var blobCircleWrapper = getBlobCircleWrapper(g, data);
   var tooltip = setupHoverTooltip(g);
   appendInvisibleCircles(blobCircleWrapper, cfg, rScale, angleSlice, tooltip);
+
 }
 
 // Helper function to wrap SVG text to fit on multiple lines
@@ -196,7 +204,7 @@ function getConfiguration() {
   return config;
 }
 
-function initiateRadarSVG(svg, cfg, id) {
+function initialiseRadarSVG(svg, cfg, id) {
   svg.selectAll("*").remove();
   svg
   .attr("width", cfg.w + cfg.margin.left + cfg.margin.right)
@@ -204,7 +212,7 @@ function initiateRadarSVG(svg, cfg, id) {
   .attr("class", "radar" + id);
 }
 
-function initiategElement(svg, cfg) {
+function initialiseGElement(svg, cfg) {
   return svg
     .append("g")
     .attr(
@@ -296,7 +304,7 @@ function appendAxisLabels(axis, cfg, svg, rScale, maxValue, angleSlice, width, m
     .call(wrap, cfg.wrapWidth);
 }
 
-function getRadarLine(cfg, rScale, angleSlice, ranges) {
+function getRadarLine(cfg, rScale, angleSlice) {
   var radarLine = d3
   .lineRadial()
   .curve(d3.curveLinearClosed)
