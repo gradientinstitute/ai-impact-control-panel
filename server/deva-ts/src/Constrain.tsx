@@ -15,6 +15,8 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
   blockedStatusState, blockingMetricsState, blockingStates, 
   unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';
 
+import { radarDataState, VisualiseData } from './RadarD3';
+
 const HandleColours = {
   0: 'white', // default
   1: 'gray',  // blocked
@@ -56,10 +58,13 @@ export function ConstraintPane({}) {
   // the actual/current contraints as defined by the position of scrollbars
 
   // current constraints done by metric
-  const [_costraints, setConstraints] = useRecoilState(constraintsState);
+  const [constraints, setConstraints] = useRecoilState(constraintsState);
 
   // all candidates sent to us by the server
   const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+
+  const metadata = useRecoilValue(metadataState);
+  const [radarData, setRadarData] = useRecoilState(radarDataState);
 
   // initial loading of candidates
   useEffect(() => {
@@ -79,9 +84,16 @@ export function ConstraintPane({}) {
     setConstraints(maxRanges)
   }, [maxRanges]);
 
+  useEffect(() => {
+    const values = {}
+    values["constraints"] = _.mapValues(constraints, x => x[1]);
+    setRadarData(values)
+  }, [constraints]);
+
   if (currentCandidates === null) {
     return (<div>Loading...</div>);
   }
+
 
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
@@ -94,6 +106,9 @@ export function ConstraintPane({}) {
       </div>
       <div className="width-1/4">
         <StartButton />
+      </div>
+      <div>
+        <VisualiseData/>
       </div>
     </div>
   );

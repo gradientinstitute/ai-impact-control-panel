@@ -4,48 +4,62 @@ import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import _ from "lodash";
 import { maxRangesState } from "./ConstrainScrollbar"
-import { useRecoilValue } from "recoil";
+import { atom, selector, useRecoilValue } from "recoil";
+import { metadataState } from './Base';
 
-export function VisualiseData({metadata, values}) {
-  const ranges = useRecoilValue(maxRangesState);
-  const data = parseData({metadata, values, ranges});
-  return RadarChart({data});   
+export function VisualiseData({}){
+  const data = useRecoilValue(radarParsedDataState);
+  const chart = RadarChart({data});
+  console.log("CHART", chart, data)
+  return chart;  
 }
+
+export const radarDataState = atom({
+  key: 'radarData',
+  default: null,
+})
 
 // Returns data required by the Radar Chart in the right format
-// Values should be in format 
-// {"candidateName": {uid1: 3, uid2: 4..}, "candidateName2" : ...}
-function parseData({metadata, values, ranges}) {
-  let parsedData = [];
-  for (const [name, vals] of Object.entries(values)) {
-    let d = [];
+export const radarParsedDataState = selector({
+  key: 'radarParsedData',
+  get: ({get}) => {
+    const metadata = get(metadataState);
+    // Values should be in format 
+    // {"candidateName": {uid1: 3, uid2: 4..}, "candidateName2" : ...}
+    const values = get(radarDataState);   
+    const ranges = get(maxRangesState);
 
-    for (const [uid, x] of Object.entries(metadata.metrics)) {
-      const u = x as any;
-      const lowerIsBetter = u.lowerIsBetter;
-      const sign = lowerIsBetter ? 1 : -1;
+    let parsedData = [];
+    for (const [name, vals] of Object.entries(values)) {
+      let d = [];
   
-      // Determine where the point should be on the scale by calculating 
-      // the percenage that the value is relative to its max/min bounds
-      const min = ranges[uid][0];
-      const max = ranges[uid][1];
-      const val = getPercentage(vals[uid], min, max, lowerIsBetter);
-
-      d.push({
-        "legend" : name,
-        "axis" : u.name, 
-        "value" : val, 
-        "actualValue" : vals[uid] * sign,
-        "rangeMin" : min,
-        "rangeMax" : max,
-      });
+      for (const [uid, x] of Object.entries(metadata.metrics)) {
+        const u = x as any;
+        const lowerIsBetter = u.lowerIsBetter;
+        const sign = lowerIsBetter ? 1 : -1;
+    
+        // Determine where the point should be on the scale by calculating 
+        // the percenage that the value is relative to its max/min bounds
+        const min = ranges[uid][0];
+        const max = ranges[uid][1];
+        const val = getPercentage(vals[uid], min, max, lowerIsBetter);
+  
+        d.push({
+          "legend" : name,
+          "axis" : u.name, 
+          "value" : val, 
+          "actualValue" : vals[uid] * sign,
+          "rangeMin" : min,
+          "rangeMax" : max,
+        });
+      }
+  
+      parsedData.push(d);
     }
-
-    parsedData.push(d);
+  
+    return parsedData;
   }
-
-  return parsedData;
-}
+});
 
 function getPercentage(val, min, max, lowerIsBetter) {
   let x = ((val - min) / (max - min)) * 100;
@@ -59,13 +73,9 @@ function RadarChart({data}) {
   useEffect(() => {
     if (svgRef.current) {
       const svg = d3.select(svgRef.current);
-      drawChart(svg);
+      DrawRadarChart(".radarChart", data, svg);
     }
-  }, [svgRef]);
-
-  const drawChart = (svg) => {
-    DrawRadarChart(".radarChart", data, svg);
-  };
+  });
 
   return (
     <div className="w-auto flex space-x-16">
