@@ -51,8 +51,6 @@ export const rangesState = selector({
       return null;
     }
 
-    // TODO: change default range -> range min/max
-    // const ranges = [metadata.metrics.range_min, metadata.metrics.range_max]
     const ranges = _.mapValues(metadata.metrics, (val, _obj) => {
         const min = val.range_min
         const max = val.range_max

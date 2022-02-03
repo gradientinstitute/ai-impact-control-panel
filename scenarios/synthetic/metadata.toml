@@ -72,7 +72,7 @@ description = "Ensure that candidates shortlisted are suitable."
     countable = true
 
     range_min = 0
-    range_max = 100
+    range_max = 1
 
 [metrics.Zmin]
     name = "feature use"
