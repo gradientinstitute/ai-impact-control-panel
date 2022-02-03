@@ -129,12 +129,12 @@ def run_bounds_eliciter(sample, table, oracle, ref, n_samples):
         if answer:
             # Answer automatically
             label = oracle(sampler.choice)
-            sampler.observe(label)
 
         else:
             # Answer based on user's input
             label = input().lower() not in base
-            sampler.observe(label)
+
+        sampler.put(label)
 
         if label:
             print("Choice: Oracle (ACCEPTED) candidate.\n\n")
@@ -149,7 +149,7 @@ def run_bounds_eliciter(sample, table, oracle, ref, n_samples):
     print("Experimental results ------------------")
     accept = oracle(table)
     accept_rt = accept.mean()
-    pred = sampler.guess(table)
+    pred = sampler.predict(table)
     acc = np.mean(accept == pred)
     print(f"True preference would accept {accept_rt:.0%}\
             of real candidates.")
