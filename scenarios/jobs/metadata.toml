@@ -56,7 +56,6 @@ role recommendations more than average."""
     action = "recommend{s}"
     lowerIsBetter = false
     displayDecimals = 0
-    countable = true
     type = "quantitative" # type determines how options are presented to the user
                           # omitting type sets the default to quantitative
 
@@ -77,7 +76,6 @@ role recommendations more than average."""
     suffix = "candidates per 100 suitable"
     action = "missed"
     displayDecimals = 0
-    countable = true
 
     range_min = 0
     range_max = 100
@@ -96,7 +94,6 @@ role recommendations more than average."""
     suffix = "fewer suitable women than the average per 100 candidates"
     action = "recommends"
     displayDecimals = 0
-    countable = true
 
     range_min = 0
     range_max = 100

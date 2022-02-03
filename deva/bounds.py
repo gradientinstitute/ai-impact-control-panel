@@ -14,13 +14,22 @@ from sklearn.neighbors import KNeighborsClassifier
 # TODO: elicit non-linear boundaries (provided client can receive them)
 
 class BoundsEliciter:
-    """Base class for bounds elicitation algorithms."""
+    """
+    Base class for bounds elicitation algorithms.
+
+    Differs from a standard Eliciter by exposing a *model* rather than a
+    candidate - hence it has methods predict and predict_proba rather than
+    a result object.
+    """
 
     # Just a promise that inheriting classes will have these members
-    def observe(self, label):
+    def put(self, label):
+        """Input a user decision."""
         raise NotImplementedError
 
-    def guess(self, q):
+    @property
+    def terminated(self):
+        """Check whether the eliciter is terminated."""
         raise NotImplementedError
 
     def check_valid(self, q):
@@ -28,11 +37,12 @@ class BoundsEliciter:
         # could be something like (choice < 0).any():
         return True  # placeholder
 
-    def predict_prob(self, n_samples):
-        raise NotImplementedError
+    def predict(self, query):
+        """Provide a "best guess" prediction."""
+        return self.predict_proba(query) > 0.5
 
-    @property
-    def terminated(self):
+    def predict_proba(self, query):
+        """Provide a probility estimate."""
         raise NotImplementedError
 
 
@@ -85,7 +95,8 @@ class KNeighborsEliciter(BoundsEliciter):
         self._update()
 
     # input
-    def observe(self, label):
+    def put(self, label):
+        """Accept a user input."""
         self.X.append(self.choice)
         self.y.append(label)
 
@@ -122,17 +133,20 @@ class KNeighborsEliciter(BoundsEliciter):
 
         return
 
-    def guess(self, q):
+    def predict(self, queries):
+        """Estimate whether the query points are acceptible."""
         r = 10
-        return np.logical_and((np.array(distance(q, self.ref)) >= r),
-                              is_below(q, self.ref))
+        return np.logical_and((np.array(distance(queries, self.ref)) >= r),
+                              is_below(queries, self.ref))
 
     @property
     def terminated(self):
+        """Check whether the sampler is terminated."""
         return self._step > self.steps
 
-    def predict_prob(self, test_samp):
-        probabilities = self.neigh.predict_proba(test_samp)
+    def predict_prob(self, queries):
+        """Estimate the probability that the queries are acceptable."""
+        probabilities = self.neigh.predict_proba(queries)
         return probabilities
 
 
@@ -194,8 +208,8 @@ class LinearActive(BoundsEliciter):
         self._update()
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
-    # input
-    def observe(self, label):
+    def put(self, label):
+        """Input a user decision."""
         self.X.append(self.choice)
         self.y.append(label)
 
@@ -246,7 +260,7 @@ class LinearActive(BoundsEliciter):
 
         return
 
-    def guess(self, q):
+    def predict(self, q):
         return ((q - self.ref) @ self.w < 0)
 
     @property
@@ -260,7 +274,7 @@ class LinearActive(BoundsEliciter):
             )
         )
 
-    def predict_prob(self, test_samp):
+    def predict_proba(self, test_samp):
         probabilities = self.lr.predict_proba(test_samp)
         return probabilities
 
@@ -311,7 +325,7 @@ class LinearRandom(BoundsEliciter):
 
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
-    def observe(self, label):
+    def put(self, label):
         self.X.append(self.choice)
         self.y.append(label)
 
@@ -337,14 +351,14 @@ class LinearRandom(BoundsEliciter):
         self._step += 1
         return
 
-    def guess(self, q):
+    def predict(self, q):
         return ((q - self.ref) @ self.w < 0)
 
     @property
     def terminated(self):
         return self._step > self.steps
 
-    def predict_prob(self, test_samp):
+    def predict_proba(self, test_samp):
         probabilities = self.lr.predict_proba(test_samp)
 
         return probabilities
@@ -376,7 +390,7 @@ class PlaneSampler(BoundsEliciter):
         self._update()
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
-    def observe(self, label):
+    def put(self, label):
         # if ref+a is a no, ref-a is a yes
         if label:
             self.X.append(2. * self.ref - self.choice)
@@ -411,14 +425,14 @@ class PlaneSampler(BoundsEliciter):
         self._step += 1
         return
 
-    def guess(self, q):
-        return ((q - self.ref) @ self.w < 0)
-
     @property
     def terminated(self):
         return self._step > self.steps
 
-    def predict_prob(self, test_samp):
+    def predict(self, q):
+        return ((q - self.ref) @ self.w < 0)
+
+    def predict_proba(self, test_samp):
         probabilities = [0.5] * len(test_samp)
         return probabilities
 

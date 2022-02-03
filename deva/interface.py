@@ -38,46 +38,6 @@ def plural(text, x):
     return text.format(s=s)
 
 
-def compare(sys1, sys2, meta, attribute):
-    """Compare an attribute between two systems."""
-    info = meta[attribute]
-    v1 = sys1[attribute]
-    v2 = sys2[attribute]
-    name1 = sys1.name
-    # name2 = sys2.name
-
-    rtol = 1.05  # 5% difference
-    atol = 0  # single count difference
-
-    diffv = abs(v1 - v2)
-    diff = readout(diffv, info)
-    action = info["action"].format(s="")
-    name = info["name"].lower()
-    if "(" in name:
-        name = name.split("(")[1].split(")")[0]
-
-    descr = name + " " + info["suffix"]  # heuristic repair
-    focus = "The systems"
-
-    # Which direction is better doesn't matter if the unit format is consistent
-    if v1 > v2 * rtol + atol:
-        focus = name1
-        action = info["action"].format(s="s")  # single focus system
-        diff += " " + info["more"]
-    elif v2 > v1 * rtol + atol:
-        focus = name1
-        diff += " " + info["less"]
-        action = info["action"].format(s="s")  # single focus system
-    else:
-        if v1 == v2:
-            diff = "the same"
-        else:
-            diff = "a similar"
-        diff += f" {info['countable']} of"
-
-    return f"{focus} {action} {diff} {descr}."
-
-
 def text(value, meta):
 
     if isinstance(value, tuple):

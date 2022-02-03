@@ -127,7 +127,7 @@ def get_bounds_choice(scenario):
 
         # Only pass valid choices on to the eliciter
         if (not sampler.terminated and valid):
-            sampler.observe(x == sampler.query.name)
+            sampler.put(x == sampler.query.name)
         else:
             print("Ignoring input")
 
