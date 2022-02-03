@@ -151,7 +151,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const [_, setCurrentSelection] = useRecoilState(currentSelectionState);
 
-  const all = useRecoilValue(allCandidatesState);
+//   const all = useRecoilValue(allCandidatesState);
   const val = constraints[uid][1];
 
   function onBeforeChange() {

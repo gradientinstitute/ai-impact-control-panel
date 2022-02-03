@@ -1,4 +1,11 @@
-precision = 50
-fnr = 50
-fnr_difference = 50
-privacy_level = 0
+[in_action]
+    precision = 100
+    fnr = 100
+    fnr_difference = 0
+    privacy_level = 2
+
+[industry_average]
+    precision = 60
+    fnr = 50
+    fnr_difference = 10
+    privacy_level = 2

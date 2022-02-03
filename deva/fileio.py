@@ -96,7 +96,8 @@ def load_scenario(scenario_name, pfilter=True):
         for val in models.values():
             val[f] = -val[f]
 
-        baseline[f] = -baseline[f]
+        for i in baseline:
+            baseline[i][f] = -baseline[i][f]
 
     scenario["baseline"] = baseline
 

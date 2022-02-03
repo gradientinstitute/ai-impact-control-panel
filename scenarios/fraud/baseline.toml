@@ -1,7 +1,13 @@
-# resembles a random choice
-fp = 5000
-fn = 300
-fp_cvar = 3.0
-revenue = 2000
-eo_disadvantage_rate = 0.1
+[in_action]
+    fp = 0
+    fn = 589
+    fp_cvar = 0.0
+    revenue = 3521
+    eo_disadvantage_rate = 0
 
+[industry_average]
+    fp = 859
+    fn = 468
+    fp_cvar = 1.5024752475247525
+    revenue = 3872
+    eo_disadvantage_rate = 0
