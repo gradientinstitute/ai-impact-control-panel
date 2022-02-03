@@ -22,7 +22,7 @@ export function DrawRadarChart(id, data, svg) {
   drawBackgroundCircles(axisGrid, cfg, radius);
   const axis = drawRadialLines(axisGrid, axes, radiusScale, maxVal, angleSlice);
   appendAxisLabels(axis, cfg, radiusScale, maxVal, angleSlice);
-  
+
   /* VISUALISE DATA */
   const radarLine = getRadarLine(cfg, radiusScale, angleSlice);
   const blobWrapper = createBlobWrapper(g, data);
@@ -66,7 +66,7 @@ function getConfiguration() {
   };
   return defaultConfig;
 }
-  
+
 ////////////////////// BASE CHART /////////////////////////////////
 
 function initialiseRadarSVG(svg, cfg, id) {
@@ -91,7 +91,7 @@ function addGlowFilter(g) {
   feMerge.append("feMergeNode").attr("in", "coloredBlur");
   feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 }
-  
+
 function drawBackgroundCircles(axisGrid, cfg, radius) {
   axisGrid
     .selectAll(".levels")
@@ -174,44 +174,42 @@ function appendBlobBackgrounds(blobWrapper, radarLine, cfg) {
   blobWrapper
     .append("path")
     .attr("class", "radarArea")
-    .attr("d", (d) => radarLine(d))
-    .style("fill", (_, i) => cfg.color[i])
+    .attr("d", (d, i) => radarLine(d))
+    .style("fill", (d, i) => cfg.color[i])
     .style("fill-opacity", cfg.opacityArea)
-    .on("mouseover", () => dimSelectBlobs(this))
-    .on("mouseout", () => undimAllBlobs(cfg));
-}
-
-// Dim blobs hat are not hovered over
-function dimSelectBlobs(x) {
-  d3.selectAll(".radarArea")
-    .transition()
-    .duration(200)
-    .style("fill-opacity", 0.1);
-  d3.select(x)
-    .transition()
-    .duration(200)
-    .style("fill-opacity", 0.7);
-}
-
-function undimAllBlobs(cfg) {
-  d3.selectAll(".radarArea")
-  .transition()
-  .duration(200)
-  .style("fill-opacity", cfg.opacityArea);
+    .on("mouseover", function (d, i) {
+      // dim all blobs
+      d3.selectAll(".radarArea")
+        .transition()
+        .duration(200)
+        .style("fill-opacity", 0.1);
+      // except the blob that is being hovered over
+      d3.select(this)
+        .transition()
+        .duration(200)
+        .style("fill-opacity", 0.7);
+    })
+    .on("mouseout", function () {
+      // undim all blobs
+      d3.selectAll(".radarArea")
+        .transition()
+        .duration(200)
+        .style("fill-opacity", cfg.opacityArea);
+    });
 }
 
 function createBlobOutlines(blobWrapper, radarLine, cfg) {
   blobWrapper
     .append("path")
     .attr("class", "radarStroke")
-    .attr("d", (d) => radarLine(d))
+    .attr("d", (d, i) => radarLine(d))
     .style("stroke-width", cfg.strokeWidth + "px")
-    .style("stroke", (_, i) => cfg.color[i])
+    .style("stroke", (d, i) => cfg.color[i])
     .style("fill", "none")
     .style("filter", "url(#glow)");
 }
-  
-function appendBlobCircles(blobWrapper, cfg, radiusScale, angleSlice) {
+
+function appendBlobCircles(blobWrapper, cfg, rScale, angleSlice) {
   blobWrapper
   .selectAll(".radarCircle")
   .data((d, i) => d)
@@ -219,8 +217,8 @@ function appendBlobCircles(blobWrapper, cfg, radiusScale, angleSlice) {
   .append("circle")
   .attr("class", "radarCircle")
   .attr("r", cfg.dotRadius)
-  .attr("cx", (d, i) => radiusScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2))
-  .attr("cy", (d, i) => radiusScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
+  .attr("cx", (d, i) => rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2))
+  .attr("cy", (d, i) => rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
   .style("fill", "black")
   .style("fill-opacity", 0.8);
 }
@@ -238,20 +236,19 @@ function getBlobCircleWrapper(g, data) {
 }
 
 // append a set of invisible circles on top for the mouseover pop-up
-function appendInvisibleCircles(blobCircleWrapper, cfg, radiusScale, angleSlice, tooltip) {
+function appendInvisibleCircles(blobCircleWrapper, cfg, rScale, angleSlice, tooltip) {
   blobCircleWrapper
     .selectAll(".radarInvisibleCircle")
-    .data((d) => d)
+    .data((d, i) => d)
     .enter()
     .append("circle")
     .attr("class", "radarInvisibleCircle")
     .attr("r", cfg.dotRadius * 1.5)
-    .attr("cx", (d, i) => radiusScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2))
-    .attr("cy", (d, i) => radiusScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
+    .attr("cx", (d, i) => rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2))
+    .attr("cy", (d, i) => rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
     .style("fill", "none")
     .style("pointer-events", "all")
-    .on("mouseover", (_, i) => {
-      // display the actual value of the data point
+    .on("mouseover", function (d, i) {
       let newX = parseFloat(d3.select(this).attr("cx")) - 10;
       let newY = parseFloat(d3.select(this).attr("cy")) - 10;
       tooltip
@@ -263,9 +260,10 @@ function appendInvisibleCircles(blobCircleWrapper, cfg, radiusScale, angleSlice,
         .style("opacity", 1)
         .style("fill", "white");
     })
-    .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
+    .on("mouseout", function () {
+      tooltip.transition().duration(200).style("opacity", 0);
+    });
 }
-
 
 // set up the small tooltip for when you hover over a circle
 function setupHoverTooltip(g) {
@@ -273,7 +271,7 @@ function setupHoverTooltip(g) {
     .append("text")
     .attr("class", "tooltip")
 }
-  
+
 // creates a legend based on the supplied candidates
 function appendLegend(svg, cfg, data) {
   for (const x in data) {
