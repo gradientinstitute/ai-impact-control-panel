@@ -9,9 +9,7 @@ import { metadataState } from './Base';
 
 export function VisualiseData({}){
   const data = useRecoilValue(radarParsedDataState);
-  const chart = RadarChart({data});
-  console.log("CHART", chart, data)
-  return chart;  
+  return RadarChart({data});
 }
 
 export const radarDataState = atom({
@@ -63,8 +61,7 @@ export const radarParsedDataState = selector({
 
 function getPercentage(val, min, max, lowerIsBetter) {
   let x = ((val - min) / (max - min)) * 100;
-  x = lowerIsBetter ? x : 100 - x;
-  return x;
+  return 100 - x;
 }
 
 // Create the Spider Plot / Radar Chart
