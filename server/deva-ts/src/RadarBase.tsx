@@ -11,8 +11,9 @@ export function DrawRadarChart(id, data, svg) {
   const axes = data[0].map((x) => x.axis);
   const maxVal = 100;
   const radius = Math.min(cfg.w / 2, cfg.h / 2);
+  const minRange = radius / cfg.levels;
   const angleSlice = (Math.PI * 2) / axes.length;
-  const radiusScale = d3.scaleLinear().range([0, radius]).domain([0, maxVal]);
+  const radiusScale = d3.scaleLinear().range([minRange, radius]).domain([0, maxVal]);
 
   /* BASE CHART */
   initialiseRadarSVG(svg, cfg, id);
