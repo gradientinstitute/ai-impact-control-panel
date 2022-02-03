@@ -15,7 +15,7 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
   blockedStatusState, blockingMetricsState, blockingStates, 
   unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';
 
-import { radarDataState, VisualiseData } from './RadarD3';
+import { radarDataState, VisualiseData } from './RadarCharts';
 
 const HandleColours = {
   0: 'white', // default

@@ -4,10 +4,10 @@ import axios from 'axios';
 
 import _ from "lodash";
 import {Pane, metadataState, paneState, 
-        resultState, scenarioState, constraintsState} from './Base';
+        resultState, scenarioState } from './Base';
 import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
-import {VisualiseData, radarDataState} from './RadarD3'
+import {VisualiseData, radarDataState} from './RadarCharts'
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
