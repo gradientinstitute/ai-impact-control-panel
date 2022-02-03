@@ -125,7 +125,7 @@ def load_all_metrics(metrics, candidates):
             metrics[u]["type"] = "quantitative"
 
         # compensate higher is better
-        if "lowerIsBetter" in metrics[u]:
+        if "lowerIsBetter" in metrics[u] and "lowerIsBetter" == False:
             if "range_min" in metrics[u] and "range_max" in metrics[u]:
                 range_min = metrics[u]["range_min"]
                 range_max = metrics[u]["range_max"]

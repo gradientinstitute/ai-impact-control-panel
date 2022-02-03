@@ -118,8 +118,8 @@ function QuantitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, 
 
   const sign = lowerIsBetter ? 1 : -1;
 
-  const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + " " + u.suffix;
-  const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + " " + u.suffix;
+  const min_string = u.prefix + " " + (lowerIsBetter ? min : max * (-1)) + " " + u.suffix;
+  const max_string = u.prefix + " " + (lowerIsBetter ? max : min * (-1)) + " " + u.suffix;
 
   const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
   const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
@@ -238,7 +238,7 @@ function StartButton({}) {
       <button className="bg-gray-200 text-black rounded-lg" 
         onClick={() => {setSubmit(true)}}>
         <div className="p-4 text-5xl">
-          Next
+          Save
         </div>
       </button>
   );
