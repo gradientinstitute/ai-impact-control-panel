@@ -1,7 +1,6 @@
 """Loading and parsing candidates and metadata."""
 import os.path
 import os
-import shutil
 from glob import glob
 from deva import elicit
 import toml
@@ -10,6 +9,11 @@ from deva.nice_range import nice_range
 
 
 def repo_root():
+    """
+    Identify root path of the repository.
+
+    Note - assumes the inplace behaviour of a Poetry install.
+    """
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -53,6 +57,7 @@ def autoname(ind):
 
 
 def list_scenarios():
+    """Examine all the scenario folders and extract their metadata."""
     scenarios = glob(os.path.join(repo_root(), "scenarios/*/"))
     metadata_files = {os.path.basename(os.path.normpath(p)): toml.load(
         os.path.join(p, "metadata.toml")) for p in scenarios}
@@ -69,6 +74,7 @@ def _load_baseline(scenario):
 
 
 def load_scenario(scenario_name, pfilter=True):
+    """Load the metadata and candidates of a specific scenario."""
     # Load all scenario files
     scenario_path = os.path.join(repo_root(), "scenarios", scenario_name)
     print("Scanning ", scenario_path)
@@ -108,7 +114,7 @@ def load_scenario(scenario_name, pfilter=True):
         scores = {k: v for k, v in perf.items()}
         candidates.append(elicit.Candidate(name, scores, spec_name))
 
-    load_all_metrics(metrics, candidates)
+    inject_metadata(metrics, candidates)
 
     if "primary_metric" in scenario:
         primary = scenario["primary_metric"]
@@ -118,54 +124,36 @@ def load_scenario(scenario_name, pfilter=True):
     return candidates, scenario
 
 
-def load_all_metrics(metrics, candidates):
-    for u in metrics:
-        if "type" not in metrics[u]:
-            # set default type
-            metrics[u]["type"] = "quantitative"
+def inject_metadata(metrics, candidates):
+    """Inject dynamic metadata after looking at candidates."""
+    for attr, meta in metrics.items():
 
-        # calculate the true range
-        metrics[u]["max"] = max(c[u] for c in candidates)
-        metrics[u]["min"] = min(c[u] for c in candidates)
+        # Fill defaults
+        if "type" not in meta:
+            meta["type"] = "quantitative"
 
-        # set min/max range default using nice_range
-        if "isMetric" not in metrics[u]:
-            (range_min, range_max) = nice_range(metrics[u]["min"],
-                                                metrics[u]["max"])
-            if "range_min" not in metrics[u]:
-                metrics[u]["range_min"] = range_min
-            if "range_max" not in metrics[u]:
-                metrics[u]["range_max"] = range_max
+        if "isMetric" not in meta:
+            meta["isMetric"] = True
 
-        if metrics[u]["type"] == "qualitative":
-            load_qualitative_metric(metrics, u)
-        elif metrics[u]["type"] == "quantitative":
-            load_quantitative_metric(metrics, u)
+        # calculate the attribute range spanned by the candidates
+        meta["min"] = min(c[attr] for c in candidates)
+        meta["max"] = max(c[attr] for c in candidates)
 
+        if meta["type"] == "quantitative":
+            meta["displayDecimals"] = int(meta["displayDecimals"])
 
-def load_qualitative_metric(metrics, u):
-    metrics[u]["displayDecimals"] = None
-    if "lowerIsBetter" not in metrics[u]:
-        metrics[u]["lowerIsBetter"] = True
+            # the user may set fixed ranges (with nice defaults if they dont)
+            (range_min, range_max) = nice_range(meta["min"], meta["max"])
+            if "range_min" not in meta:
+                meta["range_min"] = range_min
+            if "range_max" not in meta:
+                meta["range_max"] = range_max
 
+            if "lowerIsBetter" not in meta:
+                meta["lowerIsBetter"] = True
 
-def load_quantitative_metric(metrics, u):
-    metrics[u]["displayDecimals"] = int(metrics[u]["displayDecimals"])
-    if "countable" not in metrics[u]:
-        # auto-fill optional field
-        metrics[u]["countable"] = (
-            "number" if metrics[u]["displayDecimals"] == 0 else "amount")
-    if "lowerIsBetter" not in metrics[u]:
-        metrics[u]["lowerIsBetter"] = True
+        elif meta["type"] == "qualitative":
+            meta["displayDecimals"] = None
 
-
-def delete_files(folder):
-    for filename in os.listdir(folder):
-        file_path = os.path.join(folder, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print("Failed to delete %s. Reason: %s" % (file_path, e))
+        else:
+            raise Warning(f"Data type {meta['type']} not supported.")

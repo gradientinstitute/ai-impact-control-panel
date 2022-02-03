@@ -30,7 +30,6 @@ description = "Ensure that candidates shortlisted are suitable."
     suffix = "fewer suitable women than the average per 100 candidates"
     action = "recommends"
     displayDecimals = 0
-    countable = true
 
     range_min = 0
     range_max = 4
@@ -49,7 +48,6 @@ description = "Ensure that candidates shortlisted are suitable."
     suffix = "candidates per 100 suitable"
     action = "missed"
     displayDecimals = 0
-    countable = true
 
     range_min = 0
     range_max = 4
@@ -69,7 +67,6 @@ description = "Ensure that candidates shortlisted are suitable."
     action = "recommend{s}"
     lowerIsBetter = false
     displayDecimals = 2
-    countable = true
 
     range_min = 0
     range_max = 1

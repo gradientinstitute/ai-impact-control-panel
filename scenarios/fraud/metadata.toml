@@ -95,7 +95,6 @@ description = "Ensure system doesnt make disproportionate errors on women"
     prefix = ""
     suffix = "trans / month"
     action = "burden{s} the worst-off individuals with"
-    countable = "number"
     displayDecimals = 1
 
     range_min = 0
