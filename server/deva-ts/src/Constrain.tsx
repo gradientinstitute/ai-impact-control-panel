@@ -86,7 +86,8 @@ export function ConstraintPane({}) {
 
   useEffect(() => {
     const values = {}
-    values["constraints"] = _.mapValues(constraints, x => x[1]);
+    values["allowed"] = _.mapValues(constraints, x => x[0]);
+    values["not allowed"] = _.mapValues(constraints, x => x[1]);
     setRadarData(values)
   }, [constraints]);
 

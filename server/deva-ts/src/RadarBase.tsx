@@ -42,8 +42,8 @@ function getConfiguration() {
   const margin = { top: 100, right: 100, bottom: 100, left: 100 };
   const width = Math.min(700, window.innerWidth - 10) - margin.left - margin.right;
   const height = Math.min(width, window.innerHeight - margin.top - margin.bottom - 20);
-  const color = ["#CC333F", "#00A0B0", "#739CC4"];
-  
+  const color = ["#008080", "#CC333F", "#739CC4"];
+
   const defaultConfig = {
     // circle
     w: width,
