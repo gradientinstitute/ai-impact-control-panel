@@ -63,7 +63,6 @@ description = "Ensure system doesnt make disproportionate errors on women"
     displayDecimals = 0
 
     range_min = 0
-    range_max = 100
 
 [metrics.fp]
     name = "Falsly flagged fraud (FP)"
@@ -80,7 +79,6 @@ description = "Ensure system doesnt make disproportionate errors on women"
     displayDecimals = 0
 
     range_min = 0
-    range_max = 100
 
 [metrics.fp_cvar]
     name = "Concentration of falsely flagged fraud (FP CVaR)"
@@ -98,7 +96,6 @@ description = "Ensure system doesnt make disproportionate errors on women"
     displayDecimals = 1
 
     range_min = 0
-    range_max = 100
 
 [metrics.revenue]
     name = "Net revenue protected"
