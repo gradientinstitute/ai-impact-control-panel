@@ -78,11 +78,12 @@ function MultiRangeConstraint({}) {
 
   const constraints = useRecoilValue(constraintsState);
 
+  const baseline = metadata.baseline
+
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
     const u: any = x[1];
     const lowerIsBetter = u.lowerIsBetter;
-    
     const range_min = u.range_min
     const range_max = u.range_max
 
@@ -92,7 +93,8 @@ function MultiRangeConstraint({}) {
         uid={uid}
         lowerIsBetter={lowerIsBetter}
         range_min = {range_min}
-        range_max = {range_max}/>) : null
+        range_max = {range_max}
+        baseline = {baseline}/>) : null
 
     return (
       <div >
@@ -109,12 +111,18 @@ function MultiRangeConstraint({}) {
 }
 
 
-function QuantitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, range_max}) {
+function QuantitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, range_max, baseline}) {
   // TODO: remember how to specify these types in destructuring args
   const u: any = x[1];
   const min = range_min
   const max = range_max
   const name = u.name;
+
+  let marks = {}
+  for (let b in baseline) {
+    const val = baseline[b][uid]
+    marks[val] = b;
+  }
 
   const sign = lowerIsBetter ? 1 : -1;
 
@@ -138,7 +146,7 @@ function QuantitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, 
 
       <p className="col-span-1 text-xs text-right my-auto">{min_string}</p>
       <div className="col-span-3 my-auto">
-        <RangeConstraint uid={uid} min={min} max={max} marks={null} decimals={decimals} lowerIsBetter={lowerIsBetter}/>
+        <RangeConstraint uid={uid} min={min} max={max} marks={marks} decimals={decimals} lowerIsBetter={lowerIsBetter}/>
       </div>
       <p className="col-span-1 text-xs text-left my-auto">{max_string}</p>
     </div>
@@ -167,7 +175,8 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
     setConstraints(n);  
   }
-  
+
+  // console.log(marks)
 
   let rangeProps = {
     min: min,
@@ -179,13 +188,8 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     trackStyle: {backgroundColor: "lightblue"},
     railStyle: {backgroundColor: "gray"},
     reverse: !lowerIsBetter,
+    marks: marks
   };
-  
-  // for qualitative metrics
-  if (marks !== null) {
-    rangeProps["marks"] = marks;
-    rangeProps["step"] = null;
-  }
 
   return (
     <div>
