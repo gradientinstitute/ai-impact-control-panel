@@ -8,18 +8,7 @@ import { Pane, paneState, scenarioState,
         metadataState, constraintsState } from './Base';
 
 import { allCandidatesState, rangesState, currentCandidatesState,
-  getSliderStep, currentSelectionState} from './BoundsSlider';
-
-
-const BackgroundColours = {
-  0: 'gray-600',  // default
-  1: 'gray-700',  // currentlySelected
-}
-
-function GetBackgroundColor(uid) {
-    const blockStatus = useRecoilValue(currentCandidatesState)[uid];
-    return "bg-" + BackgroundColours[blockStatus];
-  };
+         getSliderStep, currentSelectionState} from './BoundsSlider';
 
 
 export function BoundariesPane({}) {
@@ -135,7 +124,7 @@ function QuantitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, 
   const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
 
   const decimals = u.displayDecimals;
-  const bgcolor = GetBackgroundColor(uid);
+  const bgcolor = "bg-gray-600"
 
   return (
     <div key={uid} 
@@ -158,8 +147,6 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const [_, setCurrentSelection] = useRecoilState(currentSelectionState);
-
-//   const all = useRecoilValue(allCandidatesState);
   const val = constraints[uid][1];
 
   function onBeforeChange() {
@@ -175,8 +162,6 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
     setConstraints(n);  
   }
-
-  // console.log(marks)
 
   let rangeProps = {
     min: min,
