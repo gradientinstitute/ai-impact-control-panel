@@ -6,6 +6,7 @@ from deva import elicit
 import toml
 from deva.pareto import remove_non_pareto
 from deva.nice_range import nice_range
+from math import ceil
 
 
 def repo_root():
@@ -139,7 +140,7 @@ def inject_metadata(metrics, candidates):
         # calculate the attribute range spanned by the candidates
         meta["min"] = min(c[attr] for c in candidates)
         meta["max"] = max(c[attr] for c in candidates)
-        range = (meta["max"] - meta["min"]) // 1
+        range = ceil(meta["max"] - meta["min"])
         digits = len(str(range)) - 1
 
         # compensate higher is better
