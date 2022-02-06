@@ -8,6 +8,6 @@
 [industry_average]
     fp = 859
     fn = 468
-    fp_cvar = 1.5024752475247525
+    fp_cvar = 1.5
     revenue = 3872
     eo_disadvantage_rate = 0

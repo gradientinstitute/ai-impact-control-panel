@@ -7,10 +7,13 @@ Author: Muyao Chen
 import math
 
 
-def nice_range(a, b, div):
+def nice_range(a, b):
     """Round min down and max up to the nearest `div`."""
     min_num = min(a, b)
     max_num = max(a, b)
+    range = math.ceil(max_num - min_num)
+    div = 10**(len(str(range)) - 1)
+
     if min_num % div == 0:
         min_num -= div
     if max_num % div == 0:

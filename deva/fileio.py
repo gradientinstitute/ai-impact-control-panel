@@ -6,7 +6,6 @@ from deva import elicit
 import toml
 from deva.pareto import remove_non_pareto
 from deva.nice_range import nice_range
-from math import ceil
 
 
 def repo_root():
@@ -140,30 +139,36 @@ def inject_metadata(metrics, candidates):
         # calculate the attribute range spanned by the candidates
         meta["min"] = min(c[attr] for c in candidates)
         meta["max"] = max(c[attr] for c in candidates)
-        range = ceil(meta["max"] - meta["min"])
-        digits = len(str(range)) - 1
 
         # compensate higher is better
-        if "lowerIsBetter" in meta and not meta["lowerIsBetter"]:
+        if "lowerIsBetter" not in meta:
+            meta["lowerIsBetter"] = True
+
+        if not meta["lowerIsBetter"]:          
+            if "range_max" in meta and "range_min" not in meta:
+                range_max = meta["range_max"]
+                meta["range_min"] = -range_max
+
+            if "range_min" in meta and "range_max" not in meta:
+                range_min = meta["range_min"]
+                meta["range_max"] = -range_min
+            
             if "range_min" in meta and "range_max" in meta:
                 range_min = meta["range_min"]
                 range_max = meta["range_max"]
-                meta["range_min"] = range_max * (-1)
-                meta["range_max"] = range_min * (-1)
+                meta["range_min"] = -range_max
+                meta["range_max"] = -range_min
 
         if meta["type"] == "quantitative":
             meta["displayDecimals"] = int(meta["displayDecimals"])
 
             # the user may set fixed ranges (with nice defaults if they dont)
-            (range_min, range_max) = nice_range(meta["min"], meta["max"],
-                                                10**digits)
+            (range_min, range_max) = nice_range(meta["min"], meta["max"])
+
             if "range_min" not in meta:
                 meta["range_min"] = range_min
             if "range_max" not in meta:
                 meta["range_max"] = range_max
-
-            if "lowerIsBetter" not in meta:
-                meta["lowerIsBetter"] = True
 
         elif meta["type"] == "qualitative":
             meta["displayDecimals"] = None
