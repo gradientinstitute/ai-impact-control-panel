@@ -23,6 +23,7 @@ export function DrawRadarChart(id, data, svg) {
   drawBackgroundCircles(axisGrid, cfg, radius);
   const axis = drawRadialLines(axisGrid, axes, radiusScale, maxVal, angleSlice);
   appendAxisLabels(axis, cfg, radiusScale, maxVal, angleSlice);
+  addOptimalLabel(svg, radius);
 
   /* VISUALISE DATA */
   const radarLine = getRadarLine(cfg, radiusScale, angleSlice);
@@ -108,6 +109,7 @@ function drawBackgroundCircles(axisGrid, cfg, radius) {
 }
 
 function drawRadialLines(axisGrid, axes, radiusScale, maxValue, angleSlice) {
+
   // spokes from the center 
   const axis = axisGrid
     .selectAll(".axis")
@@ -294,6 +296,36 @@ function appendLegend(svg, cfg, data) {
       .attr("alignment-baseline","middle")
   }
 }
+
+function addOptimalLabel(svg, radius) { 
+
+  const x = 450;
+  const y = 110;
+
+  const start = x + ", " + y;
+  const end = (x + 135) + ", " + (y + 130);
+
+  const path = "M " + start + " A " + radius + ", " + radius + ", " + "0 0 1" + end;
+  
+  svg
+    .append("path")
+    .attr("id", "wavy")
+    .attr("d", path)
+    .style("fill", "none")
+    .style("stroke", "none");
+  
+  svg
+    .append("text")
+    .append("textPath")
+    .attr("xlink:href", "#wavy")
+    .style("text-anchor","middle")
+    .attr("startOffset", "50%")
+    .text("most optimal on outer circle")
+    .style("font-size", "15px")
+    .style("fill", "#c2c2c2")
+    .attr("alignment-baseline","middle")
+}
+
 
 // Helper function to wrap SVG text to fit on multiple lines
 // http://bl.ocks.org/mbostock/7555321
