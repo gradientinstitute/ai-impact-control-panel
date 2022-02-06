@@ -65,8 +65,9 @@ function getPercentage(val, min, max, lowerIsBetter) {
 // Returns the radar chart
 function RadarChart({data}) {
   const svgRef = useRef();
+  const axes = data[0].map((x) => x.axis);
   useEffect(() => {
-    if (svgRef.current) {
+    if (svgRef.current && axes.length > 2) {
       const svg = d3.select(svgRef.current);
       DrawRadarChart(".radarChart", data, svg);
     }
