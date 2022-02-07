@@ -3,6 +3,7 @@ from itertools import combinations
 from functools import partial
 import numpy as np
 from deva import halfspace
+from sklearn.cluster import KMeans
 
 
 class Candidate:
@@ -18,10 +19,11 @@ class Candidate:
         return self.attributes[key]
 
     def __repr__(self):
-        """Human readable display of candidate."""
+        """Display candidate by name."""
         return f"Candidate({self.name})"
 
-    def get_attr(self):
+    def values(self):
+        """Access the attribute values directly."""
         return self.attributes.values()
 
 
@@ -29,17 +31,15 @@ class Eliciter:
     """Base class for elicitation algorithms."""
 
     # Just a promise that inheriting classes will have these members
-    def terminated(self, choice):
+    def terminated(self):
         """Check whether the eliciter is finished."""
         raise NotImplementedError
 
-    @property
-    def query(self, choice):
+    def query(self):
         """Collect the options the algorithm is presenting to the user."""
         raise NotImplementedError
 
-    @property
-    def result(self, choice):
+    def result(self):
         """Return the preferred candidate."""
         raise NotImplementedError
 
@@ -47,14 +47,17 @@ class Eliciter:
         """Input a user preference."""
         raise NotImplementedError
 
-    @staticmethod
-    def description():
-        # placeholder for the description of eliciter
-        raise NotImplementedError
+    @classmethod
+    def description(cls):
+        """Return the first line of the docstring (by default)."""
+        lines = cls.__doc__.split("\n")
+        lines = [line.strip() for line in lines]
+        lines = [line for line in lines if len(line)]
+        return lines[0] if lines else "An elicitation algorithm."
 
 
 class VotingEliciter(Eliciter):
-    """Simple eliciter that chooses the most selected candidate."""
+    """Ask all pairwise comparisons and choose the most frequently selected."""
 
     def __init__(self, candidates, scenario):
         assert candidates, "No candidate models"
@@ -69,24 +72,25 @@ class VotingEliciter(Eliciter):
         self._update()
 
     def put(self, choice):
-        if choice == self.query[0].name:
-            self.chosen[self.query[0]] += 1
-        if choice == self.query[1].name:
-            self.chosen[self.query[1]] += 1
+        """Enter a user choice."""
+        if choice == self._query[0].name:
+            self.chosen[self._query[0]] += 1
+        if choice == self._query[1].name:
+            self.chosen[self._query[1]] += 1
 
         self._update()
 
-    @property
     def terminated(self):
+        """Check if eliciter is terminated."""
         return self.i == len(self.comparisons)
 
-    @property
     def result(self):
+        """Obtain eliciter final result."""
         assert self.i == len(self.comparisons), "Not terminated"
         return max(self.candidates, key=self.chosen.get)
 
-    @property
     def query(self):
+        """Obtain eliciter's current query."""
         return self._query
 
     def _update(self):
@@ -97,13 +101,9 @@ class VotingEliciter(Eliciter):
         else:
             self._query = None
 
-    @staticmethod
-    def description():
-        return "VotingEliciter Description"
-
 
 class Toy(Eliciter):
-    """Simple eliciter with sequential elimination."""
+    """Pass over the candidates comparing each to the current preference."""
 
     def __init__(self, candidates, scenario):
         assert candidates, "No candidate models"
@@ -112,23 +112,24 @@ class Toy(Eliciter):
         self._update()
 
     def put(self, choice):
-        if choice == self.query[1].name:
-            self.candidates.remove(self.query[0])
+        """Input user decision into the eliciter."""
+        if choice == self._query[1].name:
+            self.candidates.remove(self._query[0])
         else:
-            self.candidates.remove(self.query[1])
+            self.candidates.remove(self._query[1])
         self._update()
 
-    @property
     def terminated(self):
+        """Check if eliciter is terminated."""
         return len(self.candidates) == 1
 
-    @property
     def result(self):
+        """Obtain eliciter final result."""
         assert len(self.candidates) == 1, "Not terminated."
         return self.candidates[0]
 
-    @property
     def query(self):
+        """Obtain eliciter current query."""
         return self._query
 
     def _update(self):
@@ -137,14 +138,10 @@ class Toy(Eliciter):
         else:
             self._query = None
 
-    @staticmethod
-    def description():
-        return "Toy description"
-
 
 class Enautilus(Eliciter):
     """
-    Enautilus eliciter.
+    Use E-Nautilus to incrementally step from Nadir to an efficient candidate.
 
     See: E-NAUTILUS: A decision support system for complex multiobjective
     optimization problems based on the NAUTILUS method.
@@ -191,23 +188,20 @@ class Enautilus(Eliciter):
         self._ns = ns
         self._update()
 
-    @property
     def query(self):
         """Return the current query."""
         return self._query
 
-    @property
     def terminated(self):
         """Check if the termination condition is met."""
         return (self._h <= 0) or (len(self.candidates) == 1)
 
-    @property
     def result(self):
         """Return result of the eliciter if terminated."""
         assert (self._h <= 0) or (len(self.candidates) == 1), "Not terminated."
         X = []
         for can in self.candidates:
-            X.append(np.array(list(can.get_attr())))
+            X.append(np.array(list(can.values())))
         return self.candidates[
             np.linalg.norm(np.array(X)
                            - np.array(list(self._nadir.values()))).argmin()
@@ -221,7 +215,7 @@ class Enautilus(Eliciter):
         # remove candidates that are worse in every attribute
         copy = []
         for can in self.candidates:
-            if np.all(np.array(list(can.get_attr()))
+            if np.all(np.array(list(can.values()))
                       < np.array(list(self._nadir.values()))):
                 copy.append(can)
         for c in copy:
@@ -250,10 +244,9 @@ class Enautilus(Eliciter):
         """
         X = []
         for can in self.candidates:
-            X.append(np.array(list(can.get_attr())))
+            X.append(np.array(list(can.values())))
         if self._ns > len(self.candidates):
             self._ns = len(self.candidates)
-        from sklearn.cluster import KMeans
         kmeans = KMeans(n_clusters=self._ns).fit(np.array(X))
         centers = kmeans.cluster_centers_
         # project to the line between pareto front and nadir point
@@ -281,14 +274,10 @@ class Enautilus(Eliciter):
         else:
             self._query = None
 
-    @staticmethod
-    def description():
-        return "E-NAUTILUS eliciter"
-
 
 # Eliciter implementations
 class ActiveRanking(Eliciter):
-    """Implements an eliciter based on linear plane queries."""
+    """Use pairwise linear separation to estimate a full candidate ranking."""
 
     _active_alg = halfspace.HalfspaceRanking
     _active_kw = {"query_order": halfspace.rank_compar_ord}
@@ -317,6 +306,7 @@ class ActiveRanking(Eliciter):
         self._update()
 
     def put(self, choice):
+        """Input user decision into the eliciter."""
         if choice == self._query[0].name:
             val = 1
         else:
@@ -334,52 +324,40 @@ class ActiveRanking(Eliciter):
             self._result = self.candidates[ind]
             self._query = None
 
-    @property
     def result(self):
+        """Return eliciter result."""
         return self._result
 
-    @property
     def query(self):
+        """Get current eliciter query."""
         return self._query
 
-    @property
     def terminated(self):
+        """Check if current model is terminated."""
         return self._result is not None
-
-    @staticmethod
-    def description():
-        return "ActiveRanking description"
 
 
 class ActiveMax(ActiveRanking):
-    """Elicit the preferred candidate using pairwise linear separation."""
+    """Use pairwise linear separation to estimate the preferred candidate."""
 
     _active_alg = halfspace.HalfspaceMax
     _active_kw = {"query_order": halfspace.max_compar_rand}
 
-    @staticmethod
-    def description():
-        return "ActiveMax description"
-
 
 class ActiveMaxSmooth(ActiveRanking):
     """
-    Elicit the preferred candidate using pairwise linear separation.
+    Use pairwise linear separation with a query order heuristic.
 
-    Distinct from ActiveMax by using a query order heuristic.
+    Distinct from ActiveMax by the strategic query order heuristic.
     """
 
     _active_alg = halfspace.HalfspaceMax
     _active_kw = {"query_order": halfspace.max_compar_smooth}
 
-    @staticmethod
-    def description():
-        return "ActiveMaxSmooth description"
-
 
 class ActiveMaxPrimary(ActiveRanking):
     """
-    Elicit the preferred candidate using pairwise linear separation.
+    Use pairwise linear separation with a query order based on primary metric.
 
     Distinct from ActiveMax by using a query order based on a primary metric.
     """
@@ -396,10 +374,6 @@ class ActiveMaxPrimary(ActiveRanking):
         qorder = partial(halfspace.max_compar_primary, primary_index=pri_ind)
         self._active_kw = {"query_order": qorder}
         super().__init__(candidates, scenario)
-
-    @staticmethod
-    def description():
-        return "ActiveMaxPrimary description"
 
 
 # Export all the Eliciter classes

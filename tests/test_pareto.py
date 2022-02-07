@@ -4,7 +4,7 @@ from itertools import product
 
 
 def test_pareto():
-    # candidates are all permutations
+    """Test that the pareto filter works on a toy problem."""
     dims = 4
     all_permutations = product(*[range(dims)] * dims)
     cands = [v for v in all_permutations if sum(v) >= 6]

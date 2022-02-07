@@ -42,6 +42,7 @@ eliciters_descriptions = {k: v.description()
 
 
 def calc_ranges(candidates, spec):
+    """Extract a list of attributes and their ranges."""
     keys = spec["metrics"].keys()
     points = [c.attributes for c in candidates]
     collated = {k: [p[k] for p in points] for k in keys}
@@ -50,11 +51,13 @@ def calc_ranges(candidates, spec):
 
 @app.route("/")
 def check_status():
+    """Confirm API status."""
     return "Deva backend server status OK"
 
 
 @app.route("/scenarios")
 def get_scenarios():
+    """List the available API scenarios."""
     if "id" not in session:
         session["id"] = random_key(16)
     data = fileio.list_scenarios()
@@ -85,6 +88,7 @@ def _scenario(name="jobs"):
 
 @app.route("/<scenario>/images/<path:name>")
 def send_image(scenario, name):
+    """Send target image to client."""
     scenario_path = os.path.join(fileio.repo_root(),
                                  f"scenarios/{scenario}/images")
     return send_from_directory(scenario_path, name)
@@ -92,12 +96,14 @@ def send_image(scenario, name):
 
 @app.route("/log/<path:name>")
 def send_log(name):
+    """Send the session logs to the client."""
     scenario_path = "logs"
     return send_from_directory(scenario_path, name)
 
 
 @app.route("/<scenario>/bounds/init", methods=["PUT"])
 def init_bounds(scenario):
+    """Initialise a bounds elicitation session."""
     if "id" not in session:
         session["id"] = random_key(16)
     candidates, meta = _scenario(scenario)
@@ -111,7 +117,7 @@ def init_bounds(scenario):
 
 @app.route("/<scenario>/bounds/choice", methods=["GET", "PUT"])
 def get_bounds_choice(scenario):
-
+    """Accept the user's choice for a bounds elicitation session."""
     if db.bounder is None:
         print("Session not initialised!")
         abort(400)  # Not initialised
@@ -126,12 +132,12 @@ def get_bounds_choice(scenario):
         valid = (x in options) & (y in options)
 
         # Only pass valid choices on to the eliciter
-        if (not sampler.terminated and valid):
+        if (not sampler.terminated() and valid):
             sampler.put(x == sampler.query.name)
         else:
             print("Ignoring input")
 
-    if sampler.terminated:
+    if sampler.terminated():
         model_id = random_key(16)
         path = "models/" + model_id + ".toml"
         if not os.path.exists("models"):
@@ -168,6 +174,7 @@ def get_algorithm():
 
 @app.route("/<scenario>/init/<algo>/<name>")
 def init_session(scenario, algo, name):
+    """Initialise a preference elicitation session."""
     if "id" not in session:
         session["id"] = random_key(16)
     # assume that a reload means user wants a restart
@@ -183,7 +190,7 @@ def init_session(scenario, algo, name):
 
 @app.route("/<scenario>/ranges", methods=["GET"])
 def get_ranges(scenario):
-
+    """Report the candidates and their ranges for a particular scenario."""
     candidates, spec = _scenario(scenario)
     points, _collated = calc_ranges(candidates, spec)
     return jsonify(points)
@@ -191,30 +198,22 @@ def get_ranges(scenario):
 
 @app.route("/<scenario>/baseline", methods=["GET"])
 def get_baseline(scenario):
+    """Return the performance baseline(s) of the scenario."""
     result = fileio.load_baseline(scenario)
     return jsonify(result)
 
 
 @app.route("/<scenario>/constraints", methods=["PUT"])
 def apply_constraints(scenario):
+    """Apply constraints chosen by the user."""
+    # TODO: placeholder
     # _ = request.get_json(force=True)
     return "OK"
 
 
-@app.route("/Enautilus/zpoints")
-def get_z():
-    eliciter = db.eliciter
-    if db.eliciter is None:
-        print("Session not initialised!")
-        abort(400)  # Not initialised
-
-    # log = loggers[session["ID"]]
-    return jsonify(eliciter.get_z_points())
-
-
 @app.route("/<scenario>/choice", methods=["GET", "PUT"])
 def get_choice(scenario):
-
+    """Inform the front-end of the current eliciter choices."""
     if db.eliciter is None:
         print("Session not initialised!")
         abort(400)  # Not initialised
@@ -230,14 +229,14 @@ def get_choice(scenario):
         x = data["first"]
 
         # Only pass valid choices on to the eliciter
-        if not eliciter.terminated:
-            choice = [v.name for v in eliciter.query]
+        if not eliciter.terminated():
+            choice = [v.name for v in eliciter.query()]
             if (x in choice):  # and (y in choice) and (x != y):
                 eliciter.put(x)
 
     # now give some new choices
-    if eliciter.terminated:
-        result = eliciter.result
+    if eliciter.terminated():
+        result = eliciter.result()
         res = {
             result.name: {
                 "attr": result.attributes,
@@ -245,7 +244,7 @@ def get_choice(scenario):
             }
         }
         log.add_result(res)
-        data = log.get_log()
+        data = log.log
         if not os.path.exists("logs"):
             os.mkdir("logs")
         output_file_name = f"logs/{session['id']}.toml"
@@ -263,7 +262,7 @@ def get_choice(scenario):
         pdf.output(f"logs/{str(session['id'])}.pdf")
     else:
         res = []
-        for option in eliciter.query:
+        for option in eliciter.query():
             res.append({"name": option.name, "values": option.attributes})
         log.add_options(res)
     db.eliciter = eliciter

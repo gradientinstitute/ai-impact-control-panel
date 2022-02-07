@@ -78,9 +78,9 @@ def test_eliciters(eliciter_list, num, attr):
     for eliciter in e_list:
         question_count = 0
         test_target = eliciter(candidates, scenario)
-        while not test_target.terminated:
+        while not test_target.terminated():
             question_count += 1
-            m1, m2 = test_target.query
+            m1, m2 = test_target.query()
             if int(m1.name) < int(m2.name):
                 # choose the better option, smaller the better
                 test_target.put(m1)
@@ -125,6 +125,7 @@ def print_result(result):
 @click.option("-r", "--runs", default=10,
               help="The number of runs to average out outliers.")
 def compareEliciters(eliciters, number, dimension, runs):
+    """Experiment to compare a set of eliciters."""
     Result = namedtuple("Result",
                         "numberCandidate numberAttributes meanError errorLog")
     result = Result(number, dimension, [], {})

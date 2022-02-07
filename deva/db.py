@@ -22,6 +22,7 @@ class DB:
 
     @property
     def eliciter(self):
+        """Access the session eliciter instance (if applicable)."""
         return self._get("eliciter")
 
     @eliciter.setter
@@ -34,6 +35,7 @@ class DB:
 
     @property
     def bounder(self):
+        """Access the session bounder instance (if applicable)."""
         return self._get("bounder")
 
     @bounder.setter
@@ -46,6 +48,7 @@ class DB:
 
     @property
     def logger(self):
+        """Access the session logger instance."""
         return self._get("logger")
 
     @logger.setter
