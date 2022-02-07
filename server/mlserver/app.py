@@ -100,6 +100,11 @@ def send_log(name):
     scenario_path = "logs"
     return send_from_directory(scenario_path, name)
 
+@app.route("/<scenario>/bounds/save", methods=["PUT"])
+def save_bound(scenario):
+    _, meta = _scenario(scenario)
+    # for m in meta["metrics"]:
+    return ""
 
 @app.route("/<scenario>/bounds/init", methods=["PUT"])
 def init_bounds(scenario):
