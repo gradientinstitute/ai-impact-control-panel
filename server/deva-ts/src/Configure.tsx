@@ -35,7 +35,6 @@ export function ConfigurePane({}) {
   
   const scenario = useRecoilValue(scenarioState);
 
-  // const name = useRecoilValue(nameState);
   // algorithms / eliciters
   // const algo = useRecoilValue(algoState);
   
@@ -72,7 +71,7 @@ export function ConfigurePane({}) {
   }
 
   return (
-    <div className="grid grid-cols-7">
+    <div className="grid grid-cols-7 gap-8 pb-10">
       <div className="col-span-2">
         <IntroContext />
       </div>
@@ -108,12 +107,18 @@ function AlgoSelector({}) {
   
   return (
       <div className="p-4 gap-4 grid grid-cols-10" >
-        <p className="text-right col-span-1">Eliciter</p>
-        <select className="col-span-8" name="scenarios" value={current} 
-          onChange={ (x) => {setCurrent(x.target.value)}}>
-          {elements}
-        </select>
-        <div className="col-span-10">
+        <div className="col-span-1">
+          <p className="text-right">Eliciter</p>
+        </div>
+        <div className="col-span-9">
+          <select className="" name="scenarios" value={current} 
+            onChange={ (x) => {setCurrent(x.target.value)}}>
+            {elements}
+          </select>
+        </div>
+        <div className="col-span-1">
+        </div>
+        <div className="col-span-9">
           <p>{algos[current]}</p>
         </div>
       </div>
@@ -123,9 +128,10 @@ function AlgoSelector({}) {
 
 function StartButton({}) {
 
-  // const setSubmit = (x) => {};
+  // some local state to trigger a useEffect fetcher
   const [submit, setSubmit] = useState(false);
 
+  const name = useRecoilValue(nameState);
   const scenario = useRecoilValue(scenarioState);
   const constraints = useRecoilValue(constraintsState);
   const [_pane, setPane] = useRecoilState(paneState);
@@ -134,7 +140,7 @@ function StartButton({}) {
   const payload = {
     scenario: scenario,
     constraints: constraints,
-    name: "lachy",
+    name: name,
     algorithm: algorithm,
   };
 
@@ -150,11 +156,13 @@ function StartButton({}) {
   );
 
   return (
-      <button className="bg-gray-200 text-black rounded-lg" 
+      <div className="">
+      <button className="bg-gray-200 text-black" 
         onClick={() => {setSubmit(true)}}>
         <div className="p-4 text-3xl">
           Continue
         </div>
       </button>
+      </div>
   );
 }

@@ -1,17 +1,15 @@
-import {useState, useEffect} from 'react';
+import {useEffect} from 'react';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import axios from 'axios';
 import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { Pane, paneState, scenarioState, 
-        metadataState, constraintsState } from './Base';
+import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
+import { scenarioState, metadataState, constraintsState } from './Base';
 
 import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
-  blockedMetricState, isBlockedState, resolvedBlockedState, 
+  blockedMetricState, isBlockedState, 
   blockedStatusState, blockingMetricsState, blockingStates, 
   unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';
 
@@ -47,21 +45,13 @@ function GetHandleColor(uid) {
 
 export function Constraints({}) {
 
-  // name of current scenorio for url purposes e.g. "ezyfraud"
-  const scenario = useRecoilValue(scenarioState);
   // largest possible ranges for specifying the scrollbar extents
   const maxRanges = useRecoilValue(maxRangesState);
   // list of currently permissible candidates based on current constraints
   const currentCandidates = useRecoilValue(currentCandidatesState);
   // the actual/current contraints as defined by the position of scrollbars
 
-  // current constraints done by metric
-  // const [_costraints, setConstraints] = useRecoilState(constraintsState);
-
-  // all candidates sent to us by the server
-  // const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
-
-  const [_constraints, setConstraints] = useRecoilState(constraintsState);
+  const setConstraints = useSetRecoilState(constraintsState);
 
   // set initial value of the constraints
   useEffect(() => {
@@ -75,8 +65,8 @@ export function Constraints({}) {
 
 
   return (
-    <div className="mx-auto grid gap-x-8 gap-y-10 grid-cols-1">
-      <h2>Metric Filters</h2>
+    <div className="mx-auto grid gap-4 grid-cols-1">
+      <h1 className="text-left">Metric Filters</h1>
       <ConstraintStatus />
       <div className="mb-10">
         <MultiRangeConstraint />
@@ -91,7 +81,7 @@ function ConstraintStatus({}) {
   const all = useRecoilValue(allCandidatesState);
 
   return (
-  <div className="">
+  <div className="mb-8">
     <span className="italic text-2xl">{curr.length +" of " + all.length + " "}</span>
     candidate models remain
   </div>
@@ -101,11 +91,11 @@ function ConstraintStatus({}) {
 
 function UnitDescription({uid, unit}) {
   return (
-    <div className="bg-gray-600 h-full">
+    <div className="bg-gray-600 h-full p-4 grid grid-cols-1 gap-4">
       <h2>{unit.name}</h2>
       <p className="italic">{unit.description}</p>
-      <p>Captures: {unit.captures}</p>
-      <p>Limitations: {unit.limitations}</p>
+      <p><span className="font-bold">Captures:</span> {unit.captures}</p>
+      <p><span className="font-bold">Limitations:</span> {unit.limitations}</p>
     </div>
   )
 }
@@ -134,7 +124,7 @@ function DescriptionRangeConstraint({uid, unit}) {
       <div className="col-span-3">
         <UnitDescription uid={uid} unit={unit} />
       </div>
-      <div className="col-span-5">
+      <div className="col-span-5 my-auto">
         {pane}
       </div>
     </div>
@@ -157,7 +147,7 @@ function MultiRangeConstraint({}) {
     const u: any = x[1];
     return (
       <div>
-        <DescriptionRangeConstraint uid={uid} unit={u} />
+        <DescriptionRangeConstraint key={uid} uid={uid} unit={u} />
       </div>
     );
   });
