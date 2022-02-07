@@ -5,7 +5,7 @@ import axios from 'axios';
 
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { Pane, paneState, scenarioState, 
-        metadataState, constraintsState } from './Base';
+        metadataState, constraintsState, algoChoicesState } from './Base';
 
 import { allCandidatesState, rangesState, currentCandidatesState,
          getSliderStep, currentSelectionState} from './BoundsSlider';
@@ -19,6 +19,9 @@ export function BoundariesPane({}) {
     // list of currently permissible candidates based on current constraints
     const currentCandidates = useRecoilValue(currentCandidatesState);
     // the actual/current contraints as defined by the position of scrollbars
+
+    const [metadata, setMetadata] = useRecoilState(metadataState);
+    const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
   
     // current constraints done by metric
     const [_costraints, setConstraints] = useRecoilState(constraintsState);
@@ -26,19 +29,20 @@ export function BoundariesPane({}) {
     // all candidates sent to us by the server
     const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
   
-    // initial loading of candidates
     useEffect(() => {
-      const fetch = async () => {
-        axios.get<any>("api/" + scenario + "/ranges")
-          .then( response => response.data)
-          .then( data => {
-            setAllCandidates(data);
-          });
+      let req = "api/" + scenario + "/all";
+      async function fetchData() {
+        const result = await axios.get<any>(req);
+        const d = result.data;
+        setMetadata(d.metadata);
+        setAlgos(d.algorithms);
+        setAllCandidates(d.candidates);
+        // setBaselines(d.baselines);
       }
-      fetch();
+      fetchData();
     }, []
     );
-  
+    
     // set initial value of the constraints
     useEffect(() => {
       setConstraints(maxRanges)
@@ -215,7 +219,7 @@ function StartButton({}) {
   useEffect(() => {
     const fetch = async () => {
       await axios.put<any>("api/" + scenario + "/constraints", constraints);
-      setPane(Pane.Setup);
+      window.location.href='/';
     }
     if (submit) {
       fetch();

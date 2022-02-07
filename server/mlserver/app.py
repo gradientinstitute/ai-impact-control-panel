@@ -193,6 +193,41 @@ def init_session(scenario, algo, name):
     return spec
 
 
+@app.route("/deployment/new", methods=["PUT"])
+def make_new_deployment_session():
+    """Initialise an eliciter with a particular algorithm and scenario."""
+    # get info about setup from the frontend
+    data = request.get_json(force=True)
+    scenario = data["scenario"]
+    algo = data["algorithm"]
+    name = data["name"]
+
+    if "id" not in session:
+        session["id"] = random_key(16)
+    # assume that a reload means user wants a restart
+    print("Init new session for user")
+    candidates, spec = _scenario(scenario)
+    eliciter = elicit.algorithms[algo](candidates, spec)
+    log = logger.Logger(scenario, algo, name)
+    db.eliciter = eliciter
+    db.logger = log
+    # send the metadata for the scenario
+    return spec
+
+
+# TODO this could replace some of the other calls
+@app.route("/<scenario>/all")
+def get_all(scenario):
+    """Get all the relevent info about a scenario."""
+    candidates, spec = _scenario(scenario)
+    points, _ = calc_ranges(candidates, spec)
+    baselines = []
+    # baselines = fileio.load_baseline(scenario)
+    r = {"metadata": spec, "candidates": points, "baselines": baselines,
+         "algorithms": eliciters_descriptions}
+    return r
+
+
 @app.route("/<scenario>/ranges", methods=["GET"])
 def get_ranges(scenario):
     """Report the candidates and their ranges for a particular scenario."""
