@@ -154,6 +154,17 @@ function Pipeline({}) {
 //   );
 // }
 
+// function QualitativeSummary({data}) {
+
+//   const result = data.options.map(x => (<p>{x}</p>));
+  
+//   return (
+//     <div className={"rounded-lg p-3 items-center"}>
+//       <p className="font-bold">Possible Values</p>
+//       {result}
+//     </div>);
+// }
+
 // // show the best case & worst case of metrics from the candidates
 // function UnitRange({data}) {
 

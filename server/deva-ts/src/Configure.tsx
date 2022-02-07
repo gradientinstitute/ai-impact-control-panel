@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import { ArcherContainer, ArcherElement } from 'react-archer';
 import _ from "lodash";
@@ -123,23 +123,31 @@ function AlgoSelector({}) {
 
 function StartButton({}) {
 
-  const setSubmit = (x) => {};
-  // const [submit, setSubmit] = useState(false);
+  // const setSubmit = (x) => {};
+  const [submit, setSubmit] = useState(false);
 
-  // const scenario = useRecoilValue(scenarioState);
-  // const constraints = useRecoilValue(constraintsState);
-  // const [_pane, setPane] = useRecoilState(paneState);
+  const scenario = useRecoilValue(scenarioState);
+  const constraints = useRecoilValue(constraintsState);
+  const [_pane, setPane] = useRecoilState(paneState);
+  const algorithm = useRecoilValue(algoState);
 
-  // useEffect(() => {
-  //   const fetch = async () => {
-  //     await axios.put<any>("api/" + scenario + "/constraints", constraints);
-  //     setPane(Pane.Pairwise);
-  //   }
-  //   if (submit) {
-  //     fetch();
-  //   }
-  // }, [submit]
-  // );
+  const payload = {
+    scenario: scenario,
+    constraints: constraints,
+    name: "lachy",
+    algorithm: algorithm,
+  };
+
+  useEffect(() => {
+    const fetch = async () => {
+      await axios.put<any>("api/deployment/new", payload);
+      setPane(Pane.Pairwise);
+    }
+    if (submit) {
+      fetch();
+    }
+  }, [submit]
+  );
 
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
