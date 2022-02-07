@@ -19,11 +19,11 @@ def test_negative():
 
 def test_zero():
     """Test the nice range for 0."""
-    assert(nice_range(0, 0) == (-10, 10))
+    assert(nice_range(0, 0) == (-1, 1))
 
 
 def test_negative_integer():
-    """Test on the negative numbers that can be divided by 10."""
+    """Test on the negative numbers that can be divided by 100."""
     assert(nice_range(-100, -10) == (-110, 0))
 
 
@@ -35,3 +35,9 @@ def test_decimals():
 def test_wrong_order():
     """Test handling of min and max being out of order."""
     assert(nice_range(122, 69) == (60, 130))
+
+
+def test_true_range():
+    """Test on true ranges."""
+    assert(nice_range(0, 3872) == (-1000, 4000))
+    assert(nice_range(0, 3910) == (-1000, 4000))

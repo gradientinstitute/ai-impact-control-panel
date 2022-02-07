@@ -69,4 +69,3 @@ description = "Minimise harm of repeated fraud to those most affected by it."
     displayDecimals = 1
 
     range_min = 0
-    range_max = 100

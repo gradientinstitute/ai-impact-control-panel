@@ -96,7 +96,8 @@ def load_scenario(scenario_name, pfilter=True):
         for val in models.values():
             val[f] = -val[f]
 
-        baseline[f] = -baseline[f]
+        for i in baseline:
+            baseline[i][f] = -baseline[i][f]
 
     scenario["baseline"] = baseline
 
@@ -139,18 +140,36 @@ def inject_metadata(metrics, candidates):
         meta["min"] = min(c[attr] for c in candidates)
         meta["max"] = max(c[attr] for c in candidates)
 
+        # compensate higher is better
+        if "lowerIsBetter" not in meta:
+            meta["lowerIsBetter"] = True
+
+        if not meta["lowerIsBetter"]:
+            if "range_min" in meta and "range_max" in meta:
+                # flip the min and max
+                range_min = meta["range_min"]
+                range_max = meta["range_max"]
+                meta["range_min"] = -range_max
+                meta["range_max"] = -range_min
+
+            elif "range_max" in meta:
+                meta["range_min"] = -meta["range_max"]
+                del meta["range_max"]
+
+            elif "range_min" in meta:
+                meta["range_max"] = -meta["range_min"]
+                del meta["range_min"]
+
         if meta["type"] == "quantitative":
             meta["displayDecimals"] = int(meta["displayDecimals"])
 
             # the user may set fixed ranges (with nice defaults if they dont)
             (range_min, range_max) = nice_range(meta["min"], meta["max"])
+
             if "range_min" not in meta:
                 meta["range_min"] = range_min
             if "range_max" not in meta:
                 meta["range_max"] = range_max
-
-            if "lowerIsBetter" not in meta:
-                meta["lowerIsBetter"] = True
 
         elif meta["type"] == "qualitative":
             meta["displayDecimals"] = None
