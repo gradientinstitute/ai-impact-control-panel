@@ -66,5 +66,6 @@ description = "Minimise harm of repeated fraud to those most affected by it."
     prefix = ""
     suffix = "trans / month"
     action = "burden{s} the worst-off individuals with"
-    countable = "number"
     displayDecimals = 1
+
+    range_min = 0

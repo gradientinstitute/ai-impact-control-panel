@@ -16,19 +16,19 @@ import pickle
 
 # Set up the flask app
 app = Flask(__name__)
-app.config.from_envvar('DEVA_MLSERVER_CONFIG')
+app.config.from_envvar("DEVA_MLSERVER_CONFIG")
 
 # Secret key for signing session cookies
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("No SECRET_KEY set for Flask application")
-app.config['SECRET_KEY'] = SECRET_KEY
+app.config["SECRET_KEY"] = SECRET_KEY
 
 # Database for production is redis, is a dict for development
-if app.config['ENV'] == 'production':
+if app.config["ENV"] == "production":
     print("Using production database (redis)")
-    r = redis.Redis(host=app.config['REDIS_SERVER'],
-                    port=app.config['REDIS_PORT'],
+    r = redis.Redis(host=app.config["REDIS_SERVER"],
+                    port=app.config["REDIS_PORT"],
                     db=0,
                     socket_connect_timeout=2)
     db = RedisDB(r, session)
@@ -42,21 +42,24 @@ eliciters_descriptions = {k: v.description()
 
 
 def calc_ranges(candidates, spec):
-    keys = spec['metrics'].keys()
+    """Extract a list of attributes and their ranges."""
+    keys = spec["metrics"].keys()
     points = [c.attributes for c in candidates]
     collated = {k: [p[k] for p in points] for k in keys}
     return points, collated
 
 
-@app.route('/')
+@app.route("/")
 def check_status():
+    """Confirm API status."""
     return "Deva backend server status OK"
 
 
-@app.route('/scenarios')
+@app.route("/scenarios")
 def get_scenarios():
-    if 'id' not in session:
-        session['id'] = random_key(16)
+    """List the available API scenarios."""
+    if "id" not in session:
+        session["id"] = random_key(16)
     data = fileio.list_scenarios()
     return jsonify(data)
 
@@ -83,23 +86,26 @@ def _scenario(name="jobs"):
     return result
 
 
-@app.route('/<scenario>/images/<path:name>')
+@app.route("/<scenario>/images/<path:name>")
 def send_image(scenario, name):
+    """Send target image to client."""
     scenario_path = os.path.join(fileio.repo_root(),
-                                 f'scenarios/{scenario}/images')
+                                 f"scenarios/{scenario}/images")
     return send_from_directory(scenario_path, name)
 
 
-@app.route('/log/<path:name>')
+@app.route("/log/<path:name>")
 def send_log(name):
-    scenario_path = 'logs'
+    """Send the session logs to the client."""
+    scenario_path = "logs"
     return send_from_directory(scenario_path, name)
 
 
-@app.route('/<scenario>/bounds/init', methods=['PUT'])
+@app.route("/<scenario>/bounds/init", methods=["PUT"])
 def init_bounds(scenario):
-    if 'id' not in session:
-        session['id'] = random_key(16)
+    """Initialise a bounds elicitation session."""
+    if "id" not in session:
+        session["id"] = random_key(16)
     candidates, meta = _scenario(scenario)
     baseline = meta["baseline"]
     metrics = meta["metrics"]
@@ -109,9 +115,9 @@ def init_bounds(scenario):
     return ""
 
 
-@app.route('/<scenario>/bounds/choice', methods=['GET', 'PUT'])
+@app.route("/<scenario>/bounds/choice", methods=["GET", "PUT"])
 def get_bounds_choice(scenario):
-
+    """Accept the user's choice for a bounds elicitation session."""
     if db.bounder is None:
         print("Session not initialised!")
         abort(400)  # Not initialised
@@ -126,16 +132,16 @@ def get_bounds_choice(scenario):
         valid = (x in options) & (y in options)
 
         # Only pass valid choices on to the eliciter
-        if (not sampler.terminated and valid):
-            sampler.observe(x == sampler.query.name)
+        if (not sampler.terminated() and valid):
+            sampler.put(x == sampler.query.name)
         else:
             print("Ignoring input")
 
-    if sampler.terminated:
+    if sampler.terminated():
         model_id = random_key(16)
         path = "models/" + model_id + ".toml"
-        if not os.path.exists('models'):
-            os.mkdir('models')
+        if not os.path.exists("models"):
+            os.mkdir("models")
         pickle.dump(sampler, open(path, "wb"))
         res = {"model_ID": path}
 
@@ -147,11 +153,11 @@ def get_bounds_choice(scenario):
             "left": {
                 "name": sampler.query.name,
                 "values": sampler.query.attributes,
-                },
+            },
             "right": {
                 "name": "Baseline",
                 "values": sampler.baseline.attributes,
-                }
+            },
         }
 
     # Update database state
@@ -160,18 +166,17 @@ def get_bounds_choice(scenario):
     return jsonify(res)
 
 
-@app.route('/algorithms')
+@app.route("/algorithms")
 def get_algorithm():
-    """
-      Return which algorithms are available.
-    """
+    """Return names and descriptions of available eliciter algorithms."""
     return jsonify(eliciters_descriptions)
 
 
-@app.route('/<scenario>/init/<algo>/<name>')
+@app.route("/<scenario>/init/<algo>/<name>")
 def init_session(scenario, algo, name):
-    if 'id' not in session:
-        session['id'] = random_key(16)
+    """Initialise a preference elicitation session."""
+    if "id" not in session:
+        session["id"] = random_key(16)
     # assume that a reload means user wants a restart
     print("Init new session for user")
     candidates, spec = _scenario(scenario)
@@ -216,29 +221,32 @@ def get_all(scenario):
     return r
 
 
-@app.route('/<scenario>/ranges', methods=['GET'])
+@app.route("/<scenario>/ranges", methods=["GET"])
 def get_ranges(scenario):
-
+    """Report the candidates and their ranges for a particular scenario."""
     candidates, spec = _scenario(scenario)
     points, _collated = calc_ranges(candidates, spec)
     return jsonify(points)
 
 
-@app.route('/<scenario>/baseline', methods=['GET'])
+@app.route("/<scenario>/baseline", methods=["GET"])
 def get_baseline(scenario):
+    """Return the performance baseline(s) of the scenario."""
     result = fileio.load_baseline(scenario)
     return jsonify(result)
 
 
-@app.route('/<scenario>/constraints', methods=['PUT'])
+@app.route("/<scenario>/constraints", methods=["PUT"])
 def apply_constraints(scenario):
+    """Apply constraints chosen by the user."""
+    # TODO: placeholder
     # _ = request.get_json(force=True)
     return "OK"
 
 
-@app.route('/<scenario>/choice', methods=['GET', 'PUT'])
+@app.route("/<scenario>/choice", methods=["GET", "PUT"])
 def get_choice(scenario):
-
+    """Inform the front-end of the current eliciter choices."""
     if db.eliciter is None:
         print("Session not initialised!")
         abort(400)  # Not initialised
@@ -248,31 +256,30 @@ def get_choice(scenario):
 
     # if we got a choice, process it
     if request.method == "PUT":
+        print("PUT")
         data = request.get_json(force=True)
-        log.add_choice(data)
-
-        # TODO: support more than two options
+        log.add_choice([data])
         x = data["first"]
-        y = data["second"]
 
-        # Filter to ensure valid choices go to the eliciter
-        if not eliciter.terminated:
-            choice = [v.name for v in eliciter.query]
-            if (x in choice) and (y in choice) and (x != y):
-                eliciter.input(x)
+        # Only pass valid choices on to the eliciter
+        if not eliciter.terminated():
+            choice = [v.name for v in eliciter.query()]
+            if (x in choice):  # and (y in choice) and (x != y):
+                eliciter.put(x)
 
     # now give some new choices
-    if eliciter.terminated:
-        # terminate by sending a single model
-        result = eliciter.result
-        res = {result.name: {
-                'attr': result.attributes,
-                'spec': result.spec_name
-        }}
+    if eliciter.terminated():
+        result = eliciter.result()
+        res = {
+            result.name: {
+                "attr": result.attributes,
+                "spec": result.spec_name
+            }
+        }
         log.add_result(res)
-        data = log.get_log()
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
+        data = log.log
+        if not os.path.exists("logs"):
+            os.mkdir("logs")
         output_file_name = f"logs/{session['id']}.toml"
         with open(output_file_name, "w") as toml_file:
             toml.dump(data, toml_file)
@@ -284,23 +291,13 @@ def get_choice(scenario):
         pdf.set_font("Arial", size=15)
         f = open(output_file_name, "r")
         for lines in f:
-            pdf.cell(200, 10, txt=lines, ln=1, align='C')
+            pdf.cell(200, 10, txt=lines, ln=1, align="C")
         pdf.output(f"logs/{str(session['id'])}.pdf")
-
     else:
-        # eliciter has not terminated - extract the next choice
-        m1, m2 = eliciter.query  # TODO - support more than 2 options
-        res = {
-                "left": {
-                    "name": m1.name,
-                    "values": m1.attributes
-                    },
-                "right": {
-                    "name": m2.name,
-                    "values": m2.attributes
-                    }
-            }
-    # the state has changed, needs to be written back
+        res = []
+        for option in eliciter.query():
+            res.append({"name": option.name, "values": option.attributes})
+        log.add_options(res)
     db.eliciter = eliciter
     db.logger = log
     return jsonify(res)

@@ -9,10 +9,11 @@ import pickle
 
 
 def main():
+    """Operate basic client to elicit bounds by talking to the server."""
     sess = requests.Session()
 
     print("Requesting Scenario List")
-    request = 'http://127.0.0.1:8666/scenarios'
+    request = "http://127.0.0.1:8666/scenarios"
     print(request)
     scenarios = sess.get(request).json()
     scenario = "jobs"
@@ -27,7 +28,7 @@ def main():
     attribs = sorted(metrics)  # canonical order for plotting
 
     # Create a hidden "ground truth" oracle function
-    request = f'http://127.0.0.1:8666/{scenario}/ranges'
+    request = f"http://127.0.0.1:8666/{scenario}/ranges"
     print(request)
     candidates = sess.get(request).json()
     attribs, table = tabulate(candidates, metrics)
@@ -36,14 +37,14 @@ def main():
 
     # Create a bounds session
     print("Starting eliciter session")
-    request = f'http://127.0.0.1:8666/{scenario}/bounds/init'
+    request = f"http://127.0.0.1:8666/{scenario}/bounds/init"
     sess.put(request)
     print(request)
 
     # log the query choice_log for plotting later
     choice_log = []
 
-    request = f'http://127.0.0.1:8666/{scenario}/bounds/choice'
+    request = f"http://127.0.0.1:8666/{scenario}/bounds/choice"
     print(request)
     choice = sess.get(request).json()
 
@@ -67,10 +68,10 @@ def main():
         # Answer automatically
         q = np.array([left.attributes[a] for a in attribs])
         ref = np.array([right.attributes[a] for a in attribs])
+        label = ((q - ref) @ w_true < 0)  # oracle!
 
         choice_log.append(q)
 
-        label = ((q - ref) @ w_true < 0)  # oracle!
         data = {}
 
         if label:
@@ -85,7 +86,7 @@ def main():
 
     # Terminated - decode the model
     model_ID = sess.get(request).json()
-    path = 'server/mlserver/' + model_ID["model_ID"]
+    path = "server/mlserver/" + model_ID["model_ID"]
     model = pickle.load(open(path, "rb"))  # load the model from disk
 
     w_est = model.w
@@ -96,7 +97,7 @@ def main():
     print("Estimated weights: ", w_est.round(2))
     accept = ((table - ref) @ w_true < 0)
     pred = ((table - ref) @ w_est < 0)
-    pred = model.guess(table)
+    pred = model.predict(table)
     accept_rt = accept.mean()
     acc = np.mean(accept == pred)
     print(f"True preference would accept {accept_rt:.0%} of real candidates.")
@@ -105,15 +106,15 @@ def main():
 
     # Display 3D plot  -------------------------
     # because this is display, we need to flip choices
-    sign = np.array([1 if metrics[a].get('lowerIsBetter', True) else -1
+    sign = np.array([1 if metrics[a].get("lowerIsBetter", True) else -1
                     for a in attribs])
 
     plot3d.sample_trajectory(choice_log * sign, attribs)
     rad = plot3d.radius(choice_log)[:3]
     plot3d.weight_disc(
-        w_true[:3], (ref * sign)[:3], rad, 'b', "true boundary")
+        w_true[:3], (ref * sign)[:3], rad, "b", "true boundary")
     plot3d.weight_disc(
-        w_est[:3], (ref * sign)[:3], rad, 'r', "estimated boundary")
+        w_est[:3], (ref * sign)[:3], rad, "r", "estimated boundary")
     plt.legend()
     plt.show()
 

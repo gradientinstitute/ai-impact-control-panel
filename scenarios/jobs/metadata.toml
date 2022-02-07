@@ -56,9 +56,11 @@ role recommendations more than average."""
     action = "recommend{s}"
     lowerIsBetter = false
     displayDecimals = 0
-    countable = true
     type = "quantitative" # type determines how options are presented to the user
                           # omitting type sets the default to quantitative
+
+    range_min = 0
+    range_max = 100
 
 [metrics.fnr]
     name = "Proportion of suitable candidates missed"
@@ -74,7 +76,9 @@ role recommendations more than average."""
     suffix = "candidates per 100 suitable"
     action = "missed"
     displayDecimals = 0
-    countable = true
+
+    range_min = 0
+    range_max = 100
 
 [metrics.fnr_difference]
     name = "Inequality of missing out"
@@ -90,7 +94,9 @@ role recommendations more than average."""
     suffix = "fewer suitable women than the average per 100 candidates"
     action = "recommends"
     displayDecimals = 0
-    countable = true
+
+    range_min = 0
+    range_max = 100
 
 [metrics.privacy_level]
     name = "feature use"
@@ -108,3 +114,5 @@ role recommendations more than average."""
     comparison_better = "uses less personal data than" 
     comparison_worse = "uses more personal data than"
     comparison_equal = "uses the same amount of personal data as"
+
+    isMetric = false
