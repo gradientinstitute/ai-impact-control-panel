@@ -144,20 +144,21 @@ def inject_metadata(metrics, candidates):
         if "lowerIsBetter" not in meta:
             meta["lowerIsBetter"] = True
 
-        if not meta["lowerIsBetter"]:          
-            if "range_max" in meta and "range_min" not in meta:
-                range_max = meta["range_max"]
-                meta["range_min"] = -range_max
-
-            if "range_min" in meta and "range_max" not in meta:
-                range_min = meta["range_min"]
-                meta["range_max"] = -range_min
-            
+        if not meta["lowerIsBetter"]:
             if "range_min" in meta and "range_max" in meta:
+                # flip the min and max
                 range_min = meta["range_min"]
                 range_max = meta["range_max"]
                 meta["range_min"] = -range_max
                 meta["range_max"] = -range_min
+
+            elif "range_max" in meta:
+                meta["range_min"] = -meta["range_max"]
+                del meta["range_max"]
+
+            elif "range_min" in meta:
+                meta["range_max"] = -meta["range_min"]
+                del meta["range_min"]
 
         if meta["type"] == "quantitative":
             meta["displayDecimals"] = int(meta["displayDecimals"])

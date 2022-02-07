@@ -8,7 +8,10 @@ import math
 
 
 def nice_range(a, b):
-    """Round min down and max up to the nearest `div`."""
+    """
+      Round min down and max up to the nearest `div`.
+      Return the minimum value and the maximum value in order in a tuple.
+    """
     min_num = min(a, b)
     max_num = max(a, b)
     range = math.ceil(max_num - min_num)
