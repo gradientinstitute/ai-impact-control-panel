@@ -20,6 +20,7 @@ class Logger:
         self.log["result"] = None
 
     def add_options(self, option):
+        """Log a query presented to the user."""
         option_store = deepcopy(option)
         for o in option_store:
             del o["name"]
@@ -28,13 +29,12 @@ class Logger:
             {"options": option_store}
 
     def add_choice(self, choice):
+        """Log a decision made by the user."""
         for key in choice[0].keys():
             question = "Question number " + str(self.choice_number + 1)
             self.log["choices"][question][key] = choice[0][key]
         self.choice_number += 1
 
     def add_result(self, result):
+        """Log the result of an eliciter algorithm."""
         self.log["result"] = result
-
-    def get_log(self):
-        return self.log

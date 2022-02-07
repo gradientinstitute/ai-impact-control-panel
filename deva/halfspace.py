@@ -125,6 +125,7 @@ class HalfspaceRanking(_HalfspaceBase):
         self.Q = np.zeros((n, n), dtype=int)  # All labels, including reversed
 
     def next_round(self):
+        """Advance the eliciter to the next user-choice round."""
         assert not self.query
 
         for self.i in range(self.i + 1, self.nc):
@@ -153,6 +154,7 @@ class HalfspaceRanking(_HalfspaceBase):
         return True
 
     def put_response(self, y):
+        """Inform the eliciter of the user's choice."""
         left, right = self.order[self.i]
         self.Y[self.i] = y
         self.Q[[left, right], [right, left]] = [y, -y]
@@ -219,7 +221,7 @@ class HalfspaceMax(_HalfspaceBase):
         self.H = np.zeros((self.n - 1, d + 1))  # comparison hyperplanes
 
     def next_round(self):
-
+        """Advance to the next round."""
         for self.i in range(self.i + 1, self.n):
 
             # construct hyperplane comparing candidate with best
@@ -242,6 +244,7 @@ class HalfspaceMax(_HalfspaceBase):
         return True
 
     def put_response(self, y):
+        """Inform the eliciter of the user's choice."""
         self.Y[self.i - 1] = y
         if y == -1:
             self.maxi = self.i

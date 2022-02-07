@@ -7,7 +7,7 @@ import pytest
 
 
 def make_data():
-    # make a simple multi-dimensional pareto efficient set with no repeats
+    """Make a simple multi-dimensional pareto efficient set with no repeats."""
     data = list(permutations(range(4), 4))
     attribs = [f"X{i+1}" for i in range(4)]
 
@@ -25,6 +25,7 @@ def make_data():
 
 @pytest.mark.parametrize("algorithm", elicit.algorithms)
 def test_works(algorithm):
+    """Test that each algorithm can find the optimum in a toy problem."""
     # Note: assumes choice is from a discrete set (no continuous responses)
     if algorithm == "Enautilus":
         return  # exemption
@@ -42,20 +43,20 @@ def test_works(algorithm):
 
     eliciter = elicit.algorithms[algorithm](candidates, scenario)
 
-    while not eliciter.terminated:
-        ans = oracle(eliciter.query)
+    while not eliciter.terminated():
+        ans = oracle(eliciter.query())
         eliciter.put(ans)
 
-    assert eliciter.result.name == best
+    assert eliciter.result().name == best
 
 
 @pytest.mark.parametrize("algorithm", elicit.algorithms)
 def test_pickleable(algorithm):
-
+    """Ensure that each algorithm can be pickled during elicitation."""
     candidates, scenario, attribs = make_data()
 
     # Run one step of the elicitation so the state is populated
     eliciter = elicit.algorithms[algorithm](candidates, scenario)
-    eliciter.put(eliciter.query[0].name)
+    eliciter.put(eliciter.query()[0].name)
 
     pickle.dumps(eliciter)  # will error if not pickleable

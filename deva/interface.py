@@ -3,6 +3,7 @@ from deva import elicit
 
 
 def readout(x, info, suffix=False, sigfig=2):
+    """Display a metric using its metadata."""
     # prep a number for text display
     fmt = f"{{:.{sigfig-1}f}}"
 
@@ -31,6 +32,7 @@ def readout(x, info, suffix=False, sigfig=2):
 
 
 def plural(text, x):
+    """Format text for singular/plural gramattical numbers."""
     if (x - 1)**2 < 1e-8:
         s = ""
     else:
@@ -39,7 +41,7 @@ def plural(text, x):
 
 
 def text(value, meta):
-
+    """Display a candidate or tuple of candidates in human readable form."""
     if isinstance(value, tuple):
         # Display a pairwise comparison
         a, b = value

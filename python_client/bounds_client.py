@@ -68,10 +68,10 @@ def main():
         # Answer automatically
         q = np.array([left.attributes[a] for a in attribs])
         ref = np.array([right.attributes[a] for a in attribs])
+        label = ((q - ref) @ w_true < 0)  # oracle!
 
         choice_log.append(q)
 
-        label = ((q - ref) @ w_true < 0)  # oracle!
         data = {}
 
         if label:
