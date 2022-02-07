@@ -5,7 +5,7 @@ import _ from "lodash";
 import axios from 'axios';
 
 import { Pane, paneState, algoState, nameState, constraintsState,
-         metadataState, scenarioState} from './Base';
+         metadataState, scenarioState, algoChoicesState} from './Base';
 import {sigFigs} from './Widgets';
 import {IntroContext} from './Intro';
 import {Constraints} from './Constrain';
@@ -15,12 +15,6 @@ const HIGHLIGHT_COLOUR = "bg-orange-700";
 const FIRST_COLOUR = "bg-gray-700";
 const SECOND_COLOUR = "bg-blue-600";
 const THIRD_COLOUR = "bg-green-700";
-
-// the set of algorithms retrieved from the serever
-const algoChoicesState = atom({
-    key: 'algorithmChoices',
-    default: [],
-  });
 
 // info from the ranges API containing
 // array containing all of the candidates

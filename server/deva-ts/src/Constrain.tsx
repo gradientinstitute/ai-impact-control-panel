@@ -51,7 +51,7 @@ export function Constraints({}) {
   const currentCandidates = useRecoilValue(currentCandidatesState);
   // the actual/current contraints as defined by the position of scrollbars
 
-  const setConstraints = useSetRecoilState(constraintsState);
+  const [constraints, setConstraints] = useRecoilState(constraintsState);
 
   // set initial value of the constraints
   useEffect(() => {
@@ -60,6 +60,10 @@ export function Constraints({}) {
 
   // initial loading of candidates
   if (currentCandidates === null) {
+    return (<div>Loading...</div>);
+  }
+
+  if (constraints === null) {
     return (<div>Loading...</div>);
   }
 

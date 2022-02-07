@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { atom, useRecoilState, useRecoilValue} from 'recoil';
+import { atom, useRecoilState, 
+  useSetRecoilState, useRecoilValue} from 'recoil';
 import axios from 'axios';
 import { Dialog } from "@reach/dialog";
 import { Tabs, TabList, Tab, TabPanels, TabPanel, TabsOrientation } from "@reach/tabs";
@@ -8,7 +9,7 @@ import "@reach/dialog/styles.css";
 import './Setup.css';
 
 import {Pane, paneState, scenarioState, algoState, nameState,
-        problemType} from './Base';
+        TaskTypes, taskTypeState} from './Base';
 
 
 // the set of scenarios retrieved from the serever
@@ -85,9 +86,12 @@ function ChooseScenario({setTabIndex}) {
   const [_scenario, setScenario] = useRecoilState(scenarioState);
   const [_name, setName] = useRecoilState(nameState);
   // const canGoBack = tabIndex >= 0;
-  const [_problemType, setProblemType] = useRecoilState(problemType);
+  const taskType = useRecoilValue(taskTypeState);
   const buttonDisabled = (current === null) || (_name === "");
-  const hasAlgoSelect = (_problemType === "preferences");
+
+  // Update here for additional tasks
+  const nextPane = taskType == TaskTypes.Boundaries 
+    ? Pane.Boundaries : Pane.Configure;
 
   return (
     <TabPanel key={1}>
@@ -109,7 +113,7 @@ function ChooseScenario({setTabIndex}) {
           onClick={() => {
             if (current) {
               setScenario(current)
-              setPane(Pane.Configure);
+              setPane(nextPane);
             }
           }}
           disabled={buttonDisabled}>
@@ -190,13 +194,13 @@ function ScenarioSelector({}) {
 // TODO: hook up to boundary elicitation when its implemented
 function StartButtons({setTabIndex}) {
 
-  const [_problemType, setProblemType] = useRecoilState(problemType);
+  const setTask = useSetRecoilState(taskTypeState);
 
   return (
       <div className="grid grid-cols-2 gap-10 py-12 px-6">
         <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
           onClick={() => {
-            setProblemType("bounds");
+            setTask(TaskTypes.Boundaries);
             setTabIndex(1);
           }}
           disabled={false}>
@@ -204,7 +208,7 @@ function StartButtons({setTabIndex}) {
         </button>
         <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
           onClick={() => {
-            setProblemType("preferences");
+            setTask(TaskTypes.Deployment);
             setTabIndex(1);
           }}
           disabled={false}>
