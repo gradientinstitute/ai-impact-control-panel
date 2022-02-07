@@ -2,10 +2,9 @@ import {RecoilRoot, useRecoilValue} from 'recoil';
 
 import {Pane, paneState} from './Base';
 import {PairwisePane} from './Pairwise';
-import {IntroPane} from './Intro';
 import {ResultPane} from './Result';
 import {SetupPane} from './Setup';
-import {ConstraintPane} from './Constrain';
+import {ConfigurePane} from './Configure';
 import {BoundariesPane} from './Boundaries';
 import {ConfigButton, ConfigPanel} from './Config'
 import {Breadcrumb} from './Breadcrumb';
@@ -41,8 +40,7 @@ function Content() {
 
   let content = {};
   content[Pane.Setup] = (<SetupPane />);
-  content[Pane.Intro] = (<IntroPane />);
-  content[Pane.Constrain] = (<ConstraintPane />);
+  content[Pane.Configure] = (<ConfigurePane />)
   content[Pane.Pairwise] = ( <PairwisePane />);
   content[Pane.Result] = (<ResultPane />);
   content[Pane.Boundaries] = (<BoundariesPane />);

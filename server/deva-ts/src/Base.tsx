@@ -3,11 +3,15 @@ import {atom} from 'recoil';
 // what pane are we looking at
 export enum Pane {
   Setup,
-  Intro,
-  Constrain,
+  Configure,
   Pairwise,
   Result,
   Boundaries, // new one for boundary scroll bars
+}
+
+export enum TaskTypes {
+  Boundaries,
+  Deployment,
 }
 
 // this global state is only for items that need to persist across panes
@@ -19,11 +23,17 @@ export const paneState = atom({
 });
 
 // Which type of problem the user has chosen to elicit
-export const problemType = atom({
-    key: 'problemType',
-    default: null,
+export const taskTypeState = atom({
+    key: 'taskType',
+    default: TaskTypes.Boundaries,
   });
 
+
+// the set of algorithms retrieved from the serever
+export const algoChoicesState = atom({
+    key: 'algorithmChoices',
+    default: [],
+  });
 
 // state for which scenario has been chosen by the user
 export const scenarioState = atom({  
