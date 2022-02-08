@@ -100,11 +100,10 @@ def send_log(name):
     scenario_path = "logs"
     return send_from_directory(scenario_path, name)
 
-@app.route("/<scenario>/bounds/save", methods=["PUT"])
+@app.route("/<scenario>/bounds/save", methods=["GET"])
 def save_bound(scenario):
-    _, meta = _scenario(scenario)
-    # for m in meta["metrics"]:
-    return ""
+    config = "configuration for the boundaries, placeholder"
+    return jsonify(config)
 
 @app.route("/<scenario>/bounds/init", methods=["PUT"])
 def init_bounds(scenario):
@@ -115,7 +114,7 @@ def init_bounds(scenario):
     baseline = meta["baseline"]
     metrics = meta["metrics"]
     attribs, table = bounds.tabulate(candidates, metrics)
-    ref = [baseline[a] for a in attribs]
+    ref = [baseline["industry_average"][a] for a in attribs]
     db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
     return ""
 
