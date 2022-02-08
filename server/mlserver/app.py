@@ -100,10 +100,11 @@ def send_log(name):
     scenario_path = "logs"
     return send_from_directory(scenario_path, name)
 
-@app.route("/<scenario>/bounds/save", methods=["GET"])
+@app.route("/<scenario>/bounds/save", methods=["PUT"])
 def save_bound(scenario):
-    config = "configuration for the boundaries, placeholder"
-    return jsonify(config)
+    # config = "configuration for the boundaries, placeholder"
+    print(request.json)
+    return "key"
 
 @app.route("/<scenario>/bounds/init", methods=["PUT"])
 def init_bounds(scenario):

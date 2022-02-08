@@ -92,8 +92,12 @@ def main():
     # config = "configuration for the boundaries, placeholder"
     request = f"http://127.0.0.1:8666/{scenario}/bounds/save"
     print(request)
-    bounds = sess.get(request).json()
-    print(bounds)
+    # config = "configuration for the boundaries, placeholder"
+    config = {
+        "revenue" : 3521
+    }
+    key = sess.put(request, json=config)
+    print(key)
 
     w_est = model.w
 
