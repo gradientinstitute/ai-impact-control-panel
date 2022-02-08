@@ -5,13 +5,15 @@ import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
-import { scenarioState, metadataState, constraintsState } from './Base';
+import { metadataState, constraintsState } from './Base';
 
 import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
   blockedMetricState, isBlockedState, 
   blockedStatusState, blockingMetricsState, blockingStates, 
   unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';
+
+import { radarDataState, VisualiseData } from './RadarCharts';
 
 const HandleColours = {
   0: 'white', // default
@@ -52,13 +54,20 @@ export function Constraints({}) {
   // the actual/current contraints as defined by the position of scrollbars
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
+  const setRadarData = useSetRecoilState(radarDataState);
 
   // set initial value of the constraints
   useEffect(() => {
     setConstraints(maxRanges)
   }, [maxRanges]);
 
-  // initial loading of candidates
+  useEffect(() => {
+    const values = {}
+    values["included"] = _.mapValues(constraints, x => x[0]);
+    values["excluded"] = _.mapValues(constraints, x => x[1]);
+    setRadarData(values)
+  }, [constraints]);
+
   if (currentCandidates === null) {
     return (<div>Loading...</div>);
   }
@@ -72,6 +81,9 @@ export function Constraints({}) {
     <div className="mx-auto grid gap-4 grid-cols-1">
       <h1 className="text-left">Metric Filters</h1>
       <ConstraintStatus />
+      <div className="">
+        <VisualiseData/>
+      </div>
       <div className="mb-10">
         <MultiRangeConstraint />
       </div>
