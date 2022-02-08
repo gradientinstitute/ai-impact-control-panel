@@ -121,7 +121,7 @@ def run_bounds_eliciter(sample, table, oracle, ref, n_samples):
     answer = True
     base = ["baseline", "base"]
 
-    while not sampler.terminated:
+    while not sampler.terminated():
         step += 1
 
         choices.append(sampler.choice)
