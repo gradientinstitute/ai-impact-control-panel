@@ -1,4 +1,4 @@
-"""Preference eliciter module."""
+"""Preferene eliciter module."""
 from itertools import combinations
 from functools import partial
 import numpy as np
@@ -227,13 +227,17 @@ class Enautilus(Eliciter):
         choice = self._query[int(choice)]
         self._nadir = choice.attributes
         # remove candidates that are worse in every attribute
+        print(f'before: {self.candidates}')
         copy = []
         for can in self.candidates:
             if np.any(np.array(can.get_attr_values())
                       > np.array(list(self._nadir.values()))):
+                a = can.get_attr_values()
+                print(a)
                 copy.append(can)
         for c in copy:
             self.candidates.remove(c)
+        print(f'after: {self.candidates}')
         self._update_zpoints()
         self._nadir = choice.attributes
         self._update()
@@ -332,7 +336,7 @@ class Enautilus(Eliciter):
         by_label = OrderedDict(zip(labels, handles))
         plt.title(f'The plot for iteration {self.iter_count}')
         plt.legend(by_label.values(), by_label.keys())
-        plt.savefig(f"last {self._h} plot.jpg")
+        plt.savefig(f"Plot for iteration {self.iter_count}.jpg")
 
 
 # Eliciter implementations

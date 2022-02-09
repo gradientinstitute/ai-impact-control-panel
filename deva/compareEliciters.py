@@ -45,6 +45,14 @@ def favourite_gen(num=1000, attr=5):
     return systems
 
 
+def cal_distance(candidate, goal):
+    """calculate the distance between an option
+    and the favorate candidate (goal)"""
+    can = np.array(candidate.get_attr_values())
+    g = np.array(goal.get_attr_values())
+    return np.linalg.norm(can - g)
+
+
 def test_eliciters(eliciter_list, num, attr):
     """
     Feed a generated system into eliciters.
@@ -74,15 +82,17 @@ def test_eliciters(eliciter_list, num, attr):
     for index, system in enumerate(systems):
         candidates.append(elicit.Candidate(index,
                                            dict(zip(attributes, system))))
+    goal = candidates[0]
     # use the generated candidates to test eliciters
     for eliciter in e_list:
         question_count = 0
         test_target = eliciter(candidates, scenario)
+        if test_target.description() == "E-NAUTILUS eliciter":
+            test_target.updateForN(100, 2)
         while not test_target.terminated:
             question_count += 1
             m1, m2 = test_target.query
-            if int(m1.name) < int(m2.name):
-                # choose the better option, smaller the better
+            if cal_distance(m1, goal) <= cal_distance(m2, goal):
                 test_target.put(m1.name)
             else:
                 test_target.put(m2.name)
