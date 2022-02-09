@@ -100,14 +100,16 @@ def send_log(name):
     scenario_path = "logs"
     return send_from_directory(scenario_path, name)
 
+
 @app.route("/<scenario>/bounds/save", methods=["PUT"])
 def save_bound(scenario):
+    """Save the bounds configurations to the server."""
     file_name = f"scenarios/{scenario}/bounds.toml"
     path = os.path.join(fileio.repo_root(), file_name)
-    with open(path, 'w+') as toml_file:
+    with open(path, "w+") as toml_file:
         toml.dump(request.json, toml_file)
-
     return "key"
+
 
 @app.route("/<scenario>/bounds/init", methods=["PUT"])
 def init_bounds(scenario):

@@ -72,17 +72,6 @@ def _load_baseline(scenario):
     baseline = toml.load(baseline_f)
     return baseline
 
-# def _load_bounds(scenario):
-#     # attempt to load the bounds
-#     scenario_path = os.path.join(repo_root(), "scenarios", scenario)
-#     bounds_f = os.path.join(scenario_path, "bounds.toml")
-#     # assert os.path.exists(bounds_f)
-#     if os.path.exists(bounds_f):
-#         bounds = toml.load(bounds_f)
-#     else:
-#         bounds = None
-#     return bounds
-
 
 def load_scenario(scenario_name, pfilter=True):
     """Load the metadata and candidates of a specific scenario."""
@@ -105,7 +94,6 @@ def load_scenario(scenario_name, pfilter=True):
     if os.path.exists(bounds_f):
         bounds = toml.load(bounds_f)
         scenario["bounds"] = bounds
-    # bounds = _load_bounds(scenario_name)
 
     # Apply lowerIsBetter
     metrics = scenario["metrics"]
@@ -186,7 +174,7 @@ def inject_metadata(metrics, candidates):
             meta["displayDecimals"] = int(meta["displayDecimals"])
 
             if candidates:
-                # the user may set fixed ranges (with nice defaults if they dont)
+                # the user may set fixed ranges with nice defaults if they dont
                 (range_min, range_max) = nice_range(meta["min"], meta["max"])
             else:
                 (range_min, range_max) = (-10000, 10000)  # TODO

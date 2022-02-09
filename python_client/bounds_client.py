@@ -92,7 +92,7 @@ def main():
     request = f"http://127.0.0.1:8666/{scenario}/bounds/save"
     # configurations for the boundaries
     config = {
-        "test" : [0, 100]
+        "test": [0, 100]
     }
     key = sess.put(request, json=config)
     print(key)
