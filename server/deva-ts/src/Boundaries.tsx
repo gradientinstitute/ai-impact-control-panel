@@ -42,7 +42,7 @@ export function BoundariesPane({}) {
       fetchData();
     }, []
     );
-    
+
     // set initial value of the constraints
     useEffect(() => {
       setConstraints(maxRanges)
@@ -59,7 +59,7 @@ export function BoundariesPane({}) {
           <MultiRangeConstraint />
         </div>
         <div className="width-1/4">
-          <StartButton />
+          <SaveButton />
         </div>
       </div>
     );
@@ -71,7 +71,20 @@ function MultiRangeConstraint({}) {
 
   const constraints = useRecoilValue(constraintsState);
 
-  const baseline = metadata.baseline
+  const baseline = metadata.baseline;
+
+  // // current constraints done by metric
+  const [_costraints, setConstraints] = useRecoilState(constraintsState);
+
+  const maxRanges = useRecoilValue(rangesState);
+  const bounds = maxRanges;
+  // set initial value of the constraints
+  useEffect(() => {
+    if ("bounds" in metadata){
+      const bounds = metadata.bounds;
+      setConstraints(bounds);
+    }
+  }, [bounds]);
 
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
@@ -164,7 +177,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
     n[uid] =  [n[uid][0], newVal]
 
-    setConstraints(n);  
+    setConstraints(n);
   }
 
   let rangeProps = {
@@ -172,6 +185,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     max: max,
     onBeforeChange: onBeforeChange,
     onChange: onChange,
+    // defaultValue: 70,
     value: val,
     step: getSliderStep(decimals),
     trackStyle: {backgroundColor: "lightblue"},
@@ -208,17 +222,16 @@ function OptimalDirection({lowerIsBetter}) {
   }
 
 
-function StartButton({}) {
+function SaveButton({}) {
 
   const [submit, setSubmit] = useState(false);
 
   const scenario = useRecoilValue(scenarioState);
   const constraints = useRecoilValue(constraintsState);
-  const [_pane, setPane] = useRecoilState(paneState);
 
   useEffect(() => {
     const fetch = async () => {
-      await axios.put<any>("api/" + scenario + "/constraints", constraints);
+      await axios.put<any>("api/" + scenario + "/bounds/save", constraints);
       window.location.href='/';
     }
     if (submit) {

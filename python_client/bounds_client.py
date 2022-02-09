@@ -89,12 +89,10 @@ def main():
     path = "server/mlserver/" + model_ID["model_ID"]
     model = pickle.load(open(path, "rb"))  # load the model from disk
 
-    # config = "configuration for the boundaries, placeholder"
     request = f"http://127.0.0.1:8666/{scenario}/bounds/save"
-    print(request)
-    # config = "configuration for the boundaries, placeholder"
+    # configurations for the boundaries
     config = {
-        "revenue" : 3521
+        "test" : [0, 100]
     }
     key = sess.put(request, json=config)
     print(key)

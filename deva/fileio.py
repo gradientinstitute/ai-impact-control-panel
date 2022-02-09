@@ -72,6 +72,17 @@ def _load_baseline(scenario):
     baseline = toml.load(baseline_f)
     return baseline
 
+# def _load_bounds(scenario):
+#     # attempt to load the bounds
+#     scenario_path = os.path.join(repo_root(), "scenarios", scenario)
+#     bounds_f = os.path.join(scenario_path, "bounds.toml")
+#     # assert os.path.exists(bounds_f)
+#     if os.path.exists(bounds_f):
+#         bounds = toml.load(bounds_f)
+#     else:
+#         bounds = None
+#     return bounds
+
 
 def load_scenario(scenario_name, pfilter=True):
     """Load the metadata and candidates of a specific scenario."""
@@ -89,6 +100,13 @@ def load_scenario(scenario_name, pfilter=True):
 
     baseline = _load_baseline(scenario_name)
 
+    # attempt to load the bounds
+    bounds_f = os.path.join(scenario_path, "bounds.toml")
+    if os.path.exists(bounds_f):
+        bounds = toml.load(bounds_f)
+        scenario["bounds"] = bounds
+    # bounds = _load_bounds(scenario_name)
+
     # Apply lowerIsBetter
     metrics = scenario["metrics"]
     flip = [m for m in metrics if not metrics[m].get("lowerIsBetter", True)]
@@ -99,7 +117,11 @@ def load_scenario(scenario_name, pfilter=True):
         for i in baseline:
             baseline[i][f] = -baseline[i][f]
 
+        # if os.path.exists(bounds_f):
+        #     bounds[f] = [-b for b in bounds[f]]
+
     scenario["baseline"] = baseline
+    # scenario["bounds"] = bounds
 
     # Filter efficient set
     if pfilter:
@@ -163,8 +185,11 @@ def inject_metadata(metrics, candidates):
         if meta["type"] == "quantitative":
             meta["displayDecimals"] = int(meta["displayDecimals"])
 
-            # the user may set fixed ranges (with nice defaults if they dont)
-            (range_min, range_max) = nice_range(meta["min"], meta["max"])
+            if candidates:
+                # the user may set fixed ranges (with nice defaults if they dont)
+                (range_min, range_max) = nice_range(meta["min"], meta["max"])
+            else:
+                (range_min, range_max) = (-10000, 10000)  # TODO
 
             if "range_min" not in meta:
                 meta["range_min"] = range_min
