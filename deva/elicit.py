@@ -171,15 +171,13 @@ class Enautilus(Eliciter):
         self._ideal = {}
         self._h = 5  # number of questions
         self._ns = 2  # number of options
+        self.iter_count = 0
         self.candidates = list(candidates)
         self.attribs = candidates[0].get_attr_keys()
         self.current_centers = []
+        self.kmeans_centers = []
         self._update_zpoints()
         self._update()
-
-    def get_z_points(self):
-        """Return ideal point and nadir point in a list."""
-        return [self._ideal, self._nadir]
 
     def updateForN(self, n1, ns):
         """Update the number of questions the algorithm will use."""
@@ -204,9 +202,10 @@ class Enautilus(Eliciter):
         X = []
         for can in self.candidates:
             X.append(np.array(can.get_attr_values()))
+        sub = np.array(X) - np.array(list(self._nadir.values()))
+        norm1 = np.linalg.norm(sub, axis=1)
         return self.candidates[
-            np.linalg.norm(np.array(X)
-                           - np.array(list(self._nadir.values()))).argmin()
+            norm1.argmin()
         ]
 
     def _update_zpoints(self):
@@ -226,19 +225,17 @@ class Enautilus(Eliciter):
     def put(self, choice):
         """Receive input from the user and update ideal point."""
         choice = self._query[int(choice)]
-        # import IPython;IPython.embed()
         self._nadir = choice.attributes
-        print(self._nadir)
-        # import IPython;IPython.embed()
         # remove candidates that are worse in every attribute
         copy = []
         for can in self.candidates:
-            if np.all(np.array(can.get_attr_values())
-                      < np.array(list(self._nadir.values()))):
+            if np.any(np.array(can.get_attr_values())
+                      > np.array(list(self._nadir.values()))):
                 copy.append(can)
         for c in copy:
             self.candidates.remove(c)
         self._update_zpoints()
+        self._nadir = choice.attributes
         self._update()
 
     def virtualCandidateGen(self):
@@ -255,6 +252,7 @@ class Enautilus(Eliciter):
         from sklearn.cluster import KMeans
         kmeans = KMeans(n_clusters=self._ns).fit(np.array(X))
         centers = kmeans.cluster_centers_
+        self.kmeans_centers = centers
         # project to the line between pareto front and nadir point
         if self._h == 1:
             numerator = 1
@@ -278,7 +276,6 @@ class Enautilus(Eliciter):
         if (self._h > 0) and (len(self.candidates) != 1):
             self._query = self.virtualCandidateGen()
             self._h = self._h - 1
-            self.plot_2d()
         else:
             self._query = None
 
@@ -286,8 +283,25 @@ class Enautilus(Eliciter):
     def description():
         return "E-NAUTILUS eliciter"
 
+    def plot_data(self):
+        """return all the data needed for 2d print"""
+        return [self._nadir, self._ideal, self.attribs, self.current_centers,
+                self.candidates, self.kmeans_centers]
+
+    def plot_final(self):
+        """plot the final candidate picked"""
+        r_point = self.result.get_attr_values()
+        plt.scatter(r_point[0], r_point[1], s=80, marker=(4, 1),
+                    label='Result')
+        handles, labels = plt.gca().get_legend_handles_labels()
+        by_label = OrderedDict(zip(labels, handles))
+        plt.legend(by_label.values(), by_label.keys())
+        plt.title('Final plot with result point')
+        plt.savefig('final.jpg')
+
     def plot_2d(self):
         """plot 2d scenarios according to the paper"""
+        self.iter_count += 1
         plt.figure()
         width = self._nadir[self.attribs[0]] - self._ideal[self.attribs[0]]
         height = self._nadir[self.attribs[1]] - self._ideal[self.attribs[1]]
@@ -296,17 +310,27 @@ class Enautilus(Eliciter):
                               self._ideal[self.attribs[1]]),
                               width, height, fill=None, alpha=0.1))
         plt.scatter(self._ideal[self.attribs[0]], self._ideal[self.attribs[1]],
-                    s=80, marker=(5, 1), label='ideal point')
+                    s=80, marker=(5, 1), label='Trade-off Margins', c='purple')
         plt.scatter(self._nadir[self.attribs[0]], self._nadir[self.attribs[1]],
-                    s=80, marker=(3, 1), label='nadir point')
+                    s=80, marker=(3, 1), label='Nadir Point', c='blue')
         for point in self.current_centers:
-            plt.scatter(point[0], point[1], c='black', label='centers')
+            plt.scatter(point[0], point[1], c='orange', alpha=0.2,
+                        label='Virtual Options')
         for can in self.candidates:
             point1 = np.array(can.get_attr_values())
             plt.scatter(point1[0], point1[1], c='red', alpha=0.3,
-                        label='candidates')
+                        label='Candidates')
+        for point2 in self.kmeans_centers:
+            plt.scatter(point2[0], point2[1], c='green', alpha=0.2,
+                        label='KMeans Centers')
+            p1 = [point2[0], self._nadir[self.attribs[0]]]
+            p2 = [point2[1],
+                  self._nadir[self.attribs[1]]]
+            plt.plot(p1, p2, c='green',
+                     linestyle='dotted', alpha=0.2)
         handles, labels = plt.gca().get_legend_handles_labels()
         by_label = OrderedDict(zip(labels, handles))
+        plt.title(f'The plot for iteration {self.iter_count}')
         plt.legend(by_label.values(), by_label.keys())
         plt.savefig(f"last {self._h} plot.jpg")
 

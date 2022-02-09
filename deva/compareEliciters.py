@@ -83,9 +83,9 @@ def test_eliciters(eliciter_list, num, attr):
             m1, m2 = test_target.query
             if int(m1.name) < int(m2.name):
                 # choose the better option, smaller the better
-                test_target.put(m1)
+                test_target.put(m1.name)
             else:
-                test_target.put(m2)
+                test_target.put(m2.name)
         result = test_target.result
         mean_error = np.mean(np.linalg.norm(systems[0] - systems))
         error = {}
