@@ -108,7 +108,8 @@ def save_bound(scenario):
     path = os.path.join(fileio.repo_root(), file_name)
     with open(path, "w+") as toml_file:
         toml.dump(request.json, toml_file)
-    return "key"
+    # TODO: return report text
+    return "report"
 
 
 @app.route("/<scenario>/bounds/init", methods=["PUT"])

@@ -12,57 +12,57 @@ import { allCandidatesState, rangesState, currentCandidatesState,
 
 
 export function BoundariesPane({}) {
-    // name of current scenorio for url purposes e.g. "ezyfraud"
-    const scenario = useRecoilValue(scenarioState);
-    // largest possible ranges for specifying the scrollbar extents
-    const maxRanges = useRecoilValue(rangesState);
-    // list of currently permissible candidates based on current constraints
-    const currentCandidates = useRecoilValue(currentCandidatesState);
-    // the actual/current contraints as defined by the position of scrollbars
+  // name of current scenorio for url purposes e.g. "ezyfraud"
+  const scenario = useRecoilValue(scenarioState);
+  // largest possible ranges for specifying the scrollbar extents
+  const maxRanges = useRecoilValue(rangesState);
+  // list of currently permissible candidates based on current constraints
+  const currentCandidates = useRecoilValue(currentCandidatesState);
+  // the actual/current contraints as defined by the position of scrollbars
 
-    const [metadata, setMetadata] = useRecoilState(metadataState);
-    const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
-  
-    // current constraints done by metric
-    const [_costraints, setConstraints] = useRecoilState(constraintsState);
-  
-    // all candidates sent to us by the server
-    const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
-  
-    useEffect(() => {
-      let req = "api/" + scenario + "/all";
-      async function fetchData() {
-        const result = await axios.get<any>(req);
-        const d = result.data;
-        setMetadata(d.metadata);
-        setAlgos(d.algorithms);
-        setAllCandidates(d.candidates);
-        // setBaselines(d.baselines);
-      }
-      fetchData();
-    }, []
-    );
+  const [metadata, setMetadata] = useRecoilState(metadataState);
+  const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
 
-    // set initial value of the constraints
-    useEffect(() => {
-      setConstraints(maxRanges)
-    }, [maxRanges]);
-  
-    if (currentCandidates === null) {
-      return (<div>Loading...</div>);
+  // current constraints done by metric
+  const [_costraints, setConstraints] = useRecoilState(constraintsState);
+
+  // all candidates sent to us by the server
+  const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+
+  useEffect(() => {
+    let req = "api/" + scenario + "/all";
+    async function fetchData() {
+      const result = await axios.get<any>(req);
+      const d = result.data;
+      setMetadata(d.metadata);
+      setAlgos(d.algorithms);
+      setAllCandidates(d.candidates);
+      // setBaselines(d.baselines);
     }
-  
-    return (
-      <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
-        <h1>Boundaries Pane</h1>
-        <div className="mb-10">
-          <MultiRangeConstraint />
-        </div>
-        <div className="width-1/4">
-          <SaveButton />
-        </div>
+    fetchData();
+  }, []
+  );
+
+  // set initial value of the constraints
+  useEffect(() => {
+    setConstraints(maxRanges)
+  }, [maxRanges]);
+
+  if (currentCandidates === null) {
+    return (<div>Loading...</div>);
+  }
+
+  return (
+    <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
+      <h1>Boundaries Pane</h1>
+      <div className="mb-10">
+        <MultiRangeConstraint />
       </div>
-    );
+      <div className="width-1/4">
+        <SaveButton />
+      </div>
+    </div>
+  );
 }
 
 
@@ -185,7 +185,6 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
     max: max,
     onBeforeChange: onBeforeChange,
     onChange: onChange,
-    // defaultValue: 70,
     value: val,
     step: getSliderStep(decimals),
     trackStyle: {backgroundColor: "lightblue"},
@@ -226,15 +225,48 @@ function SaveButton({}) {
 
   const [submit, setSubmit] = useState(false);
 
-  const scenario = useRecoilValue(scenarioState);
+  // const scenario = useRecoilValue(scenarioState);
   const constraints = useRecoilValue(constraintsState);
+  const [metadata, setMetadata] = useRecoilState(metadataState);
 
   const [_pane, setPane] = useRecoilState(paneState);
 
+  // const [metadata, setMetadata] = [...useRecoilState(metadataState)];
+  // const metadata = useRecoilState(metadataState)[0]
+
+  // let bounds = {...metadata.bounds}
+  // let maxRanges = useRecoilValue(rangesState);
+  // const bounds = maxRanges;
+
   useEffect(() => {
     const fetch = async () => {
-      await axios.put<any>("api/" + scenario + "/bounds/save", constraints);
-      // window.location.href='/';
+      // set metadata.bounds
+      // let req = "api/" + scenario + "/all";
+      // const result = await axios.get<any>(req);
+      // const d = result.data;
+      // setMetadata(d.metadata);
+      // console.log(d.metadata.bounds)
+
+      // metadata.bounds = constraints
+      // bounds = {constraints}
+
+      // const items = Object.entries(metadata.metrics).map((x) => {
+      //   const uid = x[0];
+      //   const u: any = x[1];
+      //   const lowerIsBetter = u.lowerIsBetter;
+      //   const range_min = u.range_min
+      //   const range_max = u.range_max
+
+      // const setBounds = (constraints : Object) => {
+      //   let newAllData = metadata.bounds.map((data) => {
+      //     let newData = {...data};
+      //     newData = constraints
+      //     return newData;
+      //   });
+      //   setMetadata (newAllData);
+      // };
+      // setBounds(constraints);
+
       setPane(Pane.Report)
     }
     if (submit) {
@@ -242,6 +274,8 @@ function SaveButton({}) {
     }
   }, [submit]
   );
+
+  // console.log(metadata.bounds)
 
   return (
       <button className="bg-gray-200 text-black rounded-lg" 
