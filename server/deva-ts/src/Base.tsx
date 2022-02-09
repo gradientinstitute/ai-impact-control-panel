@@ -7,6 +7,7 @@ export enum Pane {
   Pairwise,
   Result,
   Boundaries, // new one for boundary scroll bars
+  Report  // new one for display bounds configurations
 }
 
 export enum TaskTypes {

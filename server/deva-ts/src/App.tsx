@@ -6,6 +6,7 @@ import {ResultPane} from './Result';
 import {SetupPane} from './Setup';
 import {ConfigurePane} from './Configure';
 import {BoundariesPane} from './Boundaries';
+import {ReportPane} from './Report';
 
 import {Breadcrumb} from './Breadcrumb';
 
@@ -43,6 +44,7 @@ function Content() {
   content[Pane.Pairwise] = ( <PairwisePane />);
   content[Pane.Result] = (<ResultPane />);
   content[Pane.Boundaries] = (<BoundariesPane />);
+  content[Pane.Report] = (<ReportPane />);
 
   return (
     <div>

@@ -229,10 +229,13 @@ function SaveButton({}) {
   const scenario = useRecoilValue(scenarioState);
   const constraints = useRecoilValue(constraintsState);
 
+  const [_pane, setPane] = useRecoilState(paneState);
+
   useEffect(() => {
     const fetch = async () => {
       await axios.put<any>("api/" + scenario + "/bounds/save", constraints);
-      window.location.href='/';
+      // window.location.href='/';
+      setPane(Pane.Report)
     }
     if (submit) {
       fetch();
