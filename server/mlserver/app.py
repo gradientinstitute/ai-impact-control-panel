@@ -9,8 +9,9 @@ import toml
 from flask import Flask, session, abort, request, send_from_directory
 from fpdf import FPDF
 
-from deva import elicit, bounds, fileio, logger
+from deva import elicit, bounds, fileio, logger, compareBase
 from deva.db import RedisDB, DevDB
+
 
 import pickle
 
@@ -108,8 +109,13 @@ def save_bound(scenario):
     path = os.path.join(fileio.repo_root(), file_name)
     with open(path, "w+") as toml_file:
         toml.dump(request.json, toml_file)
-    # TODO: return report text
-    return "report"
+
+    # return report text
+    bounds = toml.load(path)
+    meta = _scenario(scenario)[1]
+    baselines = meta["baseline"]
+    report = compareBase.compare(meta, baselines, bounds)
+    return report
 
 
 @app.route("/<scenario>/bounds/init", methods=["PUT"])
