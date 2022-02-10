@@ -33,9 +33,7 @@ def system_gen(num=1000, attr=5):
 
 
 def cal_distance(candidate, goal):
-    """
-    Calculate the distance between an option and goal.
-    """
+    """Calculate the distance between an option and goal."""
     can = np.array(candidate.get_attr_values())
     g = np.array(goal.get_attr_values())
     return np.linalg.norm(can - g)
