@@ -5,7 +5,7 @@ import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
-import { metadataState, constraintsState } from './Base';
+import { metadataState, constraintsState, configState } from './Base';
 
 import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
@@ -13,6 +13,7 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
   blockedStatusState, blockingMetricsState, blockingStates, 
   unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';
 
+import { CompareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
 
 const HandleColours = {
@@ -55,6 +56,7 @@ export function Constraints({}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const setRadarData = useSetRecoilState(radarDataState);
+  const configs = useRecoilValue(configState);
 
   // set initial value of the constraints
   useEffect(() => {
@@ -76,14 +78,15 @@ export function Constraints({}) {
     return (<div>Loading...</div>);
   }
 
+  const visualiseRadar = CompareConfig(configs, 'displaySpiderPlot', 'true')
+    ? (<div className=""><VisualiseData/></div>)
+    : null;
 
   return (
     <div className="mx-auto grid gap-4 grid-cols-1">
       <h1 className="text-left">Metric Filters</h1>
       <ConstraintStatus />
-      <div className="">
-        <VisualiseData/>
-      </div>
+      {visualiseRadar}
       <div className="mb-10">
         <MultiRangeConstraint />
       </div>
