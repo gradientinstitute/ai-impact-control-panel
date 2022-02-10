@@ -155,6 +155,7 @@ class Enautilus(Eliciter):
     See: E-NAUTILUS: A decision support system for complex multiobjective
     optimization problems based on the NAUTILUS method.
     """
+    
     def __init__(self, candidates, scenario):
         """
         Initialise Enautilus.
