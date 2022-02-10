@@ -105,11 +105,7 @@ def load_scenario(scenario_name, pfilter=True):
         for i in baseline:
             baseline[i][f] = -baseline[i][f]
 
-        # if os.path.exists(bounds_f):
-        #     bounds[f] = [-b for b in bounds[f]]
-
     scenario["baseline"] = baseline
-    # scenario["bounds"] = bounds
 
     # Filter efficient set
     if pfilter:
@@ -176,8 +172,7 @@ def inject_metadata(metrics, candidates):
             if candidates:
                 # the user may set fixed ranges with nice defaults if they dont
                 (range_min, range_max) = nice_range(meta["min"], meta["max"])
-            else:
-                (range_min, range_max) = (-10000, 10000)  # TODO
+            # TODO else: user error
 
             if "range_min" not in meta:
                 meta["range_min"] = range_min

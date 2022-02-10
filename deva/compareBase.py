@@ -33,7 +33,7 @@ def compare(meta, baseline, bounds):
     metrics = meta["metrics"]
 
     for ref in baseline:
-        report += ref.upper()
+        report += "\n" + ref.upper()
         reason = ""
         accept = True
 
@@ -48,14 +48,14 @@ def compare(meta, baseline, bounds):
                     description = metrics[m]["name"]
 
                     if lowerIsBetter:
-                        reason += description + " is too high\n"
+                        reason += " \u2022 " + description + " is too high\n"
                     else:
-                        reason += description + " is too low\n"
+                        reason += " \u2022 " + description + " is too low\n"
 
         if accept:
             report += " is acceptable.\n"
         else:
             report += " is unacceptable because of the following reason(s):\n"
-            report += " \u2022 " + reason
+            report += reason
 
     return report

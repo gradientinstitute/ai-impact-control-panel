@@ -18,15 +18,16 @@ export function ReportPane({}) {
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
       <h1>Results Report</h1>
-      {/* TODO: left align, background, textfont, text size */}
-      {report.split("\n").map(function(item) {
-        return (
-          <span>
-            {item}
-            <br/>
-          </span>
-        )
-      })}
+      <div className="p-4 text-2xl text-left bg-gray-700 rounded-lg">
+        {report.split("\n").map(function(item) {
+          return (
+            <span>
+              {item}
+              <br/>
+            </span>
+          )
+        })}
+      </div>
 
       <div className="width-1/4">
         <BackButton />
