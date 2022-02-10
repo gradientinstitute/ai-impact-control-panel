@@ -199,12 +199,10 @@ class Enautilus(Eliciter):
             X.append(np.array(can.get_attr_values()))
         sub = np.array(X) - np.array(list(self._nadir.values()))
         norm1 = np.linalg.norm(sub, axis=1)
-        return self.candidates[
-            norm1.argmin()
-        ]
+        return self.candidates[norm1.argmin()]
 
     def _update_zpoints(self):
-        """calculate new ideal and nadirpoint"""
+        """Calculate new ideal and nadirpoint."""
         for att in self.attribs:
             minv = None
             maxv = None
@@ -281,7 +279,7 @@ class Enautilus(Eliciter):
 
     @staticmethod
     def description():
-        """Description of the eliciter."""
+        """Describe the eliciter."""
         return "E-NAUTILUS eliciter"
 
     def plot_data(self):
