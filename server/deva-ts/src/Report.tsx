@@ -65,7 +65,8 @@ function BackButton({}) {
   return (
   <div className="flex flex-1 align-middle text-left">
     <button className="hover:text-gray-400 transition"
-      onClick={() => setPane(Pane.Boundaries)}>
+      onClick={() => setPane(Pane.Boundaries)}
+      disabled = {true}>
       <div className="p-4 text-3xl">
         &#8249; Back
       </div>

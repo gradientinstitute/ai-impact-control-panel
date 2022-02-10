@@ -238,11 +238,11 @@ function SaveButton({}) {
       setReport(result.data); // result/report
 
       // TODO set metadata.bounds
-      // metadata.bounds = constraints
-      // for m in metadata.bounds:
-      // metadata.bounds
+      // for(let m in metadata.bounds){
+      //   metadata.bounds[m] = constraints[m]
+      // }
 
-      setPane(Pane.Report)
+      setPane(Pane.Report);
     }
     if (submit) {
       fetch();
