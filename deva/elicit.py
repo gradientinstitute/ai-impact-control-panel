@@ -169,7 +169,7 @@ class Enautilus(Eliciter):
         Eliciter.__init__(self)
         self._nadir = {}
         self._ideal = {}
-        self._h = 500  # number of questions
+        self._h = 50  # number of questions
         self._ns = 2  # number of options
         self.iter_count = 0
         self.candidates = list(candidates)
@@ -227,17 +227,13 @@ class Enautilus(Eliciter):
         choice = self._query[int(choice)]
         self._nadir = choice.attributes
         # remove candidates that are worse in every attribute
-        print(f'before: {self.candidates}')
         copy = []
         for can in self.candidates:
             if np.any(np.array(can.get_attr_values())
                       > np.array(list(self._nadir.values()))):
-                a = can.get_attr_values()
-                print(a)
                 copy.append(can)
         for c in copy:
             self.candidates.remove(c)
-        print(f'after: {self.candidates}')
         self._update_zpoints()
         self._nadir = choice.attributes
         self._update()

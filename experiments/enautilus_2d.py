@@ -27,8 +27,8 @@ def system_gen_lower(num=1000, attr=5):
         systems.append(np.array(system))
         num -= 1
     systems = np.array(systems)
-    systems[:, 0] -= systems[:, 0].min()
-    systems[:, 1] -= systems[:, 1].min()
+    for ind in range(attr):
+        systems[:, ind] -= systems[:, ind].min()
     return systems
 
 
@@ -71,7 +71,6 @@ while not test_target.terminated:
     test_target.plot_2d()
     test_target.put(m1.name)
 test_target._update()
-test_target.plot_2d()
 nadir, ideal, attribs, current_centers, candidates, kmeans_centers =\
     test_target.plot_data()
 nadir_list.append(nadir)
@@ -106,7 +105,6 @@ for ccl in current_centers_list:
     for point in ccl:
         plt.scatter(point[0], point[1], c='gray', alpha=0.2
                     )
-
 width = nadir[attribs[0]] - ideal_list[-1][attribs[0]]
 height = nadir[attribs[1]] - ideal_list[-1][attribs[1]]
 currentAxis = plt.gca()

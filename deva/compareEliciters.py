@@ -20,28 +20,15 @@ def system_gen(num=1000, attr=5):
     while num > 0:
         system = []
         acc = 1
-        angles = np.random.uniform(0, np.pi / 2, attr)
+        angles = np.random.uniform(np.pi, np.pi / 2, attr)
         for x in range(attr):
             system.append(acc * np.cos(angles[x]))
             acc *= np.sin(angles[x])
         systems.append(np.array(system))
         num -= 1
-    return systems
-
-
-def favourite_gen(num=1000, attr=5):
-    """
-    Generate a "preferred" system at random.
-
-    Candidates are ranked based on distance to the preferred system.
-    num is the number of systems we would like to generate,
-    attr is the number of dimensions each system has.
-    """
-    favourite_index = np.random.randint(0, num, 1)[0]
-    systems = system_gen(num, attr)
-    favourite_coor = systems[favourite_index]
-    systems.sort(key=lambda system: np.linalg.norm(system
-                 - favourite_coor))  # sort by the distance
+    systems = np.array(systems)
+    for ind in range(attr):
+        systems[:, ind] -= systems[:, ind].min()
     return systems
 
 
@@ -65,11 +52,14 @@ def test_eliciters(eliciter_list, num, attr):
     # transfer from string to function
     e_list = []
     for e in eliciter_list:
+        if e == "Enautilus":
+            # compare 3 enautilus when enautilus is added to the loop
+            e_list.append(elicit.Enautilus)
+            e_list.append(elicit.Enautilus)
         e_list.append(elicit.algorithms[e])
-        e = e.upper()
     # start prep for testing
     candidates = []
-    systems = favourite_gen(num, attr)
+    systems = system_gen(num, attr)
     attributes = []
     for x in range(attr):
         n = x + 1
@@ -82,26 +72,37 @@ def test_eliciters(eliciter_list, num, attr):
     for index, system in enumerate(systems):
         candidates.append(elicit.Candidate(index,
                                            dict(zip(attributes, system))))
-    goal = candidates[0]
+    favourite_index = np.random.randint(0, num, 1)[0]
+    goal = candidates[favourite_index]
+    enautilus_count = 1
     # use the generated candidates to test eliciters
     for eliciter in e_list:
         question_count = 0
         test_target = eliciter(candidates, scenario)
+        name = str(eliciter)
         if test_target.description() == "E-NAUTILUS eliciter":
-            test_target.updateForN(100, 2)
+            enautilus_count *= 5
+            test_target.updateForN(enautilus_count, 9)
+            name = f".Enautilus {9} options {enautilus_count} Question limits'"
         while not test_target.terminated:
             question_count += 1
-            m1, m2 = test_target.query
-            if cal_distance(m1, goal) <= cal_distance(m2, goal):
-                test_target.put(m1.name)
-            else:
-                test_target.put(m2.name)
+            options = test_target.query
+            min_o = None
+            put_name = None
+            for o in options:
+                dis = cal_distance(o, goal)
+                if min_o is None or dis < min_o:
+                    min_o = dis
+                    put_name = o.name
+            test_target.put(put_name)
         result = test_target.result
-        mean_error = np.mean(np.linalg.norm(systems[0] - systems))
+        mean_error = np.mean(np.linalg.norm(systems[favourite_index]
+                                            - systems))
         error = {}
-        error["distance"] = np.linalg.norm(systems[0] - systems[result.name])
+        error["distance"] = np.linalg.norm(systems[favourite_index]
+                                           - systems[result.name])
         error["question_count"] = question_count
-        res[str(eliciter)] = error
+        res[name] = error
     return [num, attr, mean_error, res]
 
 
