@@ -2,37 +2,23 @@ import {useState, useEffect} from 'react';
 import axios from 'axios';
 
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { Pane, paneState, scenarioState, constraintsState, TaskTypes, taskTypeState } from './Base';
+import { Pane, paneState, scenarioState, constraintsState,
+         reportState } from './Base';
 
 
 export function ReportPane({}) {
   const scenario = useRecoilValue(scenarioState);
   const constraints = useRecoilValue(constraintsState);
+  const report = useRecoilState(reportState)[0];
 
-  // useEffect(() => {
-    // const fetch = async () => {
-    //   const result = await axios.put<any>("api/" + scenario + "/bounds/save", constraints);
-    //   const d = result.data;
-    //   return d
-    // }
-  //   fetch();
-  // }, []
-  // );
-
-  const result = axios.put<any>("api/" + scenario + "/bounds/save", constraints);
-  const d = result[2];
-
-
-  console.log(d)
+  if (report === null){
+    return (<p>Loading...</p>);
+  }
 
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
       <h1>Results Placeholder</h1>
-      Your content here.
-      for each REFERENCE (eg inaction, industry avg), report whether they meet the current bounds,
-      and if they don't, identify why not (eg "inaction: true positive rate is too low")
-
-
+      {report}
       <div className="width-1/4">
         <BackButton />
       </div>
@@ -45,12 +31,10 @@ export function ReportPane({}) {
   );
 }
 
+
 function CompleteButton({scenario, constraints}) {
 
   const [submit, setSubmit] = useState(false);
-
-  // const scenario = useRecoilValue(scenarioState);
-  // const constraints = useRecoilValue(constraintsState);
 
   useEffect(() => {
     const fetch = async () => {

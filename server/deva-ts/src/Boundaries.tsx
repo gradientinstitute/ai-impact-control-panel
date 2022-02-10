@@ -4,8 +4,8 @@ import 'rc-slider/assets/index.css';
 import axios from 'axios';
 
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { Pane, paneState, scenarioState, 
-        metadataState, constraintsState, algoChoicesState } from './Base';
+import { Pane, paneState, scenarioState, metadataState, constraintsState,
+         algoChoicesState, reportState } from './Base';
 
 import { allCandidatesState, rangesState, currentCandidatesState,
          getSliderStep, currentSelectionState} from './BoundsSlider';
@@ -198,8 +198,8 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
       <Slider {...rangeProps} />
       <OptimalDirection lowerIsBetter={lowerIsBetter}/>
     </div>
-    );
-  }
+  );
+}
 
 
 function OptimalDirection({lowerIsBetter}) {
@@ -225,47 +225,22 @@ function SaveButton({}) {
 
   const [submit, setSubmit] = useState(false);
 
-  // const scenario = useRecoilValue(scenarioState);
+  const scenario = useRecoilValue(scenarioState);
   const constraints = useRecoilValue(constraintsState);
   const [metadata, setMetadata] = useRecoilState(metadataState);
+  const [report, setReport] = useRecoilState(reportState);
 
   const [_pane, setPane] = useRecoilState(paneState);
 
-  // const [metadata, setMetadata] = [...useRecoilState(metadataState)];
-  // const metadata = useRecoilState(metadataState)[0]
-
-  // let bounds = {...metadata.bounds}
-  // let maxRanges = useRecoilValue(rangesState);
-  // const bounds = maxRanges;
-
   useEffect(() => {
     const fetch = async () => {
-      // set metadata.bounds
-      // let req = "api/" + scenario + "/all";
-      // const result = await axios.get<any>(req);
-      // const d = result.data;
-      // setMetadata(d.metadata);
-      // console.log(d.metadata.bounds)
+      const result = await axios.put<any>("api/" + scenario + "/bounds/save", constraints);
+      setReport(result.data); // result/report
 
+      // TODO set metadata.bounds
       // metadata.bounds = constraints
-      // bounds = {constraints}
-
-      // const items = Object.entries(metadata.metrics).map((x) => {
-      //   const uid = x[0];
-      //   const u: any = x[1];
-      //   const lowerIsBetter = u.lowerIsBetter;
-      //   const range_min = u.range_min
-      //   const range_max = u.range_max
-
-      // const setBounds = (constraints : Object) => {
-      //   let newAllData = metadata.bounds.map((data) => {
-      //     let newData = {...data};
-      //     newData = constraints
-      //     return newData;
-      //   });
-      //   setMetadata (newAllData);
-      // };
-      // setBounds(constraints);
+      // for m in metadata.bounds:
+      // metadata.bounds
 
       setPane(Pane.Report)
     }
@@ -274,8 +249,6 @@ function SaveButton({}) {
     }
   }, [submit]
   );
-
-  // console.log(metadata.bounds)
 
   return (
       <button className="bg-gray-200 text-black rounded-lg" 

@@ -74,3 +74,9 @@ export const resultState = atom({
   default: null, 
 });
 
+
+// state for the report of the boundaries condfigurations
+export const reportState = atom({  
+    key: 'report', 
+    default: null, 
+  });
