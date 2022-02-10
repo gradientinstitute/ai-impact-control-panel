@@ -14,7 +14,7 @@ class Candidate:
 
     def __init__(self, name, attributes, spec_name=None):
         self.name = name
-        self.attr_keys = sorted(list(attributes.keys()))
+        self.attr_keys = sorted(attributes.keys())
         self.attr_values = [attributes[a] for a in self.attr_keys]
         self.attributes = dict(zip(self.attr_keys, self.attr_values))
         self.spec_name = spec_name or name
@@ -28,9 +28,11 @@ class Candidate:
         return f"Candidate({self.name})"
 
     def get_attr_values(self):
+        """Return sorted attribute values."""
         return self.attr_values
 
     def get_attr_keys(self):
+        """Return sorted attribute keys."""
         return self.attr_keys
 
 
@@ -279,15 +281,16 @@ class Enautilus(Eliciter):
 
     @staticmethod
     def description():
+        """Description of the eliciter."""
         return "E-NAUTILUS eliciter"
 
     def plot_data(self):
-        """return all the data needed for 2d print"""
+        """Return all the data needed for 2d print."""
         return [self._nadir, self._ideal, self.attribs, self.current_centers,
                 self.candidates, self.kmeans_centers]
 
     def plot_final(self):
-        """plot the final candidate picked"""
+        """Plot the final candidate picked."""
         r_point = self.result.get_attr_values()
         plt.scatter(r_point[0], r_point[1], s=80, marker=(4, 1),
                     label="Result")
@@ -298,7 +301,7 @@ class Enautilus(Eliciter):
         plt.savefig("final.jpg")
 
     def plot_2d(self):
-        """plot 2d scenarios according to the paper"""
+        """Plot 2d scenarios according to the paper."""
         self.iter_count += 1
         plt.figure()
         width = self._nadir[self.attribs[0]] - self._ideal[self.attribs[0]]
