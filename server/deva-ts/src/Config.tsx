@@ -28,6 +28,7 @@ export function ConfigPanel({}) {
   // initial loading of config
   useEffect(() => {
     // placeholder configurations
+    // must be strings
     var configs = {
       displaySpiderPlot : {
         'options' : ["true", "false"],
@@ -67,8 +68,6 @@ function DisplayOptions({}) {
     const selected = val.selected;
     return {options, selected};
   });
-
-  console.log(configList)
 
   const dropdowns = Object.entries(configList).map(([config, choices]) => {
     return (
@@ -143,4 +142,9 @@ export function ConfigButton({}) {
       alt="Settings" /> 
     </button>
   );
+}
+
+// returns if selected config option is expected selected
+export function CompareConfig(configsList, config, expectedVal) {
+  return configsList[config]['selected'] === expectedVal;
 }
