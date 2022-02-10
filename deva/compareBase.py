@@ -32,22 +32,30 @@ def compare(meta, baseline, bounds):
     report = ""
     metrics = meta["metrics"]
 
-    for m in bounds:
-        if metrics[m]["type"] == "quantitative":
-            report += m + "\n"
-            for ref in baseline:
+    for ref in baseline:
+        report += ref
+        reason = ""
+        accept = True
+
+        for m in bounds:
+            if metrics[m]["type"] == "quantitative":
                 val = bounds[m]
                 refVal = baseline[ref][m]
-                lowerIsBetter = metrics[m]["lowerIsBetter"]
-
-                report += ref + ": " + metrics[m]["description"][:-1]
-
+                print(val)
                 if val[1] < refVal:  # reference not in range
+                    accept = False
+                    lowerIsBetter = metrics[m]["lowerIsBetter"]
+                    description = metrics[m]["name"]
+
                     if lowerIsBetter:
-                        report += " is too high.\n"
+                        reason += description + " is too high.\n"
                     else:
-                        report += " is too low.\n"
-                else:
-                    report += " is within the boundaries.\n"
+                        reason += description + " is too low.\n"
+
+        if accept:
+            report += " is acceptable.\n"
+        else:
+            report += " is unacceptable because of the following reason(s)\n"
+            report += reason
 
     return report
