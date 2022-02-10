@@ -290,12 +290,12 @@ class Enautilus(Eliciter):
         """plot the final candidate picked"""
         r_point = self.result.get_attr_values()
         plt.scatter(r_point[0], r_point[1], s=80, marker=(4, 1),
-                    label='Result')
+                    label="Result")
         handles, labels = plt.gca().get_legend_handles_labels()
         by_label = OrderedDict(zip(labels, handles))
         plt.legend(by_label.values(), by_label.keys())
-        plt.title('Final plot with result point')
-        plt.savefig('final.jpg')
+        plt.title("Final plot with result point")
+        plt.savefig("final.jpg")
 
     def plot_2d(self):
         """plot 2d scenarios according to the paper"""
@@ -308,27 +308,27 @@ class Enautilus(Eliciter):
                               self._ideal[self.attribs[1]]),
                               width, height, fill=None, alpha=0.1))
         plt.scatter(self._ideal[self.attribs[0]], self._ideal[self.attribs[1]],
-                    s=80, marker=(5, 1), label='Trade-off Margins', c='purple')
+                    s=80, marker=(5, 1), label="Trade-off Margins", c="purple")
         plt.scatter(self._nadir[self.attribs[0]], self._nadir[self.attribs[1]],
-                    s=80, marker=(3, 1), label='Nadir Point', c='blue')
+                    s=80, marker=(3, 1), label="Nadir Point", c="blue")
         for point in self.current_centers:
-            plt.scatter(point[0], point[1], c='orange', alpha=0.2,
-                        label='Virtual Options')
+            plt.scatter(point[0], point[1], c="orange", alpha=0.2,
+                        label="Virtual Options")
         for can in self.candidates:
             point1 = np.array(can.get_attr_values())
-            plt.scatter(point1[0], point1[1], c='red', alpha=0.3,
-                        label='Candidates')
+            plt.scatter(point1[0], point1[1], c="red", alpha=0.3,
+                        label="Candidates")
         for point2 in self.kmeans_centers:
-            plt.scatter(point2[0], point2[1], c='green', alpha=0.2,
-                        label='KMeans Centers')
+            plt.scatter(point2[0], point2[1], c="green", alpha=0.2,
+                        label="KMeans Centers")
             p1 = [point2[0], self._nadir[self.attribs[0]]]
             p2 = [point2[1],
                   self._nadir[self.attribs[1]]]
-            plt.plot(p1, p2, c='green',
-                     linestyle='dotted', alpha=0.2)
+            plt.plot(p1, p2, c="green",
+                     linestyle="dotted", alpha=0.2)
         handles, labels = plt.gca().get_legend_handles_labels()
         by_label = OrderedDict(zip(labels, handles))
-        plt.title(f'The plot for iteration {self.iter_count}')
+        plt.title(f"The plot for iteration {self.iter_count}")
         plt.legend(by_label.values(), by_label.keys())
         plt.savefig(f"Plot for iteration {self.iter_count}.jpg")
 
