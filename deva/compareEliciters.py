@@ -33,8 +33,9 @@ def system_gen(num=1000, attr=5):
 
 
 def cal_distance(candidate, goal):
-    """calculate the distance between an option
-    and the favorate candidate (goal)"""
+    """
+    Calculate the distance between an option and goal.
+    """
     can = np.array(candidate.get_attr_values())
     g = np.array(goal.get_attr_values())
     return np.linalg.norm(can - g)
@@ -84,9 +85,9 @@ def test_eliciters(eliciter_list, num, attr):
             enautilus_count *= 5
             test_target.updateForN(enautilus_count, 9)
             name = f".Enautilus {9} options {enautilus_count} Question limits'"
-        while not test_target.terminated:
+        while not test_target.terminated():
             question_count += 1
-            options = test_target.query
+            options = test_target.query()
             min_o = None
             put_name = None
             for o in options:
@@ -95,12 +96,12 @@ def test_eliciters(eliciter_list, num, attr):
                     min_o = dis
                     put_name = o.name
             test_target.put(put_name)
-        result = test_target.result
+        result = test_target.result()
         mean_error = np.mean(np.linalg.norm(systems[favourite_index]
                                             - systems))
         error = {}
         error["distance"] = np.linalg.norm(systems[favourite_index]
-                                           - systems[result.name])
+                                           - result.get_attr_values())
         error["question_count"] = question_count
         res[name] = error
     return [num, attr, mean_error, res]
