@@ -169,7 +169,7 @@ class Enautilus(Eliciter):
         Eliciter.__init__(self)
         self._nadir = {}
         self._ideal = {}
-        self._h = 5  # number of questions
+        self._h = 500  # number of questions
         self._ns = 2  # number of options
         self.iter_count = 0
         self.candidates = list(candidates)
@@ -256,20 +256,26 @@ class Enautilus(Eliciter):
         from sklearn.cluster import KMeans
         kmeans = KMeans(n_clusters=self._ns).fit(np.array(X))
         centers = kmeans.cluster_centers_
-        self.kmeans_centers = centers
+        kc = []
+        for c in centers:
+            sub = np.array(X) - np.array(c)
+            norm1 = np.linalg.norm(sub, axis=1)
+            kc.append(X[norm1.argmin()])
+        kc = np.array(kc)
+        self.kmeans_centers = kc
         # project to the line between pareto front and nadir point
         if self._h == 1:
             numerator = 1
         else:
             numerator = self._h - 1
-        centers = centers + (
-            (np.array(list(self._nadir.values())) - centers)
+        kc = kc + (
+            (np.array(list(self._nadir.values())) - kc)
             * numerator / self._h
         )
-        self.current_centers = centers
+        self.current_centers = kc
         res = []
         step = ""  # TODO: make a different letter for each step
-        for index, system in enumerate(centers):
+        for index, system in enumerate(kc):
             cname = f"{step}{index}"
             res.append(Candidate(cname,
                                  dict(zip(self.attribs, system))))
