@@ -31,10 +31,12 @@ export function ConfigPanel({}) {
     // must be strings
     var configs = {
       displaySpiderPlot : {
+        'name' : 'display spider plot',
         'options' : ["true", "false"],
         'selected' : "true", // default
       },
       scrollbarDisplay : {
+        'name' : 'scrollbar display',
         'options' : ['most optimal on left', 'lower value on left', 'something else on left'],
         'selected' : 'lower value on left'
       }
@@ -66,13 +68,15 @@ function DisplayOptions({}) {
   const configList = _.mapValues(configs, (val, _obj) => {
     const options = val.options;
     const selected = val.selected;
-    return {options, selected};
+    const name = val.name;
+    return {options, selected, name};
   });
 
   const dropdowns = Object.entries(configList).map(([config, choices]) => {
     return (
       <div>
-      <DropdownButton config ={config} selected={choices.selected} options={choices.options}/>
+      <DropdownButton config ={config} name={choices.name} 
+        selected={choices.selected} options={choices.options}/>
       <div className="h-5"></div>
       </div>
     );
@@ -89,7 +93,7 @@ function DisplayOptions({}) {
   );
 }
 
-function DropdownButton({config, selected, options}) {
+function DropdownButton({config, name, selected, options}) {
 
   const [configs, setConfigs] = useRecoilState(configState);
   const mappedItems = (Object.values(options)).map((val) => {
@@ -102,6 +106,7 @@ function DropdownButton({config, selected, options}) {
   function handleChange(event) {
     let updatedConfigs = _.mapValues(configs, x => { return x });    
     const newConfig = {
+      'name' :  configs[config]['name'],
       'options' : configs[config]['options'],
       'selected': event.target.value
     };
@@ -114,7 +119,7 @@ function DropdownButton({config, selected, options}) {
     <Box sx={{ minWidth: 120}}>
     <FormControl fullWidth>
       <InputLabel variant="standard" htmlFor="uncontrolled-native" sx={{ color: "white"}}>
-        {config}
+        {name}
       </InputLabel>
       <NativeSelect
         defaultValue={selected as string}
