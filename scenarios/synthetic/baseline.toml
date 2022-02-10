@@ -1,4 +1,11 @@
-Wmin = 0
-Xmin = 0
-Ymax = 0
-Zmin = 0
+[inaction]
+    Wmin = 0
+    Xmin = 0
+    Ymax = 1
+    Zmin = 0
+
+[industry_average]
+    Wmin = 1.0
+    Xmin = 3.0
+    Ymax = 0.333
+    Zmin = 2

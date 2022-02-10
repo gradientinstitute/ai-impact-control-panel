@@ -136,7 +136,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
     answer = True
     base = ["baseline", "base"]
 
-    while not sampler.terminated:
+    while not sampler.terminated():
         step += 1
 
         # Display the choice between this and the reference
@@ -148,12 +148,11 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
         if answer:
             # Answer automatically
             label = oracle(sampler.choice)
-            sampler.observe(label)
-
         else:
             # Answer based on user's input
             label = input().lower() not in base
-            sampler.observe(label)
+
+        sampler.put(label)
 
         if label:
             print("Choice: Oracle (ACCEPTED) candidate.\n\n")
@@ -170,7 +169,7 @@ def run_bounds_eliciter(sample, metrics, table, baseline, w_true, oracle,
     print("Estimate: ", sampler.w)
     accept = oracle(table)
     accept_rt = accept.mean()
-    pred = sampler.guess(table)
+    pred = sampler.predict(table)
     acc = np.mean(accept == pred)
     print(f"True preference would accept {accept_rt:.0%}\
             of real candidates.")
@@ -196,7 +195,7 @@ def evaluation(eliciter, ref, n_samples, oracle):
     test_X = random_choice(ref, n_samples)
     test_y = [oracle(x) for x in test_X]  # y_true
 
-    probabilities = eliciter.predict_prob(test_X)  # y_pred
+    probabilities = eliciter.predict_proba(test_X)  # y_pred
 
     loss = log_loss(test_y, probabilities, labels=[True, False])
 

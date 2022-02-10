@@ -14,13 +14,21 @@ from sklearn.neighbors import KNeighborsClassifier
 # TODO: elicit non-linear boundaries (provided client can receive them)
 
 class BoundsEliciter:
-    """Base class for bounds elicitation algorithms."""
+    """
+    Base class for bounds elicitation algorithms.
+
+    Differs from a standard Eliciter by exposing a *model* rather than a
+    candidate - hence it has methods predict and predict_proba rather than
+    a result object.
+    """
 
     # Just a promise that inheriting classes will have these members
-    def observe(self, label):
+    def put(self, label):
+        """Input a user decision."""
         raise NotImplementedError
 
-    def guess(self, q):
+    def terminated(self):
+        """Check whether the eliciter is terminated."""
         raise NotImplementedError
 
     def check_valid(self, q):
@@ -28,11 +36,12 @@ class BoundsEliciter:
         # could be something like (choice < 0).any():
         return True  # placeholder
 
-    def predict_prob(self, n_samples):
-        raise NotImplementedError
+    def predict(self, query):
+        """Provide a "best guess" prediction."""
+        return self.predict_proba(query) > 0.5
 
-    @property
-    def terminated(self):
+    def predict_proba(self, query):
+        """Provide a probility estimate."""
         raise NotImplementedError
 
 
@@ -85,7 +94,8 @@ class KNeighborsEliciter(BoundsEliciter):
         self._update()
 
     # input
-    def observe(self, label):
+    def put(self, label):
+        """Accept a user input."""
         self.X.append(self.choice)
         self.y.append(label)
 
@@ -122,17 +132,19 @@ class KNeighborsEliciter(BoundsEliciter):
 
         return
 
-    def guess(self, q):
+    def predict(self, queries):
+        """Estimate whether the query points are acceptible."""
         r = 10
-        return np.logical_and((np.array(distance(q, self.ref)) >= r),
-                              is_below(q, self.ref))
+        return np.logical_and((np.array(distance(queries, self.ref)) >= r),
+                              is_below(queries, self.ref))
 
-    @property
     def terminated(self):
+        """Check whether the sampler is terminated."""
         return self._step > self.steps
 
-    def predict_prob(self, test_samp):
-        probabilities = self.neigh.predict_proba(test_samp)
+    def predict_prob(self, queries):
+        """Estimate the probability that the queries are acceptable."""
+        probabilities = self.neigh.predict_proba(queries)
         return probabilities
 
 
@@ -194,8 +206,8 @@ class LinearActive(BoundsEliciter):
         self._update()
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
-    # input
-    def observe(self, label):
+    def put(self, label):
+        """Input a user decision."""
         self.X.append(self.choice)
         self.y.append(label)
 
@@ -246,12 +258,12 @@ class LinearActive(BoundsEliciter):
 
         return
 
-    def guess(self, q):
+    def predict(self, q):
+        """Make a prediction using the learned weights."""
         return ((q - self.ref) @ self.w < 0)
 
-    @property
     def terminated(self):
-        # either the steps reach the limit or the model converges
+        """Check whether the eliciter has finished."""
         return (
             self._step > self.steps
             or (
@@ -260,7 +272,8 @@ class LinearActive(BoundsEliciter):
             )
         )
 
-    def predict_prob(self, test_samp):
+    def predict_proba(self, test_samp):
+        """Estimate the probability that candidates would be accepted."""
         probabilities = self.lr.predict_proba(test_samp)
         return probabilities
 
@@ -311,7 +324,8 @@ class LinearRandom(BoundsEliciter):
 
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
-    def observe(self, label):
+    def put(self, label):
+        """Enter a user choice."""
         self.X.append(self.choice)
         self.y.append(label)
 
@@ -337,15 +351,17 @@ class LinearRandom(BoundsEliciter):
         self._step += 1
         return
 
-    def guess(self, q):
-        return ((q - self.ref) @ self.w < 0)
+    def predict(self, query):
+        """Estimate whether queries are acceptable."""
+        return ((query - self.ref) @ self.w < 0)
 
-    @property
     def terminated(self):
+        """Check whether the eliciter has terminated."""
         return self._step > self.steps
 
-    def predict_prob(self, test_samp):
-        probabilities = self.lr.predict_proba(test_samp)
+    def predict_proba(self, query):
+        """Estimate the probability that queries are acceptable."""
+        probabilities = self.lr.predict_proba(query)
 
         return probabilities
 
@@ -376,7 +392,8 @@ class PlaneSampler(BoundsEliciter):
         self._update()
         self.baseline = elicit.Candidate("baseline", dict(zip(attribs, ref)))
 
-    def observe(self, label):
+    def put(self, label):
+        """Input a user decision."""
         # if ref+a is a no, ref-a is a yes
         if label:
             self.X.append(2. * self.ref - self.choice)
@@ -411,14 +428,16 @@ class PlaneSampler(BoundsEliciter):
         self._step += 1
         return
 
-    def guess(self, q):
-        return ((q - self.ref) @ self.w < 0)
-
-    @property
     def terminated(self):
+        """Check whether the algorithm has terminated."""
         return self._step > self.steps
 
-    def predict_prob(self, test_samp):
+    def predict(self, query):
+        """Estimate whether a set of queries are acceptable."""
+        return ((query - self.ref) @ self.w < 0)
+
+    def predict_proba(self, test_samp):
+        """Estimate the probabilities that queries are acceptable."""
         probabilities = [0.5] * len(test_samp)
         return probabilities
 
@@ -434,6 +453,15 @@ def tabulate(candidates, metrics):
 
 
 def distance(a, center):
+    """
+    Compute euclidean distance between two sets of candidates.
+
+    Parameters
+    ----------
+    a - (d,) or (n, d) array
+
+    center - (n, d) array
+    """
     a = np.array(a)
     center = np.array(center)
     dist = np.sqrt(np.sum((a - center) ** 2, axis=-1))
@@ -441,7 +469,7 @@ def distance(a, center):
 
 
 def is_below(q, center):
-    # Check whether a point is below a straight line through the center
+    """Check whether a point is below a straight line through the center."""
     q = np.array(q)
     if q.ndim == 1:
         x = q[0]

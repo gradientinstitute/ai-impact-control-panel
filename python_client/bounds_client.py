@@ -68,10 +68,10 @@ def main():
         # Answer automatically
         q = np.array([left.attributes[a] for a in attribs])
         ref = np.array([right.attributes[a] for a in attribs])
+        label = ((q - ref) @ w_true < 0)  # oracle!
 
         choice_log.append(q)
 
-        label = ((q - ref) @ w_true < 0)  # oracle!
         data = {}
 
         if label:
@@ -97,7 +97,7 @@ def main():
     print("Estimated weights: ", w_est.round(2))
     accept = ((table - ref) @ w_true < 0)
     pred = ((table - ref) @ w_est < 0)
-    pred = model.guess(table)
+    pred = model.predict(table)
     accept_rt = accept.mean()
     acc = np.mean(accept == pred)
     print(f"True preference would accept {accept_rt:.0%} of real candidates.")

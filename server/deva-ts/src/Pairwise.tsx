@@ -4,9 +4,10 @@ import axios from 'axios';
 
 import _ from "lodash";
 import {Pane, metadataState, paneState, 
-        resultState, scenarioState, constraintsState} from './Base';
+        resultState, scenarioState } from './Base';
 import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
+import {VisualiseData, radarDataState} from './RadarCharts'
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
@@ -34,13 +35,14 @@ export function PairwisePane({}) {
   
   const metadata = useRecoilValue(metadataState);
   const scenario = useRecoilValue(scenarioState);
-  const constraints = useRecoilValue(constraintsState);
 
   const [_result, setResult] = useRecoilState(resultState);
   const choice = useRecoilValue(choiceState);
   const [candidates, setCandidates] = useRecoilState(candidatesState);
   const [_pane, setPane] = useRecoilState(paneState);
   const [feedback, setFeedback] = useRecoilState(feedbackState);
+  const [_radarData, setRadarData] = useRecoilState(radarDataState);
+
 
   // initial loading of candidates
   // a bit complicated by the fact we can get either candidates or a result
@@ -57,8 +59,11 @@ export function PairwisePane({}) {
         const ddash = {
           left: d[0], right: d[1]
         };
-        console.log(ddash);
         setCandidates(ddash);
+        const values = {}
+        values[d[0]['name']] = d[0]['values'];
+        values[d[1]['name']] = d[1]['values']; 
+        setRadarData(values);
       }
     }
     fetch();
@@ -80,8 +85,12 @@ export function PairwisePane({}) {
         const ddash = {
           left: d[0], right: d[1]
         };
-        console.log(ddash);
+        console.log("ddsh", ddash);
         setCandidates(ddash);
+        const values = {}
+        values[d[0]['name']] = d[0]['values'];
+        values[d[1]['name']] = d[1]['values']; 
+        setRadarData(values);
       }
     }
     if (choice !== null) {
@@ -102,7 +111,6 @@ export function PairwisePane({}) {
     };
     setFeedback(feedback);
   }, [candidates]);
-
 
   // loading condition
   // must come after the useEffect so useEffect always runs
@@ -129,6 +137,7 @@ export function PairwisePane({}) {
     return result;
   }
 
+
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 
       gap-y-6 grid-cols-1 text-center items-center">
@@ -138,6 +147,7 @@ export function PairwisePane({}) {
         </h1>
         <p className="italic">A system designed to {metadata.purpose}</p>
       </div>
+      <VisualiseData/>
       {comparisons()}
       <InputGetter 
         leftName={candidates.left.name} 

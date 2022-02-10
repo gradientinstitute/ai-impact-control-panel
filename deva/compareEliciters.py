@@ -136,6 +136,7 @@ def print_result(result):
 @click.option("-r", "--runs", default=10,
               help="The number of runs to average out outliers.")
 def compareEliciters(eliciters, number, dimension, runs):
+    """Experiment to compare a set of eliciters."""
     Result = namedtuple("Result",
                         "numberCandidate numberAttributes meanError errorLog")
     result = Result(number, dimension, [], {})

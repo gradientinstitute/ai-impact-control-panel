@@ -3,6 +3,7 @@ from deva import elicit
 
 
 def readout(x, info, suffix=False, sigfig=2):
+    """Display a metric using its metadata."""
     # prep a number for text display
     fmt = f"{{:.{sigfig-1}f}}"
 
@@ -31,6 +32,7 @@ def readout(x, info, suffix=False, sigfig=2):
 
 
 def plural(text, x):
+    """Format text for singular/plural gramattical numbers."""
     if (x - 1)**2 < 1e-8:
         s = ""
     else:
@@ -38,48 +40,8 @@ def plural(text, x):
     return text.format(s=s)
 
 
-def compare(sys1, sys2, meta, attribute):
-    """Compare an attribute between two systems."""
-    info = meta[attribute]
-    v1 = sys1[attribute]
-    v2 = sys2[attribute]
-    name1 = sys1.name
-    # name2 = sys2.name
-
-    rtol = 1.05  # 5% difference
-    atol = 0  # single count difference
-
-    diffv = abs(v1 - v2)
-    diff = readout(diffv, info)
-    action = info["action"].format(s="")
-    name = info["name"].lower()
-    if "(" in name:
-        name = name.split("(")[1].split(")")[0]
-
-    descr = name + " " + info["suffix"]  # heuristic repair
-    focus = "The systems"
-
-    # Which direction is better doesn't matter if the unit format is consistent
-    if v1 > v2 * rtol + atol:
-        focus = name1
-        action = info["action"].format(s="s")  # single focus system
-        diff += " " + info["more"]
-    elif v2 > v1 * rtol + atol:
-        focus = name1
-        diff += " " + info["less"]
-        action = info["action"].format(s="s")  # single focus system
-    else:
-        if v1 == v2:
-            diff = "the same"
-        else:
-            diff = "a similar"
-        diff += f" {info['countable']} of"
-
-    return f"{focus} {action} {diff} {descr}."
-
-
 def text(value, meta):
-
+    """Display a candidate or tuple of candidates in human readable form."""
     if isinstance(value, tuple):
         # Display a pairwise comparison
         a, b = value
