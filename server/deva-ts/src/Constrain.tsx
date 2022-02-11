@@ -20,6 +20,7 @@ const HandleColours = {
   0: 'white', // default
   1: 'gray',  // blocked
   2: 'red',   // blocking
+  6: 'gray'  // at threshold
 }
 
 const BackgroundColours = {
