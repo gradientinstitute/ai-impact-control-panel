@@ -60,8 +60,8 @@ current_centers_list = []
 candidates_list = [candidates]
 kmeans_centers_list = []
 test_target = elicit.Enautilus(candidates, scenario)
-while not test_target.terminated:
-    m1, m2 = test_target.query
+while not test_target.terminated():
+    m1, m2 = test_target.query()
     nadir, ideal, attribs, current_centers, candidates, kmeans_centers =\
         test_target.plot_data()
     nadir_list.append(nadir)

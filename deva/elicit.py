@@ -168,7 +168,7 @@ class Enautilus(Eliciter):
         Eliciter.__init__(self)
         self._nadir = {}
         self._ideal = {}
-        self._h = 50  # number of questions
+        self._h = 5  # number of questions
         self._ns = 2  # number of options
         self.iter_count = 0
         self.candidates = list(candidates)
@@ -290,7 +290,7 @@ class Enautilus(Eliciter):
 
     def plot_final(self):
         """Plot the final candidate picked."""
-        r_point = self.result.get_attr_values()
+        r_point = self.result().get_attr_values()
         plt.scatter(r_point[0], r_point[1], s=80, marker=(4, 1),
                     label="Result")
         handles, labels = plt.gca().get_legend_handles_labels()
