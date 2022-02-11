@@ -39,6 +39,11 @@ export function ConfigPanel({}) {
         'name' : 'scrollbar display',
         'options' : ['most optimal on left', 'lower value on left', 'something else on left'],
         'selected' : 'lower value on left'
+      },
+      minMaxDisplay : {
+        'name' : 'minimum and maximum display',
+        'options' : ['display visual min/max', 'display range min/max', 'display data min/max'],
+        'selected' : 'display data min/max'
       }
     }
     setConfigs(configs);

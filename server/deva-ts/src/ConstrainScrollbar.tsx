@@ -1,7 +1,9 @@
 import { atom, selector } from 'recoil';
-import { metadataState, constraintsState } from './Base';
+import { metadataState, constraintsState, configState } from './Base';
 import _ from "lodash";
 import { roundValue, rvOperations } from './Widgets';
+import { CompareConfig } from './Config';
+
 
 export enum blockingStates {
   'default',
@@ -9,7 +11,8 @@ export enum blockingStates {
   'blocking',
   'resolvedBlock',
   'currentlySelected',
-  'blockedMetric'
+  'blockedMetric',
+  'threshold'
 }
 
 export const blockedStatusState = selector({
@@ -21,6 +24,7 @@ export const blockedStatusState = selector({
     const blockingMetrics = get(blockingMetricsState).blockingMetrics;
     const blockedMetric = get(blockedMetricState);
     const resolvedBlock = get(resolvedBlockedState);
+    const atThreshold = get(atThresholdState);
 
     const state = _.mapValues(constraints, (cons, uid, _obj) => {
       // pick which constraint is changing
@@ -33,6 +37,8 @@ export const blockedStatusState = selector({
         status = blockingStates.blocking;
       } else if (uidSelected === uid && isBlocked) {
         status = blockingStates.blocked;
+      } else if (uidSelected === uid && atThreshold) {
+        status = blockingStates.threshold;
       } else if (uidSelected === uid) {
         status = blockingStates.currentlySelected;
       } 
@@ -179,6 +185,33 @@ export const isBlockedState = selector({
     // check how many candidates are left
     const withNew = filterCandidates(all, n);
     return (withNew.length === 0);
+  }
+});
+
+
+// returns whether or not the currently selected metric is at 
+// the min/max threshold based on data provided (but not blocked)
+// used for range_min/range_max visualisations
+export const atThresholdState = selector({
+  key: 'atThresholdState',
+  get: ({get}) => {
+    const metadata = get(metadataState);
+    const uid = get(currentSelectionState);
+    if (uid === null) {
+      return false;
+    }
+
+    const constraints = get(constraintsState);
+    const step = getSliderStep(metadata.metrics[uid].displayDecimals);
+    const curr = constraints[uid][1];
+    const newVal = curr - step;
+    
+    const rangeMinMax = getRangeMinMax(metadata);
+    if (newVal < metadata.metrics[uid].min && newVal >= rangeMinMax[uid][0]) {
+      return true;
+    }
+
+    return false;
   }
 });
 
@@ -330,23 +363,42 @@ export const maxRangesState = selector({
   get: ({get}) => {
     const all = get(allCandidatesState);
     const metadata = get(metadataState);
+    const configs = get(configState);
 
     if (all === null) {
       return null;
     }
-    
-    const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
-      // doesn't exist in the qualitative metrics
-      const decimals = val.displayDecimals != null ? val.displayDecimals : 0; 
-      const tvals = all.map(x => x[uid]);
-      // TODO: deal with stuff like this in the server
-      const min = roundValue(rvOperations.floor, Math.min(...tvals), decimals); 
-      const max = roundValue(rvOperations.ceil, Math.max(...tvals), decimals); 
-      return [min, max];
-    });
+
+    let ranges = getDataMinMax(metadata, all);
+    if (CompareConfig(configs, "minMaxDisplay", "display range min/max")) {
+      ranges = getRangeMinMax(metadata);
+    } else if (CompareConfig(configs, "minMaxDisplay", "display range min/max")) {
+      // visual min/max
+    }
+
     return ranges;
   },
 });
+
+function getDataMinMax(metadata, all) {
+  const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
+    // doesn't exist in the qualitative metrics
+    const decimals = val.displayDecimals != null ? val.displayDecimals : 0; 
+    const tvals = all.map(x => x[uid]);
+    // TODO: deal with stuff like this in the server
+    const min = roundValue(rvOperations.floor, Math.min(...tvals), decimals); 
+    const max = roundValue(rvOperations.ceil, Math.max(...tvals), decimals); 
+    return [min, max];
+  });
+  return ranges;
+}
+
+function getRangeMinMax(metadata) {
+  const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
+    return [val.range_min, val.range_max];
+  });
+  return ranges;
+}
 
 // higher is better map (doesnt change)
 // return only candidates that are within the supplied bounds

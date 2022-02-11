@@ -29,6 +29,7 @@ const BackgroundColours = {
   3: 'green-900', // resolvedBlock
   4: 'gray-700',  // currentlySelected
   5: 'blue-700',  // blockedMetric
+  6: 'gray-700',  // at threshold 
 }
 
 function GetBackgroundColor(uid) {
@@ -333,7 +334,8 @@ function StatusButton({uid}) {
     2: 'Blocking',       //
     3: 'Resolved Block', // overridden by toggle button 
     4: 'Selected',       // currently selected
-    5: 'Blocked'         //
+    5: 'Blocked',        //
+    6: 'At Threshold',   // 
   }
 
   const blockStatus = useRecoilValue(blockedStatusState)[uid];
