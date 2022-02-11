@@ -75,7 +75,7 @@ def main():
 
 
 def plot_nl_bound(sampler, choices, nl_oracle):
-    """Display 2D plot for nl_oracle"""
+    """Display 2D plot for nl_oracle."""
     labels = nl_oracle(choices)
 
     # Create an instance of Logistic Regression Classifier and fit the data.
