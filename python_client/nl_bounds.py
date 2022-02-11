@@ -68,8 +68,8 @@ def main():
         n_iter += 1
 
     # ----------- visualisation --------------
-    sampler = eliciters["Active"]
-    choices = eli_choices["Active"]
+    sampler = eliciters["LinearActive"]
+    choices = eli_choices["LinearActive"]
 
     # Display 2D plot for nl_oracle ------------
     labels = nl_oracle(choices)
@@ -93,7 +93,7 @@ def main():
     plt.colorbar()
 
     # Plot the true boundary
-    Z = sampler.predict_prob(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+    Z = sampler.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
     Z = Z.reshape(xx.shape)
     plt.contour(xx, yy, Z, levels=[.25, .5, .75], cmap="RdYlGn")
     plt.colorbar()

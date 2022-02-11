@@ -23,7 +23,7 @@ def main():
     table = table[:, :3]
 
     # Load baseline for comparison
-    baseline = meta["baseline"]
+    baseline = meta["baseline"]["industry_average"]
     ref = np.array([baseline[a] for a in attribs])
     ref = ref[:3]
 
@@ -97,8 +97,8 @@ def main():
     print("See sampling plot")
 
     # only shows the 3D plot for LinearActive Eliciter
-    sampler = eliciters["LinearActive"]
-    choices = eli_choices["LinearActive"]
+    sampler = eliciters["PlaneSampler"]
+    choices = eli_choices["PlaneSampler"]
 
     # Display 3D plot  -------------------------
     plt.figure(2)
@@ -108,9 +108,9 @@ def main():
     plot3d.sample_trajectory(choices * sign, attribs)
     rad = plot3d.radius(choices)[:3]
     plot3d.weight_disc(
-        w_true[:3], (ref * sign)[:3], rad, "b", "true boundary")
+        (w_true * sign)[:3], (ref * sign)[:3], rad, "b", "true boundary")
     plot3d.weight_disc(
-        sampler.w[:3], (ref * sign)[:3], rad, "r", "estimated boundary")
+        (sampler.w * sign)[:3], (ref * sign)[:3], rad, "r", "estimated boundary")
     plt.legend()
     plt.show()
 

@@ -142,7 +142,7 @@ class KNeighborsEliciter(BoundsEliciter):
         """Check whether the sampler is terminated."""
         return self._step > self.steps
 
-    def predict_prob(self, queries):
+    def predict_proba(self, queries):
         """Estimate the probability that the queries are acceptable."""
         probabilities = self.neigh.predict_proba(queries)
         return probabilities
