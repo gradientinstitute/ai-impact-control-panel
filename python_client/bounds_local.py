@@ -97,8 +97,8 @@ def main():
     print("See sampling plot")
 
     # only shows the 3D plot for LinearActive Eliciter
-    sampler = eliciters["PlaneSampler"]
-    choices = eli_choices["PlaneSampler"]
+    sampler = eliciters["LinearActive"]
+    choices = eli_choices["LinearActive"]
 
     # Display 3D plot  -------------------------
     plt.figure(2)

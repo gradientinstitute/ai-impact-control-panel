@@ -68,10 +68,14 @@ def main():
         n_iter += 1
 
     # ----------- visualisation --------------
-    sampler = eliciters["LinearActive"]
-    choices = eli_choices["LinearActive"]
+    sampler = eliciters["Active"]
+    choices = eli_choices["Active"]
+    # Display 2D plot for nl_oracle
+    plot_nl_bound(sampler, choices, nl_oracle)
 
-    # Display 2D plot for nl_oracle ------------
+
+def plot_nl_bound(sampler, choices, nl_oracle):
+    """Display 2D plot for nl_oracle"""
     labels = nl_oracle(choices)
 
     # Create an instance of Logistic Regression Classifier and fit the data.
@@ -95,13 +99,13 @@ def main():
     # Plot the true boundary
     Z = sampler.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
     Z = Z.reshape(xx.shape)
-    plt.contour(xx, yy, Z, levels=[.25, .5, .75], cmap="RdYlGn")
-    plt.colorbar()
+    CS = plt.contour(xx, yy, Z, levels=[.25, .5, .75], cmap="RdYlGn")
+    plt.clabel(CS, CS.levels, inline=True, fontsize=10)
 
     # Plot also the training points
     plt.scatter(X[:, 0], X[:, 1], c=Y, edgecolors="k", cmap=plt.cm.Spectral)
-    plt.xlabel("x")
-    plt.ylabel("y")
+    plt.xlabel("attr1")
+    plt.ylabel("attr2")
 
     plt.xlim(xx.min(), xx.max())
     plt.ylim(yy.min(), yy.max())
