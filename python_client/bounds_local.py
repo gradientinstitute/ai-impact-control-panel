@@ -110,7 +110,8 @@ def main():
     plot3d.weight_disc(
         (w_true * sign)[:3], (ref * sign)[:3], rad, "b", "true boundary")
     plot3d.weight_disc(
-        (sampler.w * sign)[:3], (ref * sign)[:3], rad, "r", "estimated boundary")
+        (sampler.w * sign)[:3], (ref * sign)[:3], rad, "r",
+                                 "estimated boundary")
     plt.legend()
     plt.show()
 
