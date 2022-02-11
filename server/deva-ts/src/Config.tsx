@@ -42,7 +42,7 @@ export function ConfigPanel({}) {
       },
       minMaxDisplay : {
         'name' : 'minimum and maximum display',
-        'options' : ['display visual min/max', 'display range min/max', 'display data min/max'],
+        'options' : ['display visual min/max', 'display data min/max'],
         'selected' : 'display data min/max'
       }
     }

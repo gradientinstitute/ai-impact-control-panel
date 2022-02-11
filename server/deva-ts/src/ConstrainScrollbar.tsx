@@ -206,8 +206,7 @@ export const atThresholdState = selector({
     const curr = constraints[uid][1];
     const newVal = curr - step;
     
-    const rangeMinMax = getRangeMinMax(metadata);
-    if (newVal < metadata.metrics[uid].min && newVal >= rangeMinMax[uid][0]) {
+    if (newVal < metadata.metrics[uid].min) {
       return true;
     }
 
@@ -370,10 +369,8 @@ export const maxRangesState = selector({
     }
 
     let ranges = getDataMinMax(metadata, all);
-    if (CompareConfig(configs, "minMaxDisplay", "display range min/max")) {
-      ranges = getRangeMinMax(metadata);
-    } else if (CompareConfig(configs, "minMaxDisplay", "display range min/max")) {
-      // visual min/max
+    if (CompareConfig(configs, "minMaxDisplay", "visual range min/max")) {
+      ranges = getVisualMinMax(metadata);
     }
 
     return ranges;
@@ -393,9 +390,9 @@ function getDataMinMax(metadata, all) {
   return ranges;
 }
 
-function getRangeMinMax(metadata) {
+function getVisualMinMax(metadata) {
   const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
-    return [val.range_min, val.range_max];
+    return [val.visual_min, val.visual_max];
   });
   return ranges;
 }
