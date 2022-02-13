@@ -149,6 +149,9 @@ def run_bounds_eliciter(sample, table, oracle, ref, n_samples):
             score = evaluation(sampler, ref, n_samples, oracle)
             scores.append(score)
 
+            # plot_nl_bound(sampler, choices, oracle)
+            # 
+
     # Display text results report
     print("Experimental results ------------------")
     accept = oracle(table)
