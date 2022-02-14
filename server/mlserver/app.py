@@ -9,7 +9,8 @@ import toml
 from flask import Flask, session, abort, request, send_from_directory
 from fpdf import FPDF
 
-from deva import elicit, bounds, fileio, logger, compareBase
+from deva import elicit, fileio, logger, compareBase
+# from deva import bounds
 from deva.db import RedisDB, DevDB
 
 
@@ -53,20 +54,34 @@ def calc_ranges(candidates, spec):
 @app.route("/")
 def check_status():
     """Confirm API status."""
-    return "Deva backend server status OK"
+    res = {"tasks": ["deployment", "boundaries"]}
+    return jsonify(res)
+
+
+@app.route("/images/<scenario>/<path:name>")
+def send_image(scenario, name):
+    """Send target image to client."""
+    scenario_path = os.path.join(fileio.repo_root(),
+                                 f"scenarios/{scenario}/images")
+    return send_from_directory(scenario_path, name)
+
+
+@app.route("/log/<path:name>")
+def send_log(name):
+    """Send the session logs to the client."""
+    scenario_path = "logs"
+    return send_from_directory(scenario_path, name)
 
 
 @app.route("/scenarios")
 def get_scenarios():
-    """List the available API scenarios."""
-    if "id" not in session:
-        session["id"] = random_key(16)
+    """Get all scenarios in server folder."""
     data = fileio.list_scenarios()
     return jsonify(data)
 
 
-def _scenario(name="jobs"):
-
+def _scenario(name):
+    """Get the data for a particular scenario."""
     data = fileio.load_scenario(name)
 
     # Massage the metadata
@@ -87,19 +102,19 @@ def _scenario(name="jobs"):
     return result
 
 
-@app.route("/<scenario>/images/<path:name>")
-def send_image(scenario, name):
-    """Send target image to client."""
-    scenario_path = os.path.join(fileio.repo_root(),
-                                 f"scenarios/{scenario}/images")
-    return send_from_directory(scenario_path, name)
+# @app.route("/<scenario>/images/<path:name>")
+# def send_image(scenario, name):
+#     """Send target image to client."""
+#     scenario_path = os.path.join(fileio.repo_root(),
+#                                  f"scenarios/{scenario}/images")
+#     return send_from_directory(scenario_path, name)
 
 
-@app.route("/log/<path:name>")
-def send_log(name):
-    """Send the session logs to the client."""
-    scenario_path = "logs"
-    return send_from_directory(scenario_path, name)
+# @app.route("/log/<path:name>")
+# def send_log(name):
+#     """Send the session logs to the client."""
+#     scenario_path = "logs"
+#     return send_from_directory(scenario_path, name)
 
 
 @app.route("/<scenario>/bounds/save", methods=["PUT"])
@@ -118,42 +133,31 @@ def save_bound(scenario):
     return report
 
 
-@app.route("/<scenario>/bounds/init", methods=["PUT"])
-def init_bounds(scenario):
-    """Initialise a bounds elicitation session."""
-    if "id" not in session:
-        session["id"] = random_key(16)
-    candidates, meta = _scenario(scenario)
-    baseline = meta["baseline"]
-    metrics = meta["metrics"]
-    attribs, table = bounds.tabulate(candidates, metrics)
-    ref = [baseline["industry_average"][a] for a in attribs]
-    db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
-    return ""
+# @app.route("/<scenario>/bounds/init", methods=["PUT"])
+# def init_bounds(scenario):
+#     """Initialise a bounds elicitation session."""
+#     if "id" not in session:
+#         session["id"] = random_key(16)
+#     candidates, meta = _scenario(scenario)
+#     baseline = meta["baseline"]
+#     metrics = meta["metrics"]
+#     attribs, table = bounds.tabulate(candidates, metrics)
+#     ref = [baseline["industry_average"][a] for a in attribs]
+#     db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
+#     return ""
+@app.route("/scenarios/<scenario>")
+def get_info(scenario):
+    """Get all info about a particular scenario."""
+    candidates, spec = _scenario(scenario)
+    points, _ = calc_ranges(candidates, spec)
+    r = {"metadata": spec, "candidates": points,
+         "algorithms": eliciters_descriptions}
+    return r
 
 
-@app.route("/<scenario>/bounds/choice", methods=["GET", "PUT"])
-def get_bounds_choice(scenario):
-    """Accept the user's choice for a bounds elicitation session."""
-    if db.bounder is None:
-        print("Session not initialised!")
-        abort(400)  # Not initialised
+def _get_boundary_sample():
+    """Get a couple of samples from the boundary eliciter."""
     sampler = db.bounder
-
-    # if we received a choice, process it
-    if request.method == "PUT":
-        data = request.get_json(force=True)
-        x = data["first"]
-        y = data["second"]
-        options = [sampler.query.name, "Baseline"]
-        valid = (x in options) & (y in options)
-
-        # Only pass valid choices on to the eliciter
-        if (not sampler.terminated() and valid):
-            sampler.put(x == sampler.query.name)
-        else:
-            print("Ignoring input")
-
     if sampler.terminated():
         model_id = random_key(16)
         path = "models/" + model_id + ".toml"
@@ -176,46 +180,78 @@ def get_bounds_choice(scenario):
                 "values": sampler.baseline.attributes,
             },
         }
-
     # Update database state
     db.bounder = sampler
-
-    return jsonify(res)
-
-
-@app.route("/algorithms")
-def get_algorithm():
-    """Return names and descriptions of available eliciter algorithms."""
-    return jsonify(eliciters_descriptions)
+    return res
 
 
-@app.route("/<scenario>/init/<algo>/<name>")
-def init_session(scenario, algo, name):
-    """Initialise a preference elicitation session."""
+@app.route("/boundaries/new", methods=["PUT"])
+def init_bounds():
+    """Initialise a bounds elicitation session."""
     if "id" not in session:
         session["id"] = random_key(16)
-    # assume that a reload means user wants a restart
-    print("Init new session for user")
-    candidates, spec = _scenario(scenario)
-    eliciter = elicit.algorithms[algo](candidates, spec)
-    log = logger.Logger(scenario, algo, name)
-    db.eliciter = eliciter
-    db.logger = log
-    # send the metadata for the scenario
-    return spec
+
+    # data = request.get_json(force=True)
+
+    # scenario = data["scenario"]
+    # constraints = data["constraints"]
+    # _algo = data["algorithm"]
+    # _user = data["user"]
+
+    # # Boundary elicitation not currently exposed.
+    # candidates, meta = _scenario(scenario)
+    # baseline = meta["baseline"]
+    # metrics = meta["metrics"]
+    # attribs, table = bounds.tabulate(candidates, metrics)
+    # ref = [baseline[a] for a in attribs]
+    # db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
+
+    # # get initial choice
+    # res = _get_boundary_sample()
+
+    res = jsonify({})
+    return res
+
+
+@app.route("/boundaries/choice", methods=["PUT"])
+def get_bounds_choice():
+    """Accept the user's choice for a bounds elicitation session."""
+    if db.bounder is None:
+        print("Session not initialised!")
+        abort(400)  # Not initialised
+    sampler = db.bounder
+
+    # we received a choice, process it
+    data = request.get_json(force=True)
+    x = data["first"]
+    y = data["second"]
+    options = [sampler.query.name, "Baseline"]
+    valid = (x in options) & (y in options)
+
+    # Only pass valid choices on to the eliciter
+    if (not sampler.terminated() and valid):
+        sampler.put(x == sampler.query.name)
+    else:
+        print("Ignoring input")
+
+    # now send a new choice
+    res = _get_boundary_sample()
+    return jsonify(res)
 
 
 @app.route("/deployment/new", methods=["PUT"])
 def make_new_deployment_session():
     """Initialise an eliciter with a particular algorithm and scenario."""
+    print(f"new deployment got payload {request}")
+    if "id" not in session:
+        session["id"] = random_key(16)
+
     # get info about setup from the frontend
     data = request.get_json(force=True)
     scenario = data["scenario"]
     algo = data["algorithm"]
     name = data["name"]
 
-    if "id" not in session:
-        session["id"] = random_key(16)
     # assume that a reload means user wants a restart
     print("Init new session for user")
     candidates, spec = _scenario(scenario)
@@ -223,48 +259,52 @@ def make_new_deployment_session():
     log = logger.Logger(scenario, algo, name)
     db.eliciter = eliciter
     db.logger = log
-    # send the metadata for the scenario
-    return spec
+    # send our first sample of candidates
+    res = _get_deployment_sample(eliciter, log)
+    return jsonify(res)
 
 
-# TODO this could replace some of the other calls
-@app.route("/<scenario>/all")
-def get_all(scenario):
-    """Get all the relevent info about a scenario."""
-    candidates, spec = _scenario(scenario)
-    points, _ = calc_ranges(candidates, spec)
-    baselines = []
-    # baselines = fileio.load_baseline(scenario)
-    r = {"metadata": spec, "candidates": points, "baselines": baselines,
-         "algorithms": eliciters_descriptions}
-    return r
+def _on_terminate_eliciter(eliciter, log):
+    result = eliciter.result()
+    res = {
+        result.name: {
+            "attr": result.attributes,
+            "spec": result.spec_name
+        }
+    }
+    log.add_result(res)
+    data = log.log
+    if not os.path.exists("logs"):
+        os.mkdir("logs")
+    output_file_name = f"logs/{session['id']}.toml"
+    with open(output_file_name, "w") as toml_file:
+        toml.dump(data, toml_file)
+    pdf = FPDF()
+    # Add a page
+    pdf.add_page()
+    # set style and size of font
+    # that you want in the pdf
+    pdf.set_font("Arial", size=15)
+    f = open(output_file_name, "r")
+    for lines in f:
+        pdf.cell(200, 10, txt=lines, ln=1, align="C")
+    pdf.output(f"logs/{str(session['id'])}.pdf")
 
 
-@app.route("/<scenario>/ranges", methods=["GET"])
-def get_ranges(scenario):
-    """Report the candidates and their ranges for a particular scenario."""
-    candidates, spec = _scenario(scenario)
-    points, _collated = calc_ranges(candidates, spec)
-    return jsonify(points)
+def _get_deployment_sample(eliciter, log):
+    if not eliciter.terminated():
+        res = []
+        for option in eliciter.query():
+            res.append({"name": option.name, "values": option.attributes})
+        log.add_options(res)
+    else:
+        _on_terminate_eliciter(eliciter, log)
+        res = {}
+    return res
 
 
-@app.route("/<scenario>/baseline", methods=["GET"])
-def get_baseline(scenario):
-    """Return the performance baseline(s) of the scenario."""
-    result = fileio.load_baseline(scenario)
-    return jsonify(result)
-
-
-@app.route("/<scenario>/constraints", methods=["PUT"])
-def apply_constraints(scenario):
-    """Apply constraints chosen by the user."""
-    # TODO: placeholder
-    # _ = request.get_json(force=True)
-    return "OK"
-
-
-@app.route("/<scenario>/choice", methods=["GET", "PUT"])
-def get_choice(scenario):
+@app.route("/deployment/choice", methods=["PUT"])
+def get_choice():
     """Inform the front-end of the current eliciter choices."""
     if db.eliciter is None:
         print("Session not initialised!")
@@ -273,20 +313,31 @@ def get_choice(scenario):
     eliciter = db.eliciter
     log = db.logger
 
-    # if we got a choice, process it
-    if request.method == "PUT":
-        print("PUT")
-        data = request.get_json(force=True)
-        log.add_choice([data])
-        x = data["first"]
+    res = {}
 
-        # Only pass valid choices on to the eliciter
-        if not eliciter.terminated():
-            choice = [v.name for v in eliciter.query()]
-            if (x in choice):  # and (y in choice) and (x != y):
-                eliciter.put(x)
+    data = request.get_json(force=True)
+    log.add_choice([data])
+    x = data["first"]
 
-    # now give some new choices
+    # Only pass valid choices on to the eliciter
+    if not eliciter.terminated():
+        choice = [v.name for v in eliciter.query()]
+        if (x in choice):  # and (y in choice) and (x != y):
+            eliciter.put(x)
+
+    # have to check again because now it might be terminated
+    # after we added a new choice above
+    res = _get_deployment_sample(eliciter, log)
+    db.eliciter = eliciter
+    db.logger = log
+
+    return jsonify(res)
+
+
+@app.route("/deployment/result")
+def get_result():
+    """Get the eliciter result, if it exists."""
+    eliciter = db.eliciter
     if eliciter.terminated():
         result = eliciter.result()
         res = {
@@ -295,28 +346,6 @@ def get_choice(scenario):
                 "spec": result.spec_name
             }
         }
-        log.add_result(res)
-        data = log.log
-        if not os.path.exists("logs"):
-            os.mkdir("logs")
-        output_file_name = f"logs/{session['id']}.toml"
-        with open(output_file_name, "w") as toml_file:
-            toml.dump(data, toml_file)
-        pdf = FPDF()
-        # Add a page
-        pdf.add_page()
-        # set style and size of font
-        # that you want in the pdf
-        pdf.set_font("Arial", size=15)
-        f = open(output_file_name, "r")
-        for lines in f:
-            pdf.cell(200, 10, txt=lines, ln=1, align="C")
-        pdf.output(f"logs/{str(session['id'])}.pdf")
     else:
-        res = []
-        for option in eliciter.query():
-            res.append({"name": option.name, "values": option.attributes})
-        log.add_options(res)
-    db.eliciter = eliciter
-    db.logger = log
+        res = {}
     return jsonify(res)

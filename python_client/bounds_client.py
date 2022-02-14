@@ -22,15 +22,18 @@ def main():
         print("Please choose from: " + ", ".join(scenarios.keys()))
         scenario = input() or "!!!"
 
-    # Extract the metadata from the list for display purposes
-    meta = scenarios[scenario]
+    # get details of chosen scenario
+    request = f"http://127.0.0.1:8666/scenarios/{scenario}"
+    print(request)
+    info = sess.get(request).json()
+
+    # metadata
+    meta = info["metadata"]
     metrics = meta["metrics"]
     attribs = sorted(metrics)  # canonical order for plotting
 
     # Create a hidden "ground truth" oracle function
-    request = f"http://127.0.0.1:8666/{scenario}/ranges"
-    print(request)
-    candidates = sess.get(request).json()
+    candidates = info["candidates"]
     attribs, table = tabulate(candidates, metrics)
     w_true = 0.1 + 0.9 * np.random.rand(len(attribs))
     w_true /= (w_true @ w_true)**.5  # signed unit vector

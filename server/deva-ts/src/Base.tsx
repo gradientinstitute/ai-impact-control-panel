@@ -26,7 +26,7 @@ export const paneState = atom({
 // Which type of problem the user has chosen to elicit
 export const taskTypeState = atom({
     key: 'taskType',
-    default: TaskTypes.Boundaries,
+    default: null,
   });
 
 
@@ -80,6 +80,7 @@ export const reportState = atom({
     key: 'report', 
     default: null, 
   });
+
 // state for configurations
 export const configState = atom({
   key: 'config',
