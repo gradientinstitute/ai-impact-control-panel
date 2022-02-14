@@ -102,21 +102,6 @@ def _scenario(name):
     return result
 
 
-# @app.route("/<scenario>/images/<path:name>")
-# def send_image(scenario, name):
-#     """Send target image to client."""
-#     scenario_path = os.path.join(fileio.repo_root(),
-#                                  f"scenarios/{scenario}/images")
-#     return send_from_directory(scenario_path, name)
-
-
-# @app.route("/log/<path:name>")
-# def send_log(name):
-#     """Send the session logs to the client."""
-#     scenario_path = "logs"
-#     return send_from_directory(scenario_path, name)
-
-
 @app.route("/<scenario>/bounds/save", methods=["PUT"])
 def save_bound(scenario):
     """Save the bounds configurations to the server."""
@@ -133,18 +118,6 @@ def save_bound(scenario):
     return report
 
 
-# @app.route("/<scenario>/bounds/init", methods=["PUT"])
-# def init_bounds(scenario):
-#     """Initialise a bounds elicitation session."""
-#     if "id" not in session:
-#         session["id"] = random_key(16)
-#     candidates, meta = _scenario(scenario)
-#     baseline = meta["baseline"]
-#     metrics = meta["metrics"]
-#     attribs, table = bounds.tabulate(candidates, metrics)
-#     ref = [baseline["industry_average"][a] for a in attribs]
-#     db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
-#     return ""
 @app.route("/scenarios/<scenario>")
 def get_info(scenario):
     """Get all info about a particular scenario."""

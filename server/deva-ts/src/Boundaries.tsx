@@ -248,9 +248,6 @@ function SaveButton({}) {
       // }
 
       setPane(Pane.Report);
-    //   await axios.put<any>("api/boundaries/new", payload);
-    //   // not proceeding further at this time.
-    //   window.location.href='/';
     }
     if (submit) {
       fetch();
