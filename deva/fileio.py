@@ -89,6 +89,12 @@ def load_scenario(scenario_name, pfilter=True):
 
     baseline = _load_baseline(scenario_name)
 
+    # attempt to load the bounds
+    bounds_f = os.path.join(scenario_path, "bounds.toml")
+    if os.path.exists(bounds_f):
+        bounds = toml.load(bounds_f)
+        scenario["bounds"] = bounds
+
     # Apply lowerIsBetter
     metrics = scenario["metrics"]
     flip = [m for m in metrics if not metrics[m].get("lowerIsBetter", True)]
@@ -163,8 +169,10 @@ def inject_metadata(metrics, candidates):
         if meta["type"] == "quantitative":
             meta["displayDecimals"] = int(meta["displayDecimals"])
 
-            # the user may set fixed ranges (with nice defaults if they dont)
-            (range_min, range_max) = nice_range(meta["min"], meta["max"])
+            if candidates:
+                # the user may set fixed ranges with nice defaults if they dont
+                (range_min, range_max) = nice_range(meta["min"], meta["max"])
+            # TODO else: user error
 
             if "range_min" not in meta:
                 meta["range_min"] = range_min

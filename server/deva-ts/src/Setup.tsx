@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { atom, useRecoilState, useRecoilValue} from 'recoil';
+import { atom, useRecoilState, 
+  useSetRecoilState, useRecoilValue} from 'recoil';
 import axios from 'axios';
 import { Dialog } from "@reach/dialog";
 import { Tabs, TabList, Tab, TabPanels, TabPanel, TabsOrientation } from "@reach/tabs";
@@ -8,7 +9,7 @@ import "@reach/dialog/styles.css";
 import './Setup.css';
 
 import {Pane, paneState, scenarioState, algoState, nameState,
-        problemType} from './Base';
+        TaskTypes, taskTypeState} from './Base';
 
 
 // the set of scenarios retrieved from the serever
@@ -23,21 +24,10 @@ const currentScenarioState = atom({
   default: null,
 });
 
-// the set of algorithms retrieved from the server
-const algoChoicesState = atom({
-    key: 'algorithmChoices',
-    default: [],
-  });
-
-
-
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
 
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
-  // algorithms / eliciters
-  const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
-  const [_current, setCurrent] = useRecoilState(algoState);
   
   // initial loading of candidates
   useEffect(() => {
@@ -49,21 +39,6 @@ export function SetupPane({}) {
   }, []
   );
 
-  // use effect for algo. asyn
-  useEffect(() => {
-    const fetch = async () => {
-      const elic = await axios.get<any>("api/algorithms");
-      setAlgos(elic.data);
-    }
-    fetch();
-  }, []
-  );
-      
-  useEffect( () => {
-    if (algorithms !== null) {
-      setCurrent(Object.keys(algorithms)[0]);
-    }
-  }, [algorithms]);
 
   if (_scenarios === []) {
     return (<p>Loading...</p>);
@@ -78,6 +53,7 @@ export function SetupPane({}) {
     </div>
   );
 }
+
 
 // steps of intro flow
 function Steps() {
@@ -110,9 +86,12 @@ function ChooseScenario({setTabIndex}) {
   const [_scenario, setScenario] = useRecoilState(scenarioState);
   const [_name, setName] = useRecoilState(nameState);
   // const canGoBack = tabIndex >= 0;
-  const [_problemType, setProblemType] = useRecoilState(problemType);
+  const taskType = useRecoilValue(taskTypeState);
   const buttonDisabled = (current === null) || (_name === "");
-  const hasAlgoSelect = (_problemType === "preferences");
+
+  // Update here for additional tasks
+  const nextPane = taskType == TaskTypes.Boundaries 
+    ? Pane.Boundaries : Pane.Configure;
 
   return (
     <TabPanel key={1}>
@@ -123,7 +102,6 @@ function ChooseScenario({setTabIndex}) {
       <p className="text-lg pb-6">Select a scenario</p>
       <ScenarioSelector />
       <br></br>
-      { hasAlgoSelect ?  <AlgoSelector />  : null }
       <div className="flex justify-between btn-row mt-12">
         <div className="flex flex-1 align-middle text-left">
           <button className="hover:text-gray-300 transition"
@@ -135,7 +113,7 @@ function ChooseScenario({setTabIndex}) {
           onClick={() => {
             if (current) {
               setScenario(current)
-              setPane(Pane.Intro);
+              setPane(nextPane);
             }
           }}
           disabled={buttonDisabled}>
@@ -212,45 +190,17 @@ function ScenarioSelector({}) {
     );
 }
 
-
-// Select algorithm from list and preview details
-function AlgoSelector({}) {
-  
-  const algos = useRecoilValue(algoChoicesState);
-  const [current, setCurrent] = useRecoilState(algoState);
-
-  const elements = Object.entries(algos).map(([name, d]) => {
-    return (<option key={name} value={name}>{name}</option>);
-  });
-  
-  return (
-      <div className="p-4 gap-4 bg-gray-500 grid grid-cols-3" >
-        <p className="text-right col-span-1">Eliciter</p>
-        <select className="col-span-2" name="scenarios" value={current} 
-          onChange={ (x) => {setCurrent(x.target.value)}}>
-          {elements}
-        </select>
-        <div className="col-span-1">
-        </div>
-        <div className="col-span-2">
-          <p>{algos[current]}</p>
-        </div>
-      </div>
-    );
-
-}
-
 // select the type of elicitation to do with two buttons
 // TODO: hook up to boundary elicitation when its implemented
 function StartButtons({setTabIndex}) {
 
-  const [_problemType, setProblemType] = useRecoilState(problemType);
+  const setTask = useSetRecoilState(taskTypeState);
 
   return (
       <div className="grid grid-cols-2 gap-10 py-12 px-6">
         <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
           onClick={() => {
-            setProblemType("bounds");
+            setTask(TaskTypes.Boundaries);
             setTabIndex(1);
           }}
           disabled={false}>
@@ -258,7 +208,7 @@ function StartButtons({setTabIndex}) {
         </button>
         <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
           onClick={() => {
-            setProblemType("preferences");
+            setTask(TaskTypes.Deployment);
             setTabIndex(1);
           }}
           disabled={false}>

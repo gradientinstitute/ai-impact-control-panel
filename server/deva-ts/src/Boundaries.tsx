@@ -4,61 +4,65 @@ import 'rc-slider/assets/index.css';
 import axios from 'axios';
 
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { Pane, paneState, scenarioState, 
-        metadataState, constraintsState } from './Base';
+import { Pane, paneState, scenarioState, metadataState, constraintsState,
+         algoChoicesState, reportState } from './Base';
 
 import { allCandidatesState, rangesState, currentCandidatesState,
          getSliderStep, currentSelectionState} from './BoundsSlider';
 
 
 export function BoundariesPane({}) {
-    // name of current scenorio for url purposes e.g. "ezyfraud"
-    const scenario = useRecoilValue(scenarioState);
-    // largest possible ranges for specifying the scrollbar extents
-    const maxRanges = useRecoilValue(rangesState);
-    // list of currently permissible candidates based on current constraints
-    const currentCandidates = useRecoilValue(currentCandidatesState);
-    // the actual/current contraints as defined by the position of scrollbars
-  
-    // current constraints done by metric
-    const [_costraints, setConstraints] = useRecoilState(constraintsState);
-  
-    // all candidates sent to us by the server
-    const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
-  
-    // initial loading of candidates
-    useEffect(() => {
-      const fetch = async () => {
-        axios.get<any>("api/" + scenario + "/ranges")
-          .then( response => response.data)
-          .then( data => {
-            setAllCandidates(data);
-          });
-      }
-      fetch();
-    }, []
-    );
-  
-    // set initial value of the constraints
-    useEffect(() => {
-      setConstraints(maxRanges)
-    }, [maxRanges]);
-  
-    if (currentCandidates === null) {
-      return (<div>Loading...</div>);
+  // name of current scenorio for url purposes e.g. "ezyfraud"
+  const scenario = useRecoilValue(scenarioState);
+  // largest possible ranges for specifying the scrollbar extents
+  const maxRanges = useRecoilValue(rangesState);
+  // list of currently permissible candidates based on current constraints
+  const currentCandidates = useRecoilValue(currentCandidatesState);
+  // the actual/current contraints as defined by the position of scrollbars
+
+  const [metadata, setMetadata] = useRecoilState(metadataState);
+  const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
+
+  // current constraints done by metric
+  const [_costraints, setConstraints] = useRecoilState(constraintsState);
+
+  // all candidates sent to us by the server
+  const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+
+  useEffect(() => {
+    let req = "api/" + scenario + "/all";
+    async function fetchData() {
+      const result = await axios.get<any>(req);
+      const d = result.data;
+      setMetadata(d.metadata);
+      setAlgos(d.algorithms);
+      setAllCandidates(d.candidates);
+      // setBaselines(d.baselines);
     }
-  
-    return (
-      <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
-        <h1>Boundaries Pane</h1>
-        <div className="mb-10">
-          <MultiRangeConstraint />
-        </div>
-        <div className="width-1/4">
-          <StartButton />
-        </div>
+    fetchData();
+  }, []
+  );
+
+  // set initial value of the constraints
+  useEffect(() => {
+    setConstraints(maxRanges)
+  }, [maxRanges]);
+
+  if (currentCandidates === null) {
+    return (<div>Loading...</div>);
+  }
+
+  return (
+    <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
+      <h1>Boundaries Pane</h1>
+      <div className="mb-10">
+        <MultiRangeConstraint />
       </div>
-    );
+      <div className="width-1/4">
+        <SaveButton />
+      </div>
+    </div>
+  );
 }
 
 
@@ -67,7 +71,20 @@ function MultiRangeConstraint({}) {
 
   const constraints = useRecoilValue(constraintsState);
 
-  const baseline = metadata.baseline
+  const baseline = metadata.baseline;
+
+  // // current constraints done by metric
+  const [_costraints, setConstraints] = useRecoilState(constraintsState);
+
+  const maxRanges = useRecoilValue(rangesState);
+  const bounds = maxRanges;
+  // set initial value of the constraints
+  useEffect(() => {
+    if ("bounds" in metadata){
+      const bounds = metadata.bounds;
+      setConstraints(bounds);
+    }
+  }, [bounds]);
 
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
@@ -160,7 +177,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
     n[uid] =  [n[uid][0], newVal]
 
-    setConstraints(n);  
+    setConstraints(n);
   }
 
   let rangeProps = {
@@ -181,8 +198,8 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
       <Slider {...rangeProps} />
       <OptimalDirection lowerIsBetter={lowerIsBetter}/>
     </div>
-    );
-  }
+  );
+}
 
 
 function OptimalDirection({lowerIsBetter}) {
@@ -204,18 +221,28 @@ function OptimalDirection({lowerIsBetter}) {
   }
 
 
-function StartButton({}) {
+function SaveButton({}) {
 
   const [submit, setSubmit] = useState(false);
 
   const scenario = useRecoilValue(scenarioState);
   const constraints = useRecoilValue(constraintsState);
+  const [metadata, setMetadata] = useRecoilState(metadataState);
+  const [report, setReport] = useRecoilState(reportState);
+
   const [_pane, setPane] = useRecoilState(paneState);
 
   useEffect(() => {
     const fetch = async () => {
-      await axios.put<any>("api/" + scenario + "/constraints", constraints);
-      setPane(Pane.Setup);
+      const result = await axios.put<any>("api/" + scenario + "/bounds/save", constraints);
+      setReport(result.data); // result/report
+
+      // TODO set metadata.bounds
+      // for(let m in metadata.bounds){
+      //   metadata.bounds[m] = constraints[m]
+      // }
+
+      setPane(Pane.Report);
     }
     if (submit) {
       fetch();

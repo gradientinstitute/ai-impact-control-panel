@@ -2,12 +2,13 @@ import {RecoilRoot, useRecoilValue} from 'recoil';
 
 import {Pane, paneState} from './Base';
 import {PairwisePane} from './Pairwise';
-import {IntroPane} from './Intro';
 import {ResultPane} from './Result';
 import {SetupPane} from './Setup';
-import {ConstraintPane} from './Constrain';
+import {ConfigurePane} from './Configure';
 import {BoundariesPane} from './Boundaries';
+import {ReportPane} from './Report';
 
+import {ConfigButton, ConfigPanel} from './Config'
 import {Breadcrumb} from './Breadcrumb';
 
 import './App.css';
@@ -15,7 +16,6 @@ import logo from './logo-dark-small.svg';
 
 
 function App() {
-
   return (
     <RecoilRoot>
       <div className="App container text-gray-200 mx-auto mb-32
@@ -24,10 +24,12 @@ function App() {
           <img className="col-span-2 h-16" src={logo}
             alt="Gradient Institute logo" />
           <h1 className="col-span-8 text-3xl">AI Impact Control Panel</h1>
-          <div className="col-span-2" />
+          <div className="col-span-1" />
+          <ConfigButton />
           <Breadcrumb />
         </div>
         <Content />
+        <ConfigPanel />
       </div>
     </RecoilRoot>
   );
@@ -40,11 +42,11 @@ function Content() {
 
   let content = {};
   content[Pane.Setup] = (<SetupPane />);
-  content[Pane.Intro] = (<IntroPane />);
-  content[Pane.Constrain] = (<ConstraintPane />);
+  content[Pane.Configure] = (<ConfigurePane />)
   content[Pane.Pairwise] = ( <PairwisePane />);
   content[Pane.Result] = (<ResultPane />);
   content[Pane.Boundaries] = (<BoundariesPane />);
+  content[Pane.Report] = (<ReportPane />);
 
   return (
     <div>

@@ -9,8 +9,9 @@ import toml
 from flask import Flask, session, abort, request, send_from_directory
 from fpdf import FPDF
 
-from deva import elicit, bounds, fileio, logger
+from deva import elicit, bounds, fileio, logger, compareBase
 from deva.db import RedisDB, DevDB
+
 
 import pickle
 
@@ -101,6 +102,22 @@ def send_log(name):
     return send_from_directory(scenario_path, name)
 
 
+@app.route("/<scenario>/bounds/save", methods=["PUT"])
+def save_bound(scenario):
+    """Save the bounds configurations to the server."""
+    file_name = f"scenarios/{scenario}/bounds.toml"
+    path = os.path.join(fileio.repo_root(), file_name)
+    with open(path, "w+") as toml_file:
+        toml.dump(request.json, toml_file)
+
+    # return report text
+    bounds = toml.load(path)
+    meta = _scenario(scenario)[1]
+    baselines = meta["baseline"]
+    report = compareBase.compare(meta, baselines, bounds)
+    return report
+
+
 @app.route("/<scenario>/bounds/init", methods=["PUT"])
 def init_bounds(scenario):
     """Initialise a bounds elicitation session."""
@@ -110,7 +127,7 @@ def init_bounds(scenario):
     baseline = meta["baseline"]
     metrics = meta["metrics"]
     attribs, table = bounds.tabulate(candidates, metrics)
-    ref = [baseline[a] for a in attribs]
+    ref = [baseline["industry_average"][a] for a in attribs]
     db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
     return ""
 
@@ -186,6 +203,41 @@ def init_session(scenario, algo, name):
     db.logger = log
     # send the metadata for the scenario
     return spec
+
+
+@app.route("/deployment/new", methods=["PUT"])
+def make_new_deployment_session():
+    """Initialise an eliciter with a particular algorithm and scenario."""
+    # get info about setup from the frontend
+    data = request.get_json(force=True)
+    scenario = data["scenario"]
+    algo = data["algorithm"]
+    name = data["name"]
+
+    if "id" not in session:
+        session["id"] = random_key(16)
+    # assume that a reload means user wants a restart
+    print("Init new session for user")
+    candidates, spec = _scenario(scenario)
+    eliciter = elicit.algorithms[algo](candidates, spec)
+    log = logger.Logger(scenario, algo, name)
+    db.eliciter = eliciter
+    db.logger = log
+    # send the metadata for the scenario
+    return spec
+
+
+# TODO this could replace some of the other calls
+@app.route("/<scenario>/all")
+def get_all(scenario):
+    """Get all the relevent info about a scenario."""
+    candidates, spec = _scenario(scenario)
+    points, _ = calc_ranges(candidates, spec)
+    baselines = []
+    # baselines = fileio.load_baseline(scenario)
+    r = {"metadata": spec, "candidates": points, "baselines": baselines,
+         "algorithms": eliciters_descriptions}
+    return r
 
 
 @app.route("/<scenario>/ranges", methods=["GET"])
