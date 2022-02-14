@@ -4,6 +4,8 @@ import WebFont from 'webfontloader';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import 'bootstrap/dist/css/bootstrap.min.css';
+// import 'bootstrap/dist/css/bootstrap-theme.min.css';
 
 WebFont.load({
   google: {
