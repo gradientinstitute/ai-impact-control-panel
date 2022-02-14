@@ -30,7 +30,7 @@ export function BoundariesPane({}) {
     const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
   
     useEffect(() => {
-      let req = "api/" + scenario + "/all";
+      let req = "api/scenarios/" + scenario;
       async function fetchData() {
         const result = await axios.get<any>(req);
         const d = result.data;
@@ -216,9 +216,15 @@ function StartButton({}) {
   const constraints = useRecoilValue(constraintsState);
   const [_pane, setPane] = useRecoilState(paneState);
 
+  const payload = {
+    constraints: constraints,
+    scenario: scenario
+  }
+
   useEffect(() => {
     const fetch = async () => {
-      await axios.put<any>("api/" + scenario + "/constraints", constraints);
+      await axios.put<any>("api/boundaries/new", payload);
+      // not proceeding further at this time.
       window.location.href='/';
     }
     if (submit) {
