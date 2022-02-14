@@ -40,7 +40,7 @@ export function ConfigurePane({}) {
 
   // initial request on load
   useEffect(() => {
-    let req = "api/" + scenario + "/all";
+    let req = "api/scenarios/" + scenario;
     async function fetchData() {
       const result = await axios.get<any>(req);
       const d = result.data;

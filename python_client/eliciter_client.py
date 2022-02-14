@@ -24,10 +24,11 @@ def main():
         print("Please choose from: " + ", ".join(scenarios.keys()))
         scenario = input() or "!!!"
 
-    print("Requesting Algorithm List")
-    request = "http://127.0.0.1:8666/algorithms"
+    print("Requesting Scenario details")
+    request = f"http://127.0.0.1:8666/scenarios/{scenario}"
     print(request)
-    algos = sess.get(request).json()
+    info = sess.get(request).json()
+    algos = info["algorithms"]
     # print("Available algorithms:", *algos)
     algo = "!!!"
 
@@ -36,18 +37,16 @@ def main():
         algo = input() or "!!!"
 
     print("Starting eliciter session")
+    payload = {"name": name, "algorithm": algo, "scenario": scenario}
     # request = f"http://127.0.0.1:8666/{scenario}/metadata"
-    request = f"http://127.0.0.1:8666/{scenario}/init/{algo}/{name}"
+    request = "http://127.0.0.1:8666/deployment/new"
     print(request)
-    meta = sess.get(request).json()
+    choices = sess.put(request, json=payload).json()
 
     # Spec appears to be a repeat of base_meta, but with min/max...
+    meta = info["metadata"]
     metrics = meta["metrics"]
     print("Scenario Metrics:", *metrics)
-
-    request = f"http://127.0.0.1:8666/{scenario}/choice"
-    print(request)
-    choices = sess.get(request).json()
     while True:
         if len(choices) != 2:
             break  # termination condition
@@ -66,16 +65,21 @@ def main():
                         print(f"Autocomplete {i}-->{o}")
                         i = o
         print("Submitting: ", end="")
-        request = f"http://127.0.0.1:8666/{scenario}/choice"
+        request = "http://127.0.0.1:8666/deployment/choice"
         rdata = {"first": i}
         print(request, rdata)
         choices = sess.put(request, json=rdata).json()
-    uid = list(choices.keys())[0]
+
+    request = "http://127.0.0.1:8666/deployment/result"
+    print(request)
+    result = sess.get(request).json()
+
+    uid = list(result.keys())[0]
     # choices now contains "spec":"precise"...
-    name = f"Spec: {choices[uid]['spec']} ({uid})"
-    result = elicit.Candidate(name, choices[uid]["attr"])
+    name = f"Spec: {result[uid]['spec']} ({uid})"
+    attribs = elicit.Candidate(name, result[uid]["attr"])
     print("You have chosen:")
-    interface.text(result, metrics)
+    interface.text(attribs, metrics)
     print('The log has been saved in the "log" folder under "mlserver"')
 
 

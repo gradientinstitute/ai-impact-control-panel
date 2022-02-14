@@ -25,7 +25,7 @@ export const paneState = atom({
 // Which type of problem the user has chosen to elicit
 export const taskTypeState = atom({
     key: 'taskType',
-    default: TaskTypes.Boundaries,
+    default: null,
   });
 
 
