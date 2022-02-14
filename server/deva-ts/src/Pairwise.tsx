@@ -4,7 +4,7 @@ import axios from 'axios';
 
 import _ from "lodash";
 import {Pane, metadataState, paneState, 
-        resultState, scenarioState, configState } from './Base';
+        resultState, scenarioState, nameState, algoState, configState } from './Base';
 import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
 import {VisualiseData, radarDataState} from './RadarCharts'
@@ -36,8 +36,9 @@ export function PairwisePane({}) {
   
   const metadata = useRecoilValue(metadataState);
   const scenario = useRecoilValue(scenarioState);
+  const name = useRecoilValue(nameState);
+  const algorithm = useRecoilValue(algoState);
 
-  const [_result, setResult] = useRecoilState(resultState);
   const choice = useRecoilValue(choiceState);
   const [candidates, setCandidates] = useRecoilState(candidatesState);
   const [_pane, setPane] = useRecoilState(paneState);
@@ -51,11 +52,15 @@ export function PairwisePane({}) {
   // should probably change the server interface one day
   useEffect(() => {
     const fetch = async () => {
-      const result = await axios.get<any>("api/" + scenario + "/choice");
+      const payload = {
+        scenario: scenario,
+        algorithm: algorithm,
+        name: name,
+      }
+      const result = await axios.put<any>("api/deployment/new", payload);
       const d = result.data;
       // const k = Object.keys(d);
       if (!Array.isArray(d)) {
-        setResult(d);
         setPane(Pane.Result);
       } else {
         const ddash = {
@@ -77,11 +82,11 @@ export function PairwisePane({}) {
     const send = async () => {
       let payload = {...choice};
       payload["feedback"] = feedback;
-      const result = await axios.put<any>("api/" + scenario + "/choice", payload);
+      payload["scenario"] = scenario;
+      const result = await axios.put<any>("api/deployment/choice", payload);
       const d = result.data;
       // const k = Object.keys(d);
       if (!Array.isArray(d)) {
-        setResult(d);
         setPane(Pane.Result);
       } else {
         const ddash = {

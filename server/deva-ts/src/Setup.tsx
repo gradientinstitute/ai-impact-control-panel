@@ -30,14 +30,14 @@ export function SetupPane({}) {
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
   
   // initial loading of candidates
-  useEffect(() => {
-    const fetch = async () => {
-      const result = await axios.get<any>("api/scenarios");
-      setScenarios(result.data);
-    }
-    fetch();
-  }, []
-  );
+  // useEffect(() => {
+  //   const fetch = async () => {
+  //     const result = await axios.get<any>("api/scenarios");
+  //     setScenarios(result.data);
+  //   }
+  //   fetch();
+  // }, []
+  // );
 
 
   if (_scenarios === []) {
@@ -83,11 +83,25 @@ function ChooseScenario({setTabIndex}) {
   // second tab: select scenario and eliciter (algorithm)
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
+  const [_scenarios, setScenarios] = useRecoilState(scenariosState);
   const [_scenario, setScenario] = useRecoilState(scenarioState);
   const [_name, setName] = useRecoilState(nameState);
   // const canGoBack = tabIndex >= 0;
   const taskType = useRecoilValue(taskTypeState);
   const buttonDisabled = (current === null) || (_name === "");
+
+  // load scenarios
+  useEffect(() => {
+    const fetch = async () => {
+      const result = await axios.get<any>("api/scenarios");
+      setScenarios(result.data);
+    }
+    fetch();
+  }, []
+  );
+
+
+
 
   // Update here for additional tasks
   const nextPane = taskType == TaskTypes.Boundaries 
