@@ -5,7 +5,7 @@ import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
-import { metadataState, constraintsState } from './Base';
+import { metadataState, constraintsState, configState } from './Base';
 
 import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
@@ -13,6 +13,7 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
   blockedStatusState, blockingMetricsState, blockingStates, 
   unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';
 
+import { CompareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
 
 const HandleColours = {
@@ -22,7 +23,7 @@ const HandleColours = {
 }
 
 const BackgroundColours = {
-  0: 'gray-600',  // default
+  0: 'gray-700',  // default
   1: 'gray-700',  // blocked
   2: 'pink-900',  // blocking
   3: 'green-900', // resolvedBlock
@@ -55,6 +56,7 @@ export function Constraints({}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const setRadarData = useSetRecoilState(radarDataState);
+  const configs = useRecoilValue(configState);
 
   // set initial value of the constraints
   useEffect(() => {
@@ -76,14 +78,15 @@ export function Constraints({}) {
     return (<div>Loading...</div>);
   }
 
+  const visualiseRadar = CompareConfig(configs, 'displaySpiderPlot', 'true')
+    ? (<div className=""><VisualiseData/></div>)
+    : null;
 
   return (
     <div className="mx-auto grid gap-4 grid-cols-1">
       <h1 className="text-left">Metric Filters</h1>
       <ConstraintStatus />
-      <div className="">
-        <VisualiseData/>
-      </div>
+      {visualiseRadar}
       <div className="mb-10">
         <MultiRangeConstraint />
       </div>
@@ -121,6 +124,8 @@ function DescriptionRangeConstraint({uid, unit}) {
   const lowerIsBetter = unit.lowerIsBetter === false ? false : true;
   const maxRanges = useRecoilValue(maxRangesState);
   const constraints = useRecoilValue(constraintsState);
+  const bgcolor = GetBackgroundColor(uid);
+
   const pane = (unit.type === "qualitative") ? 
 
     (<QualitativeConstraint u={unit} 
@@ -136,7 +141,7 @@ function DescriptionRangeConstraint({uid, unit}) {
       lowerIsBetter={lowerIsBetter}/>)
 
   return (
-    <div className="grid grid-cols-8 bg-gray-700">
+    <div className={"grid grid-cols-8 " + bgcolor}>
       <div className="col-span-3">
         <UnitDescription uid={uid} unit={unit} />
       </div>
@@ -191,7 +196,7 @@ function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter})
 
   return (
     <div key={uid} 
-    className={"grid grid-cols-5 gap-8 p-4"}>
+    className={"grid grid-cols-5 gap-8 p-4 " + bgcolor}>
       
       <p className="col-span-5 text-xl text-center">{cstring}</p>
 
@@ -222,7 +227,7 @@ function QualitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter}) 
   )
 
   return (
-    <div key={uid} className="py-10 px-20">
+    <div key={uid} className={"py-15 px-20 " + bgcolor}>
         <RangeConstraint uid={uid} min={min} max={max} marks={marks} decimals={null} lowerIsBetter={lowerIsBetter}/>
     </div>
   )
@@ -317,7 +322,9 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
       blockedStatus={blockedStatus} lowerIsBetter={lowerIsBetter}/>
     <Slider {...rangeProps} />
     <OptimalDirection lowerIsBetter={lowerIsBetter}/>
-    {button}
+    <div className="text-center">
+      {button}
+    </div>
   </div>
   );
 }
@@ -443,7 +450,7 @@ function UnblockButton({uid, buttonDisabled}) {
     : "suggest metrics to unblock";
 
   return (
-    <button className="btn text-xl uppercase py-2 px-8 font-bold rounded-lg"
+    <button className="btn text-l uppercase py-2 px-6 font-bold rounded-lg"
       onClick={() => {
         if (blockedMetric === uid) {
           setBlockedMetric(null);
