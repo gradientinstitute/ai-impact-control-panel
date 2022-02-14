@@ -4,6 +4,9 @@
   "private": true,
   "dependencies": {
     "@craco/craco": "^6.2.0",
+    "@emotion/react": "^11.7.1",
+    "@emotion/styled": "^11.6.0",
+    "@mui/material": "^5.4.1",
     "@nivo/bar": "^0.79.1",
     "@nivo/core": "^0.79.0",
     "@nivo/radar": "^0.79.1",
@@ -25,6 +28,7 @@
     "rc-slider": "^9.7.4",
     "react": "^17.0.2",
     "react-archer": "^3.2.2",
+    "react-bootstrap": "^2.1.2",
     "react-dom": "^17.0.2",
     "react-fetch-hook": "^1.8.5",
     "react-scripts": "4.0.3",

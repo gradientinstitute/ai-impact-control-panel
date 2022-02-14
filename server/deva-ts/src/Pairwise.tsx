@@ -4,10 +4,11 @@ import axios from 'axios';
 
 import _ from "lodash";
 import {Pane, metadataState, paneState, 
-        resultState, scenarioState, nameState, algoState } from './Base';
+        resultState, scenarioState, nameState, algoState, configState } from './Base';
 import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
 import {VisualiseData, radarDataState} from './RadarCharts'
+import { CompareConfig } from './Config';
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
@@ -38,12 +39,12 @@ export function PairwisePane({}) {
   const name = useRecoilValue(nameState);
   const algorithm = useRecoilValue(algoState);
 
-
   const choice = useRecoilValue(choiceState);
   const [candidates, setCandidates] = useRecoilState(candidatesState);
   const [_pane, setPane] = useRecoilState(paneState);
   const [feedback, setFeedback] = useRecoilState(feedbackState);
   const [_radarData, setRadarData] = useRecoilState(radarDataState);
+  const configs = useRecoilValue(configState);
 
 
   // initial loading of candidates
@@ -143,6 +144,9 @@ export function PairwisePane({}) {
     return result;
   }
 
+  const visualiseRadar = CompareConfig(configs, 'displaySpiderPlot', 'true')
+    ? <VisualiseData/>
+    : null;
 
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 
@@ -153,7 +157,7 @@ export function PairwisePane({}) {
         </h1>
         <p className="italic">A system designed to {metadata.purpose}</p>
       </div>
-      <VisualiseData/>
+      {visualiseRadar}
       {comparisons()}
       <InputGetter 
         leftName={candidates.left.name} 

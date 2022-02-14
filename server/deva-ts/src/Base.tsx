@@ -73,3 +73,8 @@ export const resultState = atom({
   default: null, 
 });
 
+// state for configurations
+export const configState = atom({
+  key: 'config',
+  default: null, 
+});
