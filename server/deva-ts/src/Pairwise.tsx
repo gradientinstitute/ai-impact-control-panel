@@ -82,7 +82,7 @@ export function PairwisePane({}) {
     const send = async () => {
       let payload = {...choice};
       payload["feedback"] = feedback;
-      payload["scenario"] = scenario;
+      // payload["scenario"] = scenario;
       const result = await axios.put<any>("api/deployment/choice", payload);
       const d = result.data;
       // const k = Object.keys(d);

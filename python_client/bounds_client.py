@@ -66,8 +66,9 @@ def main():
             choice["right"]["values"],
         )
 
-        interface.text((left, right), metrics)
-
+        print("\n".join(
+            interface.text((left, right), metrics)
+        ))
         # Answer automatically
         q = np.array([left.attributes[a] for a in attribs])
         ref = np.array([right.attributes[a] for a in attribs])

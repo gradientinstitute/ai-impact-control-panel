@@ -63,7 +63,7 @@ def send_image(scenario, name):
     return send_from_directory(scenario_path, name)
 
 
-@app.route("/log/<ftype>")
+@app.route("/session_log/<ftype>")
 def send_log(ftype):
     """Send a completed session logfile to the user."""
     if ftype not in db.logger.files:
@@ -215,35 +215,25 @@ def make_new_deployment_session():
     print("Init new session for user")
     candidates, spec = _scenario(scenario)
     eliciter = elicit.algorithms[algo](candidates, spec)
-    log = logger.Logger(scenario, algo, name)
+    log = logger.Logger(scenario, algo, name, spec["metrics"])
     db.eliciter = eliciter
     db.logger = log
     # send our first sample of candidates
-    res = _get_deployment_sample(eliciter, log)
+    res = _get_deployment_choice(eliciter, log)
     return jsonify(res)
 
 
-def _on_terminate_eliciter(eliciter, log):
-    result = eliciter.result()
-    res = {
-        result.name: {
-            "attr": result.attributes,
-            "spec": result.spec_name
-        }
-    }
-    log.add_result(res)
-    log.write()
+def _get_deployment_choice(eliciter, log):
 
-
-def _get_deployment_sample(eliciter, log):
     if not eliciter.terminated():
         res = []
         for option in eliciter.query():
             res.append({"name": option.name, "values": option.attributes})
-        log.add_options(res)
     else:
-        _on_terminate_eliciter(eliciter, log)
+        log.result = eliciter.result()
+        log.write()
         res = {}
+
     return res
 
 
@@ -260,18 +250,21 @@ def get_choice():
     res = {}
 
     data = request.get_json(force=True)
-    log.add_choice([data])
+    # log.add_choice([data])
     x = data["first"]
 
     # Only pass valid choices on to the eliciter
     if not eliciter.terminated():
         choice = [v.name for v in eliciter.query()]
         if (x in choice):  # and (y in choice) and (x != y):
+            log.choice(eliciter.query(), data)
             eliciter.put(x)
 
     # have to check again because now it might be terminated
     # after we added a new choice above
-    res = _get_deployment_sample(eliciter, log)
+    res = _get_deployment_choice(eliciter, log)
+
+    # Write back to database
     db.eliciter = eliciter
     db.logger = log
 

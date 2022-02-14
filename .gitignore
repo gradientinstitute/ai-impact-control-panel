@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# user logs
+scenarios/*/logs/
+
+
 # clutter
 server/mlserver/logs/
 server/mlserver/node_modules/
@@ -146,5 +150,3 @@ tests/tmp/
 tests/results/*
 
 
-scenarios/*/logs/*.TOML
-scenarios/*/logs/*.pdf

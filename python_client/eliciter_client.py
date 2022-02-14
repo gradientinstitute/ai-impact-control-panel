@@ -79,8 +79,11 @@ def main():
     name = f"Spec: {result[uid]['spec']} ({uid})"
     attribs = elicit.Candidate(name, result[uid]["attr"])
     print("You have chosen:")
-    interface.text(attribs, metrics)
-    print('The log has been saved in the "log" folder under "mlserver"')
+
+    print("\n".join(
+        interface.text(attribs, metrics)
+    ))
+    print("The log has been saved in the scenario/logs folder")
 
 
 if __name__ == "__main__":
