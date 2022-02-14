@@ -69,8 +69,8 @@ export function ResultPane({}) {
         details of {name}.
       </p>
       <p>
-        Click to download the <a href={"api/log/log of session " + metadata.ID + ".toml"} download><b>toml
-        log file</b></a> or the <a href={"api/log/log of session " + metadata.ID + ".pdf"} download><b>pdf
+        Click to download the <a href={"api/session_log/toml"} download><b>toml
+        log file</b></a> or the <a href={"api/session_log/pdf"} download><b>pdf
         log file</b></a> generated for the session.
       </p>
       <StartOver />

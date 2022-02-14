@@ -5,9 +5,7 @@ import os.path
 from util import jsonify, random_key
 
 import redis
-import toml
 from flask import Flask, session, abort, request, send_from_directory
-from fpdf import FPDF
 
 from deva import elicit, fileio, logger
 # from deva import bounds
@@ -65,11 +63,15 @@ def send_image(scenario, name):
     return send_from_directory(scenario_path, name)
 
 
-@app.route("/log/<path:name>")
-def send_log(name):
-    """Send the session logs to the client."""
-    scenario_path = "logs"
-    return send_from_directory(scenario_path, name)
+@app.route("/log/<ftype>")
+def send_log(ftype):
+    """Send a completed session logfile to the user."""
+    if ftype not in db.logger.files:
+        abort(404)  # incorrect usage
+
+    full_path = db.logger.files[ftype]
+    path, filename = os.path.split(full_path)
+    return send_from_directory(path, filename)
 
 
 @app.route("/scenarios")
@@ -136,6 +138,7 @@ def _get_boundary_sample():
                 "values": sampler.baseline.attributes,
             },
         }
+
     # Update database state
     db.bounder = sampler
     return res
@@ -229,22 +232,7 @@ def _on_terminate_eliciter(eliciter, log):
         }
     }
     log.add_result(res)
-    data = log.log
-    if not os.path.exists("logs"):
-        os.mkdir("logs")
-    output_file_name = f"logs/{session['id']}.toml"
-    with open(output_file_name, "w") as toml_file:
-        toml.dump(data, toml_file)
-    pdf = FPDF()
-    # Add a page
-    pdf.add_page()
-    # set style and size of font
-    # that you want in the pdf
-    pdf.set_font("Arial", size=15)
-    f = open(output_file_name, "r")
-    for lines in f:
-        pdf.cell(200, 10, txt=lines, ln=1, align="C")
-    pdf.output(f"logs/{str(session['id'])}.pdf")
+    log.write()
 
 
 def _get_deployment_sample(eliciter, log):

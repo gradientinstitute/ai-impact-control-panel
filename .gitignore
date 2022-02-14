@@ -144,3 +144,7 @@ tests/tmp/
 */**/dump.rdb
 */**/server.secret
 tests/results/*
+
+
+scenarios/*/logs/*.TOML
+scenarios/*/logs/*.pdf
