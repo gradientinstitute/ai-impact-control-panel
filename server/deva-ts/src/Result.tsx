@@ -70,7 +70,7 @@ export function ResultPane({}) {
       </p>
       <p>
         Click to download
-        the <a href={"api/session_log/txt"} download><b>session log</b></a>.
+        the <a href={"api/deployment/logs/txt"} download><b>session log</b></a>.
       </p>
       <StartOver />
     </div>

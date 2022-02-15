@@ -63,7 +63,7 @@ def send_image(scenario, name):
     return send_from_directory(scenario_path, name)
 
 
-@app.route("/session_log/<ftype>")
+@app.route("/deployment/logs/<ftype>")
 def send_log(ftype):
     """Send a completed session logfile to the user."""
     if ftype not in db.logger.files:
