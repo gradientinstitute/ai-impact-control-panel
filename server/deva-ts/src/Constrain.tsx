@@ -79,7 +79,7 @@ export function Constraints({}) {
   }
 
   const visualiseRadar = CompareConfig(configs, 'displaySpiderPlot', 'true')
-    ? (<div className=""><VisualiseData/></div>)
+    ? (<div className=""><VisualiseData colour={["#008080", "#CC333F"]}/></div>)
     : null;
 
   return (

@@ -145,7 +145,7 @@ export function PairwisePane({}) {
   }
 
   const visualiseRadar = CompareConfig(configs, 'displaySpiderPlot', 'true')
-    ? <VisualiseData/>
+    ? <VisualiseData colour={["#f97316", "#728bb3"]}/>
     : null;
 
   return (

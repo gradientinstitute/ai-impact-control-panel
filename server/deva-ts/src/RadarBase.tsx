@@ -4,10 +4,10 @@
 import * as d3 from "d3";
 import _ from "lodash";
 
-export function DrawRadarChart(id, data, svg) {
+export function DrawRadarChart(id, data, svg, colour) {
 
   /* SET UP RADAR CHART */
-  const cfg = getConfiguration();
+  const cfg = getConfiguration(colour);
   const axes = data[0].map((x) => x.axis);
   const maxVal = 100;
   const radius = Math.min(cfg.w / 2, cfg.h / 2);
@@ -39,11 +39,10 @@ export function DrawRadarChart(id, data, svg) {
   appendInvisibleCircles(blobCircleWrapper, cfg, radiusScale, angleSlice, tooltip);
 }
 
-function getConfiguration() {
+function getConfiguration(colour) {
   const margin = { top: 100, right: 100, bottom: 100, left: 100 };
   const width = Math.min(700, window.innerWidth - 10) - margin.left - margin.right;
   const height = Math.min(width, window.innerHeight - margin.top - margin.bottom - 20);
-  const color = ["#008080", "#CC333F", "#739CC4"];
 
   const defaultConfig = {
     // circle
@@ -63,7 +62,7 @@ function getConfiguration() {
     opacityCircles: 0.1,
     strokeWidth: 2,
     roundStrokes: false,
-    color: color,
+    color: colour,
     dotRadius: 3,
   };
   return defaultConfig;

@@ -6,9 +6,9 @@ import { atom, selector, useRecoilValue } from "recoil";
 import { metadataState } from './Base';
 import { DrawRadarChart } from "./RadarBase";
 
-export function VisualiseData({}){
+export function VisualiseData({colour}){
   const data = useRecoilValue(radarParsedDataState);
-  return RadarChart({data});
+  return RadarChart({data, colour});
 }
 // Data to be displayed on the radar chart
 export const radarDataState = atom({
@@ -63,13 +63,13 @@ function getPercentage(val, min, max, lowerIsBetter) {
 }
 
 // Returns the radar chart
-function RadarChart({data}) {
+function RadarChart({data, colour}) {
   const svgRef = useRef();
   const axes = data[0].map((x) => x.axis);
   useEffect(() => {
     if (svgRef.current && axes.length > 2) {
       const svg = d3.select(svgRef.current);
-      DrawRadarChart(".radarChart", data, svg);
+      DrawRadarChart(".radarChart", data, svg, colour);
     }
   });
 
