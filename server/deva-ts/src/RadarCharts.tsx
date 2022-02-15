@@ -40,12 +40,15 @@ export const radarParsedDataState = selector({
         const min = ranges[uid][0];
         const max = ranges[uid][1];
         const val = getPercentage(vals[uid], min, max, lowerIsBetter);
-  
+        const tooltipText = u.type === "qualitative" 
+          ? u.options[vals[uid]] 
+          : vals[uid] * sign + " " + u.suffix;
+        
         d.push({
           "legend" : name,
           "axis" : u.name, 
           "value" : val, 
-          "actualValue" : vals[uid] * sign,
+          "tooltipText" : tooltipText,
           "rangeMin" : min,
           "rangeMax" : max,
         });

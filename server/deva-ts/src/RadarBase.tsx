@@ -55,7 +55,7 @@ function getConfiguration(colour) {
 
     // labels
     labelFactor: 1.25,
-    wrapWidth: 60, 
+    wrapWidth: 60,
 
     // blobs
     opacityArea: 0.35,
@@ -251,16 +251,17 @@ function appendInvisibleCircles(blobCircleWrapper, cfg, rScale, angleSlice, tool
     .style("fill", "none")
     .style("pointer-events", "all")
     .on("mouseover", function (d, i) {
-      let newX = parseFloat(d3.select(this).attr("cx")) - 10;
+      let newX = parseFloat(d3.select(this).attr("cx")) - 50;
       let newY = parseFloat(d3.select(this).attr("cy")) - 10;
       tooltip
         .attr("x", newX)
         .attr("y", newY)
-        .text(i.actualValue)
+        .text(i.tooltipText)
         .transition()
         .duration(200)
         .style("opacity", 1)
-        .style("fill", "white");
+        .style("fill", "white")
+        .style("font-size", "10px")
     })
     .on("mouseout", function () {
       tooltip.transition().duration(200).style("opacity", 0);
