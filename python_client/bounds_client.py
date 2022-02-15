@@ -1,4 +1,4 @@
-"""Basic client to elicit bounds by talking to the server."""
+"""Basic client to elicit bounds by talking to the API."""
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,14 +6,15 @@ import plot3d
 from deva import elicit, interface  # , bounds
 
 import pickle
+API = "http://127.0.0.1:8666"
 
 
 def main():
-    """Operate basic client to elicit bounds by talking to the server."""
+    """Operate basic client to elicit bounds by talking to the API."""
     sess = requests.Session()
 
     print("Requesting Scenario List")
-    request = "http://127.0.0.1:8666/scenarios"
+    request = f"{API}/scenarios"
     print(request)
     scenarios = sess.get(request).json()
     scenario = "jobs"
@@ -23,7 +24,7 @@ def main():
         scenario = input() or "!!!"
 
     # get details of chosen scenario
-    request = f"http://127.0.0.1:8666/scenarios/{scenario}"
+    request = f"{API}/scenarios/{scenario}"
     print(request)
     info = sess.get(request).json()
 
@@ -40,14 +41,14 @@ def main():
 
     # Create a bounds session
     print("Starting eliciter session")
-    request = f"http://127.0.0.1:8666/{scenario}/bounds/init"
+    request = f"{API}/{scenario}/bounds/init"
     sess.put(request)
     print(request)
 
     # log the query choice_log for plotting later
     choice_log = []
 
-    request = f"http://127.0.0.1:8666/{scenario}/bounds/choice"
+    request = f"{API}/{scenario}/bounds/choice"
     print(request)
     choice = sess.get(request).json()
 
@@ -66,8 +67,9 @@ def main():
             choice["right"]["values"],
         )
 
-        interface.text((left, right), metrics)
-
+        print("\n".join(
+            interface.text((left, right), metrics)
+        ))
         # Answer automatically
         q = np.array([left.attributes[a] for a in attribs])
         ref = np.array([right.attributes[a] for a in attribs])
@@ -84,12 +86,12 @@ def main():
             print(f"Choice: Oracle (REJECTED) {left.name}.\n\n")
             data = {"first": right.name, "second": left.name}
 
-        # Reply to server
+        # Reply to API
         choice = sess.put(request, json=data).json()
 
     # Terminated - decode the model
     model_ID = sess.get(request).json()
-    path = "server/mlserver/" + model_ID["model_ID"]
+    path = "API/mlAPI/" + model_ID["model_ID"]
     model = pickle.load(open(path, "rb"))  # load the model from disk
 
     w_est = model.w

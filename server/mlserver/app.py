@@ -5,9 +5,7 @@ import os.path
 from util import jsonify, random_key
 
 import redis
-import toml
 from flask import Flask, session, abort, request, send_from_directory
-from fpdf import FPDF
 
 from deva import elicit, fileio, logger
 # from deva import bounds
@@ -65,11 +63,15 @@ def send_image(scenario, name):
     return send_from_directory(scenario_path, name)
 
 
-@app.route("/log/<path:name>")
-def send_log(name):
-    """Send the session logs to the client."""
-    scenario_path = "logs"
-    return send_from_directory(scenario_path, name)
+@app.route("/deployment/logs/<ftype>")
+def send_log(ftype):
+    """Send a completed session logfile to the user."""
+    if ftype not in db.logger.files:
+        abort(404)  # incorrect usage
+
+    full_path = db.logger.files[ftype]
+    path, filename = os.path.split(full_path)
+    return send_from_directory(path, filename)
 
 
 @app.route("/scenarios")
@@ -136,6 +138,7 @@ def _get_boundary_sample():
                 "values": sampler.baseline.attributes,
             },
         }
+
     # Update database state
     db.bounder = sampler
     return res
@@ -212,50 +215,25 @@ def make_new_deployment_session():
     print("Init new session for user")
     candidates, spec = _scenario(scenario)
     eliciter = elicit.algorithms[algo](candidates, spec)
-    log = logger.Logger(scenario, algo, name)
+    log = logger.Logger(scenario, algo, name, spec["metrics"])
     db.eliciter = eliciter
     db.logger = log
     # send our first sample of candidates
-    res = _get_deployment_sample(eliciter, log)
+    res = _get_deployment_choice(eliciter, log)
     return jsonify(res)
 
 
-def _on_terminate_eliciter(eliciter, log):
-    result = eliciter.result()
-    res = {
-        result.name: {
-            "attr": result.attributes,
-            "spec": result.spec_name
-        }
-    }
-    log.add_result(res)
-    data = log.log
-    if not os.path.exists("logs"):
-        os.mkdir("logs")
-    output_file_name = f"logs/{session['id']}.toml"
-    with open(output_file_name, "w") as toml_file:
-        toml.dump(data, toml_file)
-    pdf = FPDF()
-    # Add a page
-    pdf.add_page()
-    # set style and size of font
-    # that you want in the pdf
-    pdf.set_font("Arial", size=15)
-    f = open(output_file_name, "r")
-    for lines in f:
-        pdf.cell(200, 10, txt=lines, ln=1, align="C")
-    pdf.output(f"logs/{str(session['id'])}.pdf")
+def _get_deployment_choice(eliciter, log):
 
-
-def _get_deployment_sample(eliciter, log):
     if not eliciter.terminated():
         res = []
         for option in eliciter.query():
             res.append({"name": option.name, "values": option.attributes})
-        log.add_options(res)
     else:
-        _on_terminate_eliciter(eliciter, log)
+        log.result = eliciter.result()
+        log.write()
         res = {}
+
     return res
 
 
@@ -272,18 +250,21 @@ def get_choice():
     res = {}
 
     data = request.get_json(force=True)
-    log.add_choice([data])
+    # log.add_choice([data])
     x = data["first"]
 
     # Only pass valid choices on to the eliciter
     if not eliciter.terminated():
         choice = [v.name for v in eliciter.query()]
         if (x in choice):  # and (y in choice) and (x != y):
+            log.choice(eliciter.query(), data)
             eliciter.put(x)
 
     # have to check again because now it might be terminated
     # after we added a new choice above
-    res = _get_deployment_sample(eliciter, log)
+    res = _get_deployment_choice(eliciter, log)
+
+    # Write back to database
     db.eliciter = eliciter
     db.logger = log
 
