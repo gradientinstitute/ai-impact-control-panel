@@ -91,3 +91,5 @@ description = "Ensure that candidates shortlisted are suitable."
 
     range_min = 0
     range_max = 4
+    visual_min = 0
+    visual_max = 4

@@ -9,6 +9,7 @@ import { Pane, paneState, algoState, nameState, constraintsState,
 import {sigFigs} from './Widgets';
 import {IntroContext} from './Intro';
 import {Constraints} from './Constrain';
+import { maxRangesState } from './ConstrainScrollbar';
 
 // TODO siigh css? 
 const HIGHLIGHT_COLOUR = "bg-orange-700";
@@ -36,7 +37,9 @@ export function ConfigurePane({}) {
   const [_current, setCurrent] = useRecoilState(algoState);
   const [metadata, setMetadata] = useRecoilState(metadataState);
   const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
-  const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+  const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+  const maxRanges = useRecoilValue(maxRangesState);
+  const [_constraints, setConstraints] = useRecoilState(constraintsState);
 
   // initial request on load
   useEffect(() => {
@@ -52,7 +55,12 @@ export function ConfigurePane({}) {
     fetchData();
   }, []
   );
+
+  useEffect(() => {
+    setConstraints(maxRanges);
+  }, [allCandidates]);
   
+
   // default selection of a particular algorithm
   useEffect( () => {
     if (algorithms !== null) {

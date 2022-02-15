@@ -35,11 +35,6 @@ export function ConfigPanel({}) {
         'options' : ["true", "false"],
         'selected' : "true", // default
       },
-      scrollbarDisplay : {
-        'name' : 'scrollbar display',
-        'options' : ['most optimal on left', 'lower value on left', 'something else on left'],
-        'selected' : 'lower value on left'
-      },
       minMaxDisplay : {
         'name' : 'minimum and maximum display',
         'options' : ['display visual min/max', 'display data min/max'],
@@ -155,6 +150,6 @@ export function ConfigButton({}) {
 }
 
 // returns if selected config option is expected selected
-export function CompareConfig(configsList, config, expectedVal) {
+export function compareConfig(configsList, config, expectedVal) {
   return configsList[config]['selected'] === expectedVal;
 }

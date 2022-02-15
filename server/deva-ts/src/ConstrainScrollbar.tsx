@@ -2,7 +2,7 @@ import { atom, selector } from 'recoil';
 import { metadataState, constraintsState, configState } from './Base';
 import _ from "lodash";
 import { roundValue, rvOperations } from './Widgets';
-import { CompareConfig } from './Config';
+import { compareConfig } from './Config';
 
 
 export enum blockingStates {
@@ -369,13 +369,14 @@ export const maxRangesState = selector({
     }
 
     let ranges = getDataMinMax(metadata, all);
-    if (CompareConfig(configs, "minMaxDisplay", "visual range min/max")) {
+    if (compareConfig(configs, "minMaxDisplay", "display visual min/max")) {
       ranges = getVisualMinMax(metadata);
     }
 
     return ranges;
   },
 });
+
 
 function getDataMinMax(metadata, all) {
   const ranges = _.mapValues(metadata.metrics, (val, uid, _obj) => {
