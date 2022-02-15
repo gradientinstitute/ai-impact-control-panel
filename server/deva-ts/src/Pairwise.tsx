@@ -198,8 +198,7 @@ function Motivation({}) {
 function InputGetter({leftName, rightName}) {
   return (
     <div className="w-auto mb-8 flex space-x-16">
-      <div className="my-auto" style={{width:"10%"}}>
-      </div>
+      <div className="my-auto" style={{width:"5%"}}/>
       <div className="my-auto" style={{width:"20%"}}>
         <PreferenceButton 
           label={leftName} 
@@ -217,6 +216,7 @@ function InputGetter({leftName, rightName}) {
           other={leftName}
         />
       </div>
+      <div className="my-auto" style={{width:"5%"}}/>
     </div>
   );
 }
