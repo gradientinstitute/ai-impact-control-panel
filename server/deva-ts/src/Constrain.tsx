@@ -15,6 +15,7 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
 
 import { CompareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
+import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
 
 const HandleColours = {
   0: 'white', // default
@@ -329,31 +330,75 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   );
 }
 
+function StatusExplanationOverlay({children, rank, msg, placement}) {
+  const popover = (
+    <Popover id={rank}>
+      <Popover.Body className="text-white text-sm">
+        {msg}
+      </Popover.Body>
+    </Popover>
+  )
+
+  return (
+    <OverlayTrigger
+      trigger="hover"
+      placement={placement} 
+      overlay={popover}
+    >
+      {children}
+    </OverlayTrigger>
+  );
+}
+
 function StatusButton({uid}) {
 
   const StatusText = {
-    0: 'Default',        // default
-    1: 'Blocked',        // overridden by toggle button (blockedMetric)
-    2: 'Blocking',       //
-    3: 'Resolved Block', // overridden by toggle button 
-    4: 'Selected',       // currently selected
-    5: 'Blocked'         //
+    0: {
+      status : 'Default', 
+      explanation : null
+    },
+
+    1: { 
+      status : 'Blocked',
+      explanation: "can't move this further"
+    },    
+    
+    2: {
+      status : 'Blocking',
+      explanation: 'oh no'
+    },    
+    
+    3: { // overridden by toggle button 
+      status : 'Resolved Block',
+      explanation: null
+    },
+    
+    4: { // currently selected
+      status : 'Selected',
+      explanation: null},       
+    
+    5: { // overridden by toggle button (blockedMetric)
+      status : 'Blocked' ,
+      explanation: "can't move this further"
+    }
   }
 
   const blockStatus = useRecoilValue(blockedStatusState)[uid];
   const bgcolor = GetBackgroundColor(uid);
-  const text = StatusText[blockStatus];
+  const text = StatusText[blockStatus].status;
+  const explanation = StatusText[blockStatus].explanation;
   const visibility = ["Default", "Selected"].includes(text) ? " invisible" : "";
 
   return (
-    <button className={bgcolor + "text-xl uppercase py-2 px-8 font-bold rounded-lg" + visibility}
-      onMouseOver={() => {
-        // TODO: display information to guide user 
-        console.log("HOVERING OVER BUTTON");
-      }}
+    <StatusExplanationOverlay 
+      rank={0} 
+      msg={explanation} 
+      placement={"right"}
     >
-    {text}
+    <button className={bgcolor + "text-xl uppercase py-2 px-8 font-bold rounded-lg" + visibility}>
+      {text}
     </button>
+    </StatusExplanationOverlay>
   );
 }
 
