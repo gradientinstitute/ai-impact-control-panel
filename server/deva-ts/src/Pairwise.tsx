@@ -158,11 +158,11 @@ export function PairwisePane({}) {
         <p className="italic">A system designed to {metadata.purpose}</p>
       </div>
       {visualiseRadar}
-      {comparisons()}
       <InputGetter 
         leftName={candidates.left.name} 
         rightName={candidates.right.name} 
       />
+      {comparisons()}
     </div>
   );
 }
