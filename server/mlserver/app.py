@@ -10,11 +10,11 @@ from flask import Flask, session, abort, request, send_from_directory
 from fpdf import FPDF
 
 from deva import elicit, fileio, logger, compareBase
-# from deva import bounds
+from deva import bounds
 from deva.db import RedisDB, DevDB
 
-
 import pickle
+
 
 # Set up the flask app
 app = Flask(__name__)
@@ -164,25 +164,25 @@ def init_bounds():
     if "id" not in session:
         session["id"] = random_key(16)
 
-    # data = request.get_json(force=True)
+    data = request.get_json(force=True)
 
-    # scenario = data["scenario"]
-    # constraints = data["constraints"]
-    # _algo = data["algorithm"]
-    # _user = data["user"]
+    scenario = data["scenario"]
+    constraints = data["constraints"]
+    _algo = data["algorithm"]
+    _user = data["user"]
 
-    # # Boundary elicitation not currently exposed.
-    # candidates, meta = _scenario(scenario)
-    # baseline = meta["baseline"]
-    # metrics = meta["metrics"]
-    # attribs, table = bounds.tabulate(candidates, metrics)
-    # ref = [baseline[a] for a in attribs]
-    # db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
+    # Boundary elicitation not currently exposed.
+    candidates, meta = _scenario(scenario)
+    baseline = meta["baseline"]
+    metrics = meta["metrics"]
+    attribs, table = bounds.tabulate(candidates, metrics)
+    ref = [baseline["industry_average"][a] for a in attribs]
+    db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
 
-    # # get initial choice
-    # res = _get_boundary_sample()
+    # get initial choice
+    res = _get_boundary_sample()
 
-    res = jsonify({})
+    # res = jsonify({})
     return res
 
 
@@ -236,6 +236,8 @@ def make_new_deployment_session():
     res = _get_deployment_sample(eliciter, log)
     return jsonify(res)
 
+
+# TODO: endpoint for saving logs
 
 def _on_terminate_eliciter(eliciter, log):
     result = eliciter.result()
