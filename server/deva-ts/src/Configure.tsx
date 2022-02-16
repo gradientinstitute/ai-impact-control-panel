@@ -74,12 +74,8 @@ export function ConfigurePane({}) {
     return (<p>Loading...</p>);
   }
 
-  const bounds = metadata.bounds
-
-  const candidates = filterCandidates(_allCandidates, bounds)
-
-  console.log(candidates)
-  console.log(bounds)
+  const bounds = metadata.bounds;
+  const candidates = filterCandidates(_allCandidates, bounds);
 
     if(candidates.length == 0){
         setPane(Pane.UserReport);
@@ -91,11 +87,27 @@ export function ConfigurePane({}) {
         <IntroContext />
       </div>
       <div className="col-span-5">
+        <EliminatedStatus remaining={candidates} all={_allCandidates}/>
         <Constraints />
         <AlgorithmMenu />
         <StartButton />
       </div>
     </div>
+  );
+}
+
+
+function EliminatedStatus({remaining, all}) {
+
+  const eliminated = all.length - remaining.length;
+
+  return (
+  <div className="mb-8 bg-gray-600 rounded-lg">
+    <span className="italic text-2xl">
+      {eliminated +" of " + all.length + " "}
+    </span>
+    candidates are eliminated by the system requirement bounds
+  </div>
   );
 }
 

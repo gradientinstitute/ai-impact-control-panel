@@ -5,6 +5,7 @@ import os.path
 from util import jsonify, random_key
 
 import redis
+import toml
 from flask import Flask, session, abort, request, send_from_directory
 
 from deva import elicit, fileio, logger, compareBase
@@ -167,25 +168,25 @@ def init_bounds():
     if "id" not in session:
         session["id"] = random_key(16)
 
-    data = request.get_json(force=True)
+    # data = request.get_json(force=True)
 
-    scenario = data["scenario"]
-    constraints = data["constraints"]
-    _algo = data["algorithm"]
-    _user = data["user"]
+    # scenario = data["scenario"]
+    # constraints = data["constraints"]
+    # _algo = data["algorithm"]
+    # _user = data["user"]
 
-    # Boundary elicitation not currently exposed.
-    candidates, meta = _scenario(scenario)
-    baseline = meta["baseline"]
-    metrics = meta["metrics"]
-    attribs, table = bounds.tabulate(candidates, metrics)
-    ref = [baseline["industry_average"][a] for a in attribs]
-    db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
+    # # Boundary elicitation not currently exposed.
+    # candidates, meta = _scenario(scenario)
+    # baseline = meta["baseline"]
+    # metrics = meta["metrics"]
+    # attribs, table = bounds.tabulate(candidates, metrics)
+    # ref = [baseline["industry_average"][a] for a in attribs]
+    # db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
 
-    # get initial choice
-    res = _get_boundary_sample()
+    # # get initial choice
+    # res = _get_boundary_sample()
 
-    # res = jsonify({})
+    res = jsonify({})
     return res
 
 
