@@ -10,6 +10,9 @@ import {sigFigs} from './Widgets';
 import {IntroContext} from './Intro';
 import {Constraints} from './Constrain';
 
+import { filterCandidates } from './ConstrainScrollbar';
+
+
 // TODO siigh css? 
 const HIGHLIGHT_COLOUR = "bg-orange-700";
 const FIRST_COLOUR = "bg-gray-700";
@@ -24,6 +27,7 @@ export const allCandidatesState = atom({
   default: null, 
 });
 
+
 // root node
 export function ConfigurePane({}) {
   
@@ -37,6 +41,8 @@ export function ConfigurePane({}) {
   const [metadata, setMetadata] = useRecoilState(metadataState);
   const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
   const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+
+  const [_pane, setPane] = useRecoilState(paneState);
 
   // initial request on load
   useEffect(() => {
@@ -64,6 +70,21 @@ export function ConfigurePane({}) {
     return (<p>Loading...</p>);
   }
 
+  if (_allCandidates === null) {
+    return (<p>Loading...</p>);
+  }
+
+  const bounds = metadata.bounds
+
+  const candidates = filterCandidates(_allCandidates, bounds)
+
+  console.log(candidates)
+  console.log(bounds)
+
+    if(candidates.length == 0){
+        setPane(Pane.UserReport);
+    }
+
   return (
     <div className="grid grid-cols-7 gap-8 pb-10">
       <div className="col-span-2">
@@ -77,6 +98,7 @@ export function ConfigurePane({}) {
     </div>
   );
 }
+
 
 function AlgorithmMenu({}) {
   
@@ -119,6 +141,7 @@ function AlgoSelector({}) {
     );
 
 }
+
 
 function StartButton({}) {
 

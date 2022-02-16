@@ -24,7 +24,7 @@ export function BoundariesPane({}) {
     const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
   
     // current constraints done by metric
-    const [_costraints, setConstraints] = useRecoilState(constraintsState);
+    const [_constraints, setConstraints] = useRecoilState(constraintsState);
   
     // all candidates sent to us by the server
     const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
@@ -74,7 +74,7 @@ function MultiRangeConstraint({}) {
   const baseline = metadata.baseline;
 
   // // current constraints done by metric
-  const [_costraints, setConstraints] = useRecoilState(constraintsState);
+  const [_constraints, setConstraints] = useRecoilState(constraintsState);
 
   const maxRanges = useRecoilValue(rangesState);
   const bounds = maxRanges;

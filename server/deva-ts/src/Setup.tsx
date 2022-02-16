@@ -24,6 +24,7 @@ const currentScenarioState = atom({
   default: null,
 });
 
+
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
 
@@ -38,7 +39,6 @@ export function SetupPane({}) {
   //   fetch();
   // }, []
   // );
-
 
   if (_scenarios === []) {
     return (<p>Loading...</p>);
@@ -69,6 +69,7 @@ function Steps() {
  )
 }
 
+
 function ChooseProblem({setTabIndex}) {
   // first tab: choose whether to elicit boundaries or preferences
   return (
@@ -78,6 +79,7 @@ function ChooseProblem({setTabIndex}) {
   </TabPanel>
   )
 }
+
 
 function ChooseScenario({setTabIndex}) {
   // second tab: select scenario and eliciter (algorithm)
@@ -99,9 +101,6 @@ function ChooseScenario({setTabIndex}) {
     fetch();
   }, []
   );
-
-
-
 
   // Update here for additional tasks
   const nextPane = taskType == TaskTypes.Boundaries 
@@ -137,6 +136,7 @@ function ChooseScenario({setTabIndex}) {
     </TabPanel>
   )
 }
+
 
 // Select scenario from list and preview details
 function ScenarioSelector({}) {
@@ -204,6 +204,7 @@ function ScenarioSelector({}) {
     );
 }
 
+
 // select the type of elicitation to do with two buttons
 // TODO: hook up to boundary elicitation when its implemented
 function StartButtons({setTabIndex}) {
@@ -211,24 +212,23 @@ function StartButtons({setTabIndex}) {
   const setTask = useSetRecoilState(taskTypeState);
 
   return (
-      <div className="grid grid-cols-2 gap-10 py-12 px-6">
-        <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
-          onClick={() => {
-            setTask(TaskTypes.Boundaries);
-            setTabIndex(1);
-          }}
-          disabled={false}>
-            Boundaries
-        </button>
-        <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
-          onClick={() => {
-            setTask(TaskTypes.Deployment);
-            setTabIndex(1);
-          }}
-          disabled={false}>
-            Deployment
-        </button>
-      </div>
+    <div className="grid grid-cols-2 gap-10 py-12 px-6">
+      <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
+        onClick={() => {
+          setTask(TaskTypes.Boundaries);
+          setTabIndex(1);
+        }}
+        disabled={false}>
+          Boundaries
+      </button>
+      <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
+        onClick={() => {
+          setTask(TaskTypes.Deployment);
+          setTabIndex(1);
+        }}
+        disabled={false}>
+          Deployment
+      </button>
+    </div>
   );
 }
-

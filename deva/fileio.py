@@ -139,9 +139,6 @@ def inject_metadata(metrics, candidates):
         if "type" not in meta:
             meta["type"] = "quantitative"
 
-        if "isMetric" not in meta:
-            meta["isMetric"] = True
-
         # calculate the attribute range spanned by the candidates
         meta["min"] = min(c[attr] for c in candidates)
         meta["max"] = max(c[attr] for c in candidates)
