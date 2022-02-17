@@ -41,7 +41,7 @@ for x in range(2):
     n = x + 1
     attributes.append(f"x{n}")
 scenario = {}
-scenario["mary_metric"] = "x1"
+scenario["primary_metric"] = "x1"
 scenario["metrics"] = {}
 
 sys_dict = {}
