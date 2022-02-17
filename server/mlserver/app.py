@@ -9,7 +9,7 @@ import toml
 from flask import Flask, session, abort, request, send_from_directory
 
 from deva import elicit, fileio, logger, compareBase
-from deva import bounds
+# from deva import bounds
 from deva.db import RedisDB, DevDB
 
 import pickle
@@ -111,7 +111,10 @@ def save_bound(scenario):
     file_name = f"scenarios/{scenario}/bounds.toml"
     path = os.path.join(fileio.repo_root(), file_name)
     with open(path, "w+") as toml_file:
-        toml.dump(request.json, toml_file)
+        # repair request
+        data = request.get_json()
+        data = {k: [float(a) for a in v] for k, v in data.items()}
+        toml.dump(data, toml_file)
 
     # return report text
     bounds = toml.load(path)
@@ -214,6 +217,27 @@ def get_bounds_choice():
     # now send a new choice
     res = _get_boundary_sample()
     return jsonify(res)
+
+
+@app.route("/<scenario>/deployment/filter", methods=["PUT"])
+def filter_candidates(scenario):
+    """Filter the candidates and save it to the log."""
+    candidates, _ = _scenario(scenario)
+    meta = _scenario(scenario)[1]
+
+    file_name = f"scenarios/{scenario}/bounds.toml"
+    path = os.path.join(fileio.repo_root(), file_name)
+
+    if os.path.exists(path):
+        bounds = toml.load(path)
+        report = compareBase.compare(meta, candidates, bounds)
+    else:
+        report = "bounds configurations not found"
+
+    # log = logger.Logger()
+    # db.logger = log
+
+    return report
 
 
 @app.route("/deployment/new", methods=["PUT"])
