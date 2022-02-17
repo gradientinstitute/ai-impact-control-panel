@@ -4,6 +4,7 @@ from deva.pareto import remove_non_pareto
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from collections import OrderedDict
+from copy import deepcopy
 
 
 def system_gen_lower(num=1000, attr=5):
@@ -65,7 +66,7 @@ while not test_target.terminated():
     nadir, ideal, attribs, current_centers, candidates, kmeans_centers =\
         test_target.plot_data()
     nadir_list.append(nadir)
-    ideal_list.append(ideal)
+    ideal_list.append(deepcopy(ideal))
     current_centers_list.append(current_centers)
     kmeans_centers_list.append(kmeans_centers)
     test_target.plot_2d()
@@ -74,9 +75,22 @@ test_target._update()
 nadir, ideal, attribs, current_centers, candidates, kmeans_centers =\
     test_target.plot_data()
 nadir_list.append(nadir)
-ideal_list.append(ideal)
+ideal_list.append(deepcopy(ideal))
 current_centers_list.append(current_centers)
 kmeans_centers_list.append(kmeans_centers)
+test_target.plot_2d()
+plt.figure()
+for can in candidates_list[0]:
+    point1 = np.array(can.get_attr_values())
+    plt.scatter(point1[0], point1[1], c='red', alpha=0.4,
+                label='Candidates')
+handles, labels = plt.gca().get_legend_handles_labels()
+by_label = OrderedDict(zip(labels, handles))
+plt.xlabel('Profit loss')
+plt.ylabel('False-positive rate')
+plt.legend(by_label.values(), by_label.keys())
+plt.title('Original candidate space')
+plt.savefig("origin.jpg")
 plt.figure()
 for can in candidates_list[0]:
     point1 = np.array(can.get_attr_values())
@@ -94,7 +108,7 @@ for index, nadir in enumerate(nadir_list):
     plt.scatter(nadir[attribs[0]], nadir[attribs[1]],
                 s=80, marker=(3, 1), c='gray')
     for point2 in kmeans_centers_list[index]:
-        plt.scatter(point2[0], point2[1], c='gray', alpha=0.2
+        plt.scatter(point2[0], point2[1], c='gray', marker="x",
                     )
         p1 = [point2[0], nadir[attribs[0]]]
         p2 = [point2[1],
@@ -123,7 +137,7 @@ for can in candidates:
     plt.scatter(point1[0], point1[1], c='red', alpha=0.3,
                 label='Candidates')
 for point2 in kmeans_centers:
-    plt.scatter(point2[0], point2[1], c='green', alpha=0.2,
+    plt.scatter(point2[0], point2[1], c="deepskyblue", marker="x",
                 label='KMeans Centers')
     p1 = [point2[0], nadir[attribs[0]]]
     p2 = [point2[1],
@@ -132,6 +146,8 @@ for point2 in kmeans_centers:
              linestyle='dotted', alpha=0.2)
 handles, labels = plt.gca().get_legend_handles_labels()
 by_label = OrderedDict(zip(labels, handles))
+plt.xlabel('Profit loss')
+plt.ylabel('False-positive rate')
 plt.legend(by_label.values(), by_label.keys())
 plt.title('Overlapping view of all iterations')
 plt.savefig('overlap.jpg')

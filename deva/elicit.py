@@ -321,7 +321,7 @@ class Enautilus(Eliciter):
             plt.scatter(point1[0], point1[1], c="red", alpha=0.3,
                         label="Candidates")
         for point2 in self.kmeans_centers:
-            plt.scatter(point2[0], point2[1], c="green", alpha=0.2,
+            plt.scatter(point2[0], point2[1], c="deepskyblue", marker="x",
                         label="KMeans Centers")
             p1 = [point2[0], self._nadir[self.attribs[0]]]
             p2 = [point2[1],
@@ -330,6 +330,10 @@ class Enautilus(Eliciter):
                      linestyle="dotted", alpha=0.2)
         handles, labels = plt.gca().get_legend_handles_labels()
         by_label = OrderedDict(zip(labels, handles))
+        plt.xlim([-0.02, 0.85])
+        plt.ylim([-0.02, 1.02])
+        plt.xlabel('Profit loss')
+        plt.ylabel('False-positive rate')
         plt.title(f"The plot for iteration {self.iter_count}")
         plt.legend(by_label.values(), by_label.keys())
         plt.savefig(f"Plot for iteration {self.iter_count}.jpg")
