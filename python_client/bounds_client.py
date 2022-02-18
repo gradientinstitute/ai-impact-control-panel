@@ -94,7 +94,7 @@ def main():
     path = "API/mlAPI/" + model_ID["model_ID"]
     model = pickle.load(open(path, "rb"))  # load the model from disk
 
-    request = f"http://127.0.0.1:8666/{scenario}/bounds/save"
+    request = f"http://127.0.0.1:8666/bounds/set-box/{scenario}"
     # configurations for the boundaries
     config = {
         "test": [0, 100]

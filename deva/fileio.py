@@ -169,7 +169,8 @@ def inject_metadata(metrics, candidates):
             if candidates:
                 # the user may set fixed ranges with nice defaults if they dont
                 (range_min, range_max) = nice_range(meta["min"], meta["max"])
-            # TODO else: user error
+            else:
+                raise Exception("Sorry, there is no candidate model.")
 
             if "range_min" not in meta:
                 meta["range_min"] = range_min

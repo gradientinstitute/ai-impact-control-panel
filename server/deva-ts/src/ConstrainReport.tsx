@@ -2,8 +2,10 @@ export function UserReportPane({}) {
 
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
-      <h1>Report Placeholder</h1>
-      content: error message handling
+      <h1>Error</h1>
+      There is no valid candidtate models.
+      Candidates might be deleted by the bounds configurations.
+      Please check with the administrator.
       
       <div className="width-1/4">
         <StartOverButton />
