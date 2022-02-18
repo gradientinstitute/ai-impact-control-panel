@@ -220,9 +220,10 @@ def get_bounds_choice():
 
 
 # @app.route("/deployment/filter/<scenario>", methods=["PUT"])
-def filter_candidates(all, bounds):
+def filter_candidates(all_cand, bounds):
+    """Filter candidates according to the bounds."""
     valid_cand = {}
-    for (k,v) in all.items():
+    for (k, v) in all_cand.items():
         lower = v >= bounds[k][0]
         upper = v <= bounds[k][1]
         if lower and upper:
@@ -243,30 +244,6 @@ def make_new_deployment_session():
     algo = data["algorithm"]
     name = data["name"]
 
-    # # candidates, meta = _scenario(scenario)
-    # candidates, meta = fileio.load_scenario(scenario)
-
-    # # # Massage the metadata
-    # # models, spec = data
-    # print(request)
-    # # meta = _scenario(scenario)[1]
-
-    # file_name = f"scenarios/{scenario}/bounds.toml"
-    # path = os.path.join(fileio.repo_root(), file_name)
-
-    # if os.path.exists(path):
-    #     bounds = toml.load(path)
-    #     # filter the candidates
-    #     candidates = filter_candidates(candidates, bounds)
-    #     text = compareBase.compare(meta, candidates, bounds)
-    # else:
-    #     text = "bounds configurations not found"
-
-    # # write to database
-    # log = db.logger
-    # log.add(text)
-    # db.logger = log
-
     # assume that a reload means user wants a restart
     print("Init new session for user")
     candidates, spec = _scenario(scenario)
@@ -277,31 +254,6 @@ def make_new_deployment_session():
     # send our first sample of candidates
     res = _get_deployment_choice(eliciter, log)
     return jsonify(res)
-
-
-# def get_report(scenario, candidates):
-#     """Save filtered candidates report to the log."""
-#     # candidates, _ = _scenario(scenario)
-#     candidates = request
-#     meta = _scenario(scenario)[1]
-
-#     file_name = f"scenarios/{scenario}/bounds.toml"
-#     path = os.path.join(fileio.repo_root(), file_name)
-
-#     if os.path.exists(path):
-#         bounds = toml.load(path)
-#         text = compareBase.compare(meta, candidates, bounds)
-#     else:
-#         text = "bounds configurations not found"
-
-#     # write to database
-#     log = db.logger
-#     log.add(text)
-#     # log.write()
-#     # print(log)
-#     db.logger = log
-
-#     return text
 
 
 def _get_deployment_choice(eliciter, log):
