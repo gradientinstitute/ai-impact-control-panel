@@ -222,13 +222,7 @@ def get_bounds_choice():
 # @app.route("/deployment/filter/<scenario>", methods=["PUT"])
 def filter_candidates(all_cand, bounds):
     """Filter candidates according to the bounds."""
-    valid_cand = {}
-    for (k, v) in all_cand.items():
-        lower = v >= bounds[k][0]
-        upper = v <= bounds[k][1]
-        if lower and upper:
-            valid_cand[k] = v
-    return valid_cand
+    raise NotImplementedError
 
 
 @app.route("/deployment/new", methods=["PUT"])
