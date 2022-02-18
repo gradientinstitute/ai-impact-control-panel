@@ -150,7 +150,6 @@ def run_bounds_eliciter(sample, table, oracle, ref, n_samples):
             scores.append(score)
 
             # plot_nl_bound(sampler, choices, oracle)
-            # 
 
     # Display text results report
     print("Experimental results ------------------")
