@@ -11,6 +11,9 @@ import {IntroContext} from './Intro';
 import {Constraints} from './Constrain';
 import { maxRangesState } from './ConstrainScrollbar';
 
+import { filterCandidates } from './ConstrainScrollbar';
+
+
 // TODO siigh css? 
 const HIGHLIGHT_COLOUR = "bg-orange-700";
 const FIRST_COLOUR = "bg-gray-700";
@@ -24,6 +27,7 @@ export const allCandidatesState = atom({
   key: 'allCandidates', 
   default: null, 
 });
+
 
 // root node
 export function ConfigurePane({}) {
@@ -40,6 +44,8 @@ export function ConfigurePane({}) {
   const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
   const maxRanges = useRecoilValue(maxRangesState);
   const [_constraints, setConstraints] = useRecoilState(constraintsState);
+
+  const [_pane, setPane] = useRecoilState(paneState);
 
   // initial request on load
   useEffect(() => {
@@ -72,12 +78,24 @@ export function ConfigurePane({}) {
     return (<p>Loading...</p>);
   }
 
+  if (_allCandidates === null) {
+    return (<p>Loading...</p>);
+  }
+
+  const bounds = metadata.bounds;
+  const candidates = filterCandidates(_allCandidates, bounds);
+
+    if(candidates.length == 0){
+        setPane(Pane.UserReport);
+    }
+
   return (
     <div className="grid grid-cols-7 gap-8 pb-10">
       <div className="col-span-2">
         <IntroContext />
       </div>
       <div className="col-span-5">
+        <EliminatedStatus remaining={candidates} all={_allCandidates}/>
         <Constraints />
         <AlgorithmMenu />
         <StartButton />
@@ -85,6 +103,22 @@ export function ConfigurePane({}) {
     </div>
   );
 }
+
+
+function EliminatedStatus({remaining, all}) {
+
+  const eliminated = all.length - remaining.length;
+
+  return (
+  <div className="mb-8 bg-gray-600 rounded-lg">
+    <span className="italic text-2xl">
+      {eliminated +" of " + all.length + " "}
+    </span>
+    candidates are eliminated by the system requirement bounds
+  </div>
+  );
+}
+
 
 function AlgorithmMenu({}) {
   
@@ -127,6 +161,7 @@ function AlgoSelector({}) {
     );
 
 }
+
 
 function StartButton({}) {
 

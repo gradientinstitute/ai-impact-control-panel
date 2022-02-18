@@ -5,13 +5,15 @@ import os.path
 from util import jsonify, random_key
 
 import redis
+import toml
 from flask import Flask, session, abort, request, send_from_directory
 
-from deva import elicit, fileio, logger
+from deva import elicit, fileio, logger, compareBase
 # from deva import bounds
 from deva.db import RedisDB, DevDB
 
 import pickle
+
 
 # Set up the flask app
 app = Flask(__name__)
@@ -103,6 +105,25 @@ def _scenario(name):
     return result
 
 
+@app.route("/<scenario>/bounds/save", methods=["PUT"])
+def save_bound(scenario):
+    """Save the bounds configurations to the server."""
+    file_name = f"scenarios/{scenario}/bounds.toml"
+    path = os.path.join(fileio.repo_root(), file_name)
+    with open(path, "w+") as toml_file:
+        # repair request
+        data = request.get_json()
+        data = {k: [float(a) for a in v] for k, v in data.items()}
+        toml.dump(data, toml_file)
+
+    # return report text
+    bounds = toml.load(path)
+    meta = _scenario(scenario)[1]
+    baselines = meta["baseline"]
+    report = compareBase.compare(meta, baselines, bounds)
+    return report
+
+
 @app.route("/scenarios/<scenario>")
 def get_info(scenario):
     """Get all info about a particular scenario."""
@@ -162,7 +183,7 @@ def init_bounds():
     # baseline = meta["baseline"]
     # metrics = meta["metrics"]
     # attribs, table = bounds.tabulate(candidates, metrics)
-    # ref = [baseline[a] for a in attribs]
+    # ref = [baseline["industry_average"][a] for a in attribs]
     # db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
 
     # # get initial choice
@@ -196,6 +217,27 @@ def get_bounds_choice():
     # now send a new choice
     res = _get_boundary_sample()
     return jsonify(res)
+
+
+@app.route("/<scenario>/deployment/filter", methods=["PUT"])
+def filter_candidates(scenario):
+    """Filter the candidates and save it to the log."""
+    candidates, _ = _scenario(scenario)
+    meta = _scenario(scenario)[1]
+
+    file_name = f"scenarios/{scenario}/bounds.toml"
+    path = os.path.join(fileio.repo_root(), file_name)
+
+    if os.path.exists(path):
+        bounds = toml.load(path)
+        report = compareBase.compare(meta, candidates, bounds)
+    else:
+        report = "bounds configurations not found"
+
+    # log = logger.Logger()
+    # db.logger = log
+
+    return report
 
 
 @app.route("/deployment/new", methods=["PUT"])

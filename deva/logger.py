@@ -27,10 +27,15 @@ class Logger:
         self.meta = meta
         self.files = {}
         self.path = os.path.abspath(path)  # save path
+        self.text = []  # reason why candidates are eliminated
 
     def choice(self, query, data):
         """Log a choice for generating the report."""
         self.choices.append((query, data))
+
+    def add(self, text):
+        """Add the text to the report."""
+        self.text.append(text)
 
     def write(self):
         """Save the log to disk."""
@@ -49,6 +54,8 @@ class Logger:
         lines = ["Scenario Settings"]
         for k, v in self.profile.items():
             lines.append(f"    {k:>15s}: {v}")
+
+        # TODO: print out report, add customed text
 
         if self.choices:
             lines.append("")
