@@ -105,7 +105,7 @@ def _scenario(name):
     return result
 
 
-@app.route("/<scenario>/bounds/save", methods=["PUT"])
+@app.route("/bounds/set-box/<scenario>", methods=["PUT"])
 def save_bound(scenario):
     """Save the bounds configurations to the server."""
     file_name = f"scenarios/{scenario}/bounds.toml"
@@ -219,25 +219,10 @@ def get_bounds_choice():
     return jsonify(res)
 
 
-@app.route("/<scenario>/deployment/filter", methods=["PUT"])
-def filter_candidates(scenario):
-    """Filter the candidates and save it to the log."""
-    candidates, _ = _scenario(scenario)
-    meta = _scenario(scenario)[1]
-
-    file_name = f"scenarios/{scenario}/bounds.toml"
-    path = os.path.join(fileio.repo_root(), file_name)
-
-    if os.path.exists(path):
-        bounds = toml.load(path)
-        report = compareBase.compare(meta, candidates, bounds)
-    else:
-        report = "bounds configurations not found"
-
-    # log = logger.Logger()
-    # db.logger = log
-
-    return report
+# @app.route("/deployment/filter/<scenario>", methods=["PUT"])
+def filter_candidates(all_cand, bounds):
+    """Filter candidates according to the bounds."""
+    raise NotImplementedError
 
 
 @app.route("/deployment/new", methods=["PUT"])
