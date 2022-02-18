@@ -12,45 +12,45 @@ import { allCandidatesState, rangesState, currentCandidatesState,
 
 
 export function BoundariesPane({}) {
-  // name of current scenorio for url purposes e.g. "ezyfraud"
-  const scenario = useRecoilValue(scenarioState);
-  // largest possible ranges for specifying the scrollbar extents
-  const maxRanges = useRecoilValue(rangesState);
-  // list of currently permissible candidates based on current constraints
-  const currentCandidates = useRecoilValue(currentCandidatesState);
-  // the actual/current contraints as defined by the position of scrollbars
+    // name of current scenorio for url purposes e.g. "ezyfraud"
+    const scenario = useRecoilValue(scenarioState);
+    // largest possible ranges for specifying the scrollbar extents
+    const maxRanges = useRecoilValue(rangesState);
+    // list of currently permissible candidates based on current constraints
+    const currentCandidates = useRecoilValue(currentCandidatesState);
+    // the actual/current contraints as defined by the position of scrollbars
 
-  const [metadata, setMetadata] = useRecoilState(metadataState);
-  const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
-
-  // current constraints done by metric
-  const [_costraints, setConstraints] = useRecoilState(constraintsState);
-
-  // all candidates sent to us by the server
-  const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
-
-  useEffect(() => {
-    let req = "api/" + scenario + "/all";
-    async function fetchData() {
-      const result = await axios.get<any>(req);
-      const d = result.data;
-      setMetadata(d.metadata);
-      setAlgos(d.algorithms);
-      setAllCandidates(d.candidates);
-      // setBaselines(d.baselines);
+    const [metadata, setMetadata] = useRecoilState(metadataState);
+    const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
+  
+    // current constraints done by metric
+    const [_constraints, setConstraints] = useRecoilState(constraintsState);
+  
+    // all candidates sent to us by the server
+    const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+  
+    useEffect(() => {
+      let req = "api/scenarios/" + scenario;
+      async function fetchData() {
+        const result = await axios.get<any>(req);
+        const d = result.data;
+        setMetadata(d.metadata);
+        setAlgos(d.algorithms);
+        setAllCandidates(d.candidates);
+        // setBaselines(d.baselines);
+      }
+      fetchData();
+    }, []
+    );
+    
+    // set initial value of the constraints
+    useEffect(() => {
+      setConstraints(maxRanges)
+    }, [maxRanges]);
+  
+    if (currentCandidates === null) {
+      return (<div>Loading...</div>);
     }
-    fetchData();
-  }, []
-  );
-
-  // set initial value of the constraints
-  useEffect(() => {
-    setConstraints(maxRanges)
-  }, [maxRanges]);
-
-  if (currentCandidates === null) {
-    return (<div>Loading...</div>);
-  }
 
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
@@ -74,7 +74,7 @@ function MultiRangeConstraint({}) {
   const baseline = metadata.baseline;
 
   // // current constraints done by metric
-  const [_costraints, setConstraints] = useRecoilState(constraintsState);
+  const [_constraints, setConstraints] = useRecoilState(constraintsState);
 
   const maxRanges = useRecoilValue(rangesState);
   const bounds = maxRanges;
@@ -232,9 +232,14 @@ function SaveButton({}) {
 
   const [_pane, setPane] = useRecoilState(paneState);
 
+  const payload = {
+    constraints: constraints,
+    scenario: scenario
+  }
+
   useEffect(() => {
     const fetch = async () => {
-      const result = await axios.put<any>("api/" + scenario + "/bounds/save", constraints);
+      const result = await axios.put<any>("api/bounds/set-box/" + scenario, constraints);
       setReport(result.data); // result/report
 
       // TODO set metadata.bounds
@@ -251,11 +256,11 @@ function SaveButton({}) {
   );
 
   return (
-      <button className="bg-gray-200 text-black rounded-lg" 
-        onClick={() => {setSubmit(true)}}>
-        <div className="p-4 text-5xl">
-          Save
-        </div>
-      </button>
+    <button className="bg-gray-200 text-black rounded-lg" 
+    onClick={() => {setSubmit(true)}}>
+    <div className="p-4 text-5xl">
+        Save
+    </div>
+    </button>
   );
 }

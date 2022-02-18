@@ -115,4 +115,5 @@ role recommendations more than average."""
     comparison_worse = "uses more personal data than"
     comparison_equal = "uses the same amount of personal data as"
 
-    isMetric = false
+    range_min = 0
+    range_max = 2

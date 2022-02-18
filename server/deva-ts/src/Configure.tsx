@@ -9,6 +9,10 @@ import { Pane, paneState, algoState, nameState, constraintsState,
 import {sigFigs} from './Widgets';
 import {IntroContext} from './Intro';
 import {Constraints} from './Constrain';
+import { maxRangesState } from './ConstrainScrollbar';
+
+import { filterCandidates } from './ConstrainScrollbar';
+
 
 // TODO siigh css? 
 const HIGHLIGHT_COLOUR = "bg-orange-700";
@@ -24,6 +28,7 @@ export const allCandidatesState = atom({
   default: null, 
 });
 
+
 // root node
 export function ConfigurePane({}) {
   
@@ -36,11 +41,15 @@ export function ConfigurePane({}) {
   const [_current, setCurrent] = useRecoilState(algoState);
   const [metadata, setMetadata] = useRecoilState(metadataState);
   const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
-  const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+  const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+  const maxRanges = useRecoilValue(maxRangesState);
+  const [_constraints, setConstraints] = useRecoilState(constraintsState);
+
+  const [_pane, setPane] = useRecoilState(paneState);
 
   // initial request on load
   useEffect(() => {
-    let req = "api/" + scenario + "/all";
+    let req = "api/scenarios/" + scenario;
     async function fetchData() {
       const result = await axios.get<any>(req);
       const d = result.data;
@@ -52,7 +61,12 @@ export function ConfigurePane({}) {
     fetchData();
   }, []
   );
+
+  useEffect(() => {
+    setConstraints(maxRanges);
+  }, [allCandidates]);
   
+
   // default selection of a particular algorithm
   useEffect( () => {
     if (algorithms !== null) {
@@ -64,12 +78,24 @@ export function ConfigurePane({}) {
     return (<p>Loading...</p>);
   }
 
+  if (allCandidates === null) {
+    return (<p>Loading...</p>);
+  }
+
+  const bounds = metadata.bounds;
+  const candidates = filterCandidates(allCandidates, bounds);
+
+    if(candidates.length == 0){
+        setPane(Pane.UserReport);
+    }
+
   return (
     <div className="grid grid-cols-7 gap-8 pb-10">
       <div className="col-span-2">
         <IntroContext />
       </div>
       <div className="col-span-5">
+        <EliminatedStatus remaining={candidates} all={allCandidates}/>
         <Constraints />
         <AlgorithmMenu />
         <StartButton />
@@ -77,6 +103,22 @@ export function ConfigurePane({}) {
     </div>
   );
 }
+
+
+function EliminatedStatus({remaining, all}) {
+
+  const eliminated = all.length - remaining.length;
+
+  return (
+  <div className="mb-8 bg-gray-600 rounded-lg">
+    <span className="italic text-2xl">
+      {eliminated +" of " + all.length + " "}
+    </span>
+    candidates are eliminated by the system requirement bounds
+  </div>
+  );
+}
+
 
 function AlgorithmMenu({}) {
   
@@ -119,6 +161,7 @@ function AlgoSelector({}) {
     );
 
 }
+
 
 function StartButton({}) {
 

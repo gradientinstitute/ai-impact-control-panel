@@ -139,12 +139,16 @@ def inject_metadata(metrics, candidates):
         if "type" not in meta:
             meta["type"] = "quantitative"
 
-        if "isMetric" not in meta:
-            meta["isMetric"] = True
-
         # calculate the attribute range spanned by the candidates
         meta["min"] = min(c[attr] for c in candidates)
         meta["max"] = max(c[attr] for c in candidates)
+
+        # defaults for visual min and max
+        if "visual_min" not in meta:
+            meta["visual_min"] = meta["min"]
+
+        if "visual_max" not in meta:
+            meta["visual_max"] = meta["max"]
 
         # compensate higher is better
         if "lowerIsBetter" not in meta:
@@ -172,7 +176,8 @@ def inject_metadata(metrics, candidates):
             if candidates:
                 # the user may set fixed ranges with nice defaults if they dont
                 (range_min, range_max) = nice_range(meta["min"], meta["max"])
-            # TODO else: user error
+            else:
+                raise Exception("Sorry, there is no candidate model.")
 
             if "range_min" not in meta:
                 meta["range_min"] = range_min

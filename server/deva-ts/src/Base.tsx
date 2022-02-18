@@ -7,7 +7,8 @@ export enum Pane {
   Pairwise,
   Result,
   Boundaries, // new one for boundary scroll bars
-  Report  // new one for display bounds configurations
+  Report,  // new one for display bounds configurations
+  UserReport
 }
 
 export enum TaskTypes {
@@ -23,10 +24,11 @@ export const paneState = atom({
   default: Pane.Setup, // default value (aka initial value)
 });
 
+
 // Which type of problem the user has chosen to elicit
 export const taskTypeState = atom({
     key: 'taskType',
-    default: TaskTypes.Boundaries,
+    default: null,
   });
 
 
@@ -36,11 +38,13 @@ export const algoChoicesState = atom({
     default: [],
   });
 
+
 // state for which scenario has been chosen by the user
 export const scenarioState = atom({  
   key: 'scenario', 
   default: null, 
 });
+
 
 // state for which algorithm has been chosen by the user
 export const algoState = atom({  
@@ -48,11 +52,13 @@ export const algoState = atom({
     default: null, 
   });
 
+
 // state for name entered by the user
 export const nameState = atom({  
   key: 'name', 
   default: "", 
 });
+
 
 // state for the metadata for the chosen scenario
 // for the scenario & algo
@@ -60,6 +66,7 @@ export const metadataState = atom({
   key: 'metadata', 
   default: null, 
 });
+
 
 // the contraints selected by the user
 export const constraintsState = atom({  
@@ -80,3 +87,17 @@ export const reportState = atom({
     key: 'report', 
     default: null, 
   });
+
+
+// state for the report of the boundaries condfigurations
+export const userReportState = atom({  
+    key: 'userReport', 
+    default: null, 
+  });
+
+
+// state for configurations
+export const configState = atom({
+  key: 'config',
+  default: null, 
+});

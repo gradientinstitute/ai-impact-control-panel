@@ -24,21 +24,21 @@ const currentScenarioState = atom({
   default: null,
 });
 
+
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
 
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
   
   // initial loading of candidates
-  useEffect(() => {
-    const fetch = async () => {
-      const result = await axios.get<any>("api/scenarios");
-      setScenarios(result.data);
-    }
-    fetch();
-  }, []
-  );
-
+  // useEffect(() => {
+  //   const fetch = async () => {
+  //     const result = await axios.get<any>("api/scenarios");
+  //     setScenarios(result.data);
+  //   }
+  //   fetch();
+  // }, []
+  // );
 
   if (_scenarios === []) {
     return (<p>Loading...</p>);
@@ -69,6 +69,7 @@ function Steps() {
  )
 }
 
+
 function ChooseProblem({setTabIndex}) {
   // first tab: choose whether to elicit boundaries or preferences
   return (
@@ -79,15 +80,27 @@ function ChooseProblem({setTabIndex}) {
   )
 }
 
+
 function ChooseScenario({setTabIndex}) {
   // second tab: select scenario and eliciter (algorithm)
   const [_pane, setPane] = useRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
+  const [_scenarios, setScenarios] = useRecoilState(scenariosState);
   const [_scenario, setScenario] = useRecoilState(scenarioState);
   const [_name, setName] = useRecoilState(nameState);
   // const canGoBack = tabIndex >= 0;
   const taskType = useRecoilValue(taskTypeState);
   const buttonDisabled = (current === null) || (_name === "");
+
+  // load scenarios
+  useEffect(() => {
+    const fetch = async () => {
+      const result = await axios.get<any>("api/scenarios");
+      setScenarios(result.data);
+    }
+    fetch();
+  }, []
+  );
 
   // Update here for additional tasks
   const nextPane = taskType == TaskTypes.Boundaries 
@@ -123,6 +136,7 @@ function ChooseScenario({setTabIndex}) {
     </TabPanel>
   )
 }
+
 
 // Select scenario from list and preview details
 function ScenarioSelector({}) {
@@ -190,6 +204,7 @@ function ScenarioSelector({}) {
     );
 }
 
+
 // select the type of elicitation to do with two buttons
 // TODO: hook up to boundary elicitation when its implemented
 function StartButtons({setTabIndex}) {
@@ -197,24 +212,23 @@ function StartButtons({setTabIndex}) {
   const setTask = useSetRecoilState(taskTypeState);
 
   return (
-      <div className="grid grid-cols-2 gap-10 py-12 px-6">
-        <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
-          onClick={() => {
-            setTask(TaskTypes.Boundaries);
-            setTabIndex(1);
-          }}
-          disabled={false}>
-            Boundaries
-        </button>
-        <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
-          onClick={() => {
-            setTask(TaskTypes.Deployment);
-            setTabIndex(1);
-          }}
-          disabled={false}>
-            Deployment
-        </button>
-      </div>
+    <div className="grid grid-cols-2 gap-10 py-12 px-6">
+      <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
+        onClick={() => {
+          setTask(TaskTypes.Boundaries);
+          setTabIndex(1);
+        }}
+        disabled={false}>
+          Boundaries
+      </button>
+      <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
+        onClick={() => {
+          setTask(TaskTypes.Deployment);
+          setTabIndex(1);
+        }}
+        disabled={false}>
+          Deployment
+      </button>
+    </div>
   );
 }
-

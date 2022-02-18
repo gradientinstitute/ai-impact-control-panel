@@ -1,5 +1,5 @@
 """
-Generate the report shown in the frontend.
+Reporting how canidates are eliminated by minimum requirements.
 
 Date: Feb 10, 2022
 Author: Muyao Chen

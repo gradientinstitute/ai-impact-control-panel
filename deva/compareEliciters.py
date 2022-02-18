@@ -4,11 +4,12 @@ import matplotlib.pylab as plt
 import click
 from deva import elicit
 from collections import namedtuple
+from deva.pareto import remove_non_pareto
 
 
 def system_gen(num=1000, attr=5):
     """
-    Generate n random systems on the Pareto front.
+    Generate n random systems in a circle.
 
     The approach samples from the surface of a hypersphere.
     num is the number of systems we would like to generate,
@@ -20,29 +21,36 @@ def system_gen(num=1000, attr=5):
     while num > 0:
         system = []
         acc = 1
-        angles = np.random.uniform(0, np.pi / 2, attr)
+        angles = np.random.uniform(np.pi, np.pi / 2, attr)
         for x in range(attr):
             system.append(acc * np.cos(angles[x]))
             acc *= np.sin(angles[x])
         systems.append(np.array(system))
         num -= 1
+    systems = np.array(systems)
+    for ind in range(attr):
+        systems[:, ind] -= systems[:, ind].min()
     return systems
 
 
-def favourite_gen(num=1000, attr=5):
-    """
-    Generate a "preferred" system at random.
+def gensamples(n_samples=1000, n_attrib=5):
+    """Gnerate n random systems on the Pareto front."""
+    # Generate random coords between 0 and 1
+    samples = np.random.random((n_samples, n_attrib))
 
-    Candidates are ranked based on distance to the preferred system.
-    num is the number of systems we would like to generate,
-    attr is the number of dimensions each system has.
-    """
-    favourite_index = np.random.randint(0, num, 1)[0]
-    systems = system_gen(num, attr)
-    favourite_coor = systems[favourite_index]
-    systems.sort(key=lambda system: np.linalg.norm(system
-                 - favourite_coor))  # sort by the distance
-    return systems
+    # Normalise the coordinates by their distance
+    # so that they all lie on the unit sphere
+    dist = np.linalg.norm(samples, axis=1)
+    coords = samples / dist[:, np.newaxis]
+
+    return -coords + 1  # Transform coords so that lower is better
+
+
+def cal_distance(candidate, goal):
+    """Calculate the distance between an option and goal."""
+    can = np.array(candidate.get_attr_values(), float)
+    g = np.array(goal.get_attr_values(), float)
+    return np.linalg.norm(can - g)
 
 
 def test_eliciters(eliciter_list, num, attr):
@@ -57,11 +65,14 @@ def test_eliciters(eliciter_list, num, attr):
     # transfer from string to function
     e_list = []
     for e in eliciter_list:
+        if e == "Enautilus":
+            # compare 3 enautilus when enautilus is added to the loop
+            e_list.append(elicit.Enautilus)
+            e_list.append(elicit.Enautilus)
         e_list.append(elicit.algorithms[e])
-        e = e.upper()
     # start prep for testing
     candidates = []
-    systems = favourite_gen(num, attr)
+    systems_origin = gensamples(num, attr)
     attributes = []
     for x in range(attr):
         n = x + 1
@@ -69,29 +80,47 @@ def test_eliciters(eliciter_list, num, attr):
     scenario = {}
     scenario["primary_metric"] = "x1"
     scenario["metrics"] = {}
+    sys_dict = {}
+    for index, system in enumerate(systems_origin):
+        sys_dict[str(index)] = dict(zip(attributes, system))
+
+    systems = remove_non_pareto(sys_dict)
 
     res = {}  # key: eliciter, value: error
-    for index, system in enumerate(systems):
-        candidates.append(elicit.Candidate(index,
-                                           dict(zip(attributes, system))))
+    for index, system in enumerate(systems.keys()):
+        candidates.append(elicit.Candidate(index, systems[system]))
+    favourite_index = np.random.randint(0, len(systems.keys()), 1)[0]
+    goal = candidates[favourite_index]
+    enautilus_count = 1
     # use the generated candidates to test eliciters
     for eliciter in e_list:
         question_count = 0
         test_target = eliciter(candidates, scenario)
+        name = str(eliciter)
+        if test_target.description() == "E-NAUTILUS eliciter":
+            enautilus_count *= 5
+            test_target.updateForN(enautilus_count, 9)
+            name = f".Enautilus {9} options {enautilus_count} Question limits'"
         while not test_target.terminated():
             question_count += 1
-            m1, m2 = test_target.query()
-            if int(m1.name) < int(m2.name):
-                # choose the better option, smaller the better
-                test_target.put(m1)
-            else:
-                test_target.put(m2)
-        result = test_target.result
-        mean_error = np.mean(np.linalg.norm(systems[0] - systems))
+            options = test_target.query()
+            min_o = None
+            put_name = None
+            for o in options:
+                dis = cal_distance(o, goal)
+                if min_o is None or dis < min_o:
+                    min_o = dis
+                    put_name = o.name
+            test_target.put(put_name)
+        result = test_target.result()
+        mean_error = np.mean(np.linalg.norm(systems_origin[favourite_index]
+                                            - systems_origin))
         error = {}
-        error["distance"] = np.linalg.norm(systems[0] - systems[result.name])
+        goal_att = np.array(goal.get_attr_values(), float)
+        result_att = np.array(result.get_attr_values(), float)
+        error["distance"] = np.linalg.norm(goal_att - result_att)
         error["question_count"] = question_count
-        res[str(eliciter)] = error
+        res[name] = error
     return [num, attr, mean_error, res]
 
 
@@ -151,7 +180,7 @@ def compareEliciters(eliciters, number, dimension, runs):
     for eliciter in res.keys():
         plt.plot(result[3][eliciter]["question_count"],
                  result[3][eliciter]["distance"], marker="x",
-                 label=eliciter)
+                 label=str(eliciter).split(".")[-1].split("'")[0])
     plt.plot(0, result[2], marker="x", label="Random guess eliciter")
     plt.title(f"Eliciter comparison. Number of cadidates={number},"
               f"number of attributes={dimension}")
@@ -169,7 +198,8 @@ def compareEliciters(eliciters, number, dimension, runs):
         y = varLog[eliciter]["question_count"]
         error.append(x)
         question.append(y)
-        plt.scatter(x, y, marker="o", alpha=0.2, label=eliciter)
+        plt.scatter(x, y, marker="o", alpha=0.2,
+                    label=str(eliciter).split(".")[-1].split("'")[0])
     plt.scatter(result.meanError, 0, marker="o", label="Random guess eliciter")
     plt.title(f"{runs} runs that vary system attributes and user preferences"
               f"\nNumber of cadidates={number},"
@@ -177,7 +207,7 @@ def compareEliciters(eliciters, number, dimension, runs):
     plt.ylabel("Number of questions")
     plt.xlabel("Error")
     plt.legend()
-    # plt.savefig("scatterCloud.jpg")
+    plt.savefig("scatterCloud.jpg")
     # box plot for error
     plt.figure()
     plt.boxplot(error, 0, "")
@@ -185,7 +215,7 @@ def compareEliciters(eliciters, number, dimension, runs):
     plt.xticks(loc, eliciters, fontsize=5.5)
     plt.ylabel("Error")
     plt.title("Box plot for errors")
-    # plt.savefig("errorBoxplt.jpg")
+    plt.savefig("errorBoxplt.jpg")
     # box plot for # of questions
     plt.figure()
     plt.boxplot(question, 0, "")

@@ -7,7 +7,9 @@ import {SetupPane} from './Setup';
 import {ConfigurePane} from './Configure';
 import {BoundariesPane} from './Boundaries';
 import {ReportPane} from './Report';
+import {UserReportPane} from './ConstrainReport';
 
+import {ConfigButton, ConfigPanel} from './Config'
 import {Breadcrumb} from './Breadcrumb';
 
 import './App.css';
@@ -15,7 +17,6 @@ import logo from './logo-dark-small.svg';
 
 
 function App() {
-
   return (
     <RecoilRoot>
       <div className="App container text-gray-200 mx-auto mb-32
@@ -24,14 +25,17 @@ function App() {
           <img className="col-span-2 h-16" src={logo}
             alt="Gradient Institute logo" />
           <h1 className="col-span-8 text-3xl">AI Impact Control Panel</h1>
-          <div className="col-span-2" />
+          <div className="col-span-1" />
+          <ConfigButton />
           <Breadcrumb />
         </div>
         <Content />
+        <ConfigPanel />
       </div>
     </RecoilRoot>
   );
 }
+
 
 // the root react component: the whole ui sit under this
 function Content() {
@@ -45,6 +49,7 @@ function Content() {
   content[Pane.Result] = (<ResultPane />);
   content[Pane.Boundaries] = (<BoundariesPane />);
   content[Pane.Report] = (<ReportPane />);
+  content[Pane.UserReport] = (<UserReportPane />);
 
   return (
     <div>

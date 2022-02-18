@@ -1,4 +1,6 @@
-import { useRecoilValue } from 'recoil';
+import { useEffect } from 'react';
+import { useRecoilValue, useRecoilState } from 'recoil';
+import axios from 'axios';
 
 import {Key, Model, adjustUnitRange} from './Widgets';
 import {metadataState, resultState} from './Base';
@@ -7,11 +9,28 @@ import {metadataState, resultState} from './Base';
 export function ResultPane({}) {
 
   const metadata = useRecoilValue(metadataState);
-  const result = useRecoilValue(resultState);
+  const [result, setResult] = useRecoilState(resultState);
   
+  useEffect(() => {
+    const fetch = async () => {
+      const res = await axios.get<any>("api/deployment/result");
+      const d = res.data;
+      setResult(d);
+    }
+    fetch();
+  }, []
+  );
+
+  if (result === null) {
+    return (
+      <div>Loading...</div>
+    );
+  }
+
   const [name, attr_spec] = Object.entries(result)[0];
   const attr = attr_spec["attr"]
   const spec = attr_spec["spec"]
+
 
   function comparisons() {
     let result = []; 
@@ -50,9 +69,8 @@ export function ResultPane({}) {
         details of {name}.
       </p>
       <p>
-        Click to download the <a href={"api/log/log of session " + metadata.ID + ".toml"} download><b>toml
-        log file</b></a> or the <a href={"api/log/log of session " + metadata.ID + ".pdf"} download><b>pdf
-        log file</b></a> generated for the session.
+        Click to download
+        the <a href={"api/deployment/logs/txt"} download><b>session log</b></a>.
       </p>
       <StartOver />
     </div>

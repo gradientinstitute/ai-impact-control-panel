@@ -5,7 +5,7 @@ import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
-import { metadataState, constraintsState } from './Base';
+import { metadataState, constraintsState, configState } from './Base';
 
 import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
@@ -13,12 +13,14 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
   blockedStatusState, blockingMetricsState, blockingStates, 
   unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';
 
+import { compareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
 
 const HandleColours = {
   0: 'white', // default
   1: 'gray',  // blocked
   2: 'red',   // blocking
+  6: 'gray'  // at threshold
 }
 
 const BackgroundColours = {
@@ -28,6 +30,7 @@ const BackgroundColours = {
   3: 'green-900', // resolvedBlock
   4: 'gray-700',  // currentlySelected
   5: 'blue-700',  // blockedMetric
+  6: 'gray-700',  // at threshold 
 }
 
 function GetBackgroundColor(uid) {
@@ -55,18 +58,19 @@ export function Constraints({}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const setRadarData = useSetRecoilState(radarDataState);
+  const configs = useRecoilValue(configState);
 
   // set initial value of the constraints
   useEffect(() => {
     setConstraints(maxRanges)
-  }, [maxRanges]);
+  }, []);
 
   useEffect(() => {
     const values = {}
-    values["included"] = _.mapValues(constraints, x => x[0]);
+    values["included"] = _.mapValues(maxRanges, x => x[0]);
     values["excluded"] = _.mapValues(constraints, x => x[1]);
     setRadarData(values)
-  }, [constraints]);
+  }, [constraints, maxRanges]);
 
   if (currentCandidates === null) {
     return (<div>Loading...</div>);
@@ -76,14 +80,15 @@ export function Constraints({}) {
     return (<div>Loading...</div>);
   }
 
+  const visualiseRadar = compareConfig(configs, 'displaySpiderPlot', 'true')
+    ? (<div className=""><VisualiseData/></div>)
+    : null;
 
   return (
     <div className="mx-auto grid gap-4 grid-cols-1">
       <h1 className="text-left">Metric Filters</h1>
       <ConstraintStatus />
-      <div className="">
-        <VisualiseData/>
-      </div>
+      {visualiseRadar}
       <div className="mb-10">
         <MultiRangeConstraint />
       </div>
@@ -334,7 +339,8 @@ function StatusButton({uid}) {
     2: 'Blocking',       //
     3: 'Resolved Block', // overridden by toggle button 
     4: 'Selected',       // currently selected
-    5: 'Blocked'         //
+    5: 'Blocked',        //
+    6: 'At Threshold',   // 
   }
 
   const blockStatus = useRecoilValue(blockedStatusState)[uid];
