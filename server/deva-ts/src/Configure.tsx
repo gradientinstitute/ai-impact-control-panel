@@ -77,9 +77,18 @@ export function ConfigurePane({}) {
   const bounds = metadata.bounds;
   const candidates = filterCandidates(_allCandidates, bounds);
 
-    if(candidates.length == 0){
-        setPane(Pane.UserReport);
-    }
+  if(candidates.length == 0){
+      setPane(Pane.UserReport);
+  }
+  // axios.put<any>("api/deployment/filter/" + scenario, candidates);
+
+    // useEffect(() => {
+    //   const fetch = async () => {
+    //     await axios.put<any>("api/deployment/filter/" + scenario, candidates);
+    //   }
+    //   fetch();
+    // }, []
+    // );
 
   return (
     <div className="grid grid-cols-7 gap-8 pb-10">

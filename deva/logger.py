@@ -55,7 +55,11 @@ class Logger:
         for k, v in self.profile.items():
             lines.append(f"    {k:>15s}: {v}")
 
-        # TODO: print out report, add customed text
+        # print out report (add customed text)
+        if self.text:
+            lines += [""]
+            lines += ["Following candidate systems are eliminated"]
+            lines += self.text
 
         if self.choices:
             lines.append("")
