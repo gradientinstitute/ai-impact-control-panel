@@ -86,7 +86,7 @@ export function ConfigurePane({}) {
 
   if ("bounds" in metadata){
     const bounds = metadata.bounds;
-    const candidates = filterCandidates(allCandidates, bounds);
+    candidates = filterCandidates(allCandidates, bounds);
   }
 
   if(candidates.length == 0){
