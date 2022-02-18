@@ -143,6 +143,13 @@ def inject_metadata(metrics, candidates):
         meta["min"] = min(c[attr] for c in candidates)
         meta["max"] = max(c[attr] for c in candidates)
 
+        # defaults for visual min and max
+        if "visual_min" not in meta:
+            meta["visual_min"] = meta["min"]
+
+        if "visual_max" not in meta:
+            meta["visual_max"] = meta["max"]
+
         # compensate higher is better
         if "lowerIsBetter" not in meta:
             meta["lowerIsBetter"] = True

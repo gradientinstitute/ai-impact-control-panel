@@ -1,8 +1,11 @@
-"""Preference eliciter module."""
+"""Preferene eliciter module."""
 from itertools import combinations
 from functools import partial
 import numpy as np
 from deva import halfspace
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from collections import OrderedDict
 from sklearn.cluster import KMeans
 
 
@@ -11,7 +14,9 @@ class Candidate:
 
     def __init__(self, name, attributes, spec_name=None):
         self.name = name
-        self.attributes = attributes
+        self.attr_keys = sorted(attributes.keys())
+        self.attr_values = [attributes[a] for a in self.attr_keys]
+        self.attributes = dict(zip(self.attr_keys, self.attr_values))
         self.spec_name = spec_name or name
 
     def __getitem__(self, key):
@@ -22,9 +27,13 @@ class Candidate:
         """Display candidate by name."""
         return f"Candidate({self.name})"
 
-    def values(self):
-        """Access the attribute values directly."""
-        return self.attributes.values()
+    def get_attr_values(self):
+        """Return sorted attribute values."""
+        return self.attr_values
+
+    def get_attr_keys(self):
+        """Return sorted attribute keys."""
+        return self.attr_keys
 
 
 class Eliciter:
@@ -147,11 +156,6 @@ class Enautilus(Eliciter):
     optimization problems based on the NAUTILUS method.
     """
 
-    _nadir = {}
-    _ideal = {}
-    _h = 5  # number of questions
-    _ns = 2  # number of options
-
     def __init__(self, candidates, scenario):
         """
         Initialise Enautilus.
@@ -162,25 +166,17 @@ class Enautilus(Eliciter):
         if len(candidates) < 2:
             raise RuntimeError("Two or more candidates required.")
         Eliciter.__init__(self)
+        self._nadir = {}
+        self._ideal = {}
+        self._h = 5  # number of questions
+        self._ns = 2  # number of options
+        self.iter_count = 0
         self.candidates = list(candidates)
-        self.attribs = list(candidates[0].attributes.keys())
-        # calculate ideal and nadir
-        for att in self.attribs:
-            minv = None
-            maxv = None
-            for candidate in candidates:
-                temp = candidate.attributes[att]
-                if minv is None or temp < minv:
-                    minv = temp
-                if maxv is None or temp > maxv:
-                    maxv = temp
-            self._ideal[att] = minv
-            self._nadir[att] = maxv
+        self.attribs = candidates[0].get_attr_keys()
+        self.current_centers = []
+        self.kmeans_centers = []
+        self._update_zpoints()
         self._update()
-
-    def get_z_points(self):
-        """Return ideal point and nadir point in a list."""
-        return [self._ideal, self._nadir]
 
     def updateForN(self, n1, ns):
         """Update the number of questions the algorithm will use."""
@@ -201,28 +197,13 @@ class Enautilus(Eliciter):
         assert (self._h <= 0) or (len(self.candidates) == 1), "Not terminated."
         X = []
         for can in self.candidates:
-            X.append(np.array(list(can.values())))
-        return self.candidates[
-            np.linalg.norm(np.array(X)
-                           - np.array(list(self._nadir.values()))).argmin()
-        ]
+            X.append(np.array(can.get_attr_values()))
+        sub = np.array(X) - np.array(list(self._nadir.values()))
+        norm1 = np.linalg.norm(sub, axis=1)
+        return self.candidates[norm1.argmin()]
 
-    def put(self, choice):
-        """Receive input from the user and update ideal point."""
-        choice = self._query[int(choice)]
-        self._nadir = choice.attributes
-
-        # remove candidates that are worse in every attribute
-        copy = []
-        for can in self.candidates:
-            if np.all(np.array(list(can.values()))
-                      < np.array(list(self._nadir.values()))):
-                copy.append(can)
-        for c in copy:
-            self.candidates.remove(c)
-
-        # calculate new ideal point
-        # TODO: AL - while reviewing linting I notice this is repeated code.
+    def _update_zpoints(self):
+        """Calculate new ideal and nadirpoint."""
         for att in self.attribs:
             minv = None
             maxv = None
@@ -234,6 +215,21 @@ class Enautilus(Eliciter):
                     maxv = temp
             self._ideal[att] = minv
             self._nadir[att] = maxv
+
+    def put(self, choice):
+        """Receive input from the user and update ideal point."""
+        choice = self._query[int(choice)]
+        self._nadir = choice.attributes
+        # remove candidates that are worse in every attribute
+        copy = []
+        for can in self.candidates:
+            if np.any(np.array(can.get_attr_values())
+                      > np.array(list(self._nadir.values()))):
+                copy.append(can)
+        for c in copy:
+            self.candidates.remove(c)
+        self._update_zpoints()
+        self._nadir = choice.attributes
         self._update()
 
     def virtualCandidateGen(self):
@@ -244,23 +240,31 @@ class Enautilus(Eliciter):
         """
         X = []
         for can in self.candidates:
-            X.append(np.array(list(can.values())))
+            X.append(np.array(can.get_attr_values()))
         if self._ns > len(self.candidates):
             self._ns = len(self.candidates)
         kmeans = KMeans(n_clusters=self._ns).fit(np.array(X))
         centers = kmeans.cluster_centers_
+        kc = []
+        for c in centers:
+            sub = np.array(X) - np.array(c)
+            norm1 = np.linalg.norm(sub, axis=1)
+            kc.append(X[norm1.argmin()])
+        kc = np.array(kc)
+        self.kmeans_centers = kc
         # project to the line between pareto front and nadir point
         if self._h == 1:
             numerator = 1
         else:
             numerator = self._h - 1
-        centers = centers + (
-            (np.array(list(self._nadir.values())) - centers)
+        kc = kc + (
+            (np.array(list(self._nadir.values())) - kc)
             * numerator / self._h
         )
+        self.current_centers = kc
         res = []
         step = ""  # TODO: make a different letter for each step
-        for index, system in enumerate(centers):
+        for index, system in enumerate(kc):
             cname = f"{step}{index}"
             res.append(Candidate(cname,
                                  dict(zip(self.attribs, system))))
@@ -273,6 +277,66 @@ class Enautilus(Eliciter):
             self._h = self._h - 1
         else:
             self._query = None
+
+    @staticmethod
+    def description():
+        """Describe the eliciter."""
+        return "E-NAUTILUS eliciter"
+
+    def plot_data(self):
+        """Return all the data needed for 2d print."""
+        return [self._nadir, self._ideal, self.attribs, self.current_centers,
+                self.candidates, self.kmeans_centers]
+
+    def plot_final(self):
+        """Plot the final candidate picked."""
+        r_point = self.result().get_attr_values()
+        plt.scatter(r_point[0], r_point[1], s=80, marker=(4, 1),
+                    label="Result")
+        handles, labels = plt.gca().get_legend_handles_labels()
+        by_label = OrderedDict(zip(labels, handles))
+        plt.legend(by_label.values(), by_label.keys())
+        plt.title("Final plot with result point")
+        plt.savefig("final.jpg")
+
+    def plot_2d(self):
+        """Plot 2d scenarios according to the paper."""
+        self.iter_count += 1
+        plt.figure()
+        width = self._nadir[self.attribs[0]] - self._ideal[self.attribs[0]]
+        height = self._nadir[self.attribs[1]] - self._ideal[self.attribs[1]]
+        currentAxis = plt.gca()
+        currentAxis.add_patch(Rectangle((self._ideal[self.attribs[0]],
+                              self._ideal[self.attribs[1]]),
+                              width, height, fill=None, alpha=0.1))
+        plt.scatter(self._ideal[self.attribs[0]], self._ideal[self.attribs[1]],
+                    s=80, marker=(5, 1), label="Trade-off Margins", c="purple")
+        plt.scatter(self._nadir[self.attribs[0]], self._nadir[self.attribs[1]],
+                    s=80, marker=(3, 1), label="Nadir Point", c="blue")
+        for point in self.current_centers:
+            plt.scatter(point[0], point[1], c="orange", alpha=0.2,
+                        label="Virtual Options")
+        for can in self.candidates:
+            point1 = np.array(can.get_attr_values())
+            plt.scatter(point1[0], point1[1], c="red", alpha=0.3,
+                        label="Candidates")
+        for point2 in self.kmeans_centers:
+            plt.scatter(point2[0], point2[1], c="deepskyblue", marker="x",
+                        label="KMeans Centers")
+            p1 = [point2[0], self._nadir[self.attribs[0]]]
+            p2 = [point2[1],
+                  self._nadir[self.attribs[1]]]
+            plt.plot(p1, p2, c="green",
+                     linestyle="dotted", alpha=0.2)
+        handles, labels = plt.gca().get_legend_handles_labels()
+        by_label = OrderedDict(zip(labels, handles))
+        plt.xlim([-0.02, 0.85])
+        plt.ylim([-0.02, 1.02])
+        plt.xlabel("Profit loss")
+        plt.ylabel("False-positive rate")
+        plt.title(f"The plot for iteration {self.iter_count}")
+        plt.legend(by_label.values(), by_label.keys())
+        plt.savefig(f"Plot for iteration {self.iter_count}.jpg")
 
 
 # Eliciter implementations

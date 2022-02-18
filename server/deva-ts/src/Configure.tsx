@@ -9,6 +9,7 @@ import { Pane, paneState, algoState, nameState, constraintsState,
 import {sigFigs} from './Widgets';
 import {IntroContext} from './Intro';
 import {Constraints} from './Constrain';
+import { maxRangesState } from './ConstrainScrollbar';
 
 import { filterCandidates } from './ConstrainScrollbar';
 
@@ -40,7 +41,9 @@ export function ConfigurePane({}) {
   const [_current, setCurrent] = useRecoilState(algoState);
   const [metadata, setMetadata] = useRecoilState(metadataState);
   const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
-  const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+  const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+  const maxRanges = useRecoilValue(maxRangesState);
+  const [_constraints, setConstraints] = useRecoilState(constraintsState);
 
   const [_pane, setPane] = useRecoilState(paneState);
 
@@ -58,7 +61,12 @@ export function ConfigurePane({}) {
     fetchData();
   }, []
   );
+
+  useEffect(() => {
+    setConstraints(maxRanges);
+  }, [allCandidates]);
   
+
   // default selection of a particular algorithm
   useEffect( () => {
     if (algorithms !== null) {
@@ -70,7 +78,7 @@ export function ConfigurePane({}) {
     return (<p>Loading...</p>);
   }
 
-  if (_allCandidates === null) {
+  if (allCandidates === null) {
     return (<p>Loading...</p>);
   }
 
@@ -91,7 +99,7 @@ export function ConfigurePane({}) {
         <IntroContext />
       </div>
       <div className="col-span-5">
-        <EliminatedStatus remaining={candidates} all={_allCandidates}/>
+        <EliminatedStatus remaining={candidates} all={allCandidates}/>
         <Constraints />
         <AlgorithmMenu />
         <StartButton />
