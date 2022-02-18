@@ -42,10 +42,14 @@ def plural(text, x):
 
 def text(value, meta):
     """Display a candidate or tuple of candidates in human readable form."""
+    lines = []
+
     if isinstance(value, tuple):
         # Display a pairwise comparison
+        # TODO: I dont think this will work for n-tuples
+        # TODO: does every system have a spec_name now?
         a, b = value
-        print(f"{'Do you prefer?':45s}{a.name:17s}{b.name:17s}")
+        lines.append(f"{'':45s}{a.name:17s}{b.name:17s}")
 
         for attrib in sorted(a.attributes):
             info = meta[attrib]
@@ -55,13 +59,20 @@ def text(value, meta):
             if "(" in name:
                 name = name.split("(")[1].split(")")[0]
 
-            print(f"{name:45s}{v1:17s}{v2:17s}")
+            lines.append(f"{name:45s}{v1:17s}{v2:17s}")
 
     elif isinstance(value, elicit.Candidate):
         # Display a single candidate
-        print(value.name)
+        lines.append("Display name: " + value.name)
+        if value.spec_name != value.name:
+            lines.append("Spec name: " + value.spec_name)
+
+        pad = max(len(meta[a]["name"]) for a in value.attributes) + 2
+        fmt = f"    {{:{pad}s}}{{:17s}}"
 
         for attrib in sorted(value.attributes):
             info = meta[attrib]
             reading = readout(value[attrib], info, suffix=False)
-            print(f"{info['name']:45s}{reading:17s}")
+            lines.append(fmt.format(info["name"], reading))
+
+    return lines

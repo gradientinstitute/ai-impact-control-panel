@@ -8,7 +8,7 @@ import {Pane, metadataState, paneState,
 import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
 import {VisualiseData, radarDataState} from './RadarCharts'
-import { CompareConfig } from './Config';
+import { compareConfig } from './Config';
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
@@ -84,7 +84,7 @@ export function PairwisePane({}) {
     const send = async () => {
       let payload = {...choice};
       payload["feedback"] = feedback;
-      payload["scenario"] = scenario;
+      // payload["scenario"] = scenario;
       const result = await axios.put<any>("api/deployment/choice", payload);
       const d = result.data;
       // const k = Object.keys(d);
@@ -146,7 +146,7 @@ export function PairwisePane({}) {
     return result;
   }
 
-  const visualiseRadar = CompareConfig(configs, 'displaySpiderPlot', 'true')
+  const visualiseRadar = compareConfig(configs, 'displaySpiderPlot', 'true')
     ? <VisualiseData colour={[leftColour.hex, rightColour.hex]}/>
     : null;
 

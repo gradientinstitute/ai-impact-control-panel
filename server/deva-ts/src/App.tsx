@@ -6,6 +6,9 @@ import {ResultPane} from './Result';
 import {SetupPane} from './Setup';
 import {ConfigurePane} from './Configure';
 import {BoundariesPane} from './Boundaries';
+import {ReportPane} from './Report';
+import {UserReportPane} from './ConstrainReport';
+
 import {ConfigButton, ConfigPanel} from './Config'
 import {Breadcrumb} from './Breadcrumb';
 
@@ -33,6 +36,7 @@ function App() {
   );
 }
 
+
 // the root react component: the whole ui sit under this
 function Content() {
 
@@ -44,6 +48,8 @@ function Content() {
   content[Pane.Pairwise] = ( <PairwisePane />);
   content[Pane.Result] = (<ResultPane />);
   content[Pane.Boundaries] = (<BoundariesPane />);
+  content[Pane.Report] = (<ReportPane />);
+  content[Pane.UserReport] = (<UserReportPane />);
 
   return (
     <div>
