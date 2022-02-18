@@ -13,13 +13,14 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
   blockedStatusState, blockingMetricsState, blockingStates, 
   unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';
 
-import { CompareConfig } from './Config';
+import { compareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
 
 const HandleColours = {
   0: 'white', // default
   1: 'gray',  // blocked
   2: 'red',   // blocking
+  6: 'gray'  // at threshold
 }
 
 const BackgroundColours = {
@@ -29,6 +30,7 @@ const BackgroundColours = {
   3: 'green-900', // resolvedBlock
   4: 'gray-700',  // currentlySelected
   5: 'blue-700',  // blockedMetric
+  6: 'gray-700',  // at threshold 
 }
 
 function GetBackgroundColor(uid) {
@@ -61,14 +63,14 @@ export function Constraints({}) {
   // set initial value of the constraints
   useEffect(() => {
     setConstraints(maxRanges)
-  }, [maxRanges]);
+  }, []);
 
   useEffect(() => {
     const values = {}
-    values["included"] = _.mapValues(constraints, x => x[0]);
+    values["included"] = _.mapValues(maxRanges, x => x[0]);
     values["excluded"] = _.mapValues(constraints, x => x[1]);
     setRadarData(values)
-  }, [constraints]);
+  }, [constraints, maxRanges]);
 
   if (currentCandidates === null) {
     return (<div>Loading...</div>);
@@ -78,7 +80,7 @@ export function Constraints({}) {
     return (<div>Loading...</div>);
   }
 
-  const visualiseRadar = CompareConfig(configs, 'displaySpiderPlot', 'true')
+  const visualiseRadar = compareConfig(configs, 'displaySpiderPlot', 'true')
     ? (<div className=""><VisualiseData/></div>)
     : null;
 
@@ -337,7 +339,8 @@ function StatusButton({uid}) {
     2: 'Blocking',       //
     3: 'Resolved Block', // overridden by toggle button 
     4: 'Selected',       // currently selected
-    5: 'Blocked'         //
+    5: 'Blocked',        //
+    6: 'At Threshold',   // 
   }
 
   const blockStatus = useRecoilValue(blockedStatusState)[uid];
