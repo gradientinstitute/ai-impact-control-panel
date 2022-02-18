@@ -78,12 +78,12 @@ export function ConfigurePane({}) {
     return (<p>Loading...</p>);
   }
 
-  if (_allCandidates === null) {
+  if (allCandidates === null) {
     return (<p>Loading...</p>);
   }
 
   const bounds = metadata.bounds;
-  const candidates = filterCandidates(_allCandidates, bounds);
+  const candidates = filterCandidates(allCandidates, bounds);
 
     if(candidates.length == 0){
         setPane(Pane.UserReport);
@@ -95,7 +95,7 @@ export function ConfigurePane({}) {
         <IntroContext />
       </div>
       <div className="col-span-5">
-        <EliminatedStatus remaining={candidates} all={_allCandidates}/>
+        <EliminatedStatus remaining={candidates} all={allCandidates}/>
         <Constraints />
         <AlgorithmMenu />
         <StartButton />
