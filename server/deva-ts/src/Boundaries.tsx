@@ -239,7 +239,7 @@ function SaveButton({}) {
 
   useEffect(() => {
     const fetch = async () => {
-      const result = await axios.put<any>("api/" + scenario + "/bounds/save", constraints);
+      const result = await axios.put<any>("api/bounds/set-box/" + scenario, constraints);
       setReport(result.data); // result/report
 
       // TODO set metadata.bounds
@@ -256,11 +256,11 @@ function SaveButton({}) {
   );
 
   return (
-      <button className="bg-gray-200 text-black rounded-lg" 
-        onClick={() => {setSubmit(true)}}>
-        <div className="p-4 text-5xl">
-          Save
-        </div>
-      </button>
+    <button className="bg-gray-200 text-black rounded-lg" 
+    onClick={() => {setSubmit(true)}}>
+    <div className="p-4 text-5xl">
+        Save
+    </div>
+    </button>
   );
 }
