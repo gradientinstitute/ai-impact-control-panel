@@ -26,6 +26,7 @@ const currentScenarioState = atom({
   default: null,
 });
 
+
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
 
@@ -40,7 +41,6 @@ export function SetupPane({}) {
   //   fetch();
   // }, []
   // );
-
 
   if (_scenarios === []) {
     return (<p>Loading...</p>);
@@ -72,6 +72,7 @@ function Steps() {
  )
 }
 
+
 function ChooseProblem({setTabIndex}) {
   // first tab: choose whether to elicit boundaries or preferences
   return (
@@ -81,6 +82,7 @@ function ChooseProblem({setTabIndex}) {
   </TabPanel>
   )
 }
+
 
 function ChooseScenario({setTabIndex}) {
   // second tab: select scenario and eliciter (algorithm)
@@ -102,9 +104,6 @@ function ChooseScenario({setTabIndex}) {
     fetch();
   }, []
   );
-
-
-
 
   // Update here for additional tasks
   const nextPane = taskType == TaskTypes.Boundaries 
@@ -140,6 +139,7 @@ function ChooseScenario({setTabIndex}) {
     </TabPanel>
   )
 }
+
 
 // Select scenario from list and preview details
 function ScenarioSelector({}) {
@@ -248,4 +248,3 @@ function StartButtons({setTabIndex}) {
       </div>
   );
 }
-

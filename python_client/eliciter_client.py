@@ -1,10 +1,12 @@
-"""Basic client to chat to the server with a console interface."""
+"""Basic client to chat to the API with a console interface."""
 import requests
 from deva import interface, elicit
 
 
 def main():
-    """Facilitate a client session with the DEVA server."""
+    """Facilitate a client session with the DEVA API."""
+    API = "http://127.0.0.1:8666"
+
     # make a persistent session
     sess = requests.Session()
 
@@ -13,7 +15,8 @@ def main():
     name = input() or "!!!"
 
     print("Requesting Scenario List")
-    request = "http://127.0.0.1:8666/scenarios"
+
+    request = f"{API}/scenarios"
     print(request)
 
     scenarios = sess.get(request).json()
@@ -25,7 +28,7 @@ def main():
         scenario = input() or "!!!"
 
     print("Requesting Scenario details")
-    request = f"http://127.0.0.1:8666/scenarios/{scenario}"
+    request = f"{API}/scenarios/{scenario}"
     print(request)
     info = sess.get(request).json()
     algos = info["algorithms"]
@@ -38,8 +41,8 @@ def main():
 
     print("Starting eliciter session")
     payload = {"name": name, "algorithm": algo, "scenario": scenario}
-    # request = f"http://127.0.0.1:8666/{scenario}/metadata"
-    request = "http://127.0.0.1:8666/deployment/new"
+    # request = f"{API}/{scenario}/metadata"
+    request = f"{API}/deployment/new"
     print(request)
     choices = sess.put(request, json=payload).json()
 
@@ -65,12 +68,12 @@ def main():
                         print(f"Autocomplete {i}-->{o}")
                         i = o
         print("Submitting: ", end="")
-        request = "http://127.0.0.1:8666/deployment/choice"
+        request = f"{API}/deployment/choice"
         rdata = {"first": i}
         print(request, rdata)
         choices = sess.put(request, json=rdata).json()
 
-    request = "http://127.0.0.1:8666/deployment/result"
+    request = f"{API}/deployment/result"
     print(request)
     result = sess.get(request).json()
 
@@ -79,8 +82,11 @@ def main():
     name = f"Spec: {result[uid]['spec']} ({uid})"
     attribs = elicit.Candidate(name, result[uid]["attr"])
     print("You have chosen:")
-    interface.text(attribs, metrics)
-    print('The log has been saved in the "log" folder under "mlserver"')
+
+    print("\n".join(
+        interface.text(attribs, metrics)
+    ))
+    print("The log has been saved in the scenario/logs folder")
 
 
 if __name__ == "__main__":

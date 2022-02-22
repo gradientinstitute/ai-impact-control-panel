@@ -4,8 +4,8 @@ import 'rc-slider/assets/index.css';
 import axios from 'axios';
 
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { Pane, paneState, scenarioState, 
-        metadataState, constraintsState, algoChoicesState } from './Base';
+import { Pane, paneState, scenarioState, metadataState, constraintsState,
+         algoChoicesState, reportState } from './Base';
 
 import { allCandidatesState, rangesState, currentCandidatesState,
          getSliderStep, currentSelectionState} from './BoundsSlider';
@@ -24,7 +24,7 @@ export function BoundariesPane({}) {
     const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
   
     // current constraints done by metric
-    const [_costraints, setConstraints] = useRecoilState(constraintsState);
+    const [_constraints, setConstraints] = useRecoilState(constraintsState);
   
     // all candidates sent to us by the server
     const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
@@ -51,18 +51,18 @@ export function BoundariesPane({}) {
     if (currentCandidates === null) {
       return (<div>Loading...</div>);
     }
-  
-    return (
-      <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
-        <h1>Boundaries Pane</h1>
-        <div className="mb-10">
-          <MultiRangeConstraint />
-        </div>
-        <div className="width-1/4">
-          <StartButton />
-        </div>
+
+  return (
+    <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
+      <h1>Boundaries Pane</h1>
+      <div className="mb-10">
+        <MultiRangeConstraint />
       </div>
-    );
+      <div className="width-1/4">
+        <SaveButton />
+      </div>
+    </div>
+  );
 }
 
 
@@ -71,7 +71,20 @@ function MultiRangeConstraint({}) {
 
   const constraints = useRecoilValue(constraintsState);
 
-  const baseline = metadata.baseline
+  const baseline = metadata.baseline;
+
+  // // current constraints done by metric
+  const [_constraints, setConstraints] = useRecoilState(constraintsState);
+
+  const maxRanges = useRecoilValue(rangesState);
+  const bounds = maxRanges;
+  // set initial value of the constraints
+  useEffect(() => {
+    if ("bounds" in metadata){
+      const bounds = metadata.bounds;
+      setConstraints(bounds);
+    }
+  }, [bounds]);
 
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
@@ -164,7 +177,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
     n[uid] =  [n[uid][0], newVal]
 
-    setConstraints(n);  
+    setConstraints(n);
   }
 
   let rangeProps = {
@@ -185,8 +198,8 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
       <Slider {...rangeProps} />
       <OptimalDirection lowerIsBetter={lowerIsBetter}/>
     </div>
-    );
-  }
+  );
+}
 
 
 function OptimalDirection({lowerIsBetter}) {
@@ -208,12 +221,15 @@ function OptimalDirection({lowerIsBetter}) {
   }
 
 
-function StartButton({}) {
+function SaveButton({}) {
 
   const [submit, setSubmit] = useState(false);
 
   const scenario = useRecoilValue(scenarioState);
   const constraints = useRecoilValue(constraintsState);
+  const [metadata, setMetadata] = useRecoilState(metadataState);
+  const [report, setReport] = useRecoilState(reportState);
+
   const [_pane, setPane] = useRecoilState(paneState);
 
   const payload = {
@@ -223,9 +239,15 @@ function StartButton({}) {
 
   useEffect(() => {
     const fetch = async () => {
-      await axios.put<any>("api/boundaries/new", payload);
-      // not proceeding further at this time.
-      window.location.href='/';
+      const result = await axios.put<any>("api/bounds/set-box/" + scenario, constraints);
+      setReport(result.data); // result/report
+
+      // TODO set metadata.bounds
+      // for(let m in metadata.bounds){
+      //   metadata.bounds[m] = constraints[m]
+      // }
+
+      setPane(Pane.Report);
     }
     if (submit) {
       fetch();
@@ -234,11 +256,11 @@ function StartButton({}) {
   );
 
   return (
-      <button className="bg-gray-200 text-black rounded-lg" 
-        onClick={() => {setSubmit(true)}}>
-        <div className="p-4 text-5xl">
-          Save
-        </div>
-      </button>
+    <button className="bg-gray-200 text-black rounded-lg" 
+    onClick={() => {setSubmit(true)}}>
+    <div className="p-4 text-5xl">
+        Save
+    </div>
+    </button>
   );
 }
