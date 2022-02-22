@@ -7,10 +7,12 @@ import { Tabs, TabList, Tab, TabPanels, TabPanel, TabsOrientation } from "@reach
 import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
+import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
 
 import {Pane, paneState, scenarioState, algoState, nameState,
         TaskTypes, taskTypeState} from './Base';
 
+import {HelpOverlay, overlayRank, HelpButton, helpState} from './HelpOverlay';
 
 // the set of scenarios retrieved from the serever
 const scenariosState = atom({
@@ -24,11 +26,13 @@ const currentScenarioState = atom({
   default: null,
 });
 
+
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
 
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
-  
+  const [help, setHelpState] = useRecoilState(helpState);
+
   // initial loading of candidates
   // useEffect(() => {
   //   const fetch = async () => {
@@ -39,6 +43,10 @@ export function SetupPane({}) {
   // }, []
   // );
 
+  // set up help button initial
+  useEffect(() => {
+    setHelpState(overlayRank.Boundaries);
+  }, []);
 
   if (_scenarios === []) {
     return (<p>Loading...</p>);
@@ -47,13 +55,14 @@ export function SetupPane({}) {
   return (
     <div className="ml-auto mr-auto w-1/2">
       <Dialog className="intro text-center" aria-label="Get Started">
-        <h1 className="my-auto font-extralight mb-4 text-3xl pb-4">Get Started</h1>
+        <h1 className="my-auto font-extralight mb-4 text-3xl pb-4">
+          Get Started <HelpButton/>
+        </h1>
         <Steps />
       </Dialog>
     </div>
   );
 }
-
 
 // steps of intro flow
 function Steps() {
@@ -69,6 +78,7 @@ function Steps() {
  )
 }
 
+
 function ChooseProblem({setTabIndex}) {
   // first tab: choose whether to elicit boundaries or preferences
   return (
@@ -79,6 +89,7 @@ function ChooseProblem({setTabIndex}) {
   )
 }
 
+
 function ChooseScenario({setTabIndex}) {
   // second tab: select scenario and eliciter (algorithm)
   const [_pane, setPane] = useRecoilState(paneState);
@@ -86,6 +97,8 @@ function ChooseScenario({setTabIndex}) {
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
   const [_scenario, setScenario] = useRecoilState(scenarioState);
   const [_name, setName] = useRecoilState(nameState);
+  const [_help, setHelpState] = useRecoilState(helpState);
+
   // const canGoBack = tabIndex >= 0;
   const taskType = useRecoilValue(taskTypeState);
   const buttonDisabled = (current === null) || (_name === "");
@@ -100,21 +113,32 @@ function ChooseScenario({setTabIndex}) {
   }, []
   );
 
-
-
-
   // Update here for additional tasks
   const nextPane = taskType == TaskTypes.Boundaries 
     ? Pane.Boundaries : Pane.Configure;
 
+
   return (
     <TabPanel key={1}>
-      <p className="text-lg pb-6">Enter your name</p>
-      <input type="text" name="name" value={_name} onChange={ (x) => {setName(x.target.value)}}/>
+      <div>
+        <div>
+          <p className="text-lg pb-6">Enter your name</p>
+          <HelpOverlay 
+            rank={overlayRank.Name}
+            title={"Enter your name"} 
+            msg={"This is a help messsage"} 
+            placement={"right"}
+          >
+          <input type="text" name="name" value={_name}
+            onChange={ (x) => {setName(x.target.value)}}/>
+          </HelpOverlay>
+        </div>
       <br></br>
       <br></br>
+
       <p className="text-lg pb-6">Select a scenario</p>
       <ScenarioSelector />
+
       <br></br>
       <div className="flex justify-between btn-row mt-12">
         <div className="flex flex-1 align-middle text-left">
@@ -123,7 +147,7 @@ function ChooseScenario({setTabIndex}) {
             &#8249; Back
           </button>
         </div>
-        <button className="btn text-xl uppercase py-4 px-8 font-bold rounded-lg"
+        <button className="btn text-xl uppercase py-4 px-8 font-bold rounded-lg text-white"
           onClick={() => {
             if (current) {
               setScenario(current)
@@ -134,9 +158,11 @@ function ChooseScenario({setTabIndex}) {
           Start
         </button>
       </div>
+      </div>
     </TabPanel>
   )
 }
+
 
 // Select scenario from list and preview details
 function ScenarioSelector({}) {
@@ -204,31 +230,48 @@ function ScenarioSelector({}) {
     );
 }
 
+
 // select the type of elicitation to do with two buttons
 // TODO: hook up to boundary elicitation when its implemented
 function StartButtons({setTabIndex}) {
 
   const setTask = useSetRecoilState(taskTypeState);
+  const [help, setHelpState] = useRecoilState(helpState);
 
   return (
       <div className="grid grid-cols-2 gap-10 py-12 px-6">
-        <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
-          onClick={() => {
-            setTask(TaskTypes.Boundaries);
-            setTabIndex(1);
-          }}
-          disabled={false}>
-            Boundaries
-        </button>
-        <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
+        <HelpOverlay 
+          rank={overlayRank.Boundaries} 
+          title={"Boundaries"} 
+          msg={"This is a help messsage"} 
+          placement={"bottom"}
+        >
+          <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
+            onClick={() => {
+              setTask(TaskTypes.Boundaries);            
+              setHelpState(overlayRank.Name);
+              setTabIndex(1);
+            }}
+            disabled={false}>
+              Boundaries
+          </button>
+        </HelpOverlay>
+        <HelpOverlay 
+          rank={overlayRank.Deployment} 
+          title={"Deployment"} 
+          msg={"This is a help messsage"} 
+          placement={"bottom"}
+        >
+        <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
           onClick={() => {
             setTask(TaskTypes.Deployment);
             setTabIndex(1);
+            setHelpState(overlayRank.Name);
           }}
           disabled={false}>
             Deployment
         </button>
+      </HelpOverlay>
       </div>
   );
 }
-

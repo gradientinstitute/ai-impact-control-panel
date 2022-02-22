@@ -4,13 +4,15 @@ import axios from 'axios';
 
 import {Key, Model, adjustUnitRange} from './Widgets';
 import {metadataState, resultState} from './Base';
+import {HelpOverlay, overlayRank, helpState} from './HelpOverlay';
 
 // main pane
 export function ResultPane({}) {
 
   const metadata = useRecoilValue(metadataState);
   const [result, setResult] = useRecoilState(resultState);
-  
+  const [help, setHelpState] = useRecoilState(helpState);
+
   useEffect(() => {
     const fetch = async () => {
       const res = await axios.get<any>("api/deployment/result");
@@ -18,6 +20,7 @@ export function ResultPane({}) {
       setResult(d);
     }
     fetch();
+    setHelpState(overlayRank.Results);
   }, []
   );
 
@@ -60,19 +63,34 @@ export function ResultPane({}) {
       grid-cols-1 text-center items-center">
       <h2 className="text-2xl mb-4"> Preference elicitation concluded.
         <br /> Your most preferred system is
+
         <div className="inline italic"> {name}</div>.
       </h2>
+      <HelpOverlay 
+        rank={overlayRank.Results}
+        title={"Results"} 
+        msg={"This is a help messsage"} 
+        placement={"top"}
+      >
       <h1 className="text-4xl">{name} Impacts</h1>
+      </HelpOverlay>
+
       {comparisons()}
       <p>
         See <b>metrics_{spec}.toml</b> and <b>params_{spec}.toml</b> for more
         details of {name}.
       </p>
+      <HelpOverlay 
+        rank={overlayRank.DownloadSessionLog}
+        title={"Download Session Log"} 
+        msg={"This is a help messsage"} 
+        placement={"bottom"}
+      >
       <p>
-        Click to download the <a href={"api/log/log of session " + metadata.ID + ".toml"} download><b>toml
-        log file</b></a> or the <a href={"api/log/log of session " + metadata.ID + ".pdf"} download><b>pdf
-        log file</b></a> generated for the session.
+        Click to download
+        the <a href={"api/deployment/logs/txt"} download><b>session log</b></a>.
       </p>
+      </HelpOverlay>
       <StartOver />
     </div>
   );

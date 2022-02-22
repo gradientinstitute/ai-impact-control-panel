@@ -7,13 +7,13 @@ from util import jsonify, random_key
 import redis
 import toml
 from flask import Flask, session, abort, request, send_from_directory
-from fpdf import FPDF
 
-from deva import elicit, fileio, logger
+from deva import elicit, fileio, logger, compareBase
 # from deva import bounds
 from deva.db import RedisDB, DevDB
 
 import pickle
+
 
 # Set up the flask app
 app = Flask(__name__)
@@ -65,11 +65,15 @@ def send_image(scenario, name):
     return send_from_directory(scenario_path, name)
 
 
-@app.route("/log/<path:name>")
-def send_log(name):
-    """Send the session logs to the client."""
-    scenario_path = "logs"
-    return send_from_directory(scenario_path, name)
+@app.route("/deployment/logs/<ftype>")
+def send_log(ftype):
+    """Send a completed session logfile to the user."""
+    if ftype not in db.logger.files:
+        abort(404)  # incorrect usage
+
+    full_path = db.logger.files[ftype]
+    path, filename = os.path.split(full_path)
+    return send_from_directory(path, filename)
 
 
 @app.route("/scenarios")
@@ -99,6 +103,25 @@ def _scenario(name):
     result = (models, spec)
 
     return result
+
+
+@app.route("/bounds/set-box/<scenario>", methods=["PUT"])
+def save_bound(scenario):
+    """Save the bounds configurations to the server."""
+    file_name = f"scenarios/{scenario}/bounds.toml"
+    path = os.path.join(fileio.repo_root(), file_name)
+    with open(path, "w+") as toml_file:
+        # repair request
+        data = request.get_json()
+        data = {k: [float(a) for a in v] for k, v in data.items()}
+        toml.dump(data, toml_file)
+
+    # return report text
+    bounds = toml.load(path)
+    meta = _scenario(scenario)[1]
+    baselines = meta["baseline"]
+    report = compareBase.compare(meta, baselines, bounds)
+    return report
 
 
 @app.route("/scenarios/<scenario>")
@@ -136,6 +159,7 @@ def _get_boundary_sample():
                 "values": sampler.baseline.attributes,
             },
         }
+
     # Update database state
     db.bounder = sampler
     return res
@@ -159,7 +183,7 @@ def init_bounds():
     # baseline = meta["baseline"]
     # metrics = meta["metrics"]
     # attribs, table = bounds.tabulate(candidates, metrics)
-    # ref = [baseline[a] for a in attribs]
+    # ref = [baseline["industry_average"][a] for a in attribs]
     # db.bounder = bounds.PlaneSampler(ref, table, attribs, steps=30)
 
     # # get initial choice
@@ -195,6 +219,12 @@ def get_bounds_choice():
     return jsonify(res)
 
 
+# @app.route("/deployment/filter/<scenario>", methods=["PUT"])
+def filter_candidates(all_cand, bounds):
+    """Filter candidates according to the bounds."""
+    raise NotImplementedError
+
+
 @app.route("/deployment/new", methods=["PUT"])
 def make_new_deployment_session():
     """Initialise an eliciter with a particular algorithm and scenario."""
@@ -212,50 +242,25 @@ def make_new_deployment_session():
     print("Init new session for user")
     candidates, spec = _scenario(scenario)
     eliciter = elicit.algorithms[algo](candidates, spec)
-    log = logger.Logger(scenario, algo, name)
+    log = logger.Logger(scenario, algo, name, spec["metrics"])
     db.eliciter = eliciter
     db.logger = log
     # send our first sample of candidates
-    res = _get_deployment_sample(eliciter, log)
+    res = _get_deployment_choice(eliciter, log)
     return jsonify(res)
 
 
-def _on_terminate_eliciter(eliciter, log):
-    result = eliciter.result()
-    res = {
-        result.name: {
-            "attr": result.attributes,
-            "spec": result.spec_name
-        }
-    }
-    log.add_result(res)
-    data = log.log
-    if not os.path.exists("logs"):
-        os.mkdir("logs")
-    output_file_name = f"logs/{session['id']}.toml"
-    with open(output_file_name, "w") as toml_file:
-        toml.dump(data, toml_file)
-    pdf = FPDF()
-    # Add a page
-    pdf.add_page()
-    # set style and size of font
-    # that you want in the pdf
-    pdf.set_font("Arial", size=15)
-    f = open(output_file_name, "r")
-    for lines in f:
-        pdf.cell(200, 10, txt=lines, ln=1, align="C")
-    pdf.output(f"logs/{str(session['id'])}.pdf")
+def _get_deployment_choice(eliciter, log):
 
-
-def _get_deployment_sample(eliciter, log):
     if not eliciter.terminated():
         res = []
         for option in eliciter.query():
             res.append({"name": option.name, "values": option.attributes})
-        log.add_options(res)
     else:
-        _on_terminate_eliciter(eliciter, log)
+        log.result = eliciter.result()
+        log.write()
         res = {}
+
     return res
 
 
@@ -272,18 +277,21 @@ def get_choice():
     res = {}
 
     data = request.get_json(force=True)
-    log.add_choice([data])
+    # log.add_choice([data])
     x = data["first"]
 
     # Only pass valid choices on to the eliciter
     if not eliciter.terminated():
         choice = [v.name for v in eliciter.query()]
         if (x in choice):  # and (y in choice) and (x != y):
+            log.choice(eliciter.query(), data)
             eliciter.put(x)
 
     # have to check again because now it might be terminated
     # after we added a new choice above
-    res = _get_deployment_sample(eliciter, log)
+    res = _get_deployment_choice(eliciter, log)
+
+    # Write back to database
     db.eliciter = eliciter
     db.logger = log
 

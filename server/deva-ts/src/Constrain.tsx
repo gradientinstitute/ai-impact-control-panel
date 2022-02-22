@@ -13,14 +13,16 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
   blockedStatusState, blockingMetricsState, blockingStates, 
   unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';
 
-import { CompareConfig } from './Config';
+import { compareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
 import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
+import {HelpOverlay, overlayRank, helpState} from './HelpOverlay';
 
 const HandleColours = {
   0: 'white', // default
   1: 'gray',  // blocked
   2: 'red',   // blocking
+  6: 'gray'  // at threshold
 }
 
 const BackgroundColours = {
@@ -30,6 +32,7 @@ const BackgroundColours = {
   3: 'green-900', // resolvedBlock
   4: 'gray-700',  // currentlySelected
   5: 'blue-700',  // blockedMetric
+  6: 'gray-700',  // at threshold 
 }
 
 function GetBackgroundColor(uid) {
@@ -58,18 +61,23 @@ export function Constraints({}) {
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const setRadarData = useSetRecoilState(radarDataState);
   const configs = useRecoilValue(configState);
+  const [_help, setHelpState] = useRecoilState(helpState);
 
   // set initial value of the constraints
   useEffect(() => {
     setConstraints(maxRanges)
-  }, [maxRanges]);
+  }, []);
+
+  useEffect(() => {
+    setHelpState(overlayRank.ScenarioDetails);
+  }, []);
 
   useEffect(() => {
     const values = {}
-    values["included"] = _.mapValues(constraints, x => x[0]);
+    values["included"] = _.mapValues(maxRanges, x => x[0]);
     values["excluded"] = _.mapValues(constraints, x => x[1]);
     setRadarData(values)
-  }, [constraints]);
+  }, [constraints, maxRanges]);
 
   if (currentCandidates === null) {
     return (<div>Loading...</div>);
@@ -79,8 +87,8 @@ export function Constraints({}) {
     return (<div>Loading...</div>);
   }
 
-  const visualiseRadar = CompareConfig(configs, 'displaySpiderPlot', 'true')
-    ? (<div className=""><VisualiseData/></div>)
+  const visualiseRadar = compareConfig(configs, 'displaySpiderPlot', 'true')
+    ? (<div className=""><VisualiseData colour={["#008080", "#CC333F"]}/></div>)
     : null;
 
   return (
@@ -88,9 +96,16 @@ export function Constraints({}) {
       <h1 className="text-left">Metric Filters</h1>
       <ConstraintStatus />
       {visualiseRadar}
+      <HelpOverlay 
+        rank={overlayRank.ConstraintScrollbars}
+        title={"Constraints Scrollbar"} 
+        msg={"This is a help messsage"} 
+        placement={"top"}
+      >
       <div className="mb-10">
         <MultiRangeConstraint />
       </div>
+      </HelpOverlay>
     </div>
   );
 }
@@ -333,7 +348,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 function StatusExplanationOverlay({children, rank, msg, placement}) {
   const popover = (
     <Popover id={rank}>
-      <Popover.Body className="text-white text-sm">
+      <Popover.Body className="bg-gray-800 text-white text-sm">
         {msg}
       </Popover.Body>
     </Popover>
@@ -360,12 +375,12 @@ function StatusButton({uid}) {
 
     1: { 
       status : 'Blocked',
-      explanation: "can't move this further"
+      explanation: "this metric cannot be made more optimal without making another metric less optimal"
     },    
     
     2: {
       status : 'Blocking',
-      explanation: 'oh no'
+      explanation: "making this metric less optimal will allow you to improve the metric you want to resolve"
     },    
     
     3: { // overridden by toggle button 
@@ -379,7 +394,12 @@ function StatusButton({uid}) {
     
     5: { // overridden by toggle button (blockedMetric)
       status : 'Blocked' ,
-      explanation: "can't move this further"
+      explanation: "this metric cannot be made more optimal without making another metric less optimal"
+    },
+
+    6: { // at threshold
+      status : 'At Threshold',
+      explanation: "this metric cannot be made more optimal given the candidates "
     }
   }
 
@@ -393,7 +413,7 @@ function StatusButton({uid}) {
     <StatusExplanationOverlay 
       rank={0} 
       msg={explanation} 
-      placement={"right"}
+      placement={"bottom"}
     >
     <button className={bgcolor + "text-xl uppercase py-2 px-8 font-bold rounded-lg" + visibility}>
       {text}
@@ -495,7 +515,7 @@ function UnblockButton({uid, buttonDisabled}) {
     : "suggest metrics to unblock";
 
   return (
-    <button className="btn text-l uppercase py-2 px-6 font-bold rounded-lg"
+    <button className="btn text-l text-white uppercase py-2 px-6 font-bold rounded-lg"
       onClick={() => {
         if (blockedMetric === uid) {
           setBlockedMetric(null);
