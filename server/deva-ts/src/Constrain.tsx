@@ -466,7 +466,7 @@ function UnblockButton({uid, buttonDisabled}) {
     : "suggest metrics to unblock";
 
   return (
-    <button className="btn text-l uppercase py-2 px-6 font-bold rounded-lg"
+    <button className="btn text-l text-white uppercase py-2 px-6 font-bold rounded-lg"
       onClick={() => {
         if (blockedMetric === uid) {
           setBlockedMetric(null);
