@@ -12,6 +12,8 @@ import { compareConfig } from './Config';
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
+const leftColour = {hex : "#93c5fd", text : "blue-300"};
+const rightColour = {hex : "#fda4af", text : "pink-200"};
 
 // the current pair of candidates sent from the server
 const candidatesState = atom({
@@ -145,7 +147,7 @@ export function PairwisePane({}) {
   }
 
   const visualiseRadar = compareConfig(configs, 'displaySpiderPlot', 'true')
-    ? <VisualiseData/>
+    ? <VisualiseData colour={[leftColour.hex, rightColour.hex]}/>
     : null;
 
   return (
@@ -158,11 +160,11 @@ export function PairwisePane({}) {
         <p className="italic">A system designed to {metadata.purpose}</p>
       </div>
       {visualiseRadar}
-      {comparisons()}
       <InputGetter 
         leftName={candidates.left.name} 
         rightName={candidates.right.name} 
       />
+      {comparisons()}
     </div>
   );
 }
@@ -198,8 +200,7 @@ function Motivation({}) {
 function InputGetter({leftName, rightName}) {
   return (
     <div className="w-auto mb-8 flex space-x-16">
-      <div className="my-auto" style={{width:"10%"}}>
-      </div>
+      <div className="my-auto" style={{width:"5%"}}/>
       <div className="my-auto" style={{width:"20%"}}>
         <PreferenceButton 
           label={leftName} 
@@ -217,6 +218,7 @@ function InputGetter({leftName, rightName}) {
           other={leftName}
         />
       </div>
+      <div className="my-auto" style={{width:"5%"}}/>
     </div>
   );
 }
@@ -286,14 +288,14 @@ function PairwiseComparator({uid, leftName, leftValue,
       </div>
       <div className="my-auto" style={{width:"30%"}}>
         <Model unit={unit} name={leftName} 
-          value={leftValue} isMirror={false}/>
+          value={leftValue} isMirror={false} colour={leftColour.text}/>
       </div>
       <div className="my-auto" style={{width:"20%"}}>
         {Comparison({leftValue, leftName, rightValue, rightName, unit})}
       </div>
       <div className="my-auto" style={{width:"30%"}}>
         <Model unit={unit} name={rightName}
-          value={rightValue} isMirror={false}/>
+          value={rightValue} isMirror={false} colour={rightColour.text}/>
       </div>
     </div>
 
@@ -331,20 +333,31 @@ function DeltaBar({leftValue, rightValue, unit}) {
   );
 }
 
-function ComparisonStatemetQuantitative({leftName, leftValue, 
+function ComparisonStatementQuantitative({leftName, leftValue, 
   rightName, rightValue, unit}) {
-  let delta = leftValue - rightValue; 
+  let delta = leftValue - rightValue;
+  
   let n1 = leftName;
+  let n1Colour = leftColour.text;
   let n2 = rightName;
+  let n2Colour = rightColour.text;
+
   if (delta < 0) {
     n1 = rightName;
     n2 = leftName;
+    n1Colour = rightColour.text;
+    n2Colour = leftColour.text;
     delta = delta * -1;
   }
+
   return (
-    <div className="text-xl font-bold">
-      {n1} {unit.action} {unit.prefix}
-      {delta.toFixed(sigfig)} {unit.suffix} more than {n2}.
+    <div>
+    <span className={"text-xl font-bold text-"+ n1Colour}>{n1 + " "}</span>
+    <span className="text-xl font-bold">
+      {unit.action} {unit.prefix} {delta.toFixed(sigfig)} {unit.suffix} more than 
+    </span>
+    <span className={"text-xl font-bold text-" + n2Colour}>{" " + n2}</span>
+    <span className={"text-xl font-bold text-" + n2Colour}>.</span>
     </div>
   );
 }
@@ -352,19 +365,20 @@ function ComparisonStatemetQuantitative({leftName, leftValue,
 function ComparisonStatementQualitative({leftName, leftValue, 
   rightName, rightValue, unit}) {
   
-  let n1 = leftName;
-  let n2 = rightName;
-
-  let text = null;
+  const n1 = leftName;
+  const n2 = rightName;
+  const n1Colour = leftColour.text;
+  const n2Colour = rightColour.text;
 
   const isPreferable = (leftValue > rightValue && !unit.lowerIsBetter) || (leftValue < rightValue && unit.lowerIsBetter);
-  const comparison = isPreferable ? unit.comparison_better : unit.comparison_worse;
-
-  text = leftValue === rightValue ? <p> {n1} {unit.comparison_equal} {n2} </p> : <p> {n1} {comparison} {n2} </p>;
+  let comparison = isPreferable ? unit.comparison_better : unit.comparison_worse;
+  comparison = leftValue === rightValue ? unit.comparison_equal : comparison;
 
   return (
-    <div className="text-xl font-bold">
-      {text}
+    <div>
+      <span className={"text-xl font-bold text-" + n1Colour}>{n1} </span>
+      <span className="text-xl font-bold">{comparison} </span>
+      <span className={"text-xl font-bold text-" + n2Colour}>{n2} </span>
     </div>
   );
 }
@@ -374,7 +388,7 @@ function ComparisonQuantitative({leftValue, leftName, rightValue, rightName, uni
     <div>
       <DeltaBar unit={unit} leftValue={leftValue}
         rightValue={rightValue} />
-      <ComparisonStatemetQuantitative unit={unit} leftName={leftName}
+      <ComparisonStatementQuantitative unit={unit} leftName={leftName}
         rightName={rightName} leftValue={leftValue} 
         rightValue={rightValue}/>
     </div>

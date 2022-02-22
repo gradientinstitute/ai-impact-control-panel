@@ -34,7 +34,7 @@ export function adjustUnitRange(unit) {
   return adjustedUnit;
 }
 
-function Model({unit, value, name, isMirror}) {
+function Model({unit, value, name, isMirror, colour="white"}) {
   const includePerformanceBar = true;
   const performanceBar = includePerformanceBar ? <Performance unit={unit} value={value} isMirror={isMirror}/> : null
 
@@ -42,7 +42,7 @@ function Model({unit, value, name, isMirror}) {
     <div>
       {performanceBar}
     <ValueStatement unit={unit} name={name} 
-      value={value} />
+      value={value} colour={colour}/>
     </div>
   );
 }
@@ -122,25 +122,25 @@ const right = !(unit.type === "qualitative")
   );
 }
 
-function ValueStatement({name, value, unit}) {
+function ValueStatement({name, value, unit, colour}) {
   return unit.type === "qualitative" 
-    ? ValueStatementQualitative({name, value, unit}) 
-    : ValueStatementQuantitative({name, value, unit});
+    ? ValueStatementQualitative({name, value, unit, colour}) 
+    : ValueStatementQuantitative({name, value, unit, colour});
 }
 
-function ValueStatementQuantitative({name, value, unit}) {
+function ValueStatementQuantitative({name, value, unit, colour}) {
   const sigfig = Number.isInteger(value) ? 0 : 2;
   return (
-    <div>
+    <div className={"text-"+ colour}>
       {name} {unit.action} {unit.prefix}
       {value.toFixed(sigfig)} {unit.suffix}. 
     </div>
   );
 }
 
-function ValueStatementQualitative({name, value, unit}) {
+function ValueStatementQualitative({name, value, unit, colour}) {
   return (
-    <div className="text-lg">
+    <div className={"text-lg text-"+ colour}>
       {name} {unit.options[value]}. 
     </div>
   );
