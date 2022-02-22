@@ -12,6 +12,7 @@ import {Constraints} from './Constrain';
 import { maxRangesState } from './ConstrainScrollbar';
 
 import { filterCandidates } from './ConstrainScrollbar';
+import {HelpOverlay, overlayRank, HelpButton, helpState} from './HelpOverlay';
 
 
 // TODO siigh css? 
@@ -114,12 +115,20 @@ function EliminatedStatus({remaining, all}) {
   const eliminated = all.length - remaining.length;
 
   return (
+  <HelpOverlay 
+    rank={overlayRank.CandidatesRemaining}
+    title={"Candidates Remaining"} 
+    msg={"This is a help messsage"} 
+    placement={"bottom"}
+  >
   <div className="mb-8 bg-gray-600 rounded-lg">
     <span className="italic text-2xl">
       {eliminated +" of " + all.length + " "}
     </span>
     candidates are eliminated by the system requirement bounds
   </div>
+  </HelpOverlay>
+
   );
 }
 
@@ -146,6 +155,12 @@ function AlgoSelector({}) {
   });
   
   return (
+      <HelpOverlay 
+        rank={overlayRank.ElicitationSettings}
+        title={"Eliciter"} 
+        msg={"This is a help messsage"} 
+        placement={"left"}
+      >
       <div className="p-4 gap-4 grid grid-cols-10" >
         <div className="col-span-1">
           <p className="text-right">Eliciter</p>
@@ -162,6 +177,7 @@ function AlgoSelector({}) {
           <p>{algos[current]}</p>
         </div>
       </div>
+      </HelpOverlay>
     );
 
 }

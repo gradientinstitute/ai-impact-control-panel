@@ -9,6 +9,7 @@ import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
 import {VisualiseData, radarDataState} from './RadarCharts'
 import { compareConfig } from './Config';
+import {HelpOverlay, overlayRank, helpState} from './HelpOverlay';
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
@@ -48,6 +49,7 @@ export function PairwisePane({}) {
   const [_radarData, setRadarData] = useRecoilState(radarDataState);
   const configs = useRecoilValue(configState);
 
+  const [_help, setHelpState] = useRecoilState(helpState);
 
   // initial loading of candidates
   // a bit complicated by the fact we can get either candidates or a result
@@ -74,6 +76,7 @@ export function PairwisePane({}) {
         values[d[1]['name']] = d[1]['values']; 
         setRadarData(values);
       }
+      setHelpState(overlayRank.Motivation);
     }
     fetch();
   }, []
@@ -182,8 +185,15 @@ function Motivation({}) {
   };
 
   return (
+    <HelpOverlay 
+      rank={overlayRank.Motivation}
+      title={"Motivation"} 
+      msg={"This is a help messsage"} 
+      placement={"top"}
+    >
     <div>
-      <p className="text-xl mb-5"> What is motivating your choice? </p>
+      <p className="text-xl mb-5">What is motivating your choice? </p>
+
       <textarea 
         className="w-full" 
         rows={5}
@@ -192,6 +202,8 @@ function Motivation({}) {
       >
       </textarea>
     </div>
+    </HelpOverlay>
+
   );
 }
 

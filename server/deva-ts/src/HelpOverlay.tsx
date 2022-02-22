@@ -1,32 +1,51 @@
-import { useEffect, useState } from 'react';
 import { atom, useRecoilState, useSetRecoilState, useRecoilValue} from 'recoil';
-import axios from 'axios';
-import { Dialog } from "@reach/dialog";
-import { Tabs, TabList, Tab, TabPanels, TabPanel, TabsOrientation } from "@reach/tabs";
 import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
 import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
 import questionMark from './question-mark.svg';
 
-// the set of scenarios retrieved from the server
 export const helpState = atom({
   key: 'help',
   default: 0,
 });
 
-export enum overlayRankSetup {
-  'Boundaries',
+export enum overlayRank {
+
+  // Setup Panel
+  'Boundaries' = 1, // initialise to 1 so we can multiply by -1 to close
   'Deployment',
+
+  // Setup Panel (continued)
+  'Name',
+  'Scenario',
+
+  // Constraint Panel
+  'ScenarioDetails',
+  'ScenarioObjectives',
+  'ScenarioPipeline',
+  'CandidatesRemaining',
+  'ConstraintScrollbars',
+  'ElicitationSettings',
+
+  // Pairwise Panel
+  'Motivation',
+  // 'PairwiseComparisons',
+  // 'Preference',
+
+  // Final Panel
+  'Results',
+  'DownloadSessionLog',
 }
 
+// add a use effect that starts at a particular thing
 export function HelpButton({}) {
   const [help, setHelpState] = useRecoilState(helpState);
+  
   return(
     <button className="col-span-1 px-2"
     onClick={() => {
-      const helpTarget = help == -1 ? 0 : -1;
-      setHelpState(helpTarget)
+      setHelpState(help * -1);
     }}>
     <img className="col-span-1 h-6 right" src={questionMark}
       alt="Help" /> 
@@ -39,10 +58,11 @@ export function HelpOverlay({children, rank, title, msg, placement}) {
     const [ctr, setCtr] = useRecoilState(helpState);
   
     const popover = (
-      <Popover id={rank}>
+      // TODO className="bg-gray-600"
+      <Popover id={rank}> 
         <Popover.Header as="h3">
           {title}
-        <CloseButton onClick={() => setCtr(-1)}/>
+        <CloseButton onClick={() => setCtr(ctr * -1)}/>
         </Popover.Header>
         <Popover.Body>
           {msg}

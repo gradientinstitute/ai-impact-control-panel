@@ -15,6 +15,7 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
 
 import { compareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
+import {HelpOverlay, overlayRank, helpState} from './HelpOverlay';
 
 const HandleColours = {
   0: 'white', // default
@@ -59,10 +60,15 @@ export function Constraints({}) {
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const setRadarData = useSetRecoilState(radarDataState);
   const configs = useRecoilValue(configState);
+  const [_help, setHelpState] = useRecoilState(helpState);
 
   // set initial value of the constraints
   useEffect(() => {
     setConstraints(maxRanges)
+  }, []);
+
+  useEffect(() => {
+    setHelpState(overlayRank.ScenarioDetails);
   }, []);
 
   useEffect(() => {
@@ -89,9 +95,16 @@ export function Constraints({}) {
       <h1 className="text-left">Metric Filters</h1>
       <ConstraintStatus />
       {visualiseRadar}
+      <HelpOverlay 
+        rank={overlayRank.ConstraintScrollbars}
+        title={"Constraints Scrollbar"} 
+        msg={"This is a help messsage"} 
+        placement={"top"}
+      >
       <div className="mb-10">
         <MultiRangeConstraint />
       </div>
+      </HelpOverlay>
     </div>
   );
 }
