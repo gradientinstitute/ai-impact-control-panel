@@ -58,22 +58,23 @@ export function HelpOverlay({children, rank, title, msg, placement}) {
     const [ctr, setCtr] = useRecoilState(helpState);
   
     const popover = (
-      // TODO className="bg-gray-600"
-      <Popover id={rank}> 
-        <Popover.Header as="h3">
-          {title}
-        <CloseButton onClick={() => setCtr(ctr * -1)}/>
+      <Popover id={rank} className="bg-gray-700 border-gray-500 shadow-sm bg-opacity-90 hover:bg-opacity-100">
+        <Popover.Header as="h3" className="text-white border-gray-500 bg-gray-800 bg-opacity-90">
+          {title}        
+          <button className="col-span-1" onClick={() => setCtr(ctr * -1)}>
+            &times;
+          </button>
         </Popover.Header>
-        <Popover.Body>
+        <Popover.Body className="text-white">
           {msg}
-          <div>
-            <br/>
-          <Button variant='primary' onClick={()=>{setCtr(ctr - 1)}}>Previous</Button>
-          <Button variant='secondary' onClick={()=>{setCtr(ctr + 1)}}>Next</Button>
-          </div>
+          <br/><br/>
+          <Button variant="dark" size="sm" 
+            onClick={()=>{setCtr(ctr - 1)}}>&lt;</Button>
+          <Button variant="dark" size="sm" 
+            onClick={()=>{setCtr(ctr + 1)}}>&gt;</Button>
         </Popover.Body>
       </Popover>
-    )
+    );
   
     return (
       <OverlayTrigger 
