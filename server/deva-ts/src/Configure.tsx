@@ -82,12 +82,16 @@ export function ConfigurePane({}) {
     return (<p>Loading...</p>);
   }
 
-  const bounds = metadata.bounds;
-  const candidates = filterCandidates(allCandidates, bounds);
+  let candidates = allCandidates  
 
-    if(candidates.length == 0){
-        setPane(Pane.UserReport);
-    }
+  if ("bounds" in metadata){
+    const bounds = metadata.bounds;
+    candidates = filterCandidates(allCandidates, bounds);
+  }
+
+  if(candidates.length == 0){
+      setPane(Pane.UserReport);
+  }
 
   return (
     <div className="grid grid-cols-7 gap-8 pb-10">
