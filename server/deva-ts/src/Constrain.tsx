@@ -16,6 +16,7 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
 import { compareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
 import {HelpOverlay, overlayRank, helpState, getOverlayBoundary} from './HelpOverlay';
+import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
 
 const HandleColours = {
   0: 'white', // default
@@ -344,32 +345,80 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   );
 }
 
+function StatusExplanationOverlay({children, rank, msg, placement}) {
+  const popover = (
+    <Popover id={rank}>
+      <Popover.Body className="bg-gray-800 text-white text-sm">
+        {msg}
+      </Popover.Body>
+    </Popover>
+  )
+
+  return (
+    <OverlayTrigger
+      trigger="hover"
+      placement={placement} 
+      overlay={popover}
+    >
+      {children}
+    </OverlayTrigger>
+  );
+}
+
 function StatusButton({uid}) {
 
   const StatusText = {
-    0: 'Default',        // default
-    1: 'Blocked',        // overridden by toggle button (blockedMetric)
-    2: 'Blocking',       //
-    3: 'Resolved Block', // overridden by toggle button 
-    4: 'Selected',       // currently selected
-    5: 'Blocked',        //
-    6: 'At Threshold',   // 
+    0: {
+      status : 'Default', 
+      explanation : null
+    },
+
+    1: { 
+      status : 'Blocked',
+      explanation: "this metric cannot be made more optimal without making another metric less optimal"
+    },    
+    
+    2: {
+      status : 'Blocking',
+      explanation: "making this metric less optimal will allow you to improve the metric you want to resolve"
+    },    
+    
+    3: { // overridden by toggle button 
+      status : 'Resolved Block',
+      explanation: null
+    },
+    
+    4: { // currently selected
+      status : 'Selected',
+      explanation: null},       
+    
+    5: { // overridden by toggle button (blockedMetric)
+      status : 'Blocked' ,
+      explanation: "this metric cannot be made more optimal without making another metric less optimal"
+    },
+
+    6: { // at threshold
+      status : 'At Threshold',
+      explanation: "this metric cannot be made more optimal given the candidates "
+    }
   }
 
   const blockStatus = useRecoilValue(blockedStatusState)[uid];
   const bgcolor = GetBackgroundColor(uid);
-  const text = StatusText[blockStatus];
+  const text = StatusText[blockStatus].status;
+  const explanation = StatusText[blockStatus].explanation;
   const visibility = ["Default", "Selected"].includes(text) ? " invisible" : "";
 
   return (
-    <button className={bgcolor + "text-xl uppercase py-2 px-8 font-bold rounded-lg" + visibility}
-      onMouseOver={() => {
-        // TODO: display information to guide user 
-        console.log("HOVERING OVER BUTTON");
-      }}
+    <StatusExplanationOverlay 
+      rank={0} 
+      msg={explanation} 
+      placement={"bottom"}
     >
-    {text}
+    <button className={bgcolor + "text-xl uppercase py-2 px-8 font-bold rounded-lg" + visibility}>
+      {text}
     </button>
+    </StatusExplanationOverlay>
   );
 }
 
