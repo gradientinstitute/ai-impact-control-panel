@@ -3,8 +3,8 @@ import { useRecoilValue, useRecoilState } from 'recoil';
 import axios from 'axios';
 
 import {Key, Model, adjustUnitRange} from './Widgets';
-import {metadataState, resultState} from './Base';
-import {HelpOverlay, overlayRank, helpState} from './HelpOverlay';
+import {metadataState, Pane, resultState} from './Base';
+import {HelpOverlay, overlayRank, helpState, getOverlayBoundary} from './HelpOverlay';
 
 // main pane
 export function ResultPane({}) {
@@ -20,7 +20,7 @@ export function ResultPane({}) {
       setResult(d);
     }
     fetch();
-    setHelpState(overlayRank.Results);
+    setHelpState(getOverlayBoundary(Pane.Result).start);
   }, []
   );
 

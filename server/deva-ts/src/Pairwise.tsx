@@ -9,7 +9,7 @@ import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
 import {VisualiseData, radarDataState} from './RadarCharts'
 import { compareConfig } from './Config';
-import {HelpOverlay, overlayRank, helpState} from './HelpOverlay';
+import {HelpOverlay, overlayRank, helpState, getOverlayBoundary} from './HelpOverlay';
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
@@ -49,7 +49,8 @@ export function PairwisePane({}) {
   const [_radarData, setRadarData] = useRecoilState(radarDataState);
   const configs = useRecoilValue(configState);
 
-  const [_help, setHelpState] = useRecoilState(helpState);
+  const [help, setHelpState] = useRecoilState(helpState);
+  const disableHelp = help === -1;
 
   // initial loading of candidates
   // a bit complicated by the fact we can get either candidates or a result
@@ -76,7 +77,7 @@ export function PairwisePane({}) {
         values[d[1]['name']] = d[1]['values']; 
         setRadarData(values);
       }
-      setHelpState(overlayRank.Motivation);
+      setHelpState(getOverlayBoundary(Pane.Pairwise).start);
     }
     fetch();
   }, []

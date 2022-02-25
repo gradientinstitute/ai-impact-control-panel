@@ -5,7 +5,7 @@ import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
-import { metadataState, constraintsState, configState } from './Base';
+import { metadataState, constraintsState, configState, Pane } from './Base';
 
 import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
@@ -15,7 +15,7 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
 
 import { compareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
-import {HelpOverlay, overlayRank, helpState} from './HelpOverlay';
+import {HelpOverlay, overlayRank, helpState, getOverlayBoundary} from './HelpOverlay';
 
 const HandleColours = {
   0: 'white', // default
@@ -60,7 +60,7 @@ export function Constraints({}) {
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const setRadarData = useSetRecoilState(radarDataState);
   const configs = useRecoilValue(configState);
-  const [_help, setHelpState] = useRecoilState(helpState);
+  const [help, setHelpState] = useRecoilState(helpState);
 
   // set initial value of the constraints
   useEffect(() => {
@@ -68,7 +68,7 @@ export function Constraints({}) {
   }, []);
 
   useEffect(() => {
-    setHelpState(overlayRank.ScenarioDetails);
+    setHelpState(getOverlayBoundary(Pane.Configure).start);
   }, []);
 
   useEffect(() => {

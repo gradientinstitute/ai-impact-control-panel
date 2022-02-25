@@ -12,7 +12,8 @@ import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-boots
 import {Pane, paneState, scenarioState, algoState, nameState,
         TaskTypes, taskTypeState} from './Base';
 
-import {HelpOverlay, overlayRank, HelpButton, helpState} from './HelpOverlay';
+import {HelpOverlay, overlayRank, HelpButton, helpState,
+  getOverlayBoundary, setupTabIndexState} from './HelpOverlay';
 
 // the set of scenarios retrieved from the serever
 const scenariosState = atom({
@@ -29,7 +30,7 @@ const currentScenarioState = atom({
 
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
-
+  const setupTabIndex = useRecoilValue(setupTabIndexState);
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
   const [help, setHelpState] = useRecoilState(helpState);
 
@@ -45,7 +46,7 @@ export function SetupPane({}) {
 
   // set up help button initial
   useEffect(() => {
-    setHelpState(overlayRank.Boundaries);
+    setHelpState(getOverlayBoundary(Pane.Setup).start);
   }, []);
 
   if (_scenarios === []) {
@@ -98,7 +99,8 @@ function ChooseScenario({setTabIndex}) {
   const [_scenario, setScenario] = useRecoilState(scenarioState);
   const [_name, setName] = useRecoilState(nameState);
   const [_help, setHelpState] = useRecoilState(helpState);
-
+  const [_setupTabIndex, setSetupTabIndex] = useRecoilState(setupTabIndexState);
+  
   // const canGoBack = tabIndex >= 0;
   const taskType = useRecoilValue(taskTypeState);
   const buttonDisabled = (current === null) || (_name === "");
@@ -136,14 +138,24 @@ function ChooseScenario({setTabIndex}) {
       <br></br>
       <br></br>
 
+      <HelpOverlay 
+        rank={overlayRank.Scenario} 
+        title={"Select a Scenario"} 
+        msg={"This is a help messsage"} 
+        placement={"bottom"}
+      >
       <p className="text-lg pb-6">Select a scenario</p>
+      </HelpOverlay>
       <ScenarioSelector />
 
       <br></br>
       <div className="flex justify-between btn-row mt-12">
         <div className="flex flex-1 align-middle text-left">
           <button className="hover:text-gray-300 transition"
-            onClick={() => setTabIndex(0)}>
+            onClick={() => {
+              setTabIndex(0);
+              setSetupTabIndex(0);
+            }}>
             &#8249; Back
           </button>
         </div>
@@ -237,6 +249,7 @@ function StartButtons({setTabIndex}) {
 
   const setTask = useSetRecoilState(taskTypeState);
   const [help, setHelpState] = useRecoilState(helpState);
+  const [_setupTabIndex, setSetupTabIndex] = useRecoilState(setupTabIndexState);
 
   return (
       <div className="grid grid-cols-2 gap-10 py-12 px-6">
@@ -249,8 +262,8 @@ function StartButtons({setTabIndex}) {
           <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
             onClick={() => {
               setTask(TaskTypes.Boundaries);            
-              setHelpState(overlayRank.Name);
               setTabIndex(1);
+              setSetupTabIndex(1);
             }}
             disabled={false}>
               Boundaries
@@ -266,7 +279,7 @@ function StartButtons({setTabIndex}) {
           onClick={() => {
             setTask(TaskTypes.Deployment);
             setTabIndex(1);
-            setHelpState(overlayRank.Name);
+            setSetupTabIndex(1);
           }}
           disabled={false}>
             Deployment
