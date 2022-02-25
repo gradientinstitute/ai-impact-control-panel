@@ -189,7 +189,7 @@ function Motivation({}) {
     <HelpOverlay 
       rank={overlayRank.Motivation}
       title={"Motivation"} 
-      msg={"This is a help messsage"} 
+      msg={"Enter the reasoning of your decision."} 
       placement={"top"}
     >
     <div>

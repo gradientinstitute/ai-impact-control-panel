@@ -99,7 +99,7 @@ export function Constraints({}) {
       <HelpOverlay 
         rank={overlayRank.ConstraintScrollbars}
         title={"Constraints Scrollbar"} 
-        msg={"This is a help messsage"} 
+        msg={"Configure your constraints by moving the slider"} 
         placement={"top"}
       >
       <div className="mb-10">

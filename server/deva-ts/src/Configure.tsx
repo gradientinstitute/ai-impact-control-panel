@@ -118,7 +118,7 @@ function EliminatedStatus({remaining, all}) {
   <HelpOverlay 
     rank={overlayRank.CandidatesRemaining}
     title={"Candidates Remaining"} 
-    msg={"This is a help messsage"} 
+    msg={"This is the number of candidates eliminated by the system requirement bounds"} 
     placement={"bottom"}
   >
   <div className="mb-8 bg-gray-600 rounded-lg">
@@ -158,7 +158,7 @@ function AlgoSelector({}) {
       <HelpOverlay 
         rank={overlayRank.ElicitationSettings}
         title={"Eliciter"} 
-        msg={"This is a help messsage"} 
+        msg={"Choose an eliciter"} 
         placement={"left"}
       >
       <div className="p-4 gap-4 grid grid-cols-10" >

@@ -128,7 +128,7 @@ function ChooseScenario({setTabIndex}) {
           <HelpOverlay 
             rank={overlayRank.Name}
             title={"Enter your name"} 
-            msg={"This is a help messsage"} 
+            msg={"Enter username to display on the generated report."} 
             placement={"right"}
           >
           <input type="text" name="name" value={_name}
@@ -141,7 +141,7 @@ function ChooseScenario({setTabIndex}) {
       <HelpOverlay 
         rank={overlayRank.Scenario} 
         title={"Select a Scenario"} 
-        msg={"This is a help messsage"} 
+        msg={"Click on the tabs to select a scenario"} 
         placement={"bottom"}
       >
       <p className="text-lg pb-6">Select a scenario</p>
@@ -256,7 +256,7 @@ function StartButtons({setTabIndex}) {
         <HelpOverlay 
           rank={overlayRank.Boundaries} 
           title={"Boundaries"} 
-          msg={"This is a help messsage"} 
+          msg={"Set the boundaries of your system"} 
           placement={"bottom"}
         >
           <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
@@ -272,7 +272,7 @@ function StartButtons({setTabIndex}) {
         <HelpOverlay 
           rank={overlayRank.Deployment} 
           title={"Deployment"} 
-          msg={"This is a help messsage"} 
+          msg={"Deployment"} 
           placement={"bottom"}
         >
         <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"

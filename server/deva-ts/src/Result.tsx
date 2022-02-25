@@ -69,7 +69,7 @@ export function ResultPane({}) {
       <HelpOverlay 
         rank={overlayRank.Results}
         title={"Results"} 
-        msg={"This is a help messsage"} 
+        msg={"Here are the results"} 
         placement={"top"}
       >
       <h1 className="text-4xl">{name} Impacts</h1>
@@ -83,7 +83,7 @@ export function ResultPane({}) {
       <HelpOverlay 
         rank={overlayRank.DownloadSessionLog}
         title={"Download Session Log"} 
-        msg={"This is a help messsage"} 
+        msg={"Click here to download a record of your session"} 
         placement={"bottom"}
       >
       <p>

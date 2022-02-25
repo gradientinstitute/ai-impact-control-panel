@@ -35,7 +35,7 @@ function DetailBlock({}) {
     <HelpOverlay 
     rank={overlayRank.ScenarioDetails}
     title={"Scenario Details"} 
-    msg={"This is a help messsage"} 
+    msg={"This is the selected scenario."} 
     placement={"right"}
     >
     <div className="bg-gray-700 gap-4 p-4 grid grid-cols-1">
@@ -64,7 +64,7 @@ function Pipeline({}) {
     <HelpOverlay 
       rank={overlayRank.ScenarioPipeline}
       title={"Pipeline"} 
-      msg={"This is a help messsage"} 
+      msg={"Information about how the tool works"} 
       placement={"right"}
     >
     <div className= "p-4 grid grid-cols-1 bg-gray-700 text-center">
@@ -113,7 +113,7 @@ function ObjectiveBlock({title, items}) {
     <HelpOverlay 
       rank={overlayRank.ScenarioObjectives}
       title={"Objective Block"} 
-      msg={"This is a help messsage"} 
+      msg={"Here are the objectives of your scenario"} 
       placement={"right"}
     >
     <div className="p-3 bg-gray-700">
