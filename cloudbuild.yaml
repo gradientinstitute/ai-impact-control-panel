@@ -2,14 +2,14 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', 
            '-f',
-           'frontend.Dockerfile'
+           'frontend.Dockerfile',
            '-t', 
            'australia-southeast1-docker.pkg.dev/${PROJECT_ID}/aicontrolpanel/frontend', 
            '.']
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', 
            '-f',
-           'backend.Dockerfile'
+           'backend.Dockerfile',
            '-t', 
            'australia-southeast1-docker.pkg.dev/${PROJECT_ID}/aicontrolpanel/backend', 
            '.']
