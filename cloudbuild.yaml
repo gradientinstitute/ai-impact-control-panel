@@ -29,6 +29,6 @@ steps:
           '--project', 
           'ongoing-236000', 
           # '--command="cd /home/app/ai-impact-control-panel && git pull && source source_on_vm.sh"']
-          '--command="cd /home/app/ai-impact-control-panel"']
+          '--command="cd /home"']
 timeout: 1200s
 
