@@ -25,7 +25,7 @@ steps:
           'ssh', 
           '--zone',
           'australia-southeast1-b',
-          'aicontrolpaneldemo',  
+          'lb@aicontrolpaneldemo',  
           '--project', 
           'ongoing-236000', 
           '--command',
