@@ -80,7 +80,7 @@ export function ResultPane({}) {
 function StartOver({}) {
   return (
       <button className="bg-gray-200 text-black rounded-lg mb-3" 
-        onClick={() =>  window.location.href='/'}>
+        onClick={() =>  window.location.reload()}>
         <div className="p-4 text-5xl">
           Start Over
         </div>

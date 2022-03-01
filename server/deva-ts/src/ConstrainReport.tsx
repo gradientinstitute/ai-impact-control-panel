@@ -21,7 +21,7 @@ function StartOverButton({}) {
     return (
     <div className="flex flex-1 align-middle text-left">
       <button className="hover:text-gray-400 transition"
-        onClick={() => window.location.href='/'}>
+        onClick={() => window.location.reload()}>
         <div className="p-4 text-3xl">
           &#8249; Start Over
         </div>
