@@ -19,4 +19,4 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 
            'australia-southeast1-docker.pkg.dev/${PROJECT_ID}/aicontrolpanel/backend']
-
+timeout: 1200s
