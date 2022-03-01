@@ -12,12 +12,13 @@ ENV PIP_DEFAULT_TIMEOUT=240 \
     PIP_NO_CACHE_DIR=1 \
     POETRY_VERSION=1.1.3
 
+# make sure poetry can be run
+ENV PATH="/root/.local/bin:$PATH" 
+
 #RUN pip install "poetry==$POETRY_VERSION"
 # RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 RUN curl -sSL https://install.python-poetry.org | python -
 
-# make sure poetry can be run
-ENV PATH="$HOME/.local/bin:$PATH" 
 
 COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-dev --no-root
