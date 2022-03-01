@@ -48,7 +48,7 @@ Running
 2. Optionally, see the instructions below for generating some demo scenarios.
 3. Run ``docker-compose up`` which should build and run the containers
    required.
-4. Access ``http://localhost:3000`` in your browser for the app.
+4. Access ``http://localhost/aicontrolpanel`` in your browser for the app.
 
 
 ***********
