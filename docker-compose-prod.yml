@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  backend:
+    image: australia-southeast1-docker.pkg.dev/ongoing-236000/aicontrolpanel/backend
+    volumes:
+      - ./scenarios/:/app/scenarios
+    depends_on:
+      - db
+  frontend:
+    image: australia-southeast1-docker.pkg.dev/ongoing-236000/aicontrolpanel/frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+  db:
+    image: "redis"
+    command: 'redis-server --save "" --appendonly no'
