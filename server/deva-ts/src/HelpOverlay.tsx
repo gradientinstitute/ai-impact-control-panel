@@ -2,145 +2,94 @@ import { atom, useRecoilState, useSetRecoilState, useRecoilValue} from 'recoil';
 import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
-import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
+import {Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
 import questionMark from './question-mark.svg';
 import {Pane, paneState} from './Base';
 
-export const setupTabIndexState = atom({
-  key: 'setupTabIndex',
-  default: 0,
-});
 
 export const helpState = atom({
   key: 'help',
   default: 0,
 });
 
-export function getOverlayBoundary(pane, setupTabIndex=0) {
-
-  let start = -1;
-  let end = -1;
-
-  // if (disableHelp == true) {
-  //   return {start, end};
-  // }
-
-  switch (pane) {
-    case Pane.Setup: {
-      start = (setupTabIndex == 0) ? overlayRank.Boundaries : overlayRank.Name;
-      end = (setupTabIndex == 0) ? overlayRank.Deployment : overlayRank.Scenario;
-      break;
-    }
-    case Pane.Configure: {
-      start = overlayRank.ScenarioDetails;
-      end = overlayRank.ElicitationSettings;
-      break;
-    }
-    case Pane.Pairwise: {
-      start = overlayRank.Motivation;
-      end = overlayRank.Motivation;
-      break;
-    }
-    case Pane.Result: {
-      start = overlayRank.Results;
-      end = overlayRank.DownloadSessionLog;
-      break;
-    }
-  }
-
-  return {start, end};
-}
-
-export enum overlayRank {
+export enum overlayId {
 
   // Setup
-  'Boundaries',
-  'Deployment',
-  'Name',
+  'ToggleHelp' = 1,
   'Scenario',
+}
 
-  // Constraint Panel
-  'ScenarioDetails',
-  'ScenarioObjectives',
-  'ScenarioPipeline',
-  'CandidatesRemaining',
-  'ConstraintScrollbars',
-  'ElicitationSettings',
-
-  // Pairwise Panel
-  'Motivation',
-  // 'PairwiseComparisons',
-  // 'Preference',
-
-  // Final Panel
-  'Results',
-  'DownloadSessionLog',
+const overlayCfg = {
+  [overlayId.ToggleHelp]: {
+    message: "Tutorial help is enabled by default. Toggle it with this button, or click Next to get started!",
+    placement: "bottom",
+    lastInSection: false,
+  },
+  [overlayId.Scenario]: {
+    message: "These panes on the left provide an overview of the AI system for the decision makers. The information here would be collated by the organisation deploying the AI system",
+    placement: "right",
+    lastInSection: false,
+  }
 }
 
 // add a use effect that starts at a particular thing
 export function HelpButton({}) {
   const [help, setHelpState] = useRecoilState(helpState);
-  const pane = useRecoilValue(paneState);
-  const setupTabIndex = useRecoilValue(setupTabIndexState);
-  const state = getOverlayBoundary(pane, setupTabIndex).start;
-  
-  function toggleHelp(help) {
-    if (help > 0) {
-      setHelpState(-1);
-    } else {
-      setHelpState(state);
-    }
-  }
-
   return(
-    <button className="col-span-1 px-2"
-    onClick={() => { toggleHelp(help) }}>
-    <img className="col-span-1 h-6 right" src={questionMark}
-      alt="Help" /> 
-    </button>
+    <div>
+      <h2>Help state: {help}</h2>
+      <HelpOverlay hid={overlayId.ToggleHelp}>
+        <button className="col-span-1 px-2"
+        onClick={() => { setHelpState(-1 * help) }}>
+        <img className="col-span-1 h-6 right" src={questionMark}
+          alt="Help" /> 
+        </button>
+      </HelpOverlay>
+    </div>
   );
 }
 
-export function HelpOverlay({children, rank, title, msg, placement}) {
+export function HelpOverlay({children, hid}) {
   
     const [ctr, setCtr] = useRecoilState(helpState);
     const pane = useRecoilValue(paneState);
-    const setupTabIndex = useRecoilValue(setupTabIndexState);
-    const boundary = getOverlayBoundary(pane, setupTabIndex);
-  
-    const disableForward = ((ctr + 1) > boundary.end);
-    const disableBackward = ((ctr - 1) < boundary.start);
-  
-    const backButton = disableBackward
-      ? <Button variant="dark" size="sm" disabled onClick={()=>{setCtr(ctr - 1)}}>&lt;</Button>
-      : <Button variant="dark" size="sm" onClick={()=>{setCtr(ctr - 1)}}>&lt;</Button>;
+    const cfg = overlayCfg[hid];
 
-    const forwardButton = disableForward
-      ? <Button variant="dark" size="sm" disabled onClick={()=>{setCtr(ctr + 1)}}>&gt;</Button>
-      : <Button variant="dark" size="sm" onClick={()=>{setCtr(ctr + 1)}}>&gt;</Button>;
-      
-    const popover = (
-      <Popover id={rank} className="bg-gray-700 border-gray-500 shadow-sm bg-opacity-90 hover:bg-opacity-100">
-        <Popover.Header as="h3" className="text-white border-gray-500 bg-gray-800 bg-opacity-90">
-          {title}        
-          <button className="col-span-1" onClick={() => setCtr(ctr * -1)}>
-            &times;
-          </button>
-        </Popover.Header>
-        <Popover.Body className="text-white">
-          {msg}
+    if (cfg == null) {
+      return (
+        <Tooltip id={hid}>
+          CFG UNDEFINED
           <br/><br/>
-          {backButton}
-          {forwardButton}
-        </Popover.Body>
-      </Popover>
+          <Button 
+            variant="dark" 
+            size="sm" 
+            disabled={cfg.lastInSection} 
+            onClick={()=>{setCtr(ctr + 1)}}>
+              Next
+          </Button>
+        </Tooltip>
+      );
+    }
+
+    const tooltip = (
+      <Tooltip id={hid} className="">
+          {cfg.message}
+          <br/><br/>
+        <Button 
+          variant="dark" 
+          size="sm" 
+          disabled={cfg.lastInSection} 
+          onClick={()=>{setCtr(ctr + 1)}}>
+            Next
+        </Button>
+      </Tooltip>
     );
   
     return (
       <OverlayTrigger 
-        show={ctr==rank}
-        placement={placement} 
-        overlay={popover}
+        show={ctr==hid}
+        placement={cfg.placement} 
+        overlay={tooltip}
       >
         {children}
       </OverlayTrigger>

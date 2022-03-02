@@ -4,7 +4,7 @@ import axios from 'axios';
 
 import {Key, Model, adjustUnitRange} from './Widgets';
 import {metadataState, Pane, resultState} from './Base';
-import {HelpOverlay, overlayRank, helpState, getOverlayBoundary} from './HelpOverlay';
+import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
 
 // main pane
 export function ResultPane({}) {
@@ -20,7 +20,6 @@ export function ResultPane({}) {
       setResult(d);
     }
     fetch();
-    setHelpState(getOverlayBoundary(Pane.Result).start);
   }, []
   );
 
@@ -66,31 +65,17 @@ export function ResultPane({}) {
 
         <div className="inline italic"> {name}</div>.
       </h2>
-      <HelpOverlay 
-        rank={overlayRank.Results}
-        title={"Results"} 
-        msg={"Here are the results"} 
-        placement={"top"}
-      >
-      <h1 className="text-4xl">{name} Impacts</h1>
-      </HelpOverlay>
+        <h1 className="text-4xl">{name} Impacts</h1>
 
       {comparisons()}
       <p>
         See <b>metrics_{spec}.toml</b> and <b>params_{spec}.toml</b> for more
         details of {name}.
       </p>
-      <HelpOverlay 
-        rank={overlayRank.DownloadSessionLog}
-        title={"Download Session Log"} 
-        msg={"Click here to download a record of your session"} 
-        placement={"bottom"}
-      >
       <p>
         Click to download
         the <a href={"api/deployment/logs/txt"} download><b>session log</b></a>.
       </p>
-      </HelpOverlay>
       <StartOver />
     </div>
   );

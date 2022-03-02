@@ -9,7 +9,7 @@ import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
 import {VisualiseData, radarDataState} from './RadarCharts'
 import { compareConfig } from './Config';
-import {HelpOverlay, overlayRank, helpState, getOverlayBoundary} from './HelpOverlay';
+import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
@@ -77,7 +77,6 @@ export function PairwisePane({}) {
         values[d[1]['name']] = d[1]['values']; 
         setRadarData(values);
       }
-      setHelpState(getOverlayBoundary(Pane.Pairwise).start);
     }
     fetch();
   }, []
@@ -186,24 +185,17 @@ function Motivation({}) {
   };
 
   return (
-    <HelpOverlay 
-      rank={overlayRank.Motivation}
-      title={"Motivation"} 
-      msg={"Enter the reasoning of your decision."} 
-      placement={"top"}
-    >
-    <div>
-      <p className="text-xl mb-5">What is motivating your choice? </p>
+      <div>
+        <p className="text-xl mb-5">What is motivating your choice? </p>
 
-      <textarea 
-        className="w-full" 
-        rows={5}
-        value={feedback["reasoning"]}
-        onChange={onChange}
-      >
-      </textarea>
-    </div>
-    </HelpOverlay>
+        <textarea 
+          className="w-full" 
+          rows={5}
+          value={feedback["reasoning"]}
+          onChange={onChange}
+        >
+        </textarea>
+      </div>
 
   );
 }

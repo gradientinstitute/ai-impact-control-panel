@@ -7,13 +7,10 @@ import { Tabs, TabList, Tab, TabPanels, TabPanel, TabsOrientation } from "@reach
 import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
-import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
+
 
 import {Pane, paneState, scenarioState, algoState, nameState,
         TaskTypes, taskTypeState} from './Base';
-
-import {HelpOverlay, overlayRank, HelpButton, helpState,
-  getOverlayBoundary, setupTabIndexState} from './HelpOverlay';
 
 // the set of scenarios retrieved from the serever
 const scenariosState = atom({
@@ -30,26 +27,9 @@ const currentScenarioState = atom({
 
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
-  const setupTabIndex = useRecoilValue(setupTabIndexState);
-  const [_scenarios, setScenarios] = useRecoilState(scenariosState);
-  const [help, setHelpState] = useRecoilState(helpState);
-
-  // initial loading of candidates
-  // useEffect(() => {
-  //   const fetch = async () => {
-  //     const result = await axios.get<any>("api/scenarios");
-  //     setScenarios(result.data);
-  //   }
-  //   fetch();
-  // }, []
-  // );
-
-  // set up help button initial
-  useEffect(() => {
-    setHelpState(getOverlayBoundary(Pane.Setup).start);
-  }, []);
-
-  if (_scenarios === []) {
+  const scenarios = useRecoilValue(scenariosState);
+  
+  if (scenarios === []) {
     return (<p>Loading...</p>);
   }
 
@@ -57,7 +37,7 @@ export function SetupPane({}) {
     <div className="ml-auto mr-auto w-1/2">
       <Dialog className="intro text-center" aria-label="Get Started">
         <h1 className="my-auto font-extralight mb-4 text-3xl pb-4">
-          Get Started <HelpButton/>
+          Get Started
         </h1>
         <Steps />
       </Dialog>
@@ -72,6 +52,7 @@ function Steps() {
  return (
    <Tabs className="intro-content flex items-stretch" index={tabIndex} onChange={setTabIndex}>
      <TabPanels className="self-center flex-1">
+       <Welcome setTabIndex={setTabIndex} />
        <ChooseProblem setTabIndex={setTabIndex} />
        <ChooseScenario setTabIndex={setTabIndex}/>
      </TabPanels>
@@ -79,11 +60,29 @@ function Steps() {
  )
 }
 
+function Welcome({setTabIndex}) {
+
+
+  return (
+    <TabPanel key={0}>
+      <p className="text-lg">Welcome to AI Impact Control panel.</p>
+      <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
+          onClick={() => {
+            setTabIndex(1);
+          }}
+          disabled={false}>
+            Start demo
+        </button>
+  </TabPanel>
+  )
+}
+
 
 function ChooseProblem({setTabIndex}) {
   // first tab: choose whether to elicit boundaries or preferences
+
   return (
-    <TabPanel key={0}>
+    <TabPanel key={1}>
       <p className="text-lg">I want to elicit</p>
       <StartButtons setTabIndex={setTabIndex} />
   </TabPanel>
@@ -98,8 +97,6 @@ function ChooseScenario({setTabIndex}) {
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
   const [_scenario, setScenario] = useRecoilState(scenarioState);
   const [_name, setName] = useRecoilState(nameState);
-  const [_help, setHelpState] = useRecoilState(helpState);
-  const [_setupTabIndex, setSetupTabIndex] = useRecoilState(setupTabIndexState);
   
   // const canGoBack = tabIndex >= 0;
   const taskType = useRecoilValue(taskTypeState);
@@ -121,31 +118,17 @@ function ChooseScenario({setTabIndex}) {
 
 
   return (
-    <TabPanel key={1}>
+    <TabPanel key={2}>
       <div>
         <div>
           <p className="text-lg pb-6">Enter your name</p>
-          <HelpOverlay 
-            rank={overlayRank.Name}
-            title={"Enter your name"} 
-            msg={"Enter username to display on the generated report."} 
-            placement={"right"}
-          >
           <input type="text" name="name" value={_name}
             onChange={ (x) => {setName(x.target.value)}}/>
-          </HelpOverlay>
         </div>
       <br></br>
       <br></br>
 
-      <HelpOverlay 
-        rank={overlayRank.Scenario} 
-        title={"Select a Scenario"} 
-        msg={"Click on the tabs to select a scenario"} 
-        placement={"bottom"}
-      >
       <p className="text-lg pb-6">Select a scenario</p>
-      </HelpOverlay>
       <ScenarioSelector />
 
       <br></br>
@@ -154,7 +137,6 @@ function ChooseScenario({setTabIndex}) {
           <button className="hover:text-gray-300 transition"
             onClick={() => {
               setTabIndex(0);
-              setSetupTabIndex(0);
             }}>
             &#8249; Back
           </button>
@@ -178,6 +160,8 @@ function ChooseScenario({setTabIndex}) {
 
 // Select scenario from list and preview details
 function ScenarioSelector({}) {
+
+
   
   const scenarios = useRecoilValue(scenariosState);
   const [current, setCurrent] = useRecoilState(currentScenarioState);
@@ -248,43 +232,25 @@ function ScenarioSelector({}) {
 function StartButtons({setTabIndex}) {
 
   const setTask = useSetRecoilState(taskTypeState);
-  const [help, setHelpState] = useRecoilState(helpState);
-  const [_setupTabIndex, setSetupTabIndex] = useRecoilState(setupTabIndexState);
 
   return (
       <div className="grid grid-cols-2 gap-10 py-12 px-6">
-        <HelpOverlay 
-          rank={overlayRank.Boundaries} 
-          title={"Boundaries"} 
-          msg={"Set the boundaries of your system"} 
-          placement={"bottom"}
-        >
           <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
             onClick={() => {
               setTask(TaskTypes.Boundaries);            
-              setTabIndex(1);
-              setSetupTabIndex(1);
+              setTabIndex(2);
             }}
             disabled={false}>
               Boundaries
           </button>
-        </HelpOverlay>
-        <HelpOverlay 
-          rank={overlayRank.Deployment} 
-          title={"Deployment"} 
-          msg={"Deployment"} 
-          placement={"bottom"}
-        >
         <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
           onClick={() => {
             setTask(TaskTypes.Deployment);
-            setTabIndex(1);
-            setSetupTabIndex(1);
+            setTabIndex(2);
           }}
           disabled={false}>
             Deployment
         </button>
-      </HelpOverlay>
       </div>
   );
 }

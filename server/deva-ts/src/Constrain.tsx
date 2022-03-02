@@ -15,7 +15,7 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
 
 import { compareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
-import {HelpOverlay, overlayRank, helpState, getOverlayBoundary} from './HelpOverlay';
+import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
 import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
 
 const HandleColours = {
@@ -68,9 +68,9 @@ export function Constraints({}) {
     setConstraints(maxRanges)
   }, []);
 
-  useEffect(() => {
-    setHelpState(getOverlayBoundary(Pane.Configure).start);
-  }, []);
+  // useEffect(() => {
+  //   setHelpState(overlayId.ConstraintScrollbars);
+  // }, []);
 
   useEffect(() => {
     const values = {}
@@ -96,16 +96,9 @@ export function Constraints({}) {
       <h1 className="text-left">Metric Filters</h1>
       <ConstraintStatus />
       {visualiseRadar}
-      <HelpOverlay 
-        rank={overlayRank.ConstraintScrollbars}
-        title={"Constraints Scrollbar"} 
-        msg={"Configure your constraints by moving the slider"} 
-        placement={"top"}
-      >
       <div className="mb-10">
         <MultiRangeConstraint />
       </div>
-      </HelpOverlay>
     </div>
   );
 }
