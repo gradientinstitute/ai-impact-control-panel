@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.9
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
@@ -7,12 +7,18 @@ ENV PYTHONFAULTHANDLER=1 \
 RUN apt-get update && apt-get install -y gcc libffi-dev g++
 WORKDIR /app
 
-ENV PIP_DEFAULT_TIMEOUT=100 \
+ENV PIP_DEFAULT_TIMEOUT=240 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
     POETRY_VERSION=1.1.3
 
-RUN pip install "poetry==$POETRY_VERSION"
+# make sure poetry can be run
+ENV PATH="/root/.local/bin:$PATH" 
+
+#RUN pip install "poetry==$POETRY_VERSION"
+# RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+RUN curl -sSL https://install.python-poetry.org | python -
+
 
 COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-dev --no-root

@@ -1,18 +1,13 @@
 version: '3.8'
-
 services:
   backend:
-    build:
-      context: .
-      dockerfile: backend.Dockerfile
+    image: australia-southeast1-docker.pkg.dev/ongoing-236000/aicontrolpanel/backend
     volumes:
       - ./scenarios/:/app/scenarios
     depends_on:
       - db
   frontend:
-    build:
-      context: .
-      dockerfile: frontend.Dockerfile
+    image: australia-southeast1-docker.pkg.dev/ongoing-236000/aicontrolpanel/frontend
     depends_on:
       - backend
     ports:

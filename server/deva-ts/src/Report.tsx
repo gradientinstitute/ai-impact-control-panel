@@ -49,7 +49,7 @@ function CompleteButton({scenario, constraints}) {
   useEffect(() => {
     const fetch = async () => {
       await axios.put<any>("api/bounds/set-box/" + scenario, constraints);
-      window.location.href='/';
+      window.location.reload();
     }
     if (submit) {
       fetch();
