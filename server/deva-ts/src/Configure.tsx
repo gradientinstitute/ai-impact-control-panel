@@ -81,7 +81,6 @@ export function ConfigurePane({}) {
   }
 
   let candidates = allCandidates  
-
   if ("bounds" in metadata){
     const bounds = metadata.bounds;
     candidates = filterCandidates(allCandidates, bounds);
@@ -97,7 +96,6 @@ export function ConfigurePane({}) {
         <IntroContext />
       </div>
       <div className="col-span-5">
-        <EliminatedStatus remaining={candidates} all={allCandidates}/>
         <Constraints />
         <AlgorithmMenu />
         <StartButton />
@@ -106,21 +104,6 @@ export function ConfigurePane({}) {
   );
 }
 
-
-function EliminatedStatus({remaining, all}) {
-
-  const eliminated = all.length - remaining.length;
-
-  return (
-  <div className="mb-8 bg-gray-600 rounded-lg">
-    <span className="italic text-2xl">
-      {eliminated +" of " + all.length + " "}
-    </span>
-    candidates are eliminated by the system requirement bounds
-  </div>
-
-  );
-}
 
 
 function AlgorithmMenu({}) {

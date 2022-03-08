@@ -94,6 +94,7 @@ export function Constraints({}) {
   return (
     <div className="mx-auto grid gap-4 grid-cols-1">
       <h1 className="text-left">Metric Filters</h1>
+      <p>The deployment eliciter selects the most preferred candidate system from a pre-generated set. Use this panel to eliminate candidate systems with impacts that are clearly undesirable before the next stage, which conducts active preference elicitation on the candidates that remain.</p>
       <ConstraintStatus />
       {visualiseRadar}
       <div className="mb-10">
@@ -109,12 +110,40 @@ function ConstraintStatus({}) {
   const all = useRecoilValue(allCandidatesState);
 
   return (
-  <div className="mb-8">
-    <span className="italic text-2xl">{curr.length +" of " + all.length + " "}</span>
-    candidate models remain
+  <div className="mb-8 bg-gray-600 grid grid-cols-8 gap-4">
+    <div className="col-span-3 p-4 place-content-center">
+      <span className="italic text-2xl">{curr.length +" of " + all.length + " "}</span>
+      candidate models remain
+    </div>
+    <div className="col-span-5 bg-gray-700 p-4">
+      <EliminatedStatus />
+    </div>
   </div>
   );
 
+}
+
+function EliminatedStatus({}) {
+
+  const allCandidates = useRecoilValue(allCandidatesState);
+  const metadata = useRecoilValue(metadataState);
+
+  let remaining = allCandidates; 
+  if ("bounds" in metadata){
+    const bounds = metadata.bounds;
+    remaining = filterCandidates(allCandidates, bounds);
+  }
+
+  const eliminated = allCandidates.length - remaining.length;
+
+  return (
+  <div className="">
+    <span className="italic text-2xl">
+      ({eliminated +" of " + allCandidates.length + " "}
+    </span>
+    candidates eliminated by system requirement bounds)
+  </div>
+  );
 }
 
 function UnitDescription({uid, unit}) {

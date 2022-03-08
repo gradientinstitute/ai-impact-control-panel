@@ -65,7 +65,36 @@ function Welcome({setTabIndex}) {
 
   return (
     <TabPanel key={0}>
-      <p className="text-lg">Welcome to AI Impact Control panel.</p>
+      <div className="text-xl grid grid-cols-1 gap-4 pb-10">
+      <h2 className="text-4xl text-center">
+        Welcome to the AI Impact Control panel
+      </h2>
+
+      <p>
+      This tool helps decision-makers control the impacts that their AI systems
+      have. It allows them to specify bounds of acceptable operation, and to
+      help them achieve an acceptable balance between conlficting objectives
+      (for example, performance in different customer groups).
+      </p>
+      
+      <h2 className="text-3xl text-center">
+        Live Demo
+      </h2>
+
+      <p>
+      The goal of the AI Impact Control Panel is to ensure that decisions about
+      how AI systems affect the world are made deliberately by the right
+      decision-makers.
+      </p>
+
+      <p>
+      This online demo provides a selection of simple example systems to illustrate the function of the tool. There is no ability to upload your own data or system in tis demo.
+      </p>
+
+      <p>
+      To get the code or deploy the tool yourself, visit <a className="e" href="https://gradientinstitute.github.com/ai-impact-control-panel">our github</a>.
+      </p>
+      </div>
       <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
           onClick={() => {
             setTabIndex(1);
@@ -83,8 +112,10 @@ function ChooseProblem({setTabIndex}) {
 
   return (
     <TabPanel key={1}>
-      <p className="text-lg">I want to elicit</p>
-      <StartButtons setTabIndex={setTabIndex} />
+      <div className="grid grid-cols-1 gap-4">
+        <p className="text-lg">I want to elicit</p>
+        <StartButtons setTabIndex={setTabIndex} />
+      </div>
   </TabPanel>
   )
 }
@@ -235,7 +266,8 @@ function StartButtons({setTabIndex}) {
 
   return (
       <div className="grid grid-cols-2 gap-10 py-12 px-6">
-          <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
+        <div>
+          <button className="btn mb-4 text-2xl uppercase py-8 font-bold rounded-lg text-white"
             onClick={() => {
               setTask(TaskTypes.Boundaries);            
               setTabIndex(2);
@@ -243,7 +275,12 @@ function StartButtons({setTabIndex}) {
             disabled={false}>
               Boundaries
           </button>
-        <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
+          <p>
+          Determine the boundaries of known-acceptable performance of an AI system for the purposes of model development and modelling.
+          </p>
+        </div>
+        <div>
+        <button className="mb-4 btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
           onClick={() => {
             setTask(TaskTypes.Deployment);
             setTabIndex(2);
@@ -251,6 +288,10 @@ function StartButtons({setTabIndex}) {
           disabled={false}>
             Deployment
         </button>
+          <p>
+          Determine the preferred balance of impacts for the AI system to help decide what configuration of the system should be deployed.
+          </p>
+        </div>
       </div>
   );
 }
