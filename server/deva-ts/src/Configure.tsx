@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { atom, useRecoilState, useRecoilValue } from 'recoil';
+import { atom, useRecoilState, useRecoilValue, useSetRecoilState} from 'recoil';
 import { ArcherContainer, ArcherElement } from 'react-archer';
 import _ from "lodash";
 import axios from 'axios';
@@ -12,6 +12,7 @@ import {Constraints} from './Constrain';
 import { maxRangesState } from './ConstrainScrollbar';
 
 import { filterCandidates } from './ConstrainScrollbar';
+import {HelpOverlay, overlayId, HelpButton, helpState} from './HelpOverlay';
 
 
 // TODO siigh css? 
@@ -34,9 +35,6 @@ export function ConfigurePane({}) {
   
   const scenario = useRecoilValue(scenarioState);
 
-  // algorithms / eliciters
-  // const algo = useRecoilValue(algoState);
-  
   // all candidates sent to us by the server
   const [_current, setCurrent] = useRecoilState(algoState);
   const [metadata, setMetadata] = useRecoilState(metadataState);
@@ -44,8 +42,8 @@ export function ConfigurePane({}) {
   const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
   const maxRanges = useRecoilValue(maxRangesState);
   const [_constraints, setConstraints] = useRecoilState(constraintsState);
-
   const [_pane, setPane] = useRecoilState(paneState);
+  const setHelpState = useSetRecoilState(helpState);
 
   // initial request on load
   useEffect(() => {
@@ -56,7 +54,7 @@ export function ConfigurePane({}) {
       setMetadata(d.metadata);
       setAlgos(d.algorithms);
       setAllCandidates(d.candidates);
-      // setBaselines(d.baselines);
+      setHelpState(overlayId.ToggleHelp);
     }
     fetchData();
   }, []
@@ -83,7 +81,6 @@ export function ConfigurePane({}) {
   }
 
   let candidates = allCandidates  
-
   if ("bounds" in metadata){
     const bounds = metadata.bounds;
     candidates = filterCandidates(allCandidates, bounds);
@@ -99,7 +96,6 @@ export function ConfigurePane({}) {
         <IntroContext />
       </div>
       <div className="col-span-5">
-        <EliminatedStatus remaining={candidates} all={allCandidates}/>
         <Constraints />
         <AlgorithmMenu />
         <StartButton />
@@ -108,20 +104,6 @@ export function ConfigurePane({}) {
   );
 }
 
-
-function EliminatedStatus({remaining, all}) {
-
-  const eliminated = all.length - remaining.length;
-
-  return (
-  <div className="mb-8 bg-gray-600 rounded-lg">
-    <span className="italic text-2xl">
-      {eliminated +" of " + all.length + " "}
-    </span>
-    candidates are eliminated by the system requirement bounds
-  </div>
-  );
-}
 
 
 function AlgorithmMenu({}) {

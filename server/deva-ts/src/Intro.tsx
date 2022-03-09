@@ -2,6 +2,7 @@ import { useRecoilValue } from 'recoil';
 import _ from "lodash";
 
 import { metadataState } from './Base';
+import {HelpOverlay, overlayId, HelpButton, helpState} from './HelpOverlay';
 
 // the Introduction pane -- root node
 export function IntroContext({}) {
@@ -15,7 +16,7 @@ export function IntroContext({}) {
   return (
     <div className="grid gap-4 grid-cols-1">
 
-      <DetailBlock />
+        <DetailBlock />
 
       <ObjectiveBlock
         items={metadata.objectives}
@@ -31,7 +32,9 @@ function DetailBlock({}) {
 
   const metadata = useRecoilValue(metadataState);
   return (
+  <HelpOverlay hid={overlayId.Scenario}>
     <div className="bg-gray-700 gap-4 p-4 grid grid-cols-1">
+
       <h1 className="text-left">Scenario Details</h1>
       <h2 className=""> {metadata.name} </h2>
       <p className="italic">
@@ -41,6 +44,7 @@ function DetailBlock({}) {
         <span className="font-bold">Operation:</span> {metadata.operation}
       </p>
     </div>
+  </HelpOverlay>
   );
 
 
@@ -53,7 +57,9 @@ function Pipeline({}) {
 
   return (
     <div className= "p-4 grid grid-cols-1 bg-gray-700 text-center">
+      <HelpOverlay hid={overlayId.Pipeline}>
       <h2 className="mb-3 font-bold font-xl">Pipeline</h2>
+      </HelpOverlay>
 
       <div className="bg-gray-600 p-4">
         <h2 className="font-bold">Data</h2>
@@ -94,12 +100,14 @@ function ObjectiveBlock({title, items}) {
     );
   });
   return (
+  <HelpOverlay hid={overlayId.Objectives}>
     <div className="p-3 bg-gray-700">
       <h2 className="font-bold text-xl mb-3">{title}</h2>
       <div className="">
         {mapped_items}
       </div>
     </div>
+  </HelpOverlay>
   );
 }
 

@@ -9,6 +9,7 @@ import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
 import {VisualiseData, radarDataState} from './RadarCharts'
 import { compareConfig } from './Config';
+import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
@@ -48,6 +49,8 @@ export function PairwisePane({}) {
   const [_radarData, setRadarData] = useRecoilState(radarDataState);
   const configs = useRecoilValue(configState);
 
+  const [help, setHelpState] = useRecoilState(helpState);
+  const disableHelp = help === -1;
 
   // initial loading of candidates
   // a bit complicated by the fact we can get either candidates or a result
@@ -182,16 +185,18 @@ function Motivation({}) {
   };
 
   return (
-    <div>
-      <p className="text-xl mb-5"> What is motivating your choice? </p>
-      <textarea 
-        className="w-full" 
-        rows={5}
-        value={feedback["reasoning"]}
-        onChange={onChange}
-      >
-      </textarea>
-    </div>
+      <div>
+        <p className="text-xl mb-5">What is motivating your choice? </p>
+
+        <textarea 
+          className="w-full" 
+          rows={5}
+          value={feedback["reasoning"]}
+          onChange={onChange}
+        >
+        </textarea>
+      </div>
+
   );
 }
 
