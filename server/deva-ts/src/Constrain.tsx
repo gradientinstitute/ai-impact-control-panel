@@ -5,7 +5,7 @@ import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
-import { metadataState, constraintsState, configState } from './Base';
+import { metadataState, constraintsState, configState, Pane } from './Base';
 
 import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
@@ -15,6 +15,8 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
 
 import { compareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
+import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
+import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
 
 const HandleColours = {
   0: 'white', // default
@@ -59,11 +61,16 @@ export function Constraints({}) {
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const setRadarData = useSetRecoilState(radarDataState);
   const configs = useRecoilValue(configState);
+  const [help, setHelpState] = useRecoilState(helpState);
 
   // set initial value of the constraints
   useEffect(() => {
     setConstraints(maxRanges)
   }, []);
+
+  // useEffect(() => {
+  //   setHelpState(overlayId.ConstraintScrollbars);
+  // }, []);
 
   useEffect(() => {
     const values = {}
@@ -81,12 +88,18 @@ export function Constraints({}) {
   }
 
   const visualiseRadar = compareConfig(configs, 'displaySpiderPlot', 'true')
-    ? (<div className=""><VisualiseData colour={["#008080", "#CC333F"]}/></div>)
+    ? (<HelpOverlay hid={overlayId.FilterPlot}><div className=""><VisualiseData colour={["#008080", "#CC333F"]}/></div></HelpOverlay>)
     : null;
 
   return (
     <div className="mx-auto grid gap-4 grid-cols-1">
-      <h1 className="text-left">Metric Filters</h1>
+      <div className="flex">
+        <HelpOverlay hid={overlayId.FilterStep}>
+          <h1 className="text-left">Metric Filters</h1>
+        </HelpOverlay>
+        <div className="my-auto" />
+      </div>
+      <p>The deployment eliciter selects the most preferred candidate system from a pre-generated set. Use this panel to eliminate candidate systems with impacts that are clearly undesirable before the next stage, which conducts active preference elicitation on the candidates that remain.</p>
       <ConstraintStatus />
       {visualiseRadar}
       <div className="mb-10">
@@ -102,12 +115,42 @@ function ConstraintStatus({}) {
   const all = useRecoilValue(allCandidatesState);
 
   return (
-  <div className="mb-8">
-    <span className="italic text-2xl">{curr.length +" of " + all.length + " "}</span>
-    candidate models remain
+  <HelpOverlay hid={overlayId.Remaining}>
+  <div className="mb-8 bg-gray-600 grid grid-cols-8 gap-4">
+    <div className="col-span-3 p-4 place-content-center">
+      <span className="italic text-2xl">{curr.length +" of " + all.length + " "}</span>
+      candidate models remain
+    </div>
+    <div className="col-span-5 bg-gray-700 p-4">
+      <EliminatedStatus />
+    </div>
   </div>
+  </HelpOverlay>
   );
 
+}
+
+function EliminatedStatus({}) {
+
+  const allCandidates = useRecoilValue(allCandidatesState);
+  const metadata = useRecoilValue(metadataState);
+
+  let remaining = allCandidates; 
+  if ("bounds" in metadata){
+    const bounds = metadata.bounds;
+    remaining = filterCandidates(allCandidates, bounds);
+  }
+
+  const eliminated = allCandidates.length - remaining.length;
+
+  return (
+  <div className="">
+    <span className="italic text-2xl">
+      ({eliminated +" of " + allCandidates.length + " "}
+    </span>
+    candidates eliminated by system requirement bounds)
+  </div>
+  );
 }
 
 function UnitDescription({uid, unit}) {
@@ -331,32 +374,80 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
   );
 }
 
+function StatusExplanationOverlay({children, rank, msg, placement}) {
+  const popover = (
+    <Popover id={rank}>
+      <Popover.Body className="bg-gray-800 text-white text-sm">
+        {msg}
+      </Popover.Body>
+    </Popover>
+  )
+
+  return (
+    <OverlayTrigger
+      trigger="hover"
+      placement={placement} 
+      overlay={popover}
+    >
+      {children}
+    </OverlayTrigger>
+  );
+}
+
 function StatusButton({uid}) {
 
   const StatusText = {
-    0: 'Default',        // default
-    1: 'Blocked',        // overridden by toggle button (blockedMetric)
-    2: 'Blocking',       //
-    3: 'Resolved Block', // overridden by toggle button 
-    4: 'Selected',       // currently selected
-    5: 'Blocked',        //
-    6: 'At Threshold',   // 
+    0: {
+      status : 'Default', 
+      explanation : null
+    },
+
+    1: { 
+      status : 'Blocked',
+      explanation: "this metric cannot be made more optimal without making another metric less optimal"
+    },    
+    
+    2: {
+      status : 'Blocking',
+      explanation: "making this metric less optimal will allow you to improve the metric you want to resolve"
+    },    
+    
+    3: { // overridden by toggle button 
+      status : 'Resolved Block',
+      explanation: null
+    },
+    
+    4: { // currently selected
+      status : 'Selected',
+      explanation: null},       
+    
+    5: { // overridden by toggle button (blockedMetric)
+      status : 'Blocked' ,
+      explanation: "this metric cannot be made more optimal without making another metric less optimal"
+    },
+
+    6: { // at threshold
+      status : 'At Threshold',
+      explanation: "this metric cannot be made more optimal given the candidates "
+    }
   }
 
   const blockStatus = useRecoilValue(blockedStatusState)[uid];
   const bgcolor = GetBackgroundColor(uid);
-  const text = StatusText[blockStatus];
+  const text = StatusText[blockStatus].status;
+  const explanation = StatusText[blockStatus].explanation;
   const visibility = ["Default", "Selected"].includes(text) ? " invisible" : "";
 
   return (
-    <button className={bgcolor + "text-xl uppercase py-2 px-8 font-bold rounded-lg" + visibility}
-      onMouseOver={() => {
-        // TODO: display information to guide user 
-        console.log("HOVERING OVER BUTTON");
-      }}
+    <StatusExplanationOverlay 
+      rank={0} 
+      msg={explanation} 
+      placement={"bottom"}
     >
-    {text}
+    <button className={bgcolor + "text-xl uppercase py-2 px-8 font-bold rounded-lg" + visibility}>
+      {text}
     </button>
+    </StatusExplanationOverlay>
   );
 }
 
@@ -453,7 +544,7 @@ function UnblockButton({uid, buttonDisabled}) {
     : "suggest metrics to unblock";
 
   return (
-    <button className="btn text-l uppercase py-2 px-6 font-bold rounded-lg"
+    <button className="btn text-l text-white uppercase py-2 px-6 font-bold rounded-lg"
       onClick={() => {
         if (blockedMetric === uid) {
           setBlockedMetric(null);

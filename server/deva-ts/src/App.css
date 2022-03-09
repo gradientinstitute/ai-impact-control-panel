@@ -27,6 +27,10 @@ button[disabled=disabled], button:disabled {
   color: #999999;
 }
 
+a {
+  color: #4444bb;
+}
+
 .horizontal-slider {
   /* background: rgb(0, 0, 0); */
   height: 50px;

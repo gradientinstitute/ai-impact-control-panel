@@ -8,9 +8,9 @@ import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
 
+
 import {Pane, paneState, scenarioState, algoState, nameState,
         TaskTypes, taskTypeState} from './Base';
-
 
 // the set of scenarios retrieved from the serever
 const scenariosState = atom({
@@ -27,33 +27,23 @@ const currentScenarioState = atom({
 
 // the setup pane itself (ie root component)
 export function SetupPane({}) {
-
-  const [_scenarios, setScenarios] = useRecoilState(scenariosState);
+  const scenarios = useRecoilValue(scenariosState);
   
-  // initial loading of candidates
-  // useEffect(() => {
-  //   const fetch = async () => {
-  //     const result = await axios.get<any>("api/scenarios");
-  //     setScenarios(result.data);
-  //   }
-  //   fetch();
-  // }, []
-  // );
-
-  if (_scenarios === []) {
+  if (scenarios === []) {
     return (<p>Loading...</p>);
   }
 
   return (
     <div className="ml-auto mr-auto w-1/2">
       <Dialog className="intro text-center" aria-label="Get Started">
-        <h1 className="my-auto font-extralight mb-4 text-3xl pb-4">Get Started</h1>
+        <h1 className="my-auto font-extralight mb-4 text-3xl pb-4">
+          Get Started
+        </h1>
         <Steps />
       </Dialog>
     </div>
   );
 }
-
 
 // steps of intro flow
 function Steps() {
@@ -62,6 +52,7 @@ function Steps() {
  return (
    <Tabs className="intro-content flex items-stretch" index={tabIndex} onChange={setTabIndex}>
      <TabPanels className="self-center flex-1">
+       <Welcome setTabIndex={setTabIndex} />
        <ChooseProblem setTabIndex={setTabIndex} />
        <ChooseScenario setTabIndex={setTabIndex}/>
      </TabPanels>
@@ -69,13 +60,62 @@ function Steps() {
  )
 }
 
+function Welcome({setTabIndex}) {
+
+
+  return (
+    <TabPanel key={0}>
+      <div className="text-xl grid grid-cols-1 gap-4 pb-10">
+      <h2 className="text-4xl text-center">
+        Welcome to the AI Impact Control panel
+      </h2>
+
+      <p>
+      This tool helps decision-makers control the impacts that their AI systems
+      have. It allows them to specify bounds of acceptable operation, and to
+      help them achieve an acceptable balance between conlficting objectives
+      (for example, performance in different customer groups).
+      </p>
+      
+      <h2 className="text-3xl text-center">
+        Live Demo
+      </h2>
+
+      <p>
+      The goal of the AI Impact Control Panel is to ensure that decisions about
+      how AI systems affect the world are made deliberately by the right
+      decision-makers.
+      </p>
+
+      <p>
+      This online demo provides a selection of simple example systems to illustrate the function of the tool. There is no ability to upload your own data or system in tis demo.
+      </p>
+
+      <p>
+      To get the code or deploy the tool yourself, visit <a className="e" href="https://gradientinstitute.github.com/ai-impact-control-panel">our github</a>.
+      </p>
+      </div>
+      <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
+          onClick={() => {
+            setTabIndex(1);
+          }}
+          disabled={false}>
+            Start demo
+        </button>
+  </TabPanel>
+  )
+}
+
 
 function ChooseProblem({setTabIndex}) {
   // first tab: choose whether to elicit boundaries or preferences
+
   return (
-    <TabPanel key={0}>
-      <p className="text-lg">I want to elicit</p>
-      <StartButtons setTabIndex={setTabIndex} />
+    <TabPanel key={1}>
+      <div className="grid grid-cols-1 gap-4">
+        <p className="text-lg">I want to elicit</p>
+        <StartButtons setTabIndex={setTabIndex} />
+      </div>
   </TabPanel>
   )
 }
@@ -88,6 +128,7 @@ function ChooseScenario({setTabIndex}) {
   const [_scenarios, setScenarios] = useRecoilState(scenariosState);
   const [_scenario, setScenario] = useRecoilState(scenarioState);
   const [_name, setName] = useRecoilState(nameState);
+  
   // const canGoBack = tabIndex >= 0;
   const taskType = useRecoilValue(taskTypeState);
   const buttonDisabled = (current === null) || (_name === "");
@@ -106,23 +147,32 @@ function ChooseScenario({setTabIndex}) {
   const nextPane = taskType == TaskTypes.Boundaries 
     ? Pane.Boundaries : Pane.Configure;
 
+
   return (
-    <TabPanel key={1}>
-      <p className="text-lg pb-6">Enter your name</p>
-      <input type="text" name="name" value={_name} onChange={ (x) => {setName(x.target.value)}}/>
+    <TabPanel key={2}>
+      <div>
+        <div>
+          <p className="text-lg pb-6">Enter your name</p>
+          <input type="text" name="name" value={_name}
+            onChange={ (x) => {setName(x.target.value)}}/>
+        </div>
       <br></br>
       <br></br>
+
       <p className="text-lg pb-6">Select a scenario</p>
       <ScenarioSelector />
+
       <br></br>
       <div className="flex justify-between btn-row mt-12">
         <div className="flex flex-1 align-middle text-left">
           <button className="hover:text-gray-300 transition"
-            onClick={() => setTabIndex(0)}>
+            onClick={() => {
+              setTabIndex(0);
+            }}>
             &#8249; Back
           </button>
         </div>
-        <button className="btn text-xl uppercase py-4 px-8 font-bold rounded-lg"
+        <button className="btn text-xl uppercase py-4 px-8 font-bold rounded-lg text-white"
           onClick={() => {
             if (current) {
               setScenario(current)
@@ -133,6 +183,7 @@ function ChooseScenario({setTabIndex}) {
           Start
         </button>
       </div>
+      </div>
     </TabPanel>
   )
 }
@@ -140,6 +191,8 @@ function ChooseScenario({setTabIndex}) {
 
 // Select scenario from list and preview details
 function ScenarioSelector({}) {
+
+
   
   const scenarios = useRecoilValue(scenariosState);
   const [current, setCurrent] = useRecoilState(currentScenarioState);
@@ -212,23 +265,33 @@ function StartButtons({setTabIndex}) {
   const setTask = useSetRecoilState(taskTypeState);
 
   return (
-    <div className="grid grid-cols-2 gap-10 py-12 px-6">
-      <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
-        onClick={() => {
-          setTask(TaskTypes.Boundaries);
-          setTabIndex(1);
-        }}
-        disabled={false}>
-          Boundaries
-      </button>
-      <button className="btn text-2xl uppercase py-8 font-bold rounded-lg"
-        onClick={() => {
-          setTask(TaskTypes.Deployment);
-          setTabIndex(1);
-        }}
-        disabled={false}>
-          Deployment
-      </button>
-    </div>
+      <div className="grid grid-cols-2 gap-10 py-12 px-6">
+        <div>
+          <button className="btn mb-4 text-2xl uppercase py-8 font-bold rounded-lg text-white"
+            onClick={() => {
+              setTask(TaskTypes.Boundaries);            
+              setTabIndex(2);
+            }}
+            disabled={false}>
+              Boundaries
+          </button>
+          <p>
+          Determine the boundaries of known-acceptable performance of an AI system for the purposes of model development and modelling.
+          </p>
+        </div>
+        <div>
+        <button className="mb-4 btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
+          onClick={() => {
+            setTask(TaskTypes.Deployment);
+            setTabIndex(2);
+          }}
+          disabled={false}>
+            Deployment
+        </button>
+          <p>
+          Determine the preferred balance of impacts for the AI system to help decide what configuration of the system should be deployed.
+          </p>
+        </div>
+      </div>
   );
 }

@@ -3,14 +3,16 @@ import { useRecoilValue, useRecoilState } from 'recoil';
 import axios from 'axios';
 
 import {Key, Model, adjustUnitRange} from './Widgets';
-import {metadataState, resultState} from './Base';
+import {metadataState, Pane, resultState} from './Base';
+import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
 
 // main pane
 export function ResultPane({}) {
 
   const metadata = useRecoilValue(metadataState);
   const [result, setResult] = useRecoilState(resultState);
-  
+  const [help, setHelpState] = useRecoilState(helpState);
+
   useEffect(() => {
     const fetch = async () => {
       const res = await axios.get<any>("api/deployment/result");
@@ -60,9 +62,11 @@ export function ResultPane({}) {
       grid-cols-1 text-center items-center">
       <h2 className="text-2xl mb-4"> Preference elicitation concluded.
         <br /> Your most preferred system is
+
         <div className="inline italic"> {name}</div>.
       </h2>
-      <h1 className="text-4xl">{name} Impacts</h1>
+        <h1 className="text-4xl">{name} Impacts</h1>
+
       {comparisons()}
       <p>
         See <b>metrics_{spec}.toml</b> and <b>params_{spec}.toml</b> for more
