@@ -16,7 +16,12 @@ export enum overlayId {
 
   // Setup
   'ToggleHelp' = 1,
+  'FilterStep',
   'Scenario',
+  'Objectives',
+  'Pipeline',
+  'Remaining',
+  'FilterPlot',
 }
 
 const overlayCfg = {
@@ -25,9 +30,34 @@ const overlayCfg = {
     placement: "bottom",
     lastInSection: false,
   },
+  [overlayId.FilterStep]: {
+    message: "This filter page allows you to remove some candidate models by imposing performance contraints. It helps reduce the number of questions you'll be asked in the subsequent elicitation step, which can also be configured below.",
+    placement: "right",
+    lastInSection: false,
+  },
   [overlayId.Scenario]: {
     message: "These panes on the left provide an overview of the AI system for the decision makers. The information here would be collated by the organisation deploying the AI system",
     placement: "right",
+    lastInSection: false,
+  },
+  [overlayId.Objectives]: {
+    message: "These are the (qualitative) objectives of the system that the performance metrics try to capture",
+    placement: "right",
+    lastInSection: false,
+  },
+  [overlayId.Pipeline]: {
+    message: "This is an overview of the system pipeline, from data to decision",
+    placement: "right",
+    lastInSection: false,
+  },
+  [overlayId.Remaining]: {
+    message: "This pane shows the number of model candidates that are currently within the bounds set by the user below. These are a subset of all the candidates which would need to be supplied to the control panel by the data scientists building the system.",
+    placement: "bottom",
+    lastInSection: false,
+  },
+  [overlayId.FilterPlot]: {
+    message: "This radar plot visualises the acceptable boundaries in terms of the best and worse values from amongst the candidate models.",
+    placement: "bottom",
     lastInSection: false,
   }
 }

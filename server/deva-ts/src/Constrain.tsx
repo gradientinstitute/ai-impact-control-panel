@@ -88,12 +88,17 @@ export function Constraints({}) {
   }
 
   const visualiseRadar = compareConfig(configs, 'displaySpiderPlot', 'true')
-    ? (<div className=""><VisualiseData colour={["#008080", "#CC333F"]}/></div>)
+    ? (<HelpOverlay hid={overlayId.FilterPlot}><div className=""><VisualiseData colour={["#008080", "#CC333F"]}/></div></HelpOverlay>)
     : null;
 
   return (
     <div className="mx-auto grid gap-4 grid-cols-1">
-      <h1 className="text-left">Metric Filters</h1>
+      <div className="flex">
+        <HelpOverlay hid={overlayId.FilterStep}>
+          <h1 className="text-left">Metric Filters</h1>
+        </HelpOverlay>
+        <div className="my-auto" />
+      </div>
       <p>The deployment eliciter selects the most preferred candidate system from a pre-generated set. Use this panel to eliminate candidate systems with impacts that are clearly undesirable before the next stage, which conducts active preference elicitation on the candidates that remain.</p>
       <ConstraintStatus />
       {visualiseRadar}
@@ -110,6 +115,7 @@ function ConstraintStatus({}) {
   const all = useRecoilValue(allCandidatesState);
 
   return (
+  <HelpOverlay hid={overlayId.Remaining}>
   <div className="mb-8 bg-gray-600 grid grid-cols-8 gap-4">
     <div className="col-span-3 p-4 place-content-center">
       <span className="italic text-2xl">{curr.length +" of " + all.length + " "}</span>
@@ -119,6 +125,7 @@ function ConstraintStatus({}) {
       <EliminatedStatus />
     </div>
   </div>
+  </HelpOverlay>
   );
 
 }

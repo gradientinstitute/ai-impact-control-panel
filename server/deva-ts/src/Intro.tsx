@@ -57,7 +57,9 @@ function Pipeline({}) {
 
   return (
     <div className= "p-4 grid grid-cols-1 bg-gray-700 text-center">
+      <HelpOverlay hid={overlayId.Pipeline}>
       <h2 className="mb-3 font-bold font-xl">Pipeline</h2>
+      </HelpOverlay>
 
       <div className="bg-gray-600 p-4">
         <h2 className="font-bold">Data</h2>
@@ -98,12 +100,14 @@ function ObjectiveBlock({title, items}) {
     );
   });
   return (
+  <HelpOverlay hid={overlayId.Objectives}>
     <div className="p-3 bg-gray-700">
       <h2 className="font-bold text-xl mb-3">{title}</h2>
       <div className="">
         {mapped_items}
       </div>
     </div>
+  </HelpOverlay>
   );
 }
 
