@@ -1,11 +1,6 @@
 """Preferene eliciter module."""
-from itertools import combinations
-from functools import partial
 import numpy as np
 from deva import halfspace
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-from collections import OrderedDict
 from sklearn.cluster import KMeans
 
 
@@ -104,7 +99,7 @@ class LadderEliciter(Eliciter):
 
 class EnautilusEliciter(Eliciter):
     """
-    Use E-Nautilus to incrementally step from Nadir to an efficient candidate.
+    Use E-NAUTILUS to incrementally step from nadir to an efficient candidate.
 
     See: 'E-NAUTILUS: A decision support system for complex multiobjective
     optimization problems based on the NAUTILUS method.', Ruiz et al. 2015
@@ -233,9 +228,7 @@ class EnautilusEliciter(Eliciter):
             self._query = None
 
 
-
-
-class ActiveMaxEliciter:
+class ActiveMaxEliciter(Eliciter):
     """Use pairwise linear separation to estimate the preferred candidate."""
 
     _active_alg = halfspace.HalfspaceMax
@@ -302,5 +295,5 @@ class ActiveMaxEliciter:
 algorithms = {
     "Ladder": LadderEliciter,
     "ActiveMax": ActiveMaxEliciter,
-    "Enautilus": EnautilusEliciter,
+    "E-NAUTILUS": EnautilusEliciter,
 }
