@@ -2,7 +2,6 @@
 import numpy as np
 from deva import halfspace
 from sklearn.cluster import KMeans
-from deva.fileio import autoname
 
 
 class Candidate:
@@ -118,7 +117,7 @@ class EnautilusEliciter(Eliciter):
         Eliciter.__init__(self)
         self._nadir = {}
         self._ideal = {}
-        self._n_questions = 15  # number of questions
+        self._n_questions = 20  # MAX number of questions
         self._n_choices = 2  # number of options
         self.step = 0
         self.iter_count = 0
@@ -302,6 +301,18 @@ class ActiveMaxEliciter(Eliciter):
     def terminated(self):
         """Check if current model is terminated."""
         return self._result is not None
+
+
+def autoname(ind):
+    """Automatically turn an index into a system name."""
+    # sequence A-Z, AA-AZ-ZZ, AAA-AAZ-AZZ-ZZZ ...
+    chars = []
+    while True:
+        chars.append(chr(65 + ind % 26))
+        if ind < 26:
+            break
+        ind = ind // 26 - 1
+    return "System " + "".join(chars[::-1])
 
 
 # Export all the Eliciter classes
