@@ -26,10 +26,6 @@ def make_data():
 @pytest.mark.parametrize("algorithm", elicit.algorithms)
 def test_works(algorithm):
     """Test that each algorithm can find the optimum in a toy problem."""
-    # Note: assumes choice is from a discrete set (no continuous responses)
-    if algorithm == "Enautilus":
-        return  # exemption
-
     candidates, scenario, attribs = make_data()
 
     # Simulate a linear preference - consistent and easy to discover

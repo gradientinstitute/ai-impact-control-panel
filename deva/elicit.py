@@ -2,6 +2,7 @@
 import numpy as np
 from deva import halfspace
 from sklearn.cluster import KMeans
+from deva.fileio import autoname
 
 
 class Candidate:
@@ -117,20 +118,22 @@ class EnautilusEliciter(Eliciter):
         Eliciter.__init__(self)
         self._nadir = {}
         self._ideal = {}
-        self._h = 8  # number of questions
-        self._ns = 2  # number of options
+        self._n_questions = 15  # number of questions
+        self._n_choices = 2  # number of options
+        self.step = 0
         self.iter_count = 0
         self.candidates = list(candidates)
         self.attribs = candidates[0].get_attr_keys()
         self.current_centers = []
         self.kmeans_centers = []
         self._update_zpoints()
+        self._options = []
         self._update()
 
-    def _set_config(self, n1, ns):
+    def _set_config(self, n_questions, n_choices):
         """Update the number of questions the algorithm will use."""
-        self._h = n1 + 1
-        self._ns = ns
+        self._n_questions = n_questions
+        self._n_choices = n_choices
         self._update()
 
     def query(self):
@@ -139,11 +142,11 @@ class EnautilusEliciter(Eliciter):
 
     def terminated(self):
         """Check if the termination condition is met."""
-        return (self._h <= 0) or (len(self.candidates) == 1)
+        return (self.step >= self._n_questions) or (len(self.candidates) == 1)
 
     def result(self):
         """Return result of the eliciter if terminated."""
-        assert (self._h <= 0) or (len(self.candidates) == 1), "Not terminated."
+        assert self.terminated(), "Not terminated."
         X = []
         for can in self.candidates:
             X.append(np.array(can.get_attr_values()))
@@ -167,7 +170,10 @@ class EnautilusEliciter(Eliciter):
 
     def put(self, choice):
         """Receive input from the user and update ideal point."""
-        choice = self._query[int(choice)]
+        assert choice in self._options, "Invalid choice"
+
+        index = self._options.index(choice)
+        choice = self._query[index]
         self._nadir = choice.attributes
         # remove candidates that are worse in every attribute
         copy = []
@@ -190,9 +196,9 @@ class EnautilusEliciter(Eliciter):
         X = []
         for can in self.candidates:
             X.append(np.array(can.get_attr_values()))
-        if self._ns > len(self.candidates):
-            self._ns = len(self.candidates)
-        kmeans = KMeans(n_clusters=self._ns).fit(np.array(X))
+        if self._n_choices > len(self.candidates):
+            self._n_choices = len(self.candidates)
+        kmeans = KMeans(n_clusters=self._n_choices).fit(np.array(X))
         centers = kmeans.cluster_centers_
         kc = []
         for c in centers:
@@ -202,28 +208,35 @@ class EnautilusEliciter(Eliciter):
         kc = np.array(kc)
         self.kmeans_centers = kc
         # project to the line between pareto front and nadir point
-        if self._h == 1:
+        remaining = self._n_questions - self.step
+
+        if remaining == 1:
             numerator = 1
         else:
-            numerator = self._h - 1
+            numerator = remaining - 1
         kc = kc + (
             (np.array(list(self._nadir.values())) - kc)
-            * numerator / self._h
+            * numerator / remaining
         )
         self.current_centers = kc
         res = []
-        step = ""  # TODO: make a different letter for each step
+        step = autoname(self.step)
+        options = []
         for index, system in enumerate(kc):
             cname = f"{step}{index}"
             res.append(Candidate(cname,
                                  dict(zip(self.attribs, system))))
+            options.append(cname)
+        self._options = options  # reverse mapping back to a candidate
         return res
 
     def _update(self):
         """Update new query and the number of questions remaining."""
-        if (self._h > 0) and (len(self.candidates) != 1):
+        remaining = self._n_questions - self.step
+
+        if (remaining > 0) and (len(self.candidates) != 1):
             self._query = self.virtualCandidateGen()
-            self._h = self._h - 1
+            self.step += 1
         else:
             self._query = None
 

@@ -37,7 +37,6 @@ else:
     print("Using development database (thread local object)")
     db = DevDB(session)
 
-# TODO: proper cache / serialisation
 eliciters_descriptions = {k: v.description()
                           for k, v in elicit.algorithms.items()}
 
