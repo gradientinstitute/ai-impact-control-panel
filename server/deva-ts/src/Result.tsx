@@ -4,15 +4,15 @@ import { useRecoilValue, useRecoilState } from 'recoil';
 import axios from 'axios';
 
 import {Key, Model, adjustUnitRange} from './Widgets';
-import {metadataState, Pane, resultState} from './Base';
-import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
+import {metadataState, resultState} from './Base';
+// import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
 
 // main pane
-export function ResultPane({}) {
+export function ResultPane() {
 
   const metadata = useRecoilValue(metadataState);
   const [result, setResult] = useRecoilState(resultState);
-  const [help, setHelpState] = useRecoilState(helpState);
+  // const [help, setHelpState] = useRecoilState(helpState);
 
   useEffect(() => {
     const fetch = async () => {
@@ -21,7 +21,7 @@ export function ResultPane({}) {
       setResult(d);
     }
     fetch();
-  }, []
+  }, [setResult]
   );
 
   if (result === null) {
@@ -81,7 +81,7 @@ export function ResultPane({}) {
   );
 }
 
-function StartOver({}) {
+function StartOver() {
   return (
       <div className="grid grid-cols-3">
       <div className="col-span-1" />

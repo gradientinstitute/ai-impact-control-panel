@@ -1,8 +1,8 @@
 // Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import _ from "lodash";
 
-import { useEffect, useState } from 'react';
-import { atom, useRecoilState, useRecoilValue } from 'recoil';
+import { useEffect } from 'react';
+import { atom, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { configState } from './Base';
 import cog from './cog.svg';
 
@@ -21,9 +21,9 @@ const showConfigState = atom({
   default: false,
 });
 
-export function ConfigPanel({}) {
+export function ConfigPanel() {
   
-  const [configs, setConfigs] = useRecoilState(configState);
+  const setConfigs = useSetRecoilState(configState);
   const [showConfig, setShowConfig] = useRecoilState(showConfigState);
 
   // initial loading of config
@@ -63,9 +63,9 @@ export function ConfigPanel({}) {
   return showConfig ? panel : null;
 }
 
-function DisplayOptions({}) {
+function DisplayOptions() {
 
-  const [configs, setConfigs] = useRecoilState(configState);
+  const configs = useRecoilValue(configState);
   const configList = _.mapValues(configs, (val, _obj) => {
     const options = val.options;
     const selected = val.selected;
@@ -139,8 +139,8 @@ function DropdownButton({config, name, selected, options}) {
   );
 }
 
-export function ConfigButton({}) {
-  const [showConfig, setShowConfig] = useRecoilState(showConfigState);
+export function ConfigButton() {
+  const setShowConfig = useSetRecoilState(showConfigState);
   return(
     <button className="col-span-1"
     onClick={() => setShowConfig(true)}>

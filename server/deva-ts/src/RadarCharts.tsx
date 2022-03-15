@@ -1,7 +1,6 @@
 // Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import _ from "lodash";
 import { maxRangesState } from "./ConstrainScrollbar"
 import { atom, selector, useRecoilValue } from "recoil";
 import { metadataState } from './Base';
@@ -67,7 +66,7 @@ function getPercentage(val, min, max, lowerIsBetter) {
 }
 
 // Returns the radar chart
-function RadarChart({data, colour}) {
+export function RadarChart({data, colour}) {
   const svgRef = useRef();
   const axes = data[0].map((x) => x.axis);
   useEffect(() => {
@@ -88,4 +87,3 @@ function RadarChart({data, colour}) {
   );
 }
 
-export default RadarChart;

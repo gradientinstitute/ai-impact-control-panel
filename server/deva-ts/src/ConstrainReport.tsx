@@ -1,5 +1,5 @@
 // Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
-export function UserReportPane({}) {
+export function UserReportPane() {
 
   return (
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 gap-y-10 grid-cols-1 text-center items-center pb-10">
@@ -18,7 +18,7 @@ export function UserReportPane({}) {
 
 // If all candidates are eliminated
 // use the startover button to go back to the initial page 
-function StartOverButton({}) {
+function StartOverButton() {
     return (
     <div className="flex flex-1 align-middle text-left">
       <button className="hover:text-gray-400 transition"

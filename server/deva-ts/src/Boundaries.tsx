@@ -4,7 +4,7 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import axios from 'axios';
 
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { Pane, paneState, scenarioState, metadataState, constraintsState,
          algoChoicesState, reportState } from './Base';
 
@@ -12,7 +12,7 @@ import { allCandidatesState, rangesState, currentCandidatesState,
          getSliderStep, currentSelectionState} from './BoundsSlider';
 
 
-export function BoundariesPane({}) {
+export function BoundariesPane() {
     // name of current scenorio for url purposes e.g. "ezyfraud"
     const scenario = useRecoilValue(scenarioState);
     // largest possible ranges for specifying the scrollbar extents
@@ -21,14 +21,14 @@ export function BoundariesPane({}) {
     const currentCandidates = useRecoilValue(currentCandidatesState);
     // the actual/current contraints as defined by the position of scrollbars
 
-    const [metadata, setMetadata] = useRecoilState(metadataState);
-    const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
+    const setMetadata = useSetRecoilState(metadataState);
+    const setAlgos = useSetRecoilState(algoChoicesState);
   
     // current constraints done by metric
-    const [_constraints, setConstraints] = useRecoilState(constraintsState);
+    const setConstraints = useSetRecoilState(constraintsState);
   
     // all candidates sent to us by the server
-    const [_allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
+    const setAllCandidates = useSetRecoilState(allCandidatesState);
   
     useEffect(() => {
       let req = "api/scenarios/" + scenario;
@@ -67,7 +67,7 @@ export function BoundariesPane({}) {
 }
 
 
-function MultiRangeConstraint({}) {
+function MultiRangeConstraint() {
   const metadata = useRecoilValue(metadataState);
 
   const constraints = useRecoilValue(constraintsState);
@@ -75,7 +75,7 @@ function MultiRangeConstraint({}) {
   const baseline = metadata.baseline;
 
   // // current constraints done by metric
-  const [_constraints, setConstraints] = useRecoilState(constraintsState);
+  const setConstraints = useSetRecoilState(constraintsState);
 
   const maxRanges = useRecoilValue(rangesState);
   const bounds = maxRanges;
@@ -164,7 +164,7 @@ function QuantitativeConstraint({x, constraints, uid, lowerIsBetter, range_min, 
 function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
-  const [_, setCurrentSelection] = useRecoilState(currentSelectionState);
+  const setCurrentSelection = useSetRecoilState(currentSelectionState);
   const val = constraints[uid][1];
 
   function onBeforeChange() {
@@ -222,21 +222,19 @@ function OptimalDirection({lowerIsBetter}) {
   }
 
 
-function SaveButton({}) {
+function SaveButton() {
 
   const [submit, setSubmit] = useState(false);
 
   const scenario = useRecoilValue(scenarioState);
   const constraints = useRecoilValue(constraintsState);
-  const [metadata, setMetadata] = useRecoilState(metadataState);
-  const [report, setReport] = useRecoilState(reportState);
+  const setReport = useSetRecoilState(reportState);
+  const setPane = useSetRecoilState(paneState);
 
-  const [_pane, setPane] = useRecoilState(paneState);
-
-  const payload = {
-    constraints: constraints,
-    scenario: scenario
-  }
+  // const payload = {
+  //   constraints: constraints,
+  //   scenario: scenario
+  // }
 
   useEffect(() => {
     const fetch = async () => {

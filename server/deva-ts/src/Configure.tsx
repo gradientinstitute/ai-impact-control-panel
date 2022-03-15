@@ -1,26 +1,16 @@
 // Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue, useSetRecoilState} from 'recoil';
-import { ArcherContainer, ArcherElement } from 'react-archer';
-import _ from "lodash";
 import axios from 'axios';
 
-import { Pane, paneState, algoState, nameState, constraintsState,
+import { Pane, paneState, algoState, constraintsState,
          metadataState, scenarioState, algoChoicesState} from './Base';
-import {sigFigs} from './Widgets';
 import {IntroContext} from './Intro';
 import {Constraints} from './Constrain';
 import { maxRangesState } from './ConstrainScrollbar';
 
 import { filterCandidates } from './ConstrainScrollbar';
-import {HelpOverlay, overlayId, HelpButton, helpState} from './HelpOverlay';
-
-
-// TODO siigh css? 
-const HIGHLIGHT_COLOUR = "bg-orange-700";
-const FIRST_COLOUR = "bg-gray-700";
-const SECOND_COLOUR = "bg-blue-600";
-const THIRD_COLOUR = "bg-green-700";
+import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
 
 // info from the ranges API containing
 // array containing all of the candidates
@@ -32,18 +22,18 @@ export const allCandidatesState = atom({
 
 
 // root node
-export function ConfigurePane({}) {
+export function ConfigurePane() {
   
   const scenario = useRecoilValue(scenarioState);
 
   // all candidates sent to us by the server
-  const [_current, setCurrent] = useRecoilState(algoState);
+  const setCurrent = useSetRecoilState(algoState);
   const [metadata, setMetadata] = useRecoilState(metadataState);
   const [algorithms, setAlgos] = useRecoilState(algoChoicesState);
   const [allCandidates, setAllCandidates] = useRecoilState(allCandidatesState);
   const maxRanges = useRecoilValue(maxRangesState);
-  const [_constraints, setConstraints] = useRecoilState(constraintsState);
-  const [_pane, setPane] = useRecoilState(paneState);
+  const setConstraints = useSetRecoilState(constraintsState);
+  const setPane = useSetRecoilState(paneState);
   const setHelpState = useSetRecoilState(helpState);
 
   // initial request on load
@@ -87,7 +77,7 @@ export function ConfigurePane({}) {
     candidates = filterCandidates(allCandidates, bounds);
   }
 
-  if(candidates.length == 0){
+  if(candidates.length === 0){
       setPane(Pane.UserReport);
   }
 
@@ -107,7 +97,7 @@ export function ConfigurePane({}) {
 
 
 
-function AlgorithmMenu({}) {
+function AlgorithmMenu() {
   
   return (
     <div>
@@ -121,7 +111,7 @@ function AlgorithmMenu({}) {
 }
 
 // Select algorithm from list and preview details
-function AlgoSelector({}) {
+function AlgoSelector() {
   
   const algos = useRecoilValue(algoChoicesState);
   const [current, setCurrent] = useRecoilState(algoState);
@@ -152,9 +142,9 @@ function AlgoSelector({}) {
 }
 
 
-function StartButton({}) {
+function StartButton() {
 
-  const [_pane, setPane] = useRecoilState(paneState);
+  const setPane = useSetRecoilState(paneState);
 
   return (
       <div className="">
