@@ -1,7 +1,8 @@
 # AI Impact Control Panel
 
 An interactive application for decision-makers to help understand and control
-the impacts of their AI systems.
+the impacts of their AI systems. Developed with support from Minderoo
+Foundation.
 
 Check out the [live demo](https://portal.gradientinstitute.org/aicontrolpanel)!
 
