@@ -21,7 +21,7 @@ export function ResultPane() {
       setResult(d);
     }
     fetch();
-  }, [setResult]
+  }, []
   );
 
   if (result === null) {
