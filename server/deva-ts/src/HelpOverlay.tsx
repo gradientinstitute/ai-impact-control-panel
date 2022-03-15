@@ -23,6 +23,8 @@ export enum overlayId {
   'Pipeline',
   'Remaining',
   'FilterPlot',
+  'UnitFilter',
+  'UnitDescription',
 }
 
 const overlayCfg = {
@@ -60,6 +62,16 @@ const overlayCfg = {
     message: "This radar plot visualises the acceptable boundaries in terms of the best and worse values from amongst the candidate models.",
     placement: "bottom",
     lastInSection: false,
+  },
+  [overlayId.UnitFilter]: {
+    message: "There is one of these boxes for each metric.",
+    placement: "bottom",
+    lastInSection: false,
+  },
+  [overlayId.UnitDescription]: {
+    message: "This describes the performance metric, including the objective it captures and any limitations in its measurement.",
+    placement: "top",
+    lastInSection: false,
   }
 }
 
@@ -84,23 +96,12 @@ export function HelpOverlay({children, hid}) {
   
     const [ctr, setCtr] = useRecoilState(helpState);
     const pane = useRecoilValue(paneState);
-    const cfg = overlayCfg[hid];
-
-    if (cfg == null) {
-      return (
-        <Tooltip id={hid}>
-          CFG UNDEFINED
-          <br/><br/>
-          <Button 
-            variant="dark" 
-            size="sm" 
-            disabled={cfg.lastInSection} 
-            onClick={()=>{setCtr(ctr + 1)}}>
-              Next
-          </Button>
-        </Tooltip>
-      );
+    
+    if (!(hid in overlayCfg)) {
+      return children;
     }
+
+    const cfg = overlayCfg[hid];
 
     const tooltip = (
       <Tooltip id={hid} className="">

@@ -166,7 +166,7 @@ function UnitDescription({uid, unit, objectives}) {
   )
 }
 
-function DescriptionRangeConstraint({uid, unit, objectives}) {
+function DescriptionRangeConstraint({uid, unit, objectives, helpFlag}) {
 
   const lowerIsBetter = unit.lowerIsBetter === false ? false : true;
   const maxRanges = useRecoilValue(maxRangesState);
@@ -179,23 +179,29 @@ function DescriptionRangeConstraint({uid, unit, objectives}) {
       maxRanges={maxRanges} 
       constraints={constraints}
       uid={uid}
-      lowerIsBetter={lowerIsBetter}/>) :
+      lowerIsBetter={lowerIsBetter}
+      helpFlag={helpFlag}/>) :
 
     (<QuantitativeConstraint u={unit}
       maxRanges={maxRanges}
       constraints={constraints}
       uid={uid}
-      lowerIsBetter={lowerIsBetter}/>)
+      lowerIsBetter={lowerIsBetter}
+      helpFlag={helpFlag}/>)
 
   return (
+    <HelpOverlay hid={helpFlag? overlayId.UnitFilter: -1000}>
     <div className={"grid grid-cols-8 " + bgcolor}>
+      <HelpOverlay hid={helpFlag? overlayId.UnitDescription: -1000} >
       <div className="col-span-3">
         <UnitDescription uid={uid} unit={unit} objectives={objectives}/>
       </div>
+      </HelpOverlay>
       <div className="col-span-5 my-auto">
         {pane}
       </div>
     </div>
+    </HelpOverlay>
   )
 
 
@@ -210,13 +216,15 @@ function MultiRangeConstraint({}) {
     return (<div>Loading...</div>);
   }
 
+  const first_uid = Object.entries(metadata.metrics)[0][0];
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
     const u: any = x[1];
+    const helpFlag = (uid === first_uid);
     return (
       <div>
         <DescriptionRangeConstraint key={uid} uid={uid} unit={u}
-        objectives={metadata.objectives}/>
+        objectives={metadata.objectives} helpFlag={helpFlag}/>
       </div>
     );
   });
@@ -228,7 +236,7 @@ function MultiRangeConstraint({}) {
   );
 }
 
-function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter}) {
+function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter, helpFlag}) {
   // TODO: remember how to specify these types in destructuring args
   const vals = maxRanges[uid];
   const sign = lowerIsBetter ? 1 : -1;
@@ -257,7 +265,7 @@ function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter})
   )
 }
 
-function QualitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter}) {
+function QualitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter, helpFlag}) {
   const vals = maxRanges[uid];
   const min = vals[0];
   const max = vals[1];
