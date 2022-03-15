@@ -9,16 +9,16 @@ help:
 	@echo "pytest-xml - run unit tests with junit output"
 
 typecheck:
-	mypy deva tests server/mlserver python_client
+	mypy deva tests server/mlserver
 
 typecheck-xml:
-	mypy deva tests server/mlserver python_client | mypy2junit > ./tests/results/mypy.xml
+	mypy deva tests server/mlserver | mypy2junit > ./tests/results/mypy.xml
 
 lint:
-	flake8 deva tests server/mlserver python_client
+	flake8 deva tests server/mlserver
 
 lint-xml:
-	flake8 deva tests server/mlserver python_client --tee --output-file ./tests/results/flake8.txt || flake8_junit ./tests/results/flake8.txt ./tests/results/flake8.xml
+	flake8 deva tests server/mlserver --tee --output-file ./tests/results/flake8.txt || flake8_junit ./tests/results/flake8.txt ./tests/results/flake8.xml
 
 test:
 	pytest . --cov=deva tests/	

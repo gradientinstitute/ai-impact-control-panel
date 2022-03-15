@@ -3,7 +3,7 @@ Unit tests for estimating a bounds range from data.
 
 Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 """
-from deva.nice_range import nice_range
+from deva.fileio import nice_range
 
 
 def test_rounded():
