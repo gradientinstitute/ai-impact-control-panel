@@ -212,6 +212,8 @@ function InputGetter({leftName, rightName}) {
           label={leftName} 
           me={leftName}
           other={rightName}
+          color={"bg-blue-400"}
+          text={"text-blue-700"}
         />
       </div>
       <div className="my-auto" style={{width:"50%"}}>
@@ -222,6 +224,8 @@ function InputGetter({leftName, rightName}) {
           label={rightName} 
           me={rightName}
           other={leftName}
+          color={"bg-pink-200"}
+          text={"text-pink-600"}
         />
       </div>
       <div className="my-auto" style={{width:"5%"}}/>
@@ -229,7 +233,7 @@ function InputGetter({leftName, rightName}) {
   );
 }
 
-function PreferenceButton({me, other, label}) {
+function PreferenceButton({me, other, label, color, text}) {
 
   const [_choice, setChoice] = useRecoilState(choiceState);
 
@@ -238,9 +242,9 @@ function PreferenceButton({me, other, label}) {
   }
 
   return (
-      <button className="bg-gray-200 rounded-lg" 
+      <button className={"rounded-lg " + color} 
         onClick={onClick}>
-        <div className="p-4 text-3xl text-black">
+        <div className={"p-4 text-3xl " + text}>
           I prefer {label}
         </div>
       </button>
