@@ -73,16 +73,16 @@ function Performance({value, unit, isMirror}) {
   let rf = "max";
   const sigfig = sigFigs(unit)
   let lv = unit.prefix + unit.min.toFixed(sigfig) 
-    + " " + unit.suffix;
+    + unit.suffix;
   let rv = unit.prefix + unit.max.toFixed(sigfig) 
-    + " " + unit.suffix;
+    + unit.suffix;
   if (isMirror === true) {
     lf = "max";
     rf = "min";
     lv = unit.prefix + unit.max.toFixed(sigfig) 
-      + " " + unit.suffix;
+      + unit.suffix;
     rv = unit.prefix + unit.min.toFixed(sigfig)
-      + " " + unit.suffix;
+      + unit.suffix;
   }
 
   const left = !(unit.type === "qualitative")
@@ -133,7 +133,7 @@ function ValueStatementQuantitative({name, value, unit, colour}) {
   return (
     <div className={"text-"+ colour}>
       {name} {unit.action} {unit.prefix}
-      {value.toFixed(sigfig)} {unit.suffix}. 
+      {value.toFixed(sigfig)}{unit.suffix}. 
     </div>
   );
 }
