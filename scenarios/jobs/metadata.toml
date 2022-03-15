@@ -72,8 +72,6 @@ type = "quantitative" # determines how options are presented to the user
                       # defaults to quantitative
 
 # Terms for interface readouts 
-more = "more"  # determiner for a larger quantity
-less = "fewer"  # determiner for lesser quantity
 prefix = ""  # any prefix on the readout (such as $)
 suffix = " interviews per 100 matches"  # text following the readout (units)
 scrollbar = " interviews per 100 matches" # text following readout on scrollbar
@@ -117,8 +115,6 @@ limitations = """False negatives (missed applicants) are difficult to
 capture if the training data is from an existing AI system."""
 description = """Number of suitable applicants who were overlooked by the 
 system."""
-more = "more"
-less = "fewer"
 prefix = ""
 suffix = " of every 100 suitable applicants"
 scrollbar = " of every 100 suitable applicants are overlooked"
@@ -136,8 +132,6 @@ captures = ["dont_disadvantage_women"]
 limitations = """Sensitive to historical bias if suitable women weren't 
 interviewed in the training data, and sensitive to the fraction of applicants 
 who are women."""
-more = "more"
-less = "fewer"
 prefix = ""
 compare = " fewer suitable women per 100 overlooked applicants than"
 scrollbar = " of every 100 overlooked suitable applicants are women"
