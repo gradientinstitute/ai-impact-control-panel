@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import axios from 'axios';
 import _ from "lodash";
-import {Pane, metadataState, paneState, 
+import {Pane, metadataState, paneState, constraintsState,
         resultState, scenarioState, nameState, algoState, configState } from './Base';
 import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
@@ -42,6 +42,7 @@ export function PairwisePane({}) {
   const scenario = useRecoilValue(scenarioState);
   const name = useRecoilValue(nameState);
   const algorithm = useRecoilValue(algoState);
+  const constraints = useRecoilValue(constraintsState);
 
   const choice = useRecoilValue(choiceState);
   const [candidates, setCandidates] = useRecoilState(candidatesState);
@@ -61,6 +62,7 @@ export function PairwisePane({}) {
       const payload = {
         scenario: scenario,
         algorithm: algorithm,
+        constraints: constraints,
         name: name,
       }
       const result = await axios.put<any>("api/deployment/new", payload);
