@@ -254,13 +254,21 @@ function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter, 
     <div key={uid} 
     className={"grid grid-cols-5 gap-8 p-4 " + bgcolor}>
       
+      <HelpOverlay hid={helpFlag? overlayId.UnitFilterWords : -1000}>
       <p className="col-span-5 text-xl text-center">{cstring}</p>
+      </HelpOverlay>
 
+      <HelpOverlay hid={helpFlag? overlayId.UnitFilterMin : -1000}>
       <p className="col-span-1 text-xs text-right my-auto">{min_string}</p>
+      </HelpOverlay>
+      <HelpOverlay hid={helpFlag? overlayId.UnitFilterRange : -1000}>
       <div className="col-span-3 my-auto">
         <RangeConstraint uid={uid} min={min} max={max} marks={null} decimals={decimals} lowerIsBetter={lowerIsBetter}/>
       </div>
+      </HelpOverlay>
+      <HelpOverlay hid={helpFlag? overlayId.UnitFilterMax : -1000}>
       <p className="col-span-1 text-xs text-left my-auto">{max_string}</p>
+      </HelpOverlay>
     </div>
   )
 }

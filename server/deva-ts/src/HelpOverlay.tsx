@@ -25,6 +25,20 @@ export enum overlayId {
   'FilterPlot',
   'UnitFilter',
   'UnitDescription',
+  'UnitFilterWords',
+  'UnitFilterMin',
+  'UnitFilterRange',
+  'UnitFilterMax',
+  'Algorithm',
+  'LastOnConfig',
+  'FirstOnPairwise',
+  'PairwiseRadar',
+  'PairwiseButton',
+  'PairwiseText',
+  'PairwiseDetail',
+  'PairwiseAbsolute',
+  'PairwiseRelative',
+  'Important',
 }
 
 const overlayCfg = {
@@ -72,7 +86,72 @@ const overlayCfg = {
     message: "This describes the performance metric, including the objective it captures and any limitations in its measurement.",
     placement: "top",
     lastInSection: false,
-  }
+  },
+  [overlayId.UnitFilterWords]: {
+    message: "This sentence gives the current range of values for the metric accepted by the filter", 
+    placement: "top",
+    lastInSection: false,
+  },
+  [overlayId.UnitFilterMin]: {
+    message: "This is the minimum value of the metric over all the candidates",
+    placement: "top",
+    lastInSection: false,
+  },
+  [overlayId.UnitFilterRange]: {
+    message: "Adjust this slider to tighten or loosen the candidate filter",
+    placement: "bottom",
+    lastInSection: false,
+  },
+  [overlayId.UnitFilterMax]: {
+    message: "This is the maximum value of the metric over all the candidates",
+    placement: "top",
+    lastInSection: false,
+  },
+  [overlayId.Algorithm]: {
+    message: "The settings for the elicitation process used on the remaining candidates are given here",
+    placement: "top",
+    lastInSection: true,
+  },
+  [overlayId.FirstOnPairwise]: {
+    message: "This next stage of the tool asks a series of questions comparing two different candidates in order to find the most preferred one to deploy",
+    placement: "bottom",
+    lastInSection: false,
+  },
+  [overlayId.PairwiseRadar]: {
+    message: "The radar plots gives a visual indication of the two candidates' relative performance",
+    placement: "top",
+    lastInSection: false,
+  },
+  [overlayId.PairwiseButton]: {
+    message: "Clicking on the left or right button tells the algorithm which system you prefer",
+    placement: "top",
+    lastInSection: false,
+  },
+  [overlayId.PairwiseText]: {
+    message: "For record-keeping, you can describe what motivated your choice here with some text",
+    placement: "top",
+    lastInSection: false,
+  },
+  [overlayId.PairwiseDetail]: {
+    message: "These boxes give more detailed information about the relative and absolute performance of the systems against each metric",
+    placement: "top",
+    lastInSection: false,
+  },
+  [overlayId.PairwiseAbsolute]: {
+    message: "This section describes the absolute performance of the model with respect to each metric",
+    placement: "top",
+    lastInSection: false,
+  },
+  [overlayId.PairwiseRelative]: {
+    message: "This section compares their performance",
+    placement: "top",
+    lastInSection: false,
+  },
+  [overlayId.Important]: {
+    message: "For record-keeping, you can mark which metrics were important for your choice",
+    placement: "top",
+    lastInSection: true,
+  },
 }
 
 // add a use effect that starts at a particular thing
@@ -80,7 +159,6 @@ export function HelpButton({}) {
   const [help, setHelpState] = useRecoilState(helpState);
   return(
     <div>
-      <h2>Help state: {help}</h2>
       <HelpOverlay hid={overlayId.ToggleHelp}>
         <button className="col-span-1 px-2"
         onClick={() => { setHelpState(-1 * help) }}>
@@ -102,6 +180,7 @@ export function HelpOverlay({children, hid}) {
     }
 
     const cfg = overlayCfg[hid];
+    const buttonText = cfg.lastInSection ? "Close" : "Next";
 
     const tooltip = (
       <Tooltip id={hid} className="">
@@ -110,9 +189,8 @@ export function HelpOverlay({children, hid}) {
         <Button 
           variant="dark" 
           size="sm" 
-          disabled={cfg.lastInSection} 
           onClick={()=>{setCtr(ctr + 1)}}>
-            Next
+            {buttonText}
         </Button>
       </Tooltip>
     );

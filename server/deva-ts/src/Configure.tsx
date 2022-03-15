@@ -111,7 +111,9 @@ function AlgorithmMenu({}) {
   
   return (
     <div>
+      <HelpOverlay hid={overlayId.Algorithm}>
       <h1 className="text-left">Elicitation Settings</h1>
+      </HelpOverlay>
       <AlgoSelector />
     </div>
   );

@@ -79,6 +79,7 @@ export function PairwisePane({}) {
         values[d[0]['name']] = d[0]['values'];
         values[d[1]['name']] = d[1]['values']; 
         setRadarData(values);
+        setHelpState(overlayId.FirstOnPairwise);
       }
     }
     fetch();
@@ -133,9 +134,14 @@ export function PairwisePane({}) {
     return (<h2>Loading...</h2>);
   }
 
+  const first_uid = Object.entries(metadata.metrics)[0][0];
+
   function comparisons() {
     let result = []; 
+
     for (const [uid, u] of Object.entries(metadata.metrics)) {
+
+      const helpFlag = (uid === first_uid);
       result.push(
       <div className="bg-gray-700 rounded-lg p-3">
         <PairwiseComparator 
@@ -145,6 +151,7 @@ export function PairwisePane({}) {
           rightValue={candidates.right.values[uid]} 
           leftName={candidates.left.name} 
           rightName={candidates.right.name}
+          helpFlag={helpFlag}
         />
       </div>
       );
@@ -160,12 +167,18 @@ export function PairwisePane({}) {
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 
       gap-y-6 grid-cols-1 text-center items-center">
       <div>
+        <HelpOverlay hid={overlayId.FirstOnPairwise}>
         <h1 className="text-5x1 font-bold">
           Pairwise Preference Elicitation: {metadata.name}
         </h1>
+        </HelpOverlay>
         <p className="italic">A system designed to {metadata.purpose}</p>
       </div>
+      <HelpOverlay hid={overlayId.PairwiseRadar}>
+      <div>
       {visualiseRadar}
+      </div>
+      </HelpOverlay>
       <InputGetter 
         leftName={candidates.left.name} 
         rightName={candidates.right.name} 
@@ -210,6 +223,8 @@ function InputGetter({leftName, rightName}) {
     <div className="w-auto mb-8 flex space-x-16">
       <div className="my-auto" style={{width:"5%"}}/>
       <div className="my-auto" style={{width:"20%"}}>
+        <HelpOverlay hid={overlayId.PairwiseButton}>
+        <div>
         <PreferenceButton 
           label={leftName} 
           me={leftName}
@@ -217,10 +232,14 @@ function InputGetter({leftName, rightName}) {
           color={"bg-blue-400"}
           text={"text-blue-700"}
         />
+        </div>
+        </HelpOverlay>
       </div>
+      <HelpOverlay hid={overlayId.PairwiseText}>
       <div className="my-auto" style={{width:"50%"}}>
         <Motivation />
       </div>
+      </HelpOverlay>
       <div className="my-auto" style={{width:"20%"}}>
         <PreferenceButton 
           label={rightName} 
@@ -281,7 +300,7 @@ function FlagImportant({uid}) {
 }
 
 function PairwiseComparator({uid, leftName, leftValue, 
-  rightName, rightValue, unit}) {
+  rightName, rightValue, unit, helpFlag}) {
 
   if (!unit.lowerIsBetter) {
     unit = adjustUnitRange(unit);
@@ -291,25 +310,33 @@ function PairwiseComparator({uid, leftName, leftValue,
 
   return (
     
+    <HelpOverlay hid={helpFlag? overlayId.PairwiseDetail: -1000}>
     <div className="w-auto flex space-x-16">
+      <HelpOverlay hid={helpFlag? overlayId.Important: -1000}>
       <div className="my-auto" style={{width:"10%"}}>
         <FlagImportant uid={uid} />
       </div>
+      </HelpOverlay>
       <div className="my-auto" style={{width:"10%"}}>
         <Key unit={unit}/>
       </div>
+      <HelpOverlay hid={helpFlag? overlayId.PairwiseAbsolute: -1000}>
       <div className="my-auto" style={{width:"30%"}}>
         <Model unit={unit} name={leftName} 
           value={leftValue} isMirror={false} colour={leftColour.text}/>
       </div>
+      </HelpOverlay> 
+      <HelpOverlay hid={helpFlag? overlayId.PairwiseRelative: -1000}>
       <div className="my-auto" style={{width:"20%"}}>
         {Comparison({leftValue, leftName, rightValue, rightName, unit})}
       </div>
+      </HelpOverlay>
       <div className="my-auto" style={{width:"30%"}}>
         <Model unit={unit} name={rightName}
           value={rightValue} isMirror={false} colour={rightColour.text}/>
       </div>
     </div>
+    </HelpOverlay>
 
   );
 }

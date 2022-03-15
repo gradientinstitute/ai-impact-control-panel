@@ -66,16 +66,15 @@ export function ResultPane({}) {
 
         <div className="inline italic"> {name}</div>.
       </h2>
+      <p className="text-3xl pb-4">
+        Click to download
+        the <a href={"api/deployment/logs/txt"} download><b>session log</b></a>.
+      </p>
         <h1 className="text-4xl">{name} Impacts</h1>
 
       {comparisons()}
-      <p>
-        See <b>metrics_{spec}.toml</b> and <b>params_{spec}.toml</b> for more
-        details of {name}.
-      </p>
-      <p>
-        Click to download
-        the <a href={"api/deployment/logs/txt"} download><b>session log</b></a>.
+      <p className="py-4">
+        See <b>metrics_{spec}.toml</b> and <b>params_{spec}.toml</b> in your scenario folder for more details of {name}.
       </p>
       <StartOver />
     </div>
@@ -84,12 +83,16 @@ export function ResultPane({}) {
 
 function StartOver({}) {
   return (
-      <button className="bg-gray-200 text-black rounded-lg mb-3" 
+      <div className="grid grid-cols-3">
+      <div className="col-span-1" />
+      <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
         onClick={() =>  window.location.reload()}>
         <div className="p-4 text-5xl">
           Start Over
         </div>
       </button>
+      <div className="col-span-1" />
+      </div>
   );
 }
 
