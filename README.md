@@ -42,47 +42,71 @@ the control panel providesa decision-maker
 A more in-depth description of the context and potential use-cases for the AI impact
 control panel can be found in [this blog post](https://medium.com/gradient-institute/ai-impact-control-panel-8f2316505a1f).
 
-## Inputs required
+## Prerequisites
 
-The control panel requ
+The control panel does not actually build machine learning models, decide what
+performance objectives your system should have, or evaluate those metrics on
+test data. You'll need to provide
 
+1. metadata explaining your system, including its objectives and performance
+   measures
 
+2. A set of files containing the values of the peformance measures for each
+   candidate and their corresponding configuration values.
 
-## Quick start
+Have a look at the example systems in the `scenarios` folder. You'll need to
+create a new scenario folder and provide the above information in a matching
+format. The scenarios folder needs to containin
+
+1. `metadata.toml`: gives all the information about the system and its metrics
+2. `images/`: a folder of icons the frontand can use to illustrate
+   performance metrics
+3. `baseline.toml`: a set of baselines against which your candidates
+   can be compared
+4. `models/metrics_*.toml`: a file for each candidate (replace the star with
+   a number or a name as approprate) giving the value of the performance
+   metrics for that candidate
+5. `models/params_*.toml`: a file for each candidate (with matching name to
+   a metrics file) giving the value of any parameters used to generate the
+   candidate.
+
+The `jobs` example is well-commented and is a good place to start.
+
+## Run the control panel
 
 0. You'll need docker and docker-compose installed to run the app locally.
-1. Place your scenario information in the ``scenarios`` folder, which will be
+1. Place your scenario information in the `scenarios` folder, which will be
    mounted by docker compose.
-2. Optionally, see the instructions below for generating some demo scenarios.
-3. Run ``docker-compose up`` which should build and run the containers
-   required.
-4. Access ``http://localhost/aicontrolpanel`` in your browser for the app.
+3. Run `docker-compose up` from the root of the repo which should build and run the containers required.
+4. Access `http://localhost/aicontrolpanel` in your browser for the app.
 
+Note, there is a docker-compose-prod.yml which you should ignore (this is for
+the live demo deployment).
 
 ## Development
 
 ### Installation
 
 1. Install python-poetry
-2. run ``poetry install`` in this directory
+2. run `poetry install` in this directory
 
 Note: there is no need to do a pip install -e . : this happens automatically, 
 along with venv creation and dependencies.
 
-To get into a venv, do ``poetry shell``.
+To get into a venv, do `poetry shell`.
 
 
 ### Running the server for development
 
-Go to the server folder. start the backend with ``server/mlserver/run_dev.sh``
+Go to the server folder. start the backend with `server/mlserver/run_dev.sh`
 
-To start the frontend, go to ``server/deva-ts`` and from there run ``yarn
-start``.
+To start the frontend, go to `server/deva-ts` and from there run `yarn
+start`.
 
 
 ### Testing
 
-In the venv, run ``pytest``.
+In the venv, run `pytest`.
 
 
 ## Copyright and License
