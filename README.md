@@ -3,12 +3,12 @@
 An interactive application for decision-makers to help understand and control
 the impacts of their AI systems.
 
-© 2022 Gradient Institue Ltd.
+Check out the [live demo](https://portal.gradientinstitute.org/aicontrolpanel)!
 
 **This code is at an Alpha (early) level of development: frequent and substantial changes in functionality are likely to occur.**
 
 
-## What is it?
+## What it does
 
 <img src="images/control_panel_location.png"/>
 
@@ -39,10 +39,16 @@ the control panel providesa decision-maker
   by asking a series of guided questions.
 - a record of the questions posed by the tool and the decisions made by the user for the purpose of ensuring the reasons for choosing a given system can be explained.
 
-## What do I need to use it with my AI system?
+A more in-depth description of the context and potential use-cases for the AI impact
+control panel can be found in [this blog post](https://medium.com/gradient-institute/ai-impact-control-panel-8f2316505a1f).
+
+## Inputs required
+
+The control panel requ
 
 
-## How do I get it running?
+
+## Quick start
 
 0. You'll need docker and docker-compose installed to run the app locally.
 1. Place your scenario information in the ``scenarios`` folder, which will be
@@ -53,7 +59,7 @@ the control panel providesa decision-maker
 4. Access ``http://localhost/aicontrolpanel`` in your browser for the app.
 
 
-## Can I contribute to development?
+## Development
 
 ### Installation
 
@@ -77,3 +83,8 @@ start``.
 ### Testing
 
 In the venv, run ``pytest``.
+
+
+## Copyright and License
+
+© 2022 Gradient Institue Ltd.
