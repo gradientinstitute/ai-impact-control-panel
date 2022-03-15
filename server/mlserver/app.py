@@ -310,7 +310,16 @@ def get_choice():
         choice = [v.name for v in eliciter.query()]
         if (x in choice):  # and (y in choice) and (x != y):
             log.choice(eliciter.query(), data)
-            eliciter.put(x)
+            # There is a risk that ActiveMax will hit an inconsistent state
+            # if so, we need to put the user back in a valid state
+            try:
+                eliciter.put(x)
+            except RuntimeError as e:
+                print(e)
+                print("Fallback to ladder")
+                eliciter = elicit.LadderEliciter(
+                    eliciter.candidates, None
+                )
 
     # have to check again because now it might be terminated
     # after we added a new choice above

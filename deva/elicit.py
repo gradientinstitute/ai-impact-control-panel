@@ -68,7 +68,7 @@ class Eliciter:
 class LadderEliciter(Eliciter):
     """Pass over the candidates, comparing each to the current preference."""
 
-    def __init__(self, candidates, scenario):
+    def __init__(self, candidates, _):
         assert candidates, "No candidate models"
         Eliciter.__init__(self)
         self.candidates = list(candidates)  # copy references
