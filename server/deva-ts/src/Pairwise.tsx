@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import axios from 'axios';
-
 import _ from "lodash";
 import {Pane, metadataState, paneState, 
         resultState, scenarioState, nameState, algoState, configState } from './Base';
@@ -10,6 +9,7 @@ import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 import {VisualiseData, radarDataState} from './RadarCharts'
 import { compareConfig } from './Config';
 import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
+import {sigFigs} from './Widgets';
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
@@ -354,12 +354,13 @@ function ComparisonStatementQuantitative({leftName, leftValue,
     n2Colour = leftColour.text;
     delta = delta * -1;
   }
+  const sigfig = sigFigs(unit)
 
   return (
     <div>
     <span className={"text-xl font-bold text-"+ n1Colour}>{n1 + " "}</span>
     <span className="text-xl font-bold">
-      {unit.action} {unit.prefix} {delta.toFixed(sigfig)} {unit.suffix} more than 
+      {unit.action} {unit.prefix} {delta.toFixed(sigfig)}{unit.compare}
     </span>
     <span className={"text-xl font-bold text-" + n2Colour}>{" " + n2}</span>
     <span className={"text-xl font-bold text-" + n2Colour}>.</span>

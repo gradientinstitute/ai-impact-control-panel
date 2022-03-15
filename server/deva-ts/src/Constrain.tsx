@@ -156,7 +156,7 @@ function EliminatedStatus({}) {
 function UnitDescription({uid, unit}) {
   return (
     <div className="bg-gray-600 h-full p-4 grid grid-cols-1 gap-4">
-      <h2>{unit.name}</h2>
+      <h2>{unit.name} ({unit.benefit})</h2>
       <p className="italic">{unit.description}</p>
       <p><span className="font-bold">Captures:</span> {unit.captures}</p>
       <p><span className="font-bold">Limitations:</span> {unit.limitations}</p>
@@ -231,11 +231,11 @@ function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter})
   const sign = lowerIsBetter ? 1 : -1;
   const min = vals[0];
   const max = vals[1];
-  const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + " " + u.suffix;
-  const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + " " + u.suffix;
+  const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + u.scrollbar;
+  const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + u.scrollbar;
   const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
   const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
-  const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
+  const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")" + u.scrollbar;
   const decimals = u.displayDecimals;
   const bgcolor = GetBackgroundColor(uid);
 

@@ -1,7 +1,0 @@
-fit_intercept = true
-random_state = 666
-class_weight = "balanced"
-max_iter = 1000
-threshold = 0.5
-positive_class_weight = 10.5
-C = 1.0
