@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import {useState, useEffect} from 'react';
 import axios from 'axios';
 

@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import axios from 'axios';

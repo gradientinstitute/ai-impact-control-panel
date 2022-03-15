@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 
 function sigFigs(unit: any) {
     if (Number.isInteger(unit.min) && Number.isInteger(unit.max)) {

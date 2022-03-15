@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import {useEffect} from 'react';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';

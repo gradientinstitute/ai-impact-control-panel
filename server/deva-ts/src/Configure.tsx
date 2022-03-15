@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { useState, useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue, useSetRecoilState} from 'recoil';
 import { ArcherContainer, ArcherElement } from 'react-archer';

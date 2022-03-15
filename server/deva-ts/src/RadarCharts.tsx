@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import _ from "lodash";

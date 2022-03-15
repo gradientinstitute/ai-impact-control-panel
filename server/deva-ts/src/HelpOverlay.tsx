@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { atom, useRecoilState, useSetRecoilState, useRecoilValue} from 'recoil';
 import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";

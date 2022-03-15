@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { atom, selector } from 'recoil';
 import { metadataState, constraintsState } from './Base';
 import _ from "lodash";
