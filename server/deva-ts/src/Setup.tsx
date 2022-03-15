@@ -114,7 +114,6 @@ function ChooseProblem({setTabIndex}) {
   return (
     <TabPanel key={1}>
       <div className="grid grid-cols-1 gap-4">
-        <p className="text-lg">I want to elicit</p>
         <StartButtons setTabIndex={setTabIndex} />
       </div>
   </TabPanel>
@@ -266,20 +265,7 @@ function StartButtons({setTabIndex}) {
   const setTask = useSetRecoilState(taskTypeState);
 
   return (
-      <div className="grid grid-cols-2 gap-10 py-12 px-6">
-        <div>
-          <button className="btn mb-4 text-2xl uppercase py-8 font-bold rounded-lg text-white"
-            onClick={() => {
-              setTask(TaskTypes.Boundaries);            
-              setTabIndex(2);
-            }}
-            disabled={false}>
-              Boundaries
-          </button>
-          <p>
-          Determine the boundaries of known-acceptable performance of an AI system for the purposes of model development and modelling.
-          </p>
-        </div>
+      <div className="grid grid-cols-1 gap-10 py-12 px-6">
         <div>
         <button className="mb-4 btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
           onClick={() => {
@@ -289,7 +275,7 @@ function StartButtons({setTabIndex}) {
           disabled={false}>
             Deployment
         </button>
-          <p>
+          <p className="text-2xl">
           Determine the preferred balance of impacts for the AI system to help decide what configuration of the system should be deployed.
           </p>
         </div>
