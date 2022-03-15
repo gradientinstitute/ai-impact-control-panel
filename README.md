@@ -9,7 +9,7 @@ the impacts of their AI systems.
 
 ## What is this purpose of this software?
 
-<img src="images/control_panel_location.png" width="128"/>
+<img src="images/control_panel_location.png"/>
 
 
 Today, there are many AI systems making consequential decisions which affect our
