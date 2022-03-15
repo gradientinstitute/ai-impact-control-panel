@@ -4,13 +4,13 @@ Loading and parsing candidates and metadata.
 Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 """
 
+import math
 import os.path
 import os
 from glob import glob
 from deva import elicit
 import toml
 from deva.pareto import remove_non_pareto
-from deva.nice_range import nice_range
 
 
 def repo_root():
@@ -182,3 +182,23 @@ def inject_metadata(metrics, candidates):
 
         else:
             raise Warning(f"Data type {meta['type']} not supported.")
+
+
+def nice_range(a, b):
+    """
+    Round min down and max up to the nearest `div`.
+
+    Return the minimum value and the maximum value in order in a tuple.
+    """
+    min_num = min(a, b)
+    max_num = max(a, b)
+    diff = math.ceil(max_num - min_num)
+    div = 10**(len(str(diff)) - 1)
+
+    if min_num % div == 0:
+        min_num -= div
+    if max_num % div == 0:
+        max_num += div
+    min_num = math.floor(min_num / div) * div
+    max_num = math.ceil(max_num / div) * div
+    return (min_num, max_num)
