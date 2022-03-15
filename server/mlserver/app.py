@@ -256,6 +256,12 @@ def make_new_deployment_session():
     else:
         print("No constraints in payload.")
         filtered = candidates
+    if len(filtered) == 0:
+        print("No candidates - how?")
+        return jsonify({})
+    elif len(filtered) == 1:
+        print("One candidate remains - no eliciter required.")
+        algo = "Ladder"  # pick an eliciter that supports one candidate
 
     print("Init new session for user")
     # assume that a reload means user wants a restart
@@ -265,6 +271,7 @@ def make_new_deployment_session():
     db.logger = log
     # send our first sample of candidates
     res = _get_deployment_choice(eliciter, log)
+
     return jsonify(res)
 
 
