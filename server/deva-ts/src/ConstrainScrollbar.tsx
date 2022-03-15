@@ -263,7 +263,7 @@ function removeNonPareto(models) {
       if (dominated[i] === true)
         break;
       
-      if (dominated[j] === true || i == j)
+      if (dominated[j] === true || i === j)
         continue;
       
       const mArray = Object.entries(m);
@@ -341,7 +341,7 @@ export const unblockValuesState = selector({
     // filter for candidates only one metric needs improvement
     const m = (Array.from(blockingMetrics))
       .map(x => x[1])
-      .filter(x => x.size == 1);
+      .filter(x => x.size === 1);
 
     // take the smallest value required to unblock blockedMetric
     let unblockingMetrics = new Map();

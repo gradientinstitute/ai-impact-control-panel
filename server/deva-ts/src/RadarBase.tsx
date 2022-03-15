@@ -2,7 +2,6 @@
 // https://gist.github.com/nbremer/21746a9668ffdf6d8242
 
 import * as d3 from "d3";
-import _ from "lodash";
 
 export function DrawRadarChart(id, data, svg, colour) {
 

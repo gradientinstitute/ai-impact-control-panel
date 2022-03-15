@@ -6,7 +6,7 @@ import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
-import { metadataState, constraintsState, configState, Pane } from './Base';
+import { metadataState, constraintsState, configState } from './Base';
 
 import { allCandidatesState, maxRangesState, currentCandidatesState,
   filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
@@ -16,8 +16,8 @@ import { allCandidatesState, maxRangesState, currentCandidatesState,
 
 import { compareConfig } from './Config';
 import { radarDataState, VisualiseData } from './RadarCharts';
-import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
-import {Popover, Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
+import {HelpOverlay, overlayId } from './HelpOverlay';
+import {Popover, OverlayTrigger } from 'react-bootstrap';
 
 const HandleColours = {
   0: 'white', // default
@@ -51,7 +51,7 @@ function GetHandleColor(uid) {
   return HandleColours[blockStatus];
 }
 
-export function Constraints({}) {
+export function Constraints() {
 
   // largest possible ranges for specifying the scrollbar extents
   const maxRanges = useRecoilValue(maxRangesState);
@@ -62,16 +62,11 @@ export function Constraints({}) {
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const setRadarData = useSetRecoilState(radarDataState);
   const configs = useRecoilValue(configState);
-  const [help, setHelpState] = useRecoilState(helpState);
 
   // set initial value of the constraints
   useEffect(() => {
     setConstraints(maxRanges)
   }, []);
-
-  // useEffect(() => {
-  //   setHelpState(overlayId.ConstraintScrollbars);
-  // }, []);
 
   useEffect(() => {
     const values = {}
@@ -110,7 +105,7 @@ export function Constraints({}) {
   );
 }
 
-function ConstraintStatus({}) {
+function ConstraintStatus() {
   
   const curr = useRecoilValue(currentCandidatesState);
   const all = useRecoilValue(allCandidatesState);
@@ -131,7 +126,7 @@ function ConstraintStatus({}) {
 
 }
 
-function EliminatedStatus({}) {
+function EliminatedStatus() {
 
   const allCandidates = useRecoilValue(allCandidatesState);
   const metadata = useRecoilValue(metadataState);
@@ -207,7 +202,7 @@ function DescriptionRangeConstraint({uid, unit, objectives, helpFlag}) {
 
 }
 
-function MultiRangeConstraint({}) {
+function MultiRangeConstraint() {
   const metadata = useRecoilValue(metadataState);
   const maxRanges = useRecoilValue(maxRangesState);
   const constraints = useRecoilValue(constraintsState);
@@ -277,8 +272,8 @@ function QualitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter, h
   const vals = maxRanges[uid];
   const min = vals[0];
   const max = vals[1];
-  const cmin = constraints[uid][0];
-  const cmax = constraints[uid][1];
+  // const cmin = constraints[uid][0];
+  // const cmax = constraints[uid][1];
   const bgcolor = GetBackgroundColor(uid);
   const options = (u.options).slice(min, max + 1);
 
@@ -301,7 +296,7 @@ function RangeConstraint({uid, min, max, marks, decimals, lowerIsBetter}) {
 
   const [constraints, setConstraints] = useRecoilState(constraintsState);
   const [currentSelection, setCurrentSelection] = useRecoilState(currentSelectionState);
-  const [blockedMetric, setBlockedMetric] = useRecoilState(blockedMetricState);
+  const blockedMetric = useRecoilValue(blockedMetricState);
 
   const all = useRecoilValue(allCandidatesState);
   const thresholdValues = useRecoilValue(bestValuesState);
@@ -503,7 +498,7 @@ function GetTargetMinPercentages(uid, min, max, decimals, lowerIsBetter) {
 function GetTargetMaxPercentages(uid, min, max, decimals, lowerIsBetter) {
   const unblockValues = useRecoilValue(unblockValuesState);
   let percentage = null;
-  if (unblockValues.get(uid) != 'undefined') {
+  if (unblockValues.get(uid) !== 'undefined') {
     percentage = ((unblockValues.get(uid) - min) / (max - min)) * 100;
     percentage = lowerIsBetter ? percentage : 100 - percentage;
   }
@@ -555,7 +550,7 @@ function BlockingTargetBar({uid, minPercentage, maxPercentage, blockedStatus, lo
 function UnblockButton({uid, buttonDisabled}) {
 
   const [blockedMetric, setBlockedMetric] = useRecoilState(blockedMetricState);
-  const [_blockedConstraints, setBlockedConstraints] = useRecoilState(blockedConstraintsState);
+  const setBlockedConstraints = useSetRecoilState(blockedConstraintsState);
   const currentConstraints = useRecoilValue(constraintsState);
 
   const text = (blockedMetric === uid) 

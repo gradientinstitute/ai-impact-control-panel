@@ -10,7 +10,7 @@ import "@reach/dialog/styles.css";
 import './Setup.css';
 
 
-import {Pane, paneState, scenarioState, algoState, nameState,
+import {Pane, paneState, scenarioState, nameState,
         TaskTypes, taskTypeState} from './Base';
 
 // the set of scenarios retrieved from the serever
@@ -27,7 +27,7 @@ const currentScenarioState = atom({
 
 
 // the setup pane itself (ie root component)
-export function SetupPane({}) {
+export function SetupPane() {
   const scenarios = useRecoilValue(scenariosState);
   
   if (scenarios === []) {
@@ -123,15 +123,15 @@ function ChooseProblem({setTabIndex}) {
 
 function ChooseScenario({setTabIndex}) {
   // second tab: select scenario and eliciter (algorithm)
-  const [_pane, setPane] = useRecoilState(paneState);
+  const setPane = useSetRecoilState(paneState);
   const current = useRecoilValue(currentScenarioState);
-  const [_scenarios, setScenarios] = useRecoilState(scenariosState);
-  const [_scenario, setScenario] = useRecoilState(scenarioState);
-  const [_name, setName] = useRecoilState(nameState);
+  const setScenarios = useSetRecoilState(scenariosState);
+  const setScenario = useSetRecoilState(scenarioState);
+  const [name, setName] = useRecoilState(nameState);
   
   // const canGoBack = tabIndex >= 0;
   const taskType = useRecoilValue(taskTypeState);
-  const buttonDisabled = (current === null) || (_name === "");
+  const buttonDisabled = (current === null) || (name === "");
 
   // load scenarios
   useEffect(() => {
@@ -140,11 +140,11 @@ function ChooseScenario({setTabIndex}) {
       setScenarios(result.data);
     }
     fetch();
-  }, []
+  }, [setScenarios]
   );
 
   // Update here for additional tasks
-  const nextPane = taskType == TaskTypes.Boundaries 
+  const nextPane = taskType === TaskTypes.Boundaries 
     ? Pane.Boundaries : Pane.Configure;
 
 
@@ -153,7 +153,7 @@ function ChooseScenario({setTabIndex}) {
       <div>
         <div>
           <p className="text-lg pb-6">Enter your name</p>
-          <input type="text" name="name" value={_name}
+          <input type="text" name="name" value={name}
             onChange={ (x) => {setName(x.target.value)}}/>
         </div>
       <br></br>
@@ -190,7 +190,7 @@ function ChooseScenario({setTabIndex}) {
 
 
 // Select scenario from list and preview details
-function ScenarioSelector({}) {
+function ScenarioSelector() {
 
 
   

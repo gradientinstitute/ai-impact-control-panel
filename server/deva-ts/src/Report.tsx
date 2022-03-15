@@ -7,7 +7,7 @@ import { Pane, paneState, scenarioState, constraintsState,
          reportState } from './Base';
 
 
-export function ReportPane({}) {
+export function ReportPane() {
   const scenario = useRecoilValue(scenarioState);
   const constraints = useRecoilValue(constraintsState);
   const report = useRecoilState(reportState)[0];
@@ -71,8 +71,8 @@ function CompleteButton({scenario, constraints}) {
 
 // TODO: Back button
 // Need to be fixed
-function BackButton({}) {
-  const [_pane, setPane] = useRecoilState(paneState);
+function BackButton() {
+  const setPane = useSetRecoilState(paneState);
   return (
   <div className="flex flex-1 align-middle text-left">
     <button className="hover:text-gray-400 transition"

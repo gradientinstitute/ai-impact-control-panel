@@ -1,11 +1,10 @@
 // Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
-import { atom, useRecoilState, useSetRecoilState, useRecoilValue} from 'recoil';
+import { atom, useRecoilState } from 'recoil';
 import "@reach/tabs/styles.css";
 import "@reach/dialog/styles.css";
 import './Setup.css';
-import {Button, Tooltip, OverlayTrigger, CloseButton} from 'react-bootstrap';
+import {Button, Tooltip, OverlayTrigger} from 'react-bootstrap';
 import questionMark from './question-mark.svg';
-import {Pane, paneState} from './Base';
 
 
 export const helpState = atom({
@@ -155,7 +154,7 @@ const overlayCfg = {
 }
 
 // add a use effect that starts at a particular thing
-export function HelpButton({}) {
+export function HelpButton() {
   const [help, setHelpState] = useRecoilState(helpState);
   return(
     <div>
@@ -173,7 +172,6 @@ export function HelpButton({}) {
 export function HelpOverlay({children, hid}) {
   
     const [ctr, setCtr] = useRecoilState(helpState);
-    const pane = useRecoilValue(paneState);
     
     if (!(hid in overlayCfg)) {
       return children;
@@ -197,7 +195,7 @@ export function HelpOverlay({children, hid}) {
   
     return (
       <OverlayTrigger 
-        show={ctr==hid}
+        show={ctr===hid}
         placement={cfg.placement} 
         overlay={tooltip}
       >

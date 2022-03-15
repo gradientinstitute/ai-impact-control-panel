@@ -8,7 +8,7 @@ export function Breadcrumb() {
   const pane = useRecoilValue(paneState);
 
   const STEPS = {
-    Intro: {label: 'Configure'},
+    Configure: {label: 'Configuration and filtering'},
     Pairwise: {label: 'Preference Selection'},
     Result: {label: 'Results'}
   }

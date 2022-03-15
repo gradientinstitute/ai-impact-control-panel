@@ -1,12 +1,11 @@
 // Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { useRecoilValue } from 'recoil';
-import _ from "lodash";
 
 import { metadataState } from './Base';
-import {HelpOverlay, overlayId, HelpButton, helpState} from './HelpOverlay';
+import {HelpOverlay, overlayId } from './HelpOverlay';
 
 // the Introduction pane -- root node
-export function IntroContext({}) {
+export function IntroContext() {
   
   const metadata = useRecoilValue(metadataState);
 
@@ -29,7 +28,7 @@ export function IntroContext({}) {
   );
 }
 
-function DetailBlock({}) {
+function DetailBlock() {
 
   const metadata = useRecoilValue(metadataState);
   return (
@@ -52,7 +51,7 @@ function DetailBlock({}) {
 }
 
 // visual-ish display of the data -> model -> decision pipeline
-function Pipeline({}) {
+function Pipeline() {
 
   const metadata = useRecoilValue(metadataState);
 
