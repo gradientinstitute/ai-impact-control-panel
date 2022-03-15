@@ -5,6 +5,8 @@ the impacts of their AI systems.
 
 Check out the [live demo](https://portal.gradientinstitute.org/aicontrolpanel)!
 
+Read more about the tool in this [blog post](https://lmccalman.medium.com/8f2316505a1f).
+
 **This code is at an Alpha (early) level of development: frequent and substantial changes in functionality are likely to occur.**
 
 
@@ -85,28 +87,33 @@ the live demo deployment).
 
 ## Development
 
-### Installation
+If you'd like to get involved with development of this tool, we'd love to
+collaborate: send us an email at `info@gradientinstitute.org`. Of course, you
+may wish to just dive into the code: the instructions below should serve as
+a starting point.
 
-1. Install python-poetry
-2. run `poetry install` in this directory
+### Installing for development
 
-Note: there is no need to do a pip install -e . : this happens automatically, 
-along with venv creation and dependencies.
+Prerequisites:
 
-To get into a venv, do `poetry shell`.
+1. python 3.8+
+2. poetry (python package manager)
+3. npm 8.5+
+4. yarn 1.22+
 
+Instructions:
 
-### Running the server for development
-
-Go to the server folder. start the backend with `server/mlserver/run_dev.sh`
-
-To start the frontend, go to `server/deva-ts` and from there run `yarn
-start`.
-
+1. run `poetry install` in this directory.
+2. run `poetry shell` to start a new shell with the virtual environment
+   enabled.
+3. cd to `server/mlserver` and run `./run_dev.sh`. This will start the backend
+   server.
+4. Open a new shell, run `poetry shell` in the repo root directory, navigate to
+   `server/deva-ts` and run `yarn start`. This will serve the frontend.
 
 ### Testing
 
-In the venv, run `pytest`.
+In the venv, run `make test`, `make lint` and `make typecheck`.
 
 
 ## Copyright and License
