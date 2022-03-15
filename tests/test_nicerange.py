@@ -1,8 +1,7 @@
 """
 Unit tests for estimating a bounds range from data.
 
-Date: 28 Jan 2022
-Author: Cindy Chen
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 """
 from deva.nice_range import nice_range
 

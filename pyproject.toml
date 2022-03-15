@@ -1,3 +1,5 @@
+# Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+
 [tool.poetry]
 name = "deva"
 version = "0.1.0"

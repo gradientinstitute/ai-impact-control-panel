@@ -1,6 +1,5 @@
 """
 DEVA AI Oversight Tool.
 
-This is unreleased prototype software.
-Copyright Gradient Institute 2022. Licence TBD.
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 """

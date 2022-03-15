@@ -1,3 +1,5 @@
+# Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+
 help:
 	@echo "typecheck - run mypy typechecking"
 	@echo "typecheck-xml - run mypy typechecking with junit output"

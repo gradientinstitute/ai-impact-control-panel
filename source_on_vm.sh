@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+# Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 # Kills all the current containers, spins up new ones based on latest images
 # assuming we're running docker-compose in docker (see sock mapping)
 #  https://cloud.google.com/community/tutorials/docker-compose-on-container-optimized-os

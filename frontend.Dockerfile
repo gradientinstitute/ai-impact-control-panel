@@ -1,3 +1,5 @@
+# Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+
 # Stage 1 - the build process
 FROM node:12.18.1 as build-deps
 WORKDIR /usr/src/app

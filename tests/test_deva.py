@@ -1,4 +1,8 @@
-"""Test the eliciters in the DEVA package."""
+"""
+Test the eliciters in the DEVA package.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
 from deva import elicit
 from itertools import permutations
 import pickle
