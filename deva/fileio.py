@@ -61,8 +61,10 @@ def _load_baseline(scenario):
     # attempt to load the baseline
     scenario_path = os.path.join(repo_root(), "scenarios", scenario)
     baseline_f = os.path.join(scenario_path, "baseline.toml")
-    assert os.path.exists(baseline_f)
-    baseline = toml.load(baseline_f)
+    if os.path.exists(baseline_f):
+        baseline = toml.load(baseline_f)
+    else:
+        baseline = {}  # optional
     return baseline
 
 
