@@ -93,7 +93,7 @@ function Welcome({setTabIndex}) {
       </p>
 
       <p>
-      To get the code or deploy the tool yourself, visit <a className="e" href="https://gradientinstitute.github.com/ai-impact-control-panel">our github</a>.
+      To get the code or deploy the tool yourself, visit <a className="e" href="https://github.com/gradientinstitute/ai-impact-control-panel">our github</a>.
       </p>
       </div>
       <button className="btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
