@@ -5,7 +5,7 @@ the impacts of their AI systems.
 
 Check out the [live demo](https://portal.gradientinstitute.org/aicontrolpanel)!
 
-Read more about the tool in this [blog post](https://lmccalman.medium.com/8f2316505a1f).
+Read more about the tool in this [blog post](https://medium.com/gradient-institute/ai-impact-control-panel-8f2316505a1f).
 
 **This code is at an Alpha (early) level of development: frequent and substantial changes in functionality are likely to occur.**
 
@@ -43,7 +43,6 @@ the control panel providesa decision-maker
 
 A more in-depth description of the context and potential use-cases for the AI impact
 control panel can be found in [this blog post](https://medium.com/gradient-institute/ai-impact-control-panel-8f2316505a1f).
-
 ## Prerequisites
 
 The control panel does not actually build machine learning models, decide what
@@ -109,7 +108,8 @@ Instructions:
 3. cd to `server/mlserver` and run `./run_dev.sh`. This will start the backend
    server.
 4. Open a new shell, run `poetry shell` in the repo root directory, navigate to
-   `server/deva-ts` and run `yarn start`. This will serve the frontend.
+   `server/deva-ts`.
+5. Run `yarn install` to install the required packages then `yarn start` to serve the frontend.
 
 ### Testing
 
