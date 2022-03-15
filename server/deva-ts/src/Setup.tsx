@@ -73,7 +73,7 @@ function Welcome({setTabIndex}) {
       <p>
       This tool helps decision-makers control the impacts that their AI systems
       have. It allows them to specify bounds of acceptable operation, and to
-      help them achieve an acceptable balance between conlficting objectives
+      help them achieve an acceptable balance between conflicting objectives
       (for example, performance in different customer groups).
       </p>
       
@@ -88,7 +88,7 @@ function Welcome({setTabIndex}) {
       </p>
 
       <p>
-      This online demo provides a selection of simple example systems to illustrate the function of the tool. There is no ability to upload your own data or system in tis demo.
+      This online demo provides a selection of simple example systems to illustrate the function of the tool. There is no ability to upload your own data or system in this demo.
       </p>
 
       <p>

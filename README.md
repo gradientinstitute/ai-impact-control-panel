@@ -1,14 +1,16 @@
-###################
-Oversight-prototype
-###################
+# AI Impact Control Panel
 
-Prototype code for the Minderoo oversight tool project.
+An interactive application for decision-makers to help understand and control
+the impacts of their AI systems.
 
-Copyright 2021 Gradient Institute Ltd.
 
-**************************************
-What is this purpose of this software?
-**************************************
+## This code is at an Alpha (early) level of development: frequent and substantial changes in functionality are likely to occur.
+
+
+## What is this purpose of this software?
+
+<img src="images/control_panel_location.png" width="128"/>
+
 
 Today, there are many AI systems making consequential decisions which affect our
 lives and livelihoods. Your bank runs AI systems to assess your credit risk for
