@@ -1,4 +1,9 @@
-"""Preferene eliciter module."""
+"""
+Preferene eliciter module.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
+
 import numpy as np
 from deva import halfspace
 from sklearn.cluster import KMeans

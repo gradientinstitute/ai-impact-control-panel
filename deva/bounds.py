@@ -1,4 +1,8 @@
-"""Module for eliciting minimum performance requirements."""
+"""
+Module for eliciting minimum performance requirements.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
 import numpy as np
 from deva import elicit
 from sklearn.linear_model import LogisticRegression

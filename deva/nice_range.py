@@ -1,9 +1,9 @@
 """
 Compute brackets around data values.
 
-Date: Jan 28, 2022
-Author: Muyao Chen
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 """
+
 import math
 
 

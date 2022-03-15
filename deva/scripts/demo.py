@@ -1,4 +1,8 @@
-"""Python demo that does not invoke a frontend server."""
+"""
+Python demo that does not invoke a frontend server.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
 import click
 from deva import elicit
 import logging

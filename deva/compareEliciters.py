@@ -1,4 +1,9 @@
-"""Command line tool for experimentally comparing eliciters."""
+"""
+Command line tool for experimentally comparing eliciters.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
+
 import numpy as np
 import matplotlib.pylab as plt
 import click

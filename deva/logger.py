@@ -1,4 +1,8 @@
-"""Module to support eliciter logging."""
+"""
+Module to support eliciter logging.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
 from datetime import datetime
 from collections import OrderedDict
 # import toml

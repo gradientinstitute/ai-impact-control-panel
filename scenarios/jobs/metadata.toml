@@ -1,3 +1,5 @@
+# Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+
 name = "Job Match Recommender" 
 purpose = """Match candidates to roles that they want to apply for and have 
 suitable qualifications and experience for."""

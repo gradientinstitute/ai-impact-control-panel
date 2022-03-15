@@ -1,4 +1,9 @@
-"""Loading and parsing candidates and metadata."""
+"""
+Loading and parsing candidates and metadata.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
+
 import os.path
 import os
 from glob import glob
