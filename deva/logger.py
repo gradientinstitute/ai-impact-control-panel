@@ -10,6 +10,7 @@ from deva.fileio import repo_root
 # from fpdf import FPDF
 import os.path
 from deva import interface
+import random
 
 
 class Logger:
@@ -26,6 +27,7 @@ class Logger:
             "time": timestr,
             "username": user
         }
+        self.user = user
         self.choices = []
         self.result = None
         self.meta = meta
@@ -51,9 +53,10 @@ class Logger:
             os.makedirs(path)  # recursive
 
         # pick a unique filename for the session
-        timestamp = self.profile["time"].replace(":", "-")
-        fname = path + timestamp
-        f_txt = fname + ".txt"
+        # no longer using timestamp: not unique for simultaineous sessions
+        # timestamp = self.profile["time"].replace(":", "-")
+        hx = "%06x" % random.randrange(16**6)
+        f_txt = os.path.join(path, "log_" + self.user + "_" + hx + ".txt")
 
         lines = ["Scenario Settings"]
         for k, v in self.profile.items():
