@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { useState, useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue, useSetRecoilState} from 'recoil';
 import { ArcherContainer, ArcherElement } from 'react-archer';
@@ -110,7 +111,9 @@ function AlgorithmMenu({}) {
   
   return (
     <div>
+      <HelpOverlay hid={overlayId.Algorithm}>
       <h1 className="text-left">Elicitation Settings</h1>
+      </HelpOverlay>
       <AlgoSelector />
     </div>
   );
@@ -151,37 +154,12 @@ function AlgoSelector({}) {
 
 function StartButton({}) {
 
-  // some local state to trigger a useEffect fetcher
-  const [submit, setSubmit] = useState(false);
-
-  const name = useRecoilValue(nameState);
-  const scenario = useRecoilValue(scenarioState);
-  const constraints = useRecoilValue(constraintsState);
   const [_pane, setPane] = useRecoilState(paneState);
-  const algorithm = useRecoilValue(algoState);
-
-  const payload = {
-    scenario: scenario,
-    constraints: constraints,
-    name: name,
-    algorithm: algorithm,
-  };
-
-  useEffect(() => {
-    const fetch = async () => {
-      await axios.put<any>("api/deployment/new", payload);
-      setPane(Pane.Pairwise);
-    }
-    if (submit) {
-      fetch();
-    }
-  }, [submit]
-  );
 
   return (
       <div className="">
       <button className="bg-gray-200 text-black" 
-        onClick={() => {setSubmit(true)}}>
+        onClick={() => {setPane(Pane.Pairwise)}}>
         <div className="p-4 text-3xl">
           Continue
         </div>

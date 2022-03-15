@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import {atom} from 'recoil';
 
 // what pane are we looking at

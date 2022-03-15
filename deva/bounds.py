@@ -1,7 +1,10 @@
-"""Module for eliciting minimum performance requirements."""
-import numpy as np
-from deva import elicit, fileio
+"""
+Module for eliciting minimum performance requirements.
 
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
+import numpy as np
+from deva import elicit
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -125,7 +128,7 @@ class KNeighborsEliciter(BoundsEliciter):
         self.choice = test_X[min_index]
 
         self.query = elicit.Candidate(
-            fileio.autoname(self._step),
+            elicit.autoname(self._step),
             dict(zip(self.attribs, self.choice))
         )
         self._step += 1
@@ -142,7 +145,7 @@ class KNeighborsEliciter(BoundsEliciter):
         """Check whether the sampler is terminated."""
         return self._step > self.steps
 
-    def predict_prob(self, queries):
+    def predict_proba(self, queries):
         """Estimate the probability that the queries are acceptable."""
         probabilities = self.neigh.predict_proba(queries)
         return probabilities
@@ -245,7 +248,7 @@ class LinearActive(BoundsEliciter):
         self.choice = test_X[min_index]
 
         self.query = elicit.Candidate(
-            fileio.autoname(self._step),
+            elicit.autoname(self._step),
             dict(zip(self.attribs, self.choice))
         )
         self._step += 1
@@ -345,7 +348,7 @@ class LinearRandom(BoundsEliciter):
         self.choice = choice  # candidate
 
         self.query = elicit.Candidate(
-            fileio.autoname(self._step),
+            elicit.autoname(self._step),
             dict(zip(self.attribs, choice))
         )
         self._step += 1
@@ -422,7 +425,7 @@ class PlaneSampler(BoundsEliciter):
 
         self.choice = choice
         self.query = elicit.Candidate(
-            fileio.autoname(self._step),
+            elicit.autoname(self._step),
             dict(zip(self.attribs, choice))
         )
         self._step += 1

@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { useEffect, useState } from 'react';
 import { atom, useRecoilState, 
   useSetRecoilState, useRecoilValue} from 'recoil';
@@ -73,7 +74,7 @@ function Welcome({setTabIndex}) {
       <p>
       This tool helps decision-makers control the impacts that their AI systems
       have. It allows them to specify bounds of acceptable operation, and to
-      help them achieve an acceptable balance between conlficting objectives
+      help them achieve an acceptable balance between conflicting objectives
       (for example, performance in different customer groups).
       </p>
       
@@ -88,7 +89,7 @@ function Welcome({setTabIndex}) {
       </p>
 
       <p>
-      This online demo provides a selection of simple example systems to illustrate the function of the tool. There is no ability to upload your own data or system in tis demo.
+      This online demo provides a selection of simple example systems to illustrate the function of the tool. There is no ability to upload your own data or system in this demo.
       </p>
 
       <p>
@@ -113,7 +114,6 @@ function ChooseProblem({setTabIndex}) {
   return (
     <TabPanel key={1}>
       <div className="grid grid-cols-1 gap-4">
-        <p className="text-lg">I want to elicit</p>
         <StartButtons setTabIndex={setTabIndex} />
       </div>
   </TabPanel>
@@ -265,20 +265,7 @@ function StartButtons({setTabIndex}) {
   const setTask = useSetRecoilState(taskTypeState);
 
   return (
-      <div className="grid grid-cols-2 gap-10 py-12 px-6">
-        <div>
-          <button className="btn mb-4 text-2xl uppercase py-8 font-bold rounded-lg text-white"
-            onClick={() => {
-              setTask(TaskTypes.Boundaries);            
-              setTabIndex(2);
-            }}
-            disabled={false}>
-              Boundaries
-          </button>
-          <p>
-          Determine the boundaries of known-acceptable performance of an AI system for the purposes of model development and modelling.
-          </p>
-        </div>
+      <div className="grid grid-cols-1 gap-10 py-12 px-6">
         <div>
         <button className="mb-4 btn text-2xl uppercase py-8 font-bold rounded-lg text-white"
           onClick={() => {
@@ -288,7 +275,7 @@ function StartButtons({setTabIndex}) {
           disabled={false}>
             Deployment
         </button>
-          <p>
+          <p className="text-2xl">
           Determine the preferred balance of impacts for the AI system to help decide what configuration of the system should be deployed.
           </p>
         </div>

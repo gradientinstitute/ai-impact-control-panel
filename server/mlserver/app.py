@@ -37,7 +37,6 @@ else:
     print("Using development database (thread local object)")
     db = DevDB(session)
 
-# TODO: proper cache / serialisation
 eliciters_descriptions = {k: v.description()
                           for k, v in elicit.algorithms.items()}
 
@@ -238,15 +237,41 @@ def make_new_deployment_session():
     algo = data["algorithm"]
     name = data["name"]
 
-    # assume that a reload means user wants a restart
-    print("Init new session for user")
+    print("Loading candiates")
     candidates, spec = _scenario(scenario)
-    eliciter = elicit.algorithms[algo](candidates, spec)
+
+    if "constraints" in data:
+        constraints = data["constraints"]
+
+        print("Filtering candidates")
+        filtered = []
+        for c in candidates:
+            for attr, (mi, ma) in constraints.items():
+                val = c[attr]
+                if (val < mi) or (val > ma):
+                    break
+            else:
+                filtered.append(c)
+        print(f"{len(filtered)} candidates remain!")
+    else:
+        print("No constraints in payload.")
+        filtered = candidates
+    if len(filtered) == 0:
+        print("No candidates - how?")
+        return jsonify({})
+    elif len(filtered) == 1:
+        print("One candidate remains - no eliciter required.")
+        algo = "Ladder"  # pick an eliciter that supports one candidate
+
+    print("Init new session for user")
+    # assume that a reload means user wants a restart
+    eliciter = elicit.algorithms[algo](filtered, spec)
     log = logger.Logger(scenario, algo, name, spec["metrics"])
     db.eliciter = eliciter
     db.logger = log
     # send our first sample of candidates
     res = _get_deployment_choice(eliciter, log)
+
     return jsonify(res)
 
 

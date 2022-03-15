@@ -1,15 +1,16 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { useEffect } from 'react';
 import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import axios from 'axios';
-
 import _ from "lodash";
-import {Pane, metadataState, paneState, 
+import {Pane, metadataState, paneState, constraintsState,
         resultState, scenarioState, nameState, algoState, configState } from './Base';
 import {Key, Model, FillBar, adjustUnitRange} from './Widgets';
 
 import {VisualiseData, radarDataState} from './RadarCharts'
 import { compareConfig } from './Config';
 import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
+import {sigFigs} from './Widgets';
 
 // TODO significant figures should be in the metadata config
 const sigfig = 2
@@ -41,6 +42,7 @@ export function PairwisePane({}) {
   const scenario = useRecoilValue(scenarioState);
   const name = useRecoilValue(nameState);
   const algorithm = useRecoilValue(algoState);
+  const constraints = useRecoilValue(constraintsState);
 
   const choice = useRecoilValue(choiceState);
   const [candidates, setCandidates] = useRecoilState(candidatesState);
@@ -60,6 +62,7 @@ export function PairwisePane({}) {
       const payload = {
         scenario: scenario,
         algorithm: algorithm,
+        constraints: constraints,
         name: name,
       }
       const result = await axios.put<any>("api/deployment/new", payload);
@@ -76,6 +79,7 @@ export function PairwisePane({}) {
         values[d[0]['name']] = d[0]['values'];
         values[d[1]['name']] = d[1]['values']; 
         setRadarData(values);
+        setHelpState(overlayId.FirstOnPairwise);
       }
     }
     fetch();
@@ -130,9 +134,14 @@ export function PairwisePane({}) {
     return (<h2>Loading...</h2>);
   }
 
+  const first_uid = Object.entries(metadata.metrics)[0][0];
+
   function comparisons() {
     let result = []; 
+
     for (const [uid, u] of Object.entries(metadata.metrics)) {
+
+      const helpFlag = (uid === first_uid);
       result.push(
       <div className="bg-gray-700 rounded-lg p-3">
         <PairwiseComparator 
@@ -142,6 +151,7 @@ export function PairwisePane({}) {
           rightValue={candidates.right.values[uid]} 
           leftName={candidates.left.name} 
           rightName={candidates.right.name}
+          helpFlag={helpFlag}
         />
       </div>
       );
@@ -157,12 +167,18 @@ export function PairwisePane({}) {
     <div className="mx-auto max-w-screen-2xl grid gap-x-8 
       gap-y-6 grid-cols-1 text-center items-center">
       <div>
+        <HelpOverlay hid={overlayId.FirstOnPairwise}>
         <h1 className="text-5x1 font-bold">
           Pairwise Preference Elicitation: {metadata.name}
         </h1>
+        </HelpOverlay>
         <p className="italic">A system designed to {metadata.purpose}</p>
       </div>
+      <HelpOverlay hid={overlayId.PairwiseRadar}>
+      <div>
       {visualiseRadar}
+      </div>
+      </HelpOverlay>
       <InputGetter 
         leftName={candidates.left.name} 
         rightName={candidates.right.name} 
@@ -207,20 +223,30 @@ function InputGetter({leftName, rightName}) {
     <div className="w-auto mb-8 flex space-x-16">
       <div className="my-auto" style={{width:"5%"}}/>
       <div className="my-auto" style={{width:"20%"}}>
+        <HelpOverlay hid={overlayId.PairwiseButton}>
+        <div>
         <PreferenceButton 
           label={leftName} 
           me={leftName}
           other={rightName}
+          color={"bg-blue-400"}
+          text={"text-blue-700"}
         />
+        </div>
+        </HelpOverlay>
       </div>
+      <HelpOverlay hid={overlayId.PairwiseText}>
       <div className="my-auto" style={{width:"50%"}}>
         <Motivation />
       </div>
+      </HelpOverlay>
       <div className="my-auto" style={{width:"20%"}}>
         <PreferenceButton 
           label={rightName} 
           me={rightName}
           other={leftName}
+          color={"bg-pink-200"}
+          text={"text-pink-600"}
         />
       </div>
       <div className="my-auto" style={{width:"5%"}}/>
@@ -228,7 +254,7 @@ function InputGetter({leftName, rightName}) {
   );
 }
 
-function PreferenceButton({me, other, label}) {
+function PreferenceButton({me, other, label, color, text}) {
 
   const [_choice, setChoice] = useRecoilState(choiceState);
 
@@ -237,9 +263,9 @@ function PreferenceButton({me, other, label}) {
   }
 
   return (
-      <button className="bg-gray-200 rounded-lg" 
+      <button className={"rounded-lg " + color} 
         onClick={onClick}>
-        <div className="p-4 text-3xl text-black">
+        <div className={"p-4 text-3xl " + text}>
           I prefer {label}
         </div>
       </button>
@@ -274,7 +300,7 @@ function FlagImportant({uid}) {
 }
 
 function PairwiseComparator({uid, leftName, leftValue, 
-  rightName, rightValue, unit}) {
+  rightName, rightValue, unit, helpFlag}) {
 
   if (!unit.lowerIsBetter) {
     unit = adjustUnitRange(unit);
@@ -284,25 +310,33 @@ function PairwiseComparator({uid, leftName, leftValue,
 
   return (
     
+    <HelpOverlay hid={helpFlag? overlayId.PairwiseDetail: -1000}>
     <div className="w-auto flex space-x-16">
+      <HelpOverlay hid={helpFlag? overlayId.Important: -1000}>
       <div className="my-auto" style={{width:"10%"}}>
         <FlagImportant uid={uid} />
       </div>
+      </HelpOverlay>
       <div className="my-auto" style={{width:"10%"}}>
         <Key unit={unit}/>
       </div>
+      <HelpOverlay hid={helpFlag? overlayId.PairwiseAbsolute: -1000}>
       <div className="my-auto" style={{width:"30%"}}>
         <Model unit={unit} name={leftName} 
           value={leftValue} isMirror={false} colour={leftColour.text}/>
       </div>
+      </HelpOverlay> 
+      <HelpOverlay hid={helpFlag? overlayId.PairwiseRelative: -1000}>
       <div className="my-auto" style={{width:"20%"}}>
         {Comparison({leftValue, leftName, rightValue, rightName, unit})}
       </div>
+      </HelpOverlay>
       <div className="my-auto" style={{width:"30%"}}>
         <Model unit={unit} name={rightName}
           value={rightValue} isMirror={false} colour={rightColour.text}/>
       </div>
     </div>
+    </HelpOverlay>
 
   );
 }
@@ -354,12 +388,13 @@ function ComparisonStatementQuantitative({leftName, leftValue,
     n2Colour = leftColour.text;
     delta = delta * -1;
   }
+  const sigfig = sigFigs(unit)
 
   return (
     <div>
     <span className={"text-xl font-bold text-"+ n1Colour}>{n1 + " "}</span>
     <span className="text-xl font-bold">
-      {unit.action} {unit.prefix} {delta.toFixed(sigfig)} {unit.suffix} more than 
+      {unit.action} {unit.prefix} {delta.toFixed(sigfig)}{unit.compare}
     </span>
     <span className={"text-xl font-bold text-" + n2Colour}>{" " + n2}</span>
     <span className={"text-xl font-bold text-" + n2Colour}>.</span>

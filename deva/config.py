@@ -1,4 +1,9 @@
-"""Load configuration TOML files."""
+"""
+Load configuration TOML files.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
+
 import toml
 import namedtupled
 

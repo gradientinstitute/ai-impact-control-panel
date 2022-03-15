@@ -1,4 +1,9 @@
-"""Database implementations for flask frontend."""
+"""
+Database implementations for flask frontend.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
+
 
 import sys
 import pickle

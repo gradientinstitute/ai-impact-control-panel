@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import {useEffect} from 'react';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
@@ -153,18 +154,19 @@ function EliminatedStatus({}) {
   );
 }
 
-function UnitDescription({uid, unit}) {
+function UnitDescription({uid, unit, objectives}) {
   return (
     <div className="bg-gray-600 h-full p-4 grid grid-cols-1 gap-4">
-      <h2>{unit.name}</h2>
+      <h2>{unit.name} ({unit.benefit})</h2>
       <p className="italic">{unit.description}</p>
-      <p><span className="font-bold">Captures:</span> {unit.captures}</p>
+      <p><span className="font-bold">Captures: </span> 
+        {objectives[unit.captures].name}</p>
       <p><span className="font-bold">Limitations:</span> {unit.limitations}</p>
     </div>
   )
 }
 
-function DescriptionRangeConstraint({uid, unit}) {
+function DescriptionRangeConstraint({uid, unit, objectives, helpFlag}) {
 
   const lowerIsBetter = unit.lowerIsBetter === false ? false : true;
   const maxRanges = useRecoilValue(maxRangesState);
@@ -177,23 +179,29 @@ function DescriptionRangeConstraint({uid, unit}) {
       maxRanges={maxRanges} 
       constraints={constraints}
       uid={uid}
-      lowerIsBetter={lowerIsBetter}/>) :
+      lowerIsBetter={lowerIsBetter}
+      helpFlag={helpFlag}/>) :
 
     (<QuantitativeConstraint u={unit}
       maxRanges={maxRanges}
       constraints={constraints}
       uid={uid}
-      lowerIsBetter={lowerIsBetter}/>)
+      lowerIsBetter={lowerIsBetter}
+      helpFlag={helpFlag}/>)
 
   return (
+    <HelpOverlay hid={helpFlag? overlayId.UnitFilter: -1000}>
     <div className={"grid grid-cols-8 " + bgcolor}>
+      <HelpOverlay hid={helpFlag? overlayId.UnitDescription: -1000} >
       <div className="col-span-3">
-        <UnitDescription uid={uid} unit={unit} />
+        <UnitDescription uid={uid} unit={unit} objectives={objectives}/>
       </div>
+      </HelpOverlay>
       <div className="col-span-5 my-auto">
         {pane}
       </div>
     </div>
+    </HelpOverlay>
   )
 
 
@@ -208,12 +216,15 @@ function MultiRangeConstraint({}) {
     return (<div>Loading...</div>);
   }
 
+  const first_uid = Object.entries(metadata.metrics)[0][0];
   const items = Object.entries(metadata.metrics).map((x) => {
     const uid = x[0];
     const u: any = x[1];
+    const helpFlag = (uid === first_uid);
     return (
       <div>
-        <DescriptionRangeConstraint key={uid} uid={uid} unit={u} />
+        <DescriptionRangeConstraint key={uid} uid={uid} unit={u}
+        objectives={metadata.objectives} helpFlag={helpFlag}/>
       </div>
     );
   });
@@ -225,17 +236,17 @@ function MultiRangeConstraint({}) {
   );
 }
 
-function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter}) {
+function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter, helpFlag}) {
   // TODO: remember how to specify these types in destructuring args
   const vals = maxRanges[uid];
   const sign = lowerIsBetter ? 1 : -1;
   const min = vals[0];
   const max = vals[1];
-  const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + " " + u.suffix;
-  const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + " " + u.suffix;
+  const min_string = u.prefix + " " + (lowerIsBetter ? min : max * sign) + u.scrollbar;
+  const max_string = u.prefix + " " + (lowerIsBetter ? max : min * sign) + u.scrollbar;
   const cmin = lowerIsBetter ? constraints[uid][0] : constraints[uid][1];
   const cmax = lowerIsBetter ? constraints[uid][1] : constraints[uid][0];
-  const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")\n" + u.suffix;
+  const cstring = u.prefix + " (" + (cmin * sign) + " - " + (cmax * sign) + ")" + u.scrollbar;
   const decimals = u.displayDecimals;
   const bgcolor = GetBackgroundColor(uid);
 
@@ -243,18 +254,26 @@ function QuantitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter})
     <div key={uid} 
     className={"grid grid-cols-5 gap-8 p-4 " + bgcolor}>
       
+      <HelpOverlay hid={helpFlag? overlayId.UnitFilterWords : -1000}>
       <p className="col-span-5 text-xl text-center">{cstring}</p>
+      </HelpOverlay>
 
+      <HelpOverlay hid={helpFlag? overlayId.UnitFilterMin : -1000}>
       <p className="col-span-1 text-xs text-right my-auto">{min_string}</p>
+      </HelpOverlay>
+      <HelpOverlay hid={helpFlag? overlayId.UnitFilterRange : -1000}>
       <div className="col-span-3 my-auto">
         <RangeConstraint uid={uid} min={min} max={max} marks={null} decimals={decimals} lowerIsBetter={lowerIsBetter}/>
       </div>
+      </HelpOverlay>
+      <HelpOverlay hid={helpFlag? overlayId.UnitFilterMax : -1000}>
       <p className="col-span-1 text-xs text-left my-auto">{max_string}</p>
+      </HelpOverlay>
     </div>
   )
 }
 
-function QualitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter}) {
+function QualitativeConstraint({u, maxRanges, constraints, uid, lowerIsBetter, helpFlag}) {
   const vals = maxRanges[uid];
   const min = vals[0];
   const max = vals[1];

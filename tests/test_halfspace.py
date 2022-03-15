@@ -1,4 +1,8 @@
-"""Test the halfspace ranking algorithm."""
+"""
+Test the halfspace ranking algorithm.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
 import pytest
 import numpy as np
 from functools import partial

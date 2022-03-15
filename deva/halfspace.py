@@ -4,7 +4,10 @@ This implements the algorithm described in:
 
 Jamieson, K.G., Nowak, R., 2011. Active Ranking using Pairwise Comparisons.
 Advances in Neural Information Processing Systems (NeurIPS) 24, 9.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 """
+
 import numpy as np
 from functools import cmp_to_key
 from scipy.optimize import linprog

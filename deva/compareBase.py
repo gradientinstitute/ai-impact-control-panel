@@ -1,8 +1,7 @@
 """
-Reporting how canidates are eliminated by minimum requirements.
+Reporting how candidates are eliminated by minimum requirements.
 
-Date: Feb 10, 2022
-Author: Muyao Chen
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 """
 
 

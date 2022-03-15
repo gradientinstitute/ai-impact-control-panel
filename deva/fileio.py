@@ -1,11 +1,16 @@
-"""Loading and parsing candidates and metadata."""
+"""
+Loading and parsing candidates and metadata.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
+
+import math
 import os.path
 import os
 from glob import glob
 from deva import elicit
 import toml
 from deva.pareto import remove_non_pareto
-from deva.nice_range import nice_range
 
 
 def repo_root():
@@ -44,18 +49,6 @@ def get_all_files(scenario):
     return input_files
 
 
-def autoname(ind):
-    """Automatically turn an index into a system name."""
-    # sequence A-Z, AA-AZ-ZZ, AAA-AAZ-AZZ-ZZZ ...
-    chars = []
-    while True:
-        chars.append(chr(65 + ind % 26))
-        if ind < 26:
-            break
-        ind = ind // 26 - 1
-    return "System " + "".join(chars[::-1])
-
-
 def list_scenarios():
     """Examine all the scenario folders and extract their metadata."""
     scenarios = glob(os.path.join(repo_root(), "scenarios/*/"))
@@ -68,8 +61,10 @@ def _load_baseline(scenario):
     # attempt to load the baseline
     scenario_path = os.path.join(repo_root(), "scenarios", scenario)
     baseline_f = os.path.join(scenario_path, "baseline.toml")
-    assert os.path.exists(baseline_f)
-    baseline = toml.load(baseline_f)
+    if os.path.exists(baseline_f):
+        baseline = toml.load(baseline_f)
+    else:
+        baseline = {}  # optional
     return baseline
 
 
@@ -117,7 +112,7 @@ def load_scenario(scenario_name, pfilter=True):
     candidates = []
 
     for spec_name, perf in models.items():
-        name = autoname(len(candidates))
+        name = elicit.autoname(len(candidates))
         scores = {k: v for k, v in perf.items()}
         candidates.append(elicit.Candidate(name, scores, spec_name))
 
@@ -189,3 +184,23 @@ def inject_metadata(metrics, candidates):
 
         else:
             raise Warning(f"Data type {meta['type']} not supported.")
+
+
+def nice_range(a, b):
+    """
+    Round min down and max up to the nearest `div`.
+
+    Return the minimum value and the maximum value in order in a tuple.
+    """
+    min_num = min(a, b)
+    max_num = max(a, b)
+    diff = math.ceil(max_num - min_num)
+    div = 10**(len(str(diff)) - 1)
+
+    if min_num % div == 0:
+        min_num -= div
+    if max_num % div == 0:
+        max_num += div
+    min_num = math.floor(min_num / div) * div
+    max_num = math.ceil(max_num / div) * div
+    return (min_num, max_num)

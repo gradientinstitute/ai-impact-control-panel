@@ -1,4 +1,8 @@
-"""Test the eliciters in the DEVA package."""
+"""
+Test the eliciters in the DEVA package.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
 from deva import elicit
 from itertools import permutations
 import pickle
@@ -26,9 +30,8 @@ def make_data():
 @pytest.mark.parametrize("algorithm", elicit.algorithms)
 def test_works(algorithm):
     """Test that each algorithm can find the optimum in a toy problem."""
-    # Note: assumes choice is from a discrete set (no continuous responses)
-    if algorithm == "Enautilus":
-        return  # exemption
+    if algorithm == "E-NAUTILUS":
+        return  # not guaranteed to converge with default sample size
 
     candidates, scenario, attribs = make_data()
 

@@ -1,4 +1,9 @@
-"""Python interfaces for displaying and comparing models."""
+"""
+Python interfaces for displaying and comparing models.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
+
 from deva import elicit
 
 

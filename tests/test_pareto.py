@@ -1,4 +1,8 @@
-"""Test the code to remove non-pareto-efficient candidates."""
+"""
+Test the code to remove non-pareto-efficient candidates.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
 from deva.pareto import remove_non_pareto
 from itertools import product
 

@@ -1,3 +1,5 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+
 import {RecoilRoot, useRecoilValue} from 'recoil';
 
 import {Pane, paneState} from './Base';

@@ -1,4 +1,9 @@
-"""Module to filter pareto inefficient candidates."""
+"""
+Module to filter pareto inefficient candidates.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
+
 import numpy as np
 
 

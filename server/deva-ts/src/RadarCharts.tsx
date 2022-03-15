@@ -1,3 +1,4 @@
+// Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import _ from "lodash";
@@ -42,11 +43,11 @@ export const radarParsedDataState = selector({
         const val = getPercentage(vals[uid], min, max, lowerIsBetter);
         const tooltipText = u.type === "qualitative" 
           ? u.options[vals[uid]] 
-          : vals[uid] * sign + " " + u.suffix;
+          : vals[uid] * sign + u.scrollbar;
         
         d.push({
           "legend" : name,
-          "axis" : u.name, 
+          "axis" : u.benefit, 
           "value" : val, 
           "tooltipText" : tooltipText,
           "rangeMin" : min,

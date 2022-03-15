@@ -1,4 +1,8 @@
-"""Pytest fixtures and utilities."""
+"""
+Pytest fixtures and utilities.
+
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+"""
 
 import numpy as np
 import pytest
