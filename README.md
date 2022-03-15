@@ -121,4 +121,6 @@ In the venv, run `make test`, `make lint` and `make typecheck`.
 
 ## Copyright and License
 
-© 2022 Gradient Institue Ltd.
+Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
+
+Licensed under Apache 2 (see LICENSE file).
