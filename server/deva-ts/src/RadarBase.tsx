@@ -137,7 +137,7 @@ function appendAxisLabels(axis, cfg, radiusScale, maxValue, angleSlice) {
   axis
     .append("text")
     .attr("class", "legend")
-    .style("font-size", "11px")
+    .style("font-size", "16px")
     .style("fill", "white")
     .attr("text-anchor", "middle")
     .attr("dy", "0.35em")

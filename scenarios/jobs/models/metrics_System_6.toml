@@ -1,0 +1,4 @@
+precision = 64
+fnr = 50
+fn_parity = 66
+privacy_level = 2

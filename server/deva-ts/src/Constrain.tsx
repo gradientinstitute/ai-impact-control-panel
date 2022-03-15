@@ -153,18 +153,19 @@ function EliminatedStatus({}) {
   );
 }
 
-function UnitDescription({uid, unit}) {
+function UnitDescription({uid, unit, objectives}) {
   return (
     <div className="bg-gray-600 h-full p-4 grid grid-cols-1 gap-4">
       <h2>{unit.name} ({unit.benefit})</h2>
       <p className="italic">{unit.description}</p>
-      <p><span className="font-bold">Captures:</span> {unit.captures}</p>
+      <p><span className="font-bold">Captures: </span> 
+        {objectives[unit.captures].name}</p>
       <p><span className="font-bold">Limitations:</span> {unit.limitations}</p>
     </div>
   )
 }
 
-function DescriptionRangeConstraint({uid, unit}) {
+function DescriptionRangeConstraint({uid, unit, objectives}) {
 
   const lowerIsBetter = unit.lowerIsBetter === false ? false : true;
   const maxRanges = useRecoilValue(maxRangesState);
@@ -188,7 +189,7 @@ function DescriptionRangeConstraint({uid, unit}) {
   return (
     <div className={"grid grid-cols-8 " + bgcolor}>
       <div className="col-span-3">
-        <UnitDescription uid={uid} unit={unit} />
+        <UnitDescription uid={uid} unit={unit} objectives={objectives}/>
       </div>
       <div className="col-span-5 my-auto">
         {pane}
@@ -213,7 +214,8 @@ function MultiRangeConstraint({}) {
     const u: any = x[1];
     return (
       <div>
-        <DescriptionRangeConstraint key={uid} uid={uid} unit={u} />
+        <DescriptionRangeConstraint key={uid} uid={uid} unit={u}
+        objectives={metadata.objectives}/>
       </div>
     );
   });
