@@ -44,18 +44,6 @@ def get_all_files(scenario):
     return input_files
 
 
-def autoname(ind):
-    """Automatically turn an index into a system name."""
-    # sequence A-Z, AA-AZ-ZZ, AAA-AAZ-AZZ-ZZZ ...
-    chars = []
-    while True:
-        chars.append(chr(65 + ind % 26))
-        if ind < 26:
-            break
-        ind = ind // 26 - 1
-    return "System " + "".join(chars[::-1])
-
-
 def list_scenarios():
     """Examine all the scenario folders and extract their metadata."""
     scenarios = glob(os.path.join(repo_root(), "scenarios/*/"))
@@ -117,7 +105,7 @@ def load_scenario(scenario_name, pfilter=True):
     candidates = []
 
     for spec_name, perf in models.items():
-        name = autoname(len(candidates))
+        name = elicit.autoname(len(candidates))
         scores = {k: v for k, v in perf.items()}
         candidates.append(elicit.Candidate(name, scores, spec_name))
 

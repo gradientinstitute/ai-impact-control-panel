@@ -99,7 +99,7 @@ def test_eliciters(eliciter_list, num, attr):
         name = str(eliciter)
         if test_target.description() == "E-NAUTILUS eliciter":
             enautilus_count *= 5
-            test_target.updateForN(enautilus_count, 9)
+            test_target._set_config(enautilus_count, 9)
             name = f".Enautilus {9} options {enautilus_count} Question limits'"
         while not test_target.terminated():
             question_count += 1

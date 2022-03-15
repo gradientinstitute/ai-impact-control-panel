@@ -23,7 +23,7 @@ def main():
     table = table[:, :3]
 
     # Load baseline for comparison
-    baseline = meta["baseline"]
+    baseline = meta["baseline"]["industry_average"]
     ref = np.array([baseline[a] for a in attribs])
     ref = ref[:3]
 
@@ -33,7 +33,7 @@ def main():
     eli_errors = {}  # storing the error rate for each eliciter
 
     n_iter = 0
-    max_iter = 5
+    max_iter = 10
     # A loop to reduce variance due to initial conditions
     while n_iter < max_iter:
         # Test whether the sampler can elicit this oracle's preference
@@ -72,22 +72,22 @@ def main():
 
     # ----------- visualisation --------------
     # compare three eliciters
-    plt.figure(0)
-    for k in eli_errors:
-        plt.plot(eli_errors[k], label=k)
-    plt.ylabel("error rate")
-    plt.xlabel("steps")
-    plt.suptitle("Eliciters Comparison")
-    plt.legend()
+    # plt.figure(0)
+    # for k in eli_errors:
+    #     plt.plot(eli_errors[k], label=k)
+    # plt.ylabel("error rate")
+    # plt.xlabel("steps")
+    # plt.suptitle("Eliciters Comparison")
+    # plt.legend()
 
     avg_scores = {}
-    for e in eliciters:
+    for e in ["LinearRandom", "LinearActive"]:
         min_step = min(map(len, eli_scores[e]))
         avg_scores[e] = np.array([i[:min_step] for i in eli_scores[e]])
         avg_scores[e] = np.mean(avg_scores[e], axis=0)
 
     plt.figure(1)
-    for k in eli_scores:
+    for k in ["LinearRandom", "LinearActive"]:
         plt.plot(np.array(avg_scores[k]), label=k)
     plt.ylabel("log loss")
     plt.xlabel("steps")
@@ -108,9 +108,10 @@ def main():
     plot3d.sample_trajectory(choices * sign, attribs)
     rad = plot3d.radius(choices)[:3]
     plot3d.weight_disc(
-        w_true[:3], (ref * sign)[:3], rad, "b", "true boundary")
+        (w_true * sign)[:3], (ref * sign)[:3], rad, "b", "true boundary")
     plot3d.weight_disc(
-        sampler.w[:3], (ref * sign)[:3], rad, "r", "estimated boundary")
+        (sampler.w * sign)[:3], (ref * sign)[:3], rad,
+        "r", "estimated boundary")
     plt.legend()
     plt.show()
 

@@ -1,11 +1,6 @@
 """Preferene eliciter module."""
-from itertools import combinations
-from functools import partial
 import numpy as np
 from deva import halfspace
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-from collections import OrderedDict
 from sklearn.cluster import KMeans
 
 
@@ -65,54 +60,8 @@ class Eliciter:
         return lines[0] if lines else "An elicitation algorithm."
 
 
-class VotingEliciter(Eliciter):
-    """Ask all pairwise comparisons and choose the most frequently selected."""
-
-    def __init__(self, candidates, scenario):
-        assert candidates, "No candidate models"
-        Eliciter.__init__(self)
-        self.candidates = list(candidates)  # copy references
-        # save the number of time each candidate is chosen
-        self.chosen = dict.fromkeys(self.candidates, 0)
-        self.i = 0  # increasing index
-        # all the possible query pairs
-        self.comparisons = list(combinations(self.candidates, 2))
-
-        self._update()
-
-    def put(self, choice):
-        """Enter a user choice."""
-        if choice == self._query[0].name:
-            self.chosen[self._query[0]] += 1
-        if choice == self._query[1].name:
-            self.chosen[self._query[1]] += 1
-
-        self._update()
-
-    def terminated(self):
-        """Check if eliciter is terminated."""
-        return self.i == len(self.comparisons)
-
-    def result(self):
-        """Obtain eliciter final result."""
-        assert self.i == len(self.comparisons), "Not terminated"
-        return max(self.candidates, key=self.chosen.get)
-
-    def query(self):
-        """Obtain eliciter's current query."""
-        return self._query
-
-    def _update(self):
-        if len(self.comparisons) >= 1 and self.i < len(self.comparisons):
-            queries = self.comparisons[self.i]
-            self._query = (queries[0], queries[1])
-            self.i += 1
-        else:
-            self._query = None
-
-
-class Toy(Eliciter):
-    """Pass over the candidates comparing each to the current preference."""
+class LadderEliciter(Eliciter):
+    """Pass over the candidates, comparing each to the current preference."""
 
     def __init__(self, candidates, scenario):
         assert candidates, "No candidate models"
@@ -148,12 +97,12 @@ class Toy(Eliciter):
             self._query = None
 
 
-class Enautilus(Eliciter):
+class EnautilusEliciter(Eliciter):
     """
-    Use E-Nautilus to incrementally step from Nadir to an efficient candidate.
+    Use E-NAUTILUS to incrementally step from nadir to an efficient candidate.
 
-    See: E-NAUTILUS: A decision support system for complex multiobjective
-    optimization problems based on the NAUTILUS method.
+    See: 'E-NAUTILUS: A decision support system for complex multiobjective
+    optimization problems based on the NAUTILUS method.', Ruiz et al. 2015
     """
 
     def __init__(self, candidates, scenario):
@@ -168,20 +117,22 @@ class Enautilus(Eliciter):
         Eliciter.__init__(self)
         self._nadir = {}
         self._ideal = {}
-        self._h = 5  # number of questions
-        self._ns = 2  # number of options
+        self._n_questions = 20  # MAX number of questions
+        self._n_choices = 2  # number of options
+        self.step = 0
         self.iter_count = 0
         self.candidates = list(candidates)
         self.attribs = candidates[0].get_attr_keys()
         self.current_centers = []
         self.kmeans_centers = []
         self._update_zpoints()
+        self._options = []
         self._update()
 
-    def updateForN(self, n1, ns):
+    def _set_config(self, n_questions, n_choices):
         """Update the number of questions the algorithm will use."""
-        self._h = n1 + 1
-        self._ns = ns
+        self._n_questions = n_questions
+        self._n_choices = n_choices
         self._update()
 
     def query(self):
@@ -190,11 +141,11 @@ class Enautilus(Eliciter):
 
     def terminated(self):
         """Check if the termination condition is met."""
-        return (self._h <= 0) or (len(self.candidates) == 1)
+        return (self.step >= self._n_questions) or (len(self.candidates) == 1)
 
     def result(self):
         """Return result of the eliciter if terminated."""
-        assert (self._h <= 0) or (len(self.candidates) == 1), "Not terminated."
+        assert self.terminated(), "Not terminated."
         X = []
         for can in self.candidates:
             X.append(np.array(can.get_attr_values()))
@@ -218,7 +169,10 @@ class Enautilus(Eliciter):
 
     def put(self, choice):
         """Receive input from the user and update ideal point."""
-        choice = self._query[int(choice)]
+        assert choice in self._options, "Invalid choice"
+
+        index = self._options.index(choice)
+        choice = self._query[index]
         self._nadir = choice.attributes
         # remove candidates that are worse in every attribute
         copy = []
@@ -241,9 +195,9 @@ class Enautilus(Eliciter):
         X = []
         for can in self.candidates:
             X.append(np.array(can.get_attr_values()))
-        if self._ns > len(self.candidates):
-            self._ns = len(self.candidates)
-        kmeans = KMeans(n_clusters=self._ns).fit(np.array(X))
+        if self._n_choices > len(self.candidates):
+            self._n_choices = len(self.candidates)
+        kmeans = KMeans(n_clusters=self._n_choices).fit(np.array(X))
         centers = kmeans.cluster_centers_
         kc = []
         for c in centers:
@@ -253,98 +207,46 @@ class Enautilus(Eliciter):
         kc = np.array(kc)
         self.kmeans_centers = kc
         # project to the line between pareto front and nadir point
-        if self._h == 1:
+        remaining = self._n_questions - self.step
+
+        if remaining == 1:
             numerator = 1
         else:
-            numerator = self._h - 1
+            numerator = remaining - 1
         kc = kc + (
             (np.array(list(self._nadir.values())) - kc)
-            * numerator / self._h
+            * numerator / remaining
         )
         self.current_centers = kc
         res = []
-        step = ""  # TODO: make a different letter for each step
+        step = autoname(self.step)
+        options = []
         for index, system in enumerate(kc):
             cname = f"{step}{index}"
             res.append(Candidate(cname,
                                  dict(zip(self.attribs, system))))
+            options.append(cname)
+        self._options = options  # reverse mapping back to a candidate
         return res
 
     def _update(self):
         """Update new query and the number of questions remaining."""
-        if (self._h > 0) and (len(self.candidates) != 1):
+        remaining = self._n_questions - self.step
+
+        if (remaining > 0) and (len(self.candidates) != 1):
             self._query = self.virtualCandidateGen()
-            self._h = self._h - 1
+            self.step += 1
         else:
             self._query = None
 
-    @staticmethod
-    def description():
-        """Describe the eliciter."""
-        return "E-NAUTILUS eliciter"
 
-    def plot_data(self):
-        """Return all the data needed for 2d print."""
-        return [self._nadir, self._ideal, self.attribs, self.current_centers,
-                self.candidates, self.kmeans_centers]
+class ActiveMaxEliciter(Eliciter):
+    """Use pairwise linear separation to estimate the preferred candidate."""
 
-    def plot_final(self):
-        """Plot the final candidate picked."""
-        r_point = self.result().get_attr_values()
-        plt.scatter(r_point[0], r_point[1], s=80, marker=(4, 1),
-                    label="Result")
-        handles, labels = plt.gca().get_legend_handles_labels()
-        by_label = OrderedDict(zip(labels, handles))
-        plt.legend(by_label.values(), by_label.keys())
-        plt.title("Final plot with result point")
-        plt.savefig("final.jpg")
-
-    def plot_2d(self):
-        """Plot 2d scenarios according to the paper."""
-        self.iter_count += 1
-        plt.figure()
-        width = self._nadir[self.attribs[0]] - self._ideal[self.attribs[0]]
-        height = self._nadir[self.attribs[1]] - self._ideal[self.attribs[1]]
-        currentAxis = plt.gca()
-        currentAxis.add_patch(Rectangle((self._ideal[self.attribs[0]],
-                              self._ideal[self.attribs[1]]),
-                              width, height, fill=None, alpha=0.1))
-        plt.scatter(self._ideal[self.attribs[0]], self._ideal[self.attribs[1]],
-                    s=80, marker=(5, 1), label="Trade-off Margins", c="purple")
-        plt.scatter(self._nadir[self.attribs[0]], self._nadir[self.attribs[1]],
-                    s=80, marker=(3, 1), label="Nadir Point", c="blue")
-        for point in self.current_centers:
-            plt.scatter(point[0], point[1], c="orange", alpha=0.2,
-                        label="Virtual Options")
-        for can in self.candidates:
-            point1 = np.array(can.get_attr_values())
-            plt.scatter(point1[0], point1[1], c="red", alpha=0.3,
-                        label="Candidates")
-        for point2 in self.kmeans_centers:
-            plt.scatter(point2[0], point2[1], c="deepskyblue", marker="x",
-                        label="KMeans Centers")
-            p1 = [point2[0], self._nadir[self.attribs[0]]]
-            p2 = [point2[1],
-                  self._nadir[self.attribs[1]]]
-            plt.plot(p1, p2, c="green",
-                     linestyle="dotted", alpha=0.2)
-        handles, labels = plt.gca().get_legend_handles_labels()
-        by_label = OrderedDict(zip(labels, handles))
-        plt.xlim([-0.02, 0.85])
-        plt.ylim([-0.02, 1.02])
-        plt.xlabel("Profit loss")
-        plt.ylabel("False-positive rate")
-        plt.title(f"The plot for iteration {self.iter_count}")
-        plt.legend(by_label.values(), by_label.keys())
-        plt.savefig(f"Plot for iteration {self.iter_count}.jpg")
-
-
-# Eliciter implementations
-class ActiveRanking(Eliciter):
-    """Use pairwise linear separation to estimate a full candidate ranking."""
-
-    _active_alg = halfspace.HalfspaceRanking
-    _active_kw = {"query_order": halfspace.rank_compar_ord}
+    _active_alg = halfspace.HalfspaceMax
+    _active_kw = {"query_order": halfspace.max_compar_rand}
+    # Orders: max_compar_smooth, max_compar_rand,
+    #         partial(max_compar_primary, primary_index=...)
 
     def __init__(self, candidates, scenario):
         if len(candidates) < 2:
@@ -401,52 +303,21 @@ class ActiveRanking(Eliciter):
         return self._result is not None
 
 
-class ActiveMax(ActiveRanking):
-    """Use pairwise linear separation to estimate the preferred candidate."""
-
-    _active_alg = halfspace.HalfspaceMax
-    _active_kw = {"query_order": halfspace.max_compar_rand}
-
-
-class ActiveMaxSmooth(ActiveRanking):
-    """
-    Use pairwise linear separation with a query order heuristic.
-
-    Distinct from ActiveMax by the strategic query order heuristic.
-    """
-
-    _active_alg = halfspace.HalfspaceMax
-    _active_kw = {"query_order": halfspace.max_compar_smooth}
-
-
-class ActiveMaxPrimary(ActiveRanking):
-    """
-    Use pairwise linear separation with a query order based on primary metric.
-
-    Distinct from ActiveMax by using a query order based on a primary metric.
-    """
-
-    _active_alg = halfspace.HalfspaceMax
-
-    def __init__(self, candidates, scenario):
-        if "primary_metric" not in scenario:
-            raise RuntimeError("Expecting a primary_metric to be specified in"
-                               " the metadata.")
-        pmetric = scenario["primary_metric"]
-        attribs = list(candidates[0].attributes.keys())
-        pri_ind = attribs.index(pmetric)
-        qorder = partial(halfspace.max_compar_primary, primary_index=pri_ind)
-        self._active_kw = {"query_order": qorder}
-        super().__init__(candidates, scenario)
+def autoname(ind):
+    """Automatically turn an index into a system name."""
+    # sequence A-Z, AA-AZ-ZZ, AAA-AAZ-AZZ-ZZZ ...
+    chars = []
+    while True:
+        chars.append(chr(65 + ind % 26))
+        if ind < 26:
+            break
+        ind = ind // 26 - 1
+    return "System " + "".join(chars[::-1])
 
 
 # Export all the Eliciter classes
 algorithms = {
-    "Toy": Toy,
-    "ActiveRanking": ActiveRanking,
-    "ActiveMax": ActiveMax,
-    "ActiveMaxSmooth": ActiveMaxSmooth,
-    "ActiveMaxPrimary": ActiveMaxPrimary,
-    "VotingEliciter": VotingEliciter,
-    "Enautilus": Enautilus
+    "Ladder": LadderEliciter,
+    "ActiveMax": ActiveMaxEliciter,
+    "E-NAUTILUS": EnautilusEliciter,
 }
