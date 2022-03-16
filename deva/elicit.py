@@ -122,7 +122,7 @@ class EnautilusEliciter(Eliciter):
         Eliciter.__init__(self)
         self._nadir = {}
         self._ideal = {}
-        self._n_questions = 20  # MAX number of questions
+        self._n_questions = 5  # MAX number of questions
         self._n_choices = 2  # number of options
         self.step = 0
         self.iter_count = 0
