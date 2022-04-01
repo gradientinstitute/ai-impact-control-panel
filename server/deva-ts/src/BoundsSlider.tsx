@@ -1,20 +1,12 @@
 // Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { atom, selector } from 'recoil';
-import { metadataState, constraintsState } from './Base';
+import { allCandidatesState, metadataState, constraintsState } from './Base';
 import _ from "lodash";
 
 
 export const currentSelectionState = atom({
   key: 'currentSelection',
   default: null,
-});
-
-// info from the ranges API containing
-// array containing all of the candidates
-// [{metric1: value1, metric2: value1}, {metric1: value3, metric2:value4}]
-export const allCandidatesState = atom({  
-  key: 'allCandidates', 
-  default: null, 
 });
 
 

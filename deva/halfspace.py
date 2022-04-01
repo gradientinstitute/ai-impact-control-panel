@@ -16,6 +16,7 @@ from sklearn.decomposition import PCA
 
 
 SHATTER_THRESH = 1e-10
+EPS = 1e-5   # hack for constant column std
 
 
 # Ranking algorithms
@@ -405,7 +406,7 @@ def max_compar_rand(X, random_state=None):
     inds = list(range(n))
 
     # Standardise X
-    Xstd = (X - X.mean(axis=0)) / X.std(axis=0)
+    Xstd = (X - X.mean(axis=0)) / (X.std(axis=0) + EPS)
 
     # Get the largest magnitude point for the first query
     norms = (Xstd**2).sum(axis=1)

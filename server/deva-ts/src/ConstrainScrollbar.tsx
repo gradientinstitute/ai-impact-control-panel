@@ -1,9 +1,11 @@
 // Copyright 2021-2022 Gradient Institute Ltd. <info@gradientinstitute.org>
 import { atom, selector } from 'recoil';
-import { metadataState, constraintsState, configState } from './Base';
+import { allCandidatesState, metadataState, constraintsState, 
+         configState } from './Base';
 import _ from "lodash";
 import { roundValue, rvOperations } from './Widgets';
 import { compareConfig } from './Config';
+import { currentSelectionState, currentCandidatesState } from './BoundsSlider';
 
 
 export enum blockingStates {
@@ -49,24 +51,11 @@ export const blockedStatusState = selector({
   }
 })
 
-export const currentSelectionState = atom({
-  key: 'currentSelection',
-  default: null,
-});
-
 // Metric to unblock as selected by the user
 // Suggestions for unblocking are made relative to this metric 
 export const blockedMetricState = atom({
   key: 'blockedMetric',
   default: null,
-});
-
-// info from the ranges API containing
-// array containing all of the candidates
-// [{metric1: value1, metric2: value1}, {metric1: value3, metric2:value4}]
-export const allCandidatesState = atom({  
-  key: 'allCandidates', 
-  default: null, 
 });
 
 // snapshot of hte current constraint state when the 'unblock metrics' button
@@ -83,20 +72,6 @@ export function getSliderStep(decimals) {
   }
   return Number((0.1 ** decimals).toFixed(decimals));
 }
-
-// uses filterCandidates to give list of candidates
-// permissable by the currently selected ranges
-export const currentCandidatesState = selector({
-  key: 'currentCandidates',
-  get: ({get}) => {
-    const allCandidates = get(allCandidatesState);
-    const constraints = get(constraintsState);
-    if (allCandidates === null || constraints === null) {
-      return null;
-    }
-    return filterCandidates(allCandidates, constraints);
-  },
-});
 
 // Returns the most optimal values for each metric given possible candidates
 // {metric1: <most desirable value in current candidate set>, etc.}
