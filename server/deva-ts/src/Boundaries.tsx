@@ -6,9 +6,9 @@ import axios from 'axios';
 
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { Pane, paneState, scenarioState, metadataState, constraintsState,
-         algoChoicesState, reportState } from './Base';
+         algoChoicesState, reportState, allCandidatesState } from './Base';
 
-import { allCandidatesState, rangesState, currentCandidatesState,
+import { rangesState, currentCandidatesState,
          getSliderStep, currentSelectionState} from './BoundsSlider';
 
 

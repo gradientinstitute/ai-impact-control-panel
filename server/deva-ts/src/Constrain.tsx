@@ -6,10 +6,12 @@ import _ from "lodash";
 
 import { roundValue, rvOperations } from './Widgets'
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
-import { metadataState, constraintsState, configState } from './Base';
+import { allCandidatesState, metadataState, constraintsState, 
+         configState } from './Base';
 
-import { allCandidatesState, maxRangesState, currentCandidatesState,
-  filterCandidates, getSliderStep, bestValuesState, currentSelectionState, 
+import { currentSelectionState, currentCandidatesState } from './BoundsSlider';
+
+import { maxRangesState, filterCandidates, getSliderStep, bestValuesState, 
   blockedMetricState, isBlockedState, 
   blockedStatusState, blockingMetricsState, blockingStates, 
   unblockValuesState, blockedConstraintsState} from './ConstrainScrollbar';

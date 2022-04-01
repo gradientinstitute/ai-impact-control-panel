@@ -4,22 +4,14 @@ import { atom, useRecoilState, useRecoilValue, useSetRecoilState} from 'recoil';
 import axios from 'axios';
 
 import { Pane, paneState, algoState, constraintsState,
-         metadataState, scenarioState, algoChoicesState} from './Base';
+         metadataState, scenarioState, algoChoicesState, 
+         allCandidatesState} from './Base';
 import {IntroContext} from './Intro';
 import {Constraints} from './Constrain';
 import { maxRangesState } from './ConstrainScrollbar';
 
 import { filterCandidates } from './ConstrainScrollbar';
 import {HelpOverlay, overlayId, helpState} from './HelpOverlay';
-
-// info from the ranges API containing
-// array containing all of the candidates
-// [{metric1: value1, metric2: value1}, {metric1: value3, metric2:value4}]
-export const allCandidatesState = atom({  
-  key: 'allCandidates', 
-  default: null, 
-});
-
 
 // root node
 export function ConfigurePane() {

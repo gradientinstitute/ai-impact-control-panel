@@ -102,3 +102,12 @@ export const configState = atom({
   key: 'config',
   default: null, 
 });
+
+// info from the ranges API containing
+// array containing all of the candidates
+// [{metric1: value1, metric2: value1}, {metric1: value3, metric2:value4}]
+export const allCandidatesState = atom({  
+  key: 'allCandidates', 
+  default: null, 
+});
+
